@@ -227,6 +227,7 @@ export default function EditPlayerModal() {
                     onChangeText={setName}
                     maxLength={20}
                     autoCapitalize="words"
+                    testID="edit-player-name-input"
                   />
                   {nameExists && (
                     <ThemedText style={[styles.errorText, { color: palette.danger }]}>
@@ -255,6 +256,7 @@ export default function EditPlayerModal() {
                     onChangeText={handleNumberChange}
                     keyboardType="number-pad"
                     maxLength={MAX_PLAYER_NUMBER_LENGTH}
+                    testID="edit-player-number-input"
                   />
                   {numberExists && (
                     <ThemedText style={[styles.errorText, { color: palette.danger }]}>

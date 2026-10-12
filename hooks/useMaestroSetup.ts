@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 import {
@@ -7,6 +7,7 @@ import {
   MaestroTrackerState,
   seedAdvancedTrackerTestGame,
   seedMaestroBasicCancelPendingGoalScenario,
+  seedMaestroBasicSavedGame,
   seedMaestroOnboardingPrerequisites,
   seedMaestroTeamPrerequisites,
   waitForMaestroStoresToHydrate,
@@ -66,9 +67,7 @@ export function useMaestroSetup(params: MaestroSetupParams) {
   return errorMessage;
 }
 
-async function seedMaestroState(
-  params: MaestroSetupParams,
-): Promise<'/' | '/Dashboard' | '/Scoreboard' | '/advancedTracking/Tracker'> {
+async function seedMaestroState(params: MaestroSetupParams): Promise<Href> {
   if (params.mode === 'onboarding') {
     await seedMaestroOnboardingPrerequisites();
     return '/';
@@ -82,6 +81,11 @@ async function seedMaestroState(
   if (params.mode === 'scrimmageTeam') {
     await seedMaestroTeamPrerequisites({ clearActiveGame: true, gameType: 'scrimmage' });
     return '/Dashboard';
+  }
+
+  if (params.mode === 'basicSavedGame') {
+    const gameId = await seedMaestroBasicSavedGame();
+    return { pathname: '/saved-games/[gameId]', params: { gameId } };
   }
 
   if (params.mode === 'basicCancelPendingGoal') {

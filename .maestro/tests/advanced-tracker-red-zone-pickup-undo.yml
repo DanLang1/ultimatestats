@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Red Zone Pickup and Dropped Pull Undo
+tags:
+  - advanced
 ---
 - runFlow:
     file: ../flows/setup-game.yaml

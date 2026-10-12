@@ -255,6 +255,7 @@ export default function DashboardScreen() {
           label: 'Help',
           description: 'Tutorials, legends, privacy',
           onPress: () => router.push('/Help'),
+          testID: 'dashboard-help-button',
         },
         {
           icon: 'information-outline' as const,

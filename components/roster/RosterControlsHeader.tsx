@@ -63,6 +63,7 @@ export function RosterControlsHeader({
             <>
               <Pressable
                 onPress={onToggleSelectMode}
+                testID="roster-bulk-toggle"
                 style={({ pressed }) => [
                   styles.primaryChip,
                   { borderColor: palette.overlay20, backgroundColor: palette.overlay08 },
@@ -92,6 +93,10 @@ export function RosterControlsHeader({
                   return (
                     <Pressable
                       key={role}
+                      accessibilityLabel={`Filter ${label}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
+                      testID={`roster-role-filter-${role}`}
                       onPress={() => onToggleRoleFilter(role)}
                       style={({ pressed }) => [
                         styles.segment,
@@ -153,6 +158,7 @@ export function RosterControlsHeader({
 
               <Pressable
                 onPress={onToggleSelectMode}
+                testID="roster-bulk-done"
                 style={({ pressed }) => [
                   styles.primaryChip,
                   { borderColor: palette.accent, backgroundColor: palette.accent },

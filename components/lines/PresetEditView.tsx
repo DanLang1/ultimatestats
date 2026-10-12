@@ -51,6 +51,9 @@ export function PresetEditView({
         {/* Back button */}
         <Pressable
           onPress={onBack}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          testID="line-preset-edit-back"
           style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
           hitSlop={12}>
           <MaterialCommunityIcons
@@ -62,13 +65,17 @@ export function PresetEditView({
 
         {/* Preset Name Input */}
         <View style={styles.nameSection}>
-          <Pressable style={styles.nameInputRow} onPress={() => nameInputRef.current?.focus()}>
+          <Pressable
+            accessible={false}
+            style={styles.nameInputRow}
+            onPress={() => nameInputRef.current?.focus()}>
             <TextInput
               ref={nameInputRef}
               style={[styles.presetNameInput, { color: palette.textInverse }]}
               value={presetName}
               onChangeText={onPresetNameChange}
               placeholder="Preset Name"
+              testID="line-preset-name-input"
               placeholderTextColor={palette.textMuted}
               maxLength={10}
               textAlign="center"
@@ -87,6 +94,9 @@ export function PresetEditView({
           <Pressable
             onPress={onSave}
             disabled={!canSave}
+            accessibilityLabel={`Save preset, ${selectedIds.length} players`}
+            accessibilityRole="button"
+            testID="line-preset-save"
             style={({ pressed }) => [
               styles.saveBtn,
               { backgroundColor: canSave ? palette.success : palette.overlay20 },

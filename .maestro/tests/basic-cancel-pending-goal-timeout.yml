@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Basic Cancel Pending Goal Preserves Used Timeout
+tags:
+  - basic
 ---
 # This exercises the documented regression scenario:
 # use a timeout, score the halftime point, cancel the pending stat entry, and

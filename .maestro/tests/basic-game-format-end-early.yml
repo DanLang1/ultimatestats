@@ -1,0 +1,85 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Game Format Change and Early End
+tags:
+  - basic
+---
+# Raising Game To mid-game moves halftime, and ending a game early from Game Status saves it.
+- runFlow: ../flows/setup-basic-game.yaml
+
+# Game Status -> Game Format: raise Game To from 2 to 4 during the first half.
+- tapOn:
+    id: 'scoreboard-game-info'
+- extendedWaitUntil:
+    visible: 'GAME STATUS'
+    timeout: 5000
+- tapOn: 'Edit game format'
+- extendedWaitUntil:
+    visible: 'GAME FORMAT'
+    timeout: 5000
+- assertVisible: 'Halftime, At 1'
+- tapOn: 'Game To, .*'
+- tapOn:
+    id: 'number-picker-clear'
+- tapOn:
+    id: 'number-picker-key-4'
+- tapOn:
+    id: 'number-picker-save'
+- extendedWaitUntil:
+    visible: 'Game To, .*, 4, .*'
+    timeout: 5000
+- assertVisible: 'Halftime, At 2'
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'GAME STATUS'
+    timeout: 5000
+- assertVisible: '4'
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# The first goal no longer triggers halftime.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Joe'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Jon'
+- extendedWaitUntil:
+    visible:
+      id: 'scoreboard-team1-score'
+      text: '1'
+    timeout: 5000
+- assertNotVisible:
+    id: 'halftime-modal-continue'
+
+# End the game early from Game Status; the 1-0 result is saved.
+- tapOn:
+    id: 'scoreboard-game-info'
+- extendedWaitUntil:
+    visible: 'GAME STATUS'
+    timeout: 5000
+- tapOn: '.*END GAME'
+- extendedWaitUntil:
+    visible: 'End Game Early\?'
+    timeout: 5000
+- tapOn: 'End Game'
+- extendedWaitUntil:
+    visible: 'GAME COMPLETE'
+    timeout: 5000
+- assertVisible: 'wins the game'
+- tapOn: 'Done.*'
+- extendedWaitUntil:
+    visible: 'SAVED GAME'
+    timeout: 5000
+- assertVisible: '1 - 0'
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-game-format-end-early

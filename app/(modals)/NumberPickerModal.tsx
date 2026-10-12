@@ -72,9 +72,11 @@ export default function NumberPickerModal() {
   return (
     <View style={StyleSheet.absoluteFill}>
       <Pressable
+        accessible={false}
         style={[styles.overlay, { backgroundColor: palette.overlayModal }]}
         onPress={handleDismiss}>
         <Pressable
+          accessible={false}
           style={[
             styles.container,
             { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
@@ -122,6 +124,7 @@ export default function NumberPickerModal() {
                     <Pressable
                       key={digit}
                       onPress={() => handleDigitPress(digit)}
+                      testID={`number-picker-key-${digit}`}
                       style={({ pressed }) => [
                         styles.numpadButton,
                         { backgroundColor: palette.overlay15 },
@@ -152,6 +155,7 @@ export default function NumberPickerModal() {
                     <Pressable
                       key={digit}
                       onPress={() => handleDigitPress(digit)}
+                      testID={`number-picker-key-${digit}`}
                       style={({ pressed }) => [
                         styles.numpadButton,
                         { backgroundColor: palette.overlay15 },
@@ -164,6 +168,7 @@ export default function NumberPickerModal() {
                   ))}
                   <Pressable
                     onPress={handleClear}
+                    testID="number-picker-clear"
                     style={({ pressed }) => [
                       styles.numpadButton,
                       { backgroundColor: palette.overlay20 },
@@ -184,6 +189,7 @@ export default function NumberPickerModal() {
                       <Pressable
                         key={digit}
                         onPress={() => handleDigitPress(digit)}
+                        testID={`number-picker-key-${digit}`}
                         style={({ pressed }) => [
                           styles.numpadButtonPortrait,
                           { backgroundColor: palette.overlay15 },
@@ -200,6 +206,7 @@ export default function NumberPickerModal() {
                 <View style={styles.numpadRow}>
                   <Pressable
                     onPress={handleClear}
+                    testID="number-picker-clear"
                     style={({ pressed }) => [
                       styles.numpadButtonPortrait,
                       { backgroundColor: palette.overlay20 },
@@ -213,6 +220,7 @@ export default function NumberPickerModal() {
 
                   <Pressable
                     onPress={() => handleDigitPress(0)}
+                    testID="number-picker-key-0"
                     style={({ pressed }) => [
                       styles.numpadButtonPortrait,
                       { backgroundColor: palette.overlay15 },
@@ -286,6 +294,7 @@ export default function NumberPickerModal() {
             <Pressable
               disabled={hasInvalidValue}
               onPress={handleSave}
+              testID="number-picker-save"
               style={({ pressed }) => [
                 styles.actionButton,
                 styles.saveButton,

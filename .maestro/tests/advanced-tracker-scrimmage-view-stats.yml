@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Scrimmage View Stats
 tags:
+  - advanced
   - scrimmage
 ---
 - runFlow:
@@ -53,7 +54,7 @@ tags:
     element:
       id: 'advanced-stats-row-anna'
     direction: DOWN
-    centerElement: true
+    speed: 80
 - assertVisible:
     id: 'advanced-stats-row-anna'
 

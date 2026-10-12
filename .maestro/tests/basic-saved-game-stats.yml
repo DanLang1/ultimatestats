@@ -1,0 +1,52 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Saved Game Stats
+tags:
+  - basic
+  - extended
+---
+# Dashboard -> Saved Games search -> saved game box score -> player detail.
+- runFlow: ../flows/setup-basic-saved-game.yaml
+- tapOn:
+    id: 'hub-tab-home'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+- tapOn: 'Saved Games'
+- extendedWaitUntil:
+    visible: 'SAVED GAMES'
+    timeout: 5000
+
+# The simulator may hold other saved games; search narrows the list to the seeded one.
+- tapOn: 'Search teams or dates...'
+- inputText: 'Rivals'
+- hideKeyboard
+- tapOn: '.*Zoboomafoo, 2, Rivals, 1.*'
+- extendedWaitUntil:
+    visible: 'TOP PERFORMERS'
+    timeout: 5000
+
+# Box score rows read: name, +/-, goals, assists, blocks, turnovers, ...
+# Rows are wider than the screen, so they never reach the default 100% visibility.
+- scrollUntilVisible:
+    element: 'Mike, -1, -, -, -, 1, .*'
+    direction: DOWN
+    speed: 80
+    visibilityPercentage: 40
+- assertVisible: 'Joe, \+1, 1, -, -, -, .*'
+- assertVisible: 'Jon, \+1, -, 1, -, -, .*'
+- assertVisible: 'Kelly, \+1, -, -, 1, -, .*'
+- assertVisible: 'Joel, 0, -, -, -, -, .*'
+
+# Rows scroll horizontally past the screen edge, so tap near the leading name cell.
+- tapOn:
+    text: 'Joe, .*'
+    point: '5%,50%'
+- extendedWaitUntil:
+    visible: 'Oct.* vs Rivals|.* vs Rivals'
+    timeout: 5000
+- assertVisible: 'GOALS \(1\)'
+- assertVisible: 'Net impact'
+- assertVisible: 'Joe: 1'
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-saved-game-stats

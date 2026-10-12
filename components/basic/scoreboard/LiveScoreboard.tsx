@@ -214,6 +214,7 @@ export default function LiveScoreboard() {
       <TeamScoreSection
         teamName={team1Name}
         score={team1Score}
+        scoreTestID="scoreboard-team1-score"
         onIncrement={() => handleIncrement(true)}
         textColor={getContrastingTextColor(team1BgColor)}
         backgroundColor={team1BgColor}
@@ -249,6 +250,9 @@ export default function LiveScoreboard() {
       {lineCallingEnabled && currentGameStatus !== 'finished' && (
         <Pressable
           onPress={() => router.push({ pathname: '/LineEditor', params: { mode: 'edit-line' } })}
+          accessibilityLabel="Edit current line"
+          accessibilityRole="button"
+          testID="scoreboard-edit-line"
           hitSlop={homeHitSlop}
           style={styles.floatingEditLineButton}>
           <MaterialCommunityIcons
@@ -262,6 +266,7 @@ export default function LiveScoreboard() {
       <TeamScoreSection
         teamName={team2Name}
         score={team2Score}
+        scoreTestID="scoreboard-team2-score"
         onIncrement={() => handleIncrement(false)}
         textColor={getContrastingTextColor(team2BgColor)}
         backgroundColor={team2BgColor}

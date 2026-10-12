@@ -65,7 +65,12 @@ export default function TutorialTeamScoreSection({
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <Pressable onPress={handleTap} style={styles.scoreTapArea} />
+      <Pressable
+        accessibilityLabel={`Score for ${teamName}`}
+        accessibilityRole="button"
+        onPress={handleTap}
+        style={styles.scoreTapArea}
+      />
 
       <View
         pointerEvents="box-none"
@@ -100,6 +105,8 @@ export default function TutorialTeamScoreSection({
                   />
                 )}
                 <Pressable
+                  accessibilityLabel={`Use timeout ${index + 1} for ${teamName}`}
+                  accessibilityRole="button"
                   hitSlop={TIMEOUT_HIT_SLOP}
                   onPress={() => onTimeoutUse?.(index)}
                   style={[

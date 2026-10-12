@@ -1,0 +1,22 @@
+appId: com.langdk.ultimatestats.dev
+name: Seed Team and Open Dashboard
+---
+# Seed team Zoboomafoo (Joe, Jon, Mike, Molly, Kelly, Rachel, Joel) with no active game and no
+# saved basic games, then land on Dashboard. Basic stat tracking defaults to on.
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=team
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible:
+      text: 'DASHBOARD'
+    timeout: 15000

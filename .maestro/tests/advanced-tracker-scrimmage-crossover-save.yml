@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Scrimmage Atomic Crossover Correction Save
 tags:
+  - advanced
   - scrimmage
 ---
 - runFlow:

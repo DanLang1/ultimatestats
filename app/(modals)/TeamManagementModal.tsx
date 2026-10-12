@@ -128,7 +128,13 @@ export default function TeamManagementModal() {
       <View style={styles.headerRow}>
         <View style={styles.headerSpacer} />
         <ThemedText style={[styles.title, { color: palette.modalText }]}>Switch Team</ThemedText>
-        <Pressable onPress={handleDismiss} hitSlop={12} style={styles.closeButton}>
+        <Pressable
+          onPress={handleDismiss}
+          accessibilityLabel="Close"
+          accessibilityRole="button"
+          testID="team-management-close"
+          hitSlop={12}
+          style={styles.closeButton}>
           <MaterialCommunityIcons
             name="close"
             size={scaleBySizeClass(24, sizeClass)}

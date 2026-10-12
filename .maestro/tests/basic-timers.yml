@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Basic Timeout and Halftime Timers
+tags:
+  - basic
 ---
 - runFlow: ../flows/setup-basic-game.yaml
 

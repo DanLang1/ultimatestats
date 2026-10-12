@@ -1,0 +1,141 @@
+appId: com.langdk.ultimatestats.dev
+name: Team Line Presets
+tags:
+  - team
+  - extended
+---
+# Create, validate, edit, discard, and delete team line presets from the Dashboard.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn: 'Team Line Presets'
+- extendedWaitUntil:
+    visible: 'Line Presets'
+    timeout: 5000
+- assertVisible: 'No presets yet'
+
+# Create "O Line" with all seven players.
+- tapOn:
+    id: 'line-presets-create'
+- assertVisible:
+    id: 'line-preset-save'
+    enabled: false
+- tapOn:
+    id: 'line-preset-name-input'
+- eraseText
+- inputText: 'O Line'
+- hideKeyboard
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'line-preset-save'
+    text: 'Save preset, 7 players'
+- extendedWaitUntil:
+    visible:
+      id: 'line-preset-edit-O Line'
+    timeout: 5000
+- assertVisible: '7 players'
+
+# A preset cannot reuse an existing name. Leaving that unsaved draft asks first and
+# discarding it keeps the list unchanged.
+- tapOn:
+    id: 'line-presets-create'
+- tapOn:
+    id: 'line-preset-name-input'
+- eraseText
+- inputText: 'O Line'
+- hideKeyboard
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'line-preset-save'
+- extendedWaitUntil:
+    visible: 'Name Already Exists'
+    timeout: 5000
+- tapOn: 'OK'
+- tapOn:
+    id: 'line-preset-edit-back'
+- extendedWaitUntil:
+    visible: 'Unsaved Changes'
+    timeout: 5000
+- tapOn: 'Discard'
+- extendedWaitUntil:
+    visible:
+      id: 'line-preset-edit-O Line'
+    timeout: 5000
+- assertNotVisible: '1 players'
+
+# Create "D Line" with three players.
+- tapOn:
+    id: 'line-presets-create'
+- tapOn:
+    id: 'line-preset-name-input'
+- eraseText
+- inputText: 'D Line'
+- hideKeyboard
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'line-preset-save'
+    text: 'Save preset, 3 players'
+- extendedWaitUntil:
+    visible:
+      id: 'line-preset-edit-D Line'
+    timeout: 5000
+- assertVisible: '3 players'
+
+# Editing O Line to drop Joel updates its count.
+- tapOn:
+    id: 'line-preset-edit-O Line'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn:
+    id: 'line-preset-save'
+    text: 'Save preset, 6 players'
+- extendedWaitUntil:
+    visible: '6 players'
+    timeout: 5000
+
+# Deleting D Line asks for confirmation and leaves O Line.
+- tapOn:
+    id: 'line-preset-delete-D Line'
+- extendedWaitUntil:
+    visible: 'Delete Preset'
+    timeout: 5000
+- tapOn: 'Delete'
+- extendedWaitUntil:
+    notVisible:
+      id: 'line-preset-edit-D Line'
+    timeout: 5000
+- assertVisible:
+    id: 'line-preset-edit-O Line'
+
+# Presets persist when the editor is reopened.
+- tapOn:
+    id: 'line-presets-back'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+- tapOn: 'Team Line Presets'
+- extendedWaitUntil:
+    visible:
+      id: 'line-preset-edit-O Line'
+    timeout: 5000
+- assertVisible: '6 players'
+
+- takeScreenshot:
+    path: .maestro/screenshots/line-presets

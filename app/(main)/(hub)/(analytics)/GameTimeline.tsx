@@ -117,6 +117,9 @@ export default function GameTimelineScreen() {
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          testID="game-timeline-back"
           style={[styles.backButton, { backgroundColor: palette.overlay10 }]}
           hitSlop={12}>
           <MaterialCommunityIcons

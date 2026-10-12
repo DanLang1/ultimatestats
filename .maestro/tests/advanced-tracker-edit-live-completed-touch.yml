@@ -2,6 +2,7 @@ appId: com.langdk.ultimatestats.dev
 # Verifies correction through the loaded live-game timeline.
 name: Advanced Tracker Edit Live Completed Touch
 tags:
+  - advanced
   - extended
 ---
 - runFlow:

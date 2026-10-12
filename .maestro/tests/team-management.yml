@@ -1,0 +1,111 @@
+appId: com.langdk.ultimatestats.dev
+name: Team Management
+tags:
+  - team
+---
+# Rename the current team, create a second team with its own roster, switch between teams from
+# the roster screen, and delete the extra team. Rosters stay isolated per team.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn: 'Manage Team'
+- extendedWaitUntil:
+    visible: 'ZOBOOMAFOO'
+    timeout: 5000
+
+# Rename (the field autofocuses with the current name).
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-rename'
+- extendedWaitUntil:
+    visible: 'Rename Team'
+    timeout: 5000
+- eraseText
+- inputText: 'Hammers'
+- tapOn: 'Save'
+- extendedWaitUntil:
+    visible: 'HAMMERS'
+    timeout: 5000
+- assertVisible:
+    id: 'player-chip-Joe'
+
+# Create a second team; it starts empty and becomes the current team.
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-new'
+- extendedWaitUntil:
+    visible: 'New Team'
+    timeout: 5000
+- inputText: 'Maestro Rookies'
+- tapOn: 'Create'
+- extendedWaitUntil:
+    visible: 'MAESTRO ROOKIES'
+    timeout: 5000
+- assertVisible: 'No players yet'
+- tapOn:
+    id: 'roster-add-player-input'
+- inputText: 'Ana'
+- tapOn:
+    id: 'roster-add-player-button'
+- extendedWaitUntil:
+    visible:
+      id: 'player-chip-Ana'
+    timeout: 5000
+- hideKeyboard
+
+# Switch back to the renamed seed team; its roster is unchanged and has no Ana.
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-switch'
+- extendedWaitUntil:
+    visible:
+      id: 'team-select-maestro-seed-team'
+    timeout: 5000
+- tapOn:
+    id: 'team-select-maestro-seed-team'
+- extendedWaitUntil:
+    visible: 'HAMMERS'
+    timeout: 5000
+- assertVisible:
+    id: 'player-chip-Joe'
+- assertNotVisible:
+    id: 'player-chip-Ana'
+
+# Manage Team from the Dashboard reopens the renamed current team.
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+- tapOn: 'Manage Team'
+- extendedWaitUntil:
+    visible: 'HAMMERS'
+    timeout: 5000
+
+# Delete Maestro Rookies from the team switcher.
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-switch'
+- extendedWaitUntil:
+    visible: '.*Maestro Rookies.*'
+    timeout: 5000
+- tapOn: 'Delete Maestro Rookies'
+- extendedWaitUntil:
+    visible: 'Delete Team'
+    timeout: 5000
+- tapOn:
+    id: 'team-delete-confirm'
+- extendedWaitUntil:
+    visible: 'No other teams saved yet'
+    timeout: 5000
+- tapOn:
+    id: 'team-management-close'
+- extendedWaitUntil:
+    notVisible: 'Switch Team'
+    timeout: 5000
+- assertVisible: 'HAMMERS'
+
+- takeScreenshot:
+    path: .maestro/screenshots/team-management

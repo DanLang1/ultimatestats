@@ -43,7 +43,8 @@ export default function RosterBulkActions({
             styles.pillShadow,
             { backgroundColor: fmpColor, shadowColor: palette.shadow },
           ]}
-          onPress={() => onSetMatching('fmp')}>
+          onPress={() => onSetMatching('fmp')}
+          testID="roster-bulk-fmp">
           <ThemedText style={[styles.actionPillText, { color: palette.textOnAccent }]}>
             FMP
           </ThemedText>
@@ -54,7 +55,8 @@ export default function RosterBulkActions({
             styles.pillShadow,
             { backgroundColor: mmpColor, shadowColor: palette.shadow },
           ]}
-          onPress={() => onSetMatching('mmp')}>
+          onPress={() => onSetMatching('mmp')}
+          testID="roster-bulk-mmp">
           <ThemedText style={[styles.actionPillText, { color: palette.textOnAccent }]}>
             MMP
           </ThemedText>
@@ -74,7 +76,8 @@ export default function RosterBulkActions({
               shadowColor: palette.shadow,
             },
           ]}
-          onPress={() => onSetRole('handler')}>
+          onPress={() => onSetRole('handler')}
+          testID="roster-bulk-handler">
           <MaterialCommunityIcons
             name="bullseye-arrow"
             size={iconSize}
@@ -95,7 +98,8 @@ export default function RosterBulkActions({
               shadowColor: palette.shadow,
             },
           ]}
-          onPress={() => onSetRole('hybrid')}>
+          onPress={() => onSetRole('hybrid')}
+          testID="roster-bulk-hybrid">
           <MaterialCommunityIcons
             name="star-three-points"
             size={iconSize}
@@ -116,7 +120,8 @@ export default function RosterBulkActions({
               shadowColor: palette.shadow,
             },
           ]}
-          onPress={() => onSetRole('cutter')}>
+          onPress={() => onSetRole('cutter')}
+          testID="roster-bulk-cutter">
           <MaterialCommunityIcons name="shoe-print" size={iconSize} color={palette.textInverse} />
           <ThemedText style={[styles.actionPillText, { color: palette.textInverse }]}>
             Cutter

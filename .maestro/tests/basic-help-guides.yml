@@ -1,0 +1,90 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Help Guides
+tags:
+  - basic
+  - extended
+---
+# Help -> Basic Scoreboard Guide and Basic Stats Guide, each completed and returned to Dashboard.
+- runFlow: ../flows/setup-team-dashboard.yaml
+
+# The Help row starts underneath the tab bar.
+- swipe:
+    start: '50%,70%'
+    end: '50%,40%'
+- tapOn:
+    id: 'dashboard-help-button'
+- tapOn: '.*Basic Scoreboard Guide.*'
+
+# Scoreboard guide: score, undo, start the clock, use a timeout.
+- extendedWaitUntil:
+    visible: 'Tap either side to score'
+    timeout: 5000
+- tapOn: 'Score for USA'
+- extendedWaitUntil:
+    visible: 'Undo Mistakes'
+    timeout: 5000
+- tapOn:
+    id: 'scoreboard-undo'
+- extendedWaitUntil:
+    visible: 'Game Timer'
+    timeout: 5000
+- tapOn:
+    id: 'scoreboard-clock-toggle'
+- extendedWaitUntil:
+    visible: 'Track Timeouts'
+    timeout: 5000
+- tapOn: 'Use timeout 1 for Canada'
+- extendedWaitUntil:
+    visible: 'Basics Complete!'
+    timeout: 5000
+- tapOn: '.*Return Home.*'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+
+# Stats guide: start the point, record a block, then a goal with scorer and assist.
+- swipe:
+    start: '50%,70%'
+    end: '50%,40%'
+- tapOn:
+    id: 'dashboard-help-button'
+- tapOn: '.*Basic Stats Guide.*'
+- tapOn:
+    id: 'stats-tutorial-start'
+- extendedWaitUntil:
+    visible: '.*START POINT'
+    timeout: 5000
+- tapOn: '.*START POINT'
+- extendedWaitUntil:
+    visible: '.*BLOCK'
+    timeout: 5000
+- tapOn: '.*BLOCK'
+- extendedWaitUntil:
+    visible: 'Who made the block?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Groom'
+- extendedWaitUntil:
+    visible: ".*Tap USA's side to score."
+    timeout: 5000
+- tapOn: 'Score for USA'
+- extendedWaitUntil:
+    visible: 'Who Scored\?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Helton'
+- extendedWaitUntil:
+    visible: 'Who Assisted\?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Trop'
+- extendedWaitUntil:
+    visible: 'Stats Tutorial Complete!'
+    timeout: 5000
+- tapOn: '.*Return Home.*'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-help-guides

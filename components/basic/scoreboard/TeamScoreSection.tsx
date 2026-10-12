@@ -9,6 +9,7 @@ import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 interface TeamScoreSectionProps {
   teamName: string;
   score: number;
+  scoreTestID: string;
   onIncrement: () => void;
   textColor: string;
   backgroundColor: string;
@@ -34,6 +35,7 @@ const TIMEOUT_HIT_SLOP = {
 export default function TeamScoreSection({
   teamName,
   score,
+  scoreTestID,
   onIncrement,
   textColor,
   backgroundColor,
@@ -117,7 +119,7 @@ export default function TeamScoreSection({
             isCompactVertical={isCompactVertical}
           />
         </View>
-        <View pointerEvents="none">
+        <View pointerEvents="none" testID={scoreTestID} accessible>
           <ScoreDisplay
             bgColor={backgroundColor}
             textColor={textColor}

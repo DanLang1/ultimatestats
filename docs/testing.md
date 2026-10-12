@@ -72,12 +72,13 @@ npm run ios
 npm run maestro:smoke
 ```
 
-The Maestro suite is intentionally concentrated on advanced tracking, where menus, modal
-transitions, and long action sequences benefit most from device-level coverage. Run the default
-single-simulator suite with `npm run maestro`; it uses the fast test-only seed route for most flows
-and keeps one UI setup smoke test for the real Dashboard → New Game → line/pull path. Seeding avoids
-retesting setup in every scenario, but everything after the seed still runs through the installed
-app's real UI and navigation.
+The Maestro suite is concentrated on advanced tracking, where menus, modal transitions, and long
+action sequences benefit most from device-level coverage, plus one or two flows per basic-game and
+team-management journey (tagged `basic` and `team`). Run the default single-simulator suite with
+`npm run maestro`; it uses the fast test-only seed route for most flows and keeps UI setup flows for
+the real Dashboard → New Game paths (`advanced-tracker-ui-setup.yml`, `basic-game-full-cycle.yml`,
+`basic-line-calling.yml`). Seeding avoids retesting setup in every scenario, but everything after
+the seed still runs through the installed app's real UI and navigation.
 
 Each seeded flow resets and recreates its own team/game state, so tests remain independent without
 clearing the app's persisted data between flows. Reusable seed flows restart the app with
@@ -111,6 +112,34 @@ for ticks between reads.
 The default suite excludes the `extended` multi-point scenarios to keep feedback fast. Use
 `npm run maestro:all` to include them all.
 
+Basic and team seed modes:
+
+- `mode=team` lands on Dashboard with team Zoboomafoo (seven unset players), no active game, basic
+  stat tracking on, and the seed team's saved basic games removed (`setup-team-dashboard.yaml`).
+- `mode=basicCancelPendingGoal` lands on a live basic Scoreboard at 0-0, game to 2, with one team 1
+  timeout used (`setup-basic-game.yaml`).
+- `mode=basicSavedGame` lands on a saved 2-1 basic game against Rivals with known turnovers,
+  goals, and point lines (`setup-basic-saved-game.yaml`).
+
+Every seed except `mode=onboarding` marks onboarding as seen, so flows that relaunch the app
+(`launchApp` mid-flow) re-enter through `/` to the active game or Dashboard even if an earlier
+onboarding flow was interrupted. Every seed deletes saved teams whose names start with `Maestro `
+(`MAESTRO_CREATED_TEAM_PREFIX`).
+Flows that create teams must use that prefix so a failed run cannot leak a team into later runs;
+other saved teams on the simulator are left alone.
+
+Selector notes learned from the installed app:
+
+- Maestro text matching ignores case, so `'Edit Point 1 Line'` also matches an `Edit point 1 line`
+  button label. Wait on a distinct element when titles and labels collide.
+- `?`, `(`, `)`, and `+` are regex characters in text selectors; escape them (`'Delete Game\?'`).
+- Pressable cards expose their whole label as one element (for example
+  `'<icon>, Game To, 15, <icon>'`); match them with a regex such as `'.*Game To, 15.*'`.
+- Basic box-score rows are wider than the screen. Tap them with an element-relative point
+  (`point: '5%,50%'`) and scroll to them with a lower `visibilityPercentage`.
+- `scrollUntilVisible` with `speed: 80` and without `centerElement` is markedly faster than the
+  defaults; only center when the next tap needs it.
+
 The seed route accepts `bench=true` for single-team injury-substitution scenarios; the extra roster
 players remain off the starting line. Single-team bench seeds also include the nine-player Full squad
 and seven-player Starting line presets. `advanced-tracker-preset-selection.yml` verifies oversized
@@ -123,13 +152,22 @@ exact pause-adjusted analytics durations remain covered by deterministic Jest te
 # Smallest installed-app smoke flow
 npm run maestro:smoke
 
-# Core advanced-tracker device flows; excludes the extended tag
+# Core device flows; excludes the extended tag
 npm run maestro
+
+# Advanced tracker flows, including scrimmage
+npm run maestro:advanced
 
 # Scrimmage setup, dual-side turnovers, and side-perspective stats
 npm run maestro:scrimmage
 
-# Core and extended advanced-tracker device flows
+# Basic scoreboard games: setup, scoring, line calling, timers, timeline, saved stats
+npm run maestro:basic
+
+# Roster, line preset, and team management
+npm run maestro:team
+
+# Core and extended device flows
 npm run maestro:all
 
 # CI-friendly JUnit report and local artifacts

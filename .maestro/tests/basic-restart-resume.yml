@@ -1,0 +1,89 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Game Restart and Resume
+tags:
+  - basic
+---
+# A live basic game survives an app restart (score, possession, undo history), can be resumed
+# from the Dashboard, and honors the Assist First stat-entry preference.
+- runFlow: ../flows/setup-basic-game.yaml
+
+# Mike throws it away, flipping possession to Team 2.
+- tapOn: '.*T/A'
+- extendedWaitUntil:
+    visible: 'Who threw it away?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Mike'
+- extendedWaitUntil:
+    visible: '.*OPP TURN'
+    timeout: 5000
+
+# Restarting the process returns straight to the live scoreboard with Team 2 on offense.
+- launchApp
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 15000
+- assertVisible: '.*OPP TURN'
+- assertVisible:
+    id: 'scoreboard-team1-score'
+    text: '0'
+
+# Undo still works after the restart and gives the disc back to Zoboomafoo.
+- tapOn:
+    id: 'scoreboard-undo'
+- extendedWaitUntil:
+    visible: '.*T/A'
+    timeout: 5000
+
+# Leaving to the Dashboard keeps the game resumable.
+- tapOn:
+    id: 'scoreboard-home-button'
+- extendedWaitUntil:
+    visible:
+      id: 'dashboard-resume-game-button'
+    timeout: 5000
+- tapOn:
+    id: 'dashboard-resume-game-button'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+- assertVisible: '.*T/A'
+
+# Assist First asks for the thrower before the scorer.
+- tapOn:
+    id: 'scoreboard-settings'
+- extendedWaitUntil:
+    visible: 'Assist First'
+    timeout: 5000
+- tapOn: 'Assist First'
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Jon'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Joe'
+# The first goal of a game to 2 is the halftime point.
+- extendedWaitUntil:
+    visible:
+      id: 'halftime-modal-continue'
+    timeout: 5000
+- tapOn:
+    id: 'halftime-modal-continue'
+- extendedWaitUntil:
+    visible:
+      id: 'scoreboard-team1-score'
+      text: '1'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-restart-resume

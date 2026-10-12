@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Scrimmage Correction Preserves Unaffected Injury Sub
 tags:
+  - advanced
   - scrimmage
 ---
 - runFlow:

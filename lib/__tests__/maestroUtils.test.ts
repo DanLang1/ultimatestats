@@ -4,13 +4,21 @@ import { getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import {
   getMaestroSeedPlayerId,
   MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
+  MAESTRO_SEED_BASIC_GAME_ID,
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
-import { MaestroTrackerState, seedAdvancedTrackerTestGame } from '@/lib/maestroUtils';
+import {
+  MaestroTrackerState,
+  seedAdvancedTrackerTestGame,
+  seedMaestroBasicSavedGame,
+  seedMaestroTeamPrerequisites,
+} from '@/lib/maestroUtils';
+import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useTutorialStore } from '@/store/tutorialStore';
 
 describe('seedAdvancedTrackerTestGame tracker state presets', () => {
   beforeEach(async () => {
@@ -119,5 +127,56 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
     expect(currentTeam.id).toBe(MAESTRO_SEED_TEAM_ID);
     expect(game?.sides[0].sourceTeamId).toBe(currentTeam.id);
     expect(currentTeam.roster.map((player) => player.name)).toEqual(MAESTRO_SEED_PLAYERS);
+  });
+});
+
+describe('basic Maestro seeds', () => {
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+    useGameStore.setState({ savedGames: [], savedTeams: [] });
+  });
+
+  it('seeds one saved basic game whose score matches its goal events', async () => {
+    await seedMaestroBasicSavedGame();
+    await seedMaestroBasicSavedGame();
+
+    const savedGames = useGameStore.getState().savedGames;
+    expect(savedGames.map((game) => game.id)).toEqual([MAESTRO_SEED_BASIC_GAME_ID]);
+
+    const [game] = savedGames;
+    expect(game.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(game.team1.id).toBe(MAESTRO_SEED_TEAM_ID);
+    const goals = game.events.filter((event) => event.type === 'goal');
+    expect(goals.filter((goal) => goal.team === 'team1')).toHaveLength(game.team1Score);
+    expect(goals.filter((goal) => goal.team === 'team2')).toHaveLength(game.team2Score);
+    expect(game.events.every((event) => event.gameId === game.id)).toBe(true);
+  });
+
+  it('clears Maestro-owned saved games and teams without touching other data', async () => {
+    await seedMaestroBasicSavedGame();
+    const otherTeam = { id: 'real-team', name: 'Real Team', roster: [] };
+    const otherGame = {
+      ...useGameStore.getState().savedGames[0],
+      id: 'real-game',
+      team1: otherTeam,
+    };
+    useGameStore.setState((state) => {
+      state.savedGames.push(otherGame);
+      state.savedTeams.push(otherTeam, { id: 'leaked', name: 'Maestro Leaked', roster: [] });
+    });
+
+    await seedMaestroTeamPrerequisites({ clearActiveGame: true });
+
+    const { savedGames, savedTeams } = useGameStore.getState();
+    expect(savedGames.map((game) => game.id)).toEqual(['real-game']);
+    expect(savedTeams.map((team) => team.id).sort()).toEqual([MAESTRO_SEED_TEAM_ID, 'real-team']);
+  });
+
+  it('marks onboarding as seen so relaunching flows skip the welcome screen', async () => {
+    useTutorialStore.setState({ hasSeenOnboarding: false });
+
+    await seedMaestroTeamPrerequisites({ clearActiveGame: true });
+
+    expect(useTutorialStore.getState().hasSeenOnboarding).toBe(true);
   });
 });

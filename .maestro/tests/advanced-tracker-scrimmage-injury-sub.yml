@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Scrimmage Injury Sub Progression
 tags:
+  - advanced
   - scrimmage
 ---
 - runFlow:

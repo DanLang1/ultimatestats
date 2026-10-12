@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Scrimmage Stall
 tags:
+  - advanced
   - scrimmage
 ---
 - runFlow:

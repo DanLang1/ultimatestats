@@ -69,7 +69,12 @@ export default function TutorialSettingsBar({
   return (
     <View style={[styles.container, { backgroundColor: barBg, shadowColor: palette.shadow }]}>
       {showPlay && (
-        <Pressable onPress={onPlay} style={styles.iconButton}>
+        <Pressable
+          onPress={onPlay}
+          accessibilityLabel={isPlaying ? 'Pause game clock' : 'Start game clock'}
+          accessibilityRole="button"
+          testID="scoreboard-clock-toggle"
+          style={styles.iconButton}>
           {highlightPlay && (
             <>
               <Animated.View
@@ -113,6 +118,9 @@ export default function TutorialSettingsBar({
       {onUndo && (
         <Pressable
           onPress={onUndo}
+          accessibilityLabel="Undo last action"
+          accessibilityRole="button"
+          testID="scoreboard-undo"
           style={[styles.iconButton, !canUndo && styles.iconButtonDisabled]}
           disabled={!canUndo}>
           {highlightUndo && (

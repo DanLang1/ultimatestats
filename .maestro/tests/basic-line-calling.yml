@@ -1,0 +1,166 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Line Calling
+tags:
+  - basic
+---
+# Basic game with line calling at 5v5: pregame line selection, the player cap, line-limited stat
+# entry, loading the previous point's line, a mid-point injury sub, and correcting a completed
+# point's line from the live timeline.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-basic'
+- extendedWaitUntil:
+    visible: 'BASIC SCOREBOARD'
+    timeout: 5000
+- tapOn: '.*Players, 7v7.*'
+- tapOn:
+    id: 'number-picker-clear'
+- tapOn:
+    id: 'number-picker-key-5'
+- tapOn:
+    id: 'number-picker-save'
+- assertVisible: '.*Players, 5v5.*'
+- tapOn: '.*Line Calling, OFF.*'
+- assertVisible: '.*Line Calling, ON.*'
+- tapOn: 'Zoboomafoo'
+# With line calling on, starting chains into line selection.
+- tapOn: '.*Set Line'
+
+# Point 1 line: confirm stays disabled until five are picked, and a sixth tap is ignored.
+- extendedWaitUntil:
+    visible: 'Set Line'
+    timeout: 5000
+- assertVisible:
+    text: 'Confirm line'
+    enabled: false
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn: 'Confirm line'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# Stat entry only offers players on the current line.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- assertVisible:
+    id: 'player-chip-Kelly'
+- assertNotVisible:
+    id: 'player-chip-Rachel'
+- tapOn:
+    id: 'player-chip-Joe'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Jon'
+
+# Point 2 line selection opens after the goal. Clear it, then reload point 1's line.
+- extendedWaitUntil:
+    visible: 'Point 1'
+    timeout: 5000
+- assertVisible: '.*CLEAN HOLD'
+- assertVisible:
+    id: 'player-chip-Joe'
+    text: 'Joe, 1pt'
+- tapOn:
+    id: 'line-select-clear'
+- assertVisible:
+    text: 'Confirm line'
+    enabled: false
+- tapOn:
+    id: 'line-select-load-line'
+- extendedWaitUntil:
+    visible: 'Load Line'
+    timeout: 5000
+- tapOn:
+    id: 'line-select-recent-1'
+- extendedWaitUntil:
+    notVisible: 'Load Line'
+    timeout: 5000
+- assertVisible:
+    id: 'line-select-load-line'
+    text: 'Choose line, Pt 1'
+- tapOn: 'Confirm line'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# Mid-point injury sub: Rachel replaces Kelly.
+- tapOn:
+    id: 'scoreboard-edit-line'
+- extendedWaitUntil:
+    visible: 'Edit Line · Point 2'
+    timeout: 5000
+- tapOn: 'Injury Sub'
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn: 'Confirm line'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# Team 2 scores; skipping point 3's line selection returns to the scoreboard.
+- tapOn: 'Score for Team 2'
+- extendedWaitUntil:
+    visible:
+      id: 'line-select-load-line'
+    timeout: 5000
+- tapOn: 'Skip line selection'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# The live timeline shows each point's line and the injury substitution.
+- tapOn:
+    id: 'scoreboard-home-button'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+- tapOn: 'Game Timeline'
+- extendedWaitUntil:
+    visible: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'GOAL, Joe'
+- assertVisible: 'SUB'
+- assertVisible: 'INJ'
+
+# Correct point 1's line: Joel actually played instead of Kelly.
+- tapOn:
+    id: 'edit-point-line-1'
+- extendedWaitUntil:
+    visible: 'Edit Point 1 Line'
+    timeout: 5000
+- assertVisible:
+    text: '.*Save Line'
+    enabled: false
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn: '.*Save Line'
+# The sheet title also matches the footer's "Edit point 1 line" button (Maestro text matching
+# ignores case), so wait on the sheet's save button instead.
+- extendedWaitUntil:
+    notVisible: '.*Save Line'
+    timeout: 5000
+- assertVisible: 'Joel'
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-line-calling

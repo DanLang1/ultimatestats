@@ -56,7 +56,12 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   return (
     <View style={[styles.container, { backgroundColor: barBg, shadowColor: palette.shadow }]}>
       {/* Play/Pause */}
-      <Pressable onPress={toggleTimer} style={styles.iconButton}>
+      <Pressable
+        onPress={toggleTimer}
+        style={styles.iconButton}
+        accessibilityLabel={isActive ? 'Pause game clock' : 'Start game clock'}
+        accessibilityRole="button"
+        testID="scoreboard-clock-toggle">
         <MaterialCommunityIcons
           name={isActive ? 'pause' : 'play'}
           size={iconSize}
@@ -86,24 +91,42 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
-        <Pressable onPress={() => router.push('/ViewStats')} style={styles.iconButton}>
+        <Pressable
+          onPress={() => router.push('/ViewStats')}
+          style={styles.iconButton}
+          accessibilityLabel="View stats"
+          accessibilityRole="button"
+          testID="scoreboard-view-stats">
           <MaterialCommunityIcons name="chart-bar" size={iconSize} color={barContentColor} />
         </Pressable>
       )}
 
       {/* Info */}
-      <Pressable onPress={() => router.push('/GameInfo')} style={styles.iconButton}>
+      <Pressable
+        onPress={() => router.push('/GameInfo')}
+        style={styles.iconButton}
+        accessibilityLabel="Game info"
+        accessibilityRole="button"
+        testID="scoreboard-game-info">
         <MaterialCommunityIcons name="information" size={iconSize} color={barContentColor} />
       </Pressable>
 
       {/* Settings */}
-      <Pressable onPress={() => router.push('/Settings')} style={styles.iconButton}>
+      <Pressable
+        onPress={() => router.push('/Settings')}
+        style={styles.iconButton}
+        accessibilityLabel="Settings"
+        accessibilityRole="button"
+        testID="scoreboard-settings">
         <MaterialCommunityIcons name="cog" size={iconSize} color={barContentColor} />
       </Pressable>
 
       {/* Undo */}
       <Pressable
         onPress={onUndo}
+        accessibilityLabel="Undo last action"
+        accessibilityRole="button"
+        testID="scoreboard-undo"
         style={[styles.iconButton, !canUndo && styles.iconButtonDisabled]}
         disabled={!canUndo}>
         <MaterialCommunityIcons name="undo" size={iconSize} color={barContentColor} />

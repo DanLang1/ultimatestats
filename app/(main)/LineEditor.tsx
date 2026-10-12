@@ -340,6 +340,9 @@ export default function LineEditor() {
           {selectedIds.length > 0 && (
             <Pressable
               onPress={handleClearSelection}
+              accessibilityLabel="Clear selection"
+              accessibilityRole="button"
+              testID="line-select-clear"
               style={({ pressed }) => [
                 styles.clearBtn,
                 { borderColor: palette.overlay15 },

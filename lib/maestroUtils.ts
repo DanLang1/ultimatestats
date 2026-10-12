@@ -2,13 +2,16 @@ import { getDefaultHalftimeTimerState } from '@/lib/advancedTracking/halftimeTim
 import type { AdvancedGameType, Participant, PlayerRef } from '@/lib/advancedTracking/types';
 import {
   getMaestroSeedPlayerId,
+  MAESTRO_CREATED_TEAM_PREFIX,
+  MAESTRO_SEED_BASIC_GAME_ID,
   MAESTRO_SEED_GAME_ID,
   MAESTRO_SEED_PLAYERS,
   MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
-import type { SavedTeam } from '@/lib/storage/types';
+import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
+import type { GameEvent, PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -143,6 +146,8 @@ function resetMaestroSetupState(team: SavedTeam) {
     state.baseGameTo = 15;
     state.team1Timeouts = [true, true];
     state.team2Timeouts = [true, true];
+    state.statTrackingEnabled = true;
+    state.pointTimerEnabled = false;
 
     const savedTeamIndex = state.savedTeams.findIndex((savedTeam) => savedTeam.id === team.id);
     if (savedTeamIndex === -1) {
@@ -172,9 +177,102 @@ export async function seedMaestroTeamPrerequisites(
     await clearAdvancedGames();
     useGameStore.getState().resetGame();
     useGameSessionStore.getState().clearActiveGame();
+    await clearSeedTeamSavedBasicGames();
   }
+  clearMaestroCreatedTeams();
 
-  useTutorialStore.getState().completeAdvancedTutorial();
+  // Flows that relaunch the app re-enter through `/`, which routes to onboarding until it is
+  // seen; completing it here keeps an interrupted onboarding flow from leaking into later flows.
+  useTutorialStore.getState().completeAdvancedOnboarding();
+  useTutorialStore.getState().closeStatsTutorial();
+}
+
+// Basic flows save finished games for the seed team; drop them so each flow starts with the same
+// saved-games list instead of accumulating games across runs.
+async function clearSeedTeamSavedBasicGames() {
+  const seedGameIds = useGameStore
+    .getState()
+    .savedGames.filter((game) => game.team1.id === MAESTRO_SEED_TEAM_ID)
+    .map((game) => game.id);
+  if (seedGameIds.length === 0) return;
+
+  await useGameStore.getState().deleteSavedGames(seedGameIds);
+}
+
+// Flows that create teams name them with this prefix so a failed run cannot leak a team into
+// later runs; other saved teams on the simulator are left alone.
+function clearMaestroCreatedTeams() {
+  useGameStore.setState((state) => {
+    state.savedTeams = state.savedTeams.filter(
+      (team) => !team.name.startsWith(MAESTRO_CREATED_TEAM_PREFIX),
+    );
+  });
+}
+
+function buildSeedBasicSavedGame(team: SavedTeam): SavedGame {
+  const playerId = getMaestroSeedPlayerId;
+  const startedAt = Date.now() - 60 * 60 * 1000;
+  // Point 1: Mike throws it away, Kelly blocks, Joe scores from Jon.
+  // Point 2: the opponent scores. Point 3: Molly scores from Rachel to win 2-1.
+  const events: GameEvent[] = [
+    {
+      type: 'turnover',
+      team: 'team1',
+      subtype: 'throwaway',
+      playerId: playerId('Mike'),
+      pointNumber: 1,
+    },
+    {
+      type: 'turnover',
+      team: 'team1',
+      subtype: 'block',
+      playerId: playerId('Kelly'),
+      pointNumber: 1,
+    },
+    {
+      type: 'goal',
+      team: 'team1',
+      goalPlayerId: playerId('Joe'),
+      assistPlayerId: playerId('Jon'),
+      pointNumber: 1,
+    },
+    { type: 'goal', team: 'team2', goalPlayerId: null, assistPlayerId: null, pointNumber: 2 },
+    {
+      type: 'goal',
+      team: 'team1',
+      goalPlayerId: playerId('Molly'),
+      assistPlayerId: playerId('Rachel'),
+      pointNumber: 3,
+    },
+  ];
+  const lineIds = MAESTRO_SEED_PLAYERS.map(playerId);
+  const pointLines: PointLineRecord[] = [1, 2, 3].map((pointNumber) => ({
+    pointNumber,
+    playerIds: lineIds,
+    timestamp: startedAt + pointNumber * 60 * 1000,
+  }));
+
+  return {
+    id: MAESTRO_SEED_BASIC_GAME_ID,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    createdAt: startedAt,
+    team1: team,
+    team2Name: 'Rivals',
+    team1Score: 2,
+    team2Score: 1,
+    events: events.map((event) => ({ ...event, gameId: MAESTRO_SEED_BASIC_GAME_ID })),
+    autoHalftimeEnabled: false,
+    gameTo: 2,
+    startingPossession: 'team1',
+    pointLines,
+  };
+}
+
+export async function seedMaestroBasicSavedGame() {
+  await seedMaestroTeamPrerequisites({ clearActiveGame: true });
+  const team = buildSeedTeam();
+  await useGameStore.getState().importGame(buildSeedBasicSavedGame(team));
+  return MAESTRO_SEED_BASIC_GAME_ID;
 }
 
 export async function seedMaestroBasicCancelPendingGoalScenario() {

@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker View Stats Mid-Point
+tags:
+  - advanced
 ---
 - runFlow:
     file: ../flows/setup-game.yaml
@@ -37,14 +39,14 @@ name: Advanced Tracker View Stats Mid-Point
     element:
       id: 'advanced-throw-types-card'
     direction: DOWN
-    centerElement: true
+    speed: 80
 - assertVisible:
     text: 'HUCKS'
 - scrollUntilVisible:
     element:
       id: 'advanced-stats-group-types'
     direction: DOWN
-    centerElement: true
+    speed: 80
 - tapOn:
     id: 'advanced-stats-group-types'
 - assertVisible:
@@ -58,7 +60,7 @@ name: Advanced Tracker View Stats Mid-Point
     element:
       id: 'advanced-stats-row-joe'
     direction: DOWN
-    centerElement: true
+    speed: 80
 
 # Tap the player row for detail
 - tapOn:
@@ -72,7 +74,7 @@ name: Advanced Tracker View Stats Mid-Point
     element:
       id: 'advanced-player-throw-types-card'
     direction: DOWN
-    centerElement: true
+    speed: 80
 - assertVisible:
     text: 'HUCK THROWING'
 - assertVisible:

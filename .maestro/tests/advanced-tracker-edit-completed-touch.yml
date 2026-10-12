@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Edit Completed Touch
 tags:
+  - advanced
   - extended
 ---
 - runFlow:

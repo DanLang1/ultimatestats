@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Red Zone Anonymous Injury Cleanup on Undo
+tags:
+  - advanced
 ---
 - launchApp
 - openLink: ultimatestats-dev:///__maestro_seed__?trackerState=focusPossession&bench=true

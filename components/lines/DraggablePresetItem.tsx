@@ -147,6 +147,9 @@ export function DraggablePresetItem({
       <View style={styles.actions}>
         <Pressable
           onPress={() => onEditPreset(preset)}
+          accessibilityLabel={`Edit ${preset.name}`}
+          accessibilityRole="button"
+          testID={`line-preset-edit-${preset.name}`}
           style={({ pressed }) => [
             styles.actionBtn,
             { backgroundColor: palette.overlay05 },
@@ -161,6 +164,9 @@ export function DraggablePresetItem({
         </Pressable>
         <Pressable
           onPress={() => onDeletePreset(preset)}
+          accessibilityLabel={`Delete ${preset.name}`}
+          accessibilityRole="button"
+          testID={`line-preset-delete-${preset.name}`}
           style={({ pressed }) => [
             styles.actionBtn,
             { backgroundColor: palette.dangerOverlay15 },

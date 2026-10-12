@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Defense Actions
 tags:
+  - advanced
   - extended
 ---
 - runFlow:

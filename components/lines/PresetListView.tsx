@@ -36,7 +36,13 @@ export function PresetListView({
     <View style={[styles.container, { backgroundColor: palette.primary, paddingTop: 16 }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={onClose} style={styles.backButton} hitSlop={12}>
+        <Pressable
+          onPress={onClose}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          testID="line-presets-back"
+          style={styles.backButton}
+          hitSlop={12}>
           <MaterialCommunityIcons
             name="arrow-left"
             size={scaleBySizeClass(24, sizeClass)}
@@ -49,6 +55,9 @@ export function PresetListView({
         <View style={styles.headerActions}>
           <Pressable
             onPress={onCreateNew}
+            accessibilityLabel="New preset"
+            accessibilityRole="button"
+            testID="line-presets-create"
             style={[styles.addButton, { backgroundColor: palette.accent }]}>
             <MaterialCommunityIcons
               name="plus"

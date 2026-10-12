@@ -72,7 +72,12 @@ export default function TutorialStatTeamScoreSection({
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <Pressable onPress={handleTap} style={styles.scoreTapArea} />
+      <Pressable
+        accessibilityLabel={`Score for ${teamName}`}
+        accessibilityRole="button"
+        onPress={handleTap}
+        style={styles.scoreTapArea}
+      />
 
       <View
         pointerEvents="box-none"

@@ -208,6 +208,25 @@ export default defineConfig({
       },
     },
     {
+      files: ['app/(modals)/**/*.tsx'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              ...RESTRICTED_IMPORTS,
+              {
+                name: '@/components/ui/AlertProvider',
+                importNames: ['useAlert'],
+                message:
+                  "showAlert's root <Modal> cannot present over a modal route on iOS and keeps swallowing touches. Confirm inside the sheet instead (see docs/ui-patterns.md).",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       files: ['hooks/useLayout.ts'],
       rules: {
         'no-restricted-imports': [

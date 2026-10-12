@@ -40,6 +40,9 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
           <Pressable
             style={[styles.closeButton, { backgroundColor: palette.overlay10 }]}
             onPress={onClose}
+            accessibilityLabel="Close"
+            accessibilityRole="button"
+            testID="alert-modal-close"
             hitSlop={8}>
             <MaterialCommunityIcons
               name="close"

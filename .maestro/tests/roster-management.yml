@@ -1,0 +1,150 @@
+appId: com.langdk.ultimatestats.dev
+name: Roster Management
+tags:
+  - team
+---
+# Manage Team: add a player, reject a duplicate, edit name/number/matching/role, bulk-assign
+# matching and role, filter by role, deactivate from the cards view, and delete a player.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn: 'Manage Team'
+- extendedWaitUntil:
+    visible: 'ZOBOOMAFOO'
+    timeout: 5000
+- assertVisible:
+    id: 'player-chip-Rachel'
+
+# Add a player; adding an existing name (case-insensitive) is rejected.
+- tapOn:
+    id: 'roster-add-player-input'
+- inputText: 'Zed'
+- tapOn:
+    id: 'roster-add-player-button'
+- extendedWaitUntil:
+    visible:
+      id: 'player-chip-Zed'
+    timeout: 5000
+- inputText: 'joe'
+- tapOn:
+    id: 'roster-add-player-button'
+- assertVisible: 'joe is already on your team'
+- eraseText
+- hideKeyboard
+
+# Edit the new player in the player sheet.
+- tapOn:
+    id: 'player-chip-Zed'
+- extendedWaitUntil:
+    visible: 'Edit Player'
+    timeout: 5000
+- tapOn:
+    id: 'edit-player-name-input'
+- eraseText
+- inputText: 'Zeke'
+- tapOn:
+    id: 'edit-player-number-input'
+- inputText: '12'
+# Tapping the section label dismisses the number pad without leaving the sheet.
+- tapOn: 'Matching preference'
+- tapOn: 'FMP'
+- tapOn: '.*Handler'
+- tapOn:
+    id: 'edit-player-save'
+- extendedWaitUntil:
+    notVisible: 'Edit Player'
+    timeout: 5000
+# Chips group by matching type and show the number.
+- assertVisible:
+    id: 'player-chip-Zeke'
+    text: 'Zeke, #12'
+- assertNotVisible:
+    id: 'player-chip-Zed'
+- assertVisible: 'FMP'
+
+# Bulk mode applies matching type and role to every selected player.
+- tapOn:
+    id: 'roster-bulk-toggle'
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- assertVisible: '2 selected'
+- tapOn:
+    id: 'roster-bulk-fmp'
+- tapOn:
+    id: 'roster-bulk-handler'
+- tapOn:
+    id: 'roster-bulk-done'
+- assertVisible:
+    id: 'roster-bulk-toggle'
+
+# The handler filter shows only the three handlers.
+- tapOn:
+    id: 'roster-role-filter-handler'
+- assertVisible:
+    id: 'player-chip-Joe'
+- assertVisible:
+    id: 'player-chip-Jon'
+- assertVisible:
+    id: 'player-chip-Zeke'
+- assertNotVisible:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'roster-role-filter-handler'
+- assertVisible:
+    id: 'player-chip-Mike'
+
+# Delete Zeke from the player sheet's inline confirmation.
+- tapOn:
+    id: 'player-chip-Zeke'
+- extendedWaitUntil:
+    visible: 'Edit Player'
+    timeout: 5000
+- tapOn:
+    id: 'edit-player-delete'
+- extendedWaitUntil:
+    visible: 'Delete Zeke\?'
+    timeout: 5000
+- tapOn: 'Delete'
+- extendedWaitUntil:
+    notVisible:
+      id: 'player-chip-Zeke'
+    timeout: 5000
+- assertVisible:
+    id: 'player-chip-Joe'
+
+# Cards view: deactivating Joe moves him to the Inactive group.
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-toggle-view'
+- extendedWaitUntil:
+    visible:
+      id: 'quick-edit-active-maestro-seed-player-joe'
+    timeout: 5000
+- tapOn:
+    id: 'quick-edit-active-maestro-seed-player-joe'
+# Inactive players sort below every active card.
+- scrollUntilVisible:
+    element: 'INACTIVE'
+    direction: DOWN
+    speed: 80
+- scrollUntilVisible:
+    element:
+      id: 'quick-edit-active-maestro-seed-player-joe'
+      text: '0'
+    direction: DOWN
+    speed: 80
+
+# Back in chips view, Joe is listed under Inactive with the rest of the roster above.
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-toggle-view'
+- assertVisible: 'INACTIVE'
+- assertVisible:
+    id: 'player-chip-Joe'
+- assertVisible:
+    id: 'player-chip-Mike'
+
+- takeScreenshot:
+    path: .maestro/screenshots/roster-management

@@ -1,0 +1,126 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Saved Game Timeline Edits
+tags:
+  - basic
+  - extended
+---
+# Corrects a saved basic game from its timeline (turnover type/player, goal scorer, assist),
+# verifies a dismissed editor leaves the event unchanged, deletes a turnover through the in-sheet
+# confirmation, then deletes the saved game.
+- runFlow: ../flows/setup-basic-saved-game.yaml
+- assertVisible: '2 - 1'
+- tapOn:
+    id: 'header-actions-menu'
+- tapOn: '.*Timeline'
+- extendedWaitUntil:
+    visible: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'Zoboomafoo vs Rivals'
+
+# Turnover: Mike's throwaway becomes Joel's drop.
+- longPressOn: 'THROWAWAY, Mike'
+- extendedWaitUntil:
+    visible: 'Edit Event'
+    timeout: 5000
+- tapOn: 'Drop'
+- tapOn:
+    id: 'player-chip-Joel'
+- tapOn: 'Save event changes'
+- extendedWaitUntil:
+    visible: 'DROP, Joel'
+    timeout: 5000
+- assertNotVisible: 'THROWAWAY, Mike'
+
+# Goal scorer: Joe becomes Mike; the assist is unchanged.
+- longPressOn: 'GOAL, Joe'
+- extendedWaitUntil:
+    visible: 'Edit Goal'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn: 'Save event changes'
+- extendedWaitUntil:
+    visible: 'GOAL, Mike'
+    timeout: 5000
+- assertVisible: 'ASSIST, Jon'
+
+# Assist: Rachel becomes Kelly.
+- longPressOn: 'ASSIST, Rachel'
+- extendedWaitUntil:
+    visible: 'Edit Assist'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn: 'Save event changes'
+- extendedWaitUntil:
+    visible: 'ASSIST, Kelly'
+    timeout: 5000
+- assertVisible: 'GOAL, Molly'
+
+# Closing the editor without saving discards the draft selection.
+- longPressOn: 'BLOCK, Kelly'
+- extendedWaitUntil:
+    visible: 'Edit Event'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Rachel'
+- tapOn: 'Close event editor'
+- extendedWaitUntil:
+    notVisible: 'Edit Event'
+    timeout: 5000
+- assertVisible: 'BLOCK, Kelly'
+- assertNotVisible: 'BLOCK, Rachel'
+
+# Deleting a turnover confirms inside the sheet (a root alert modal cannot present over this
+# modal route on iOS and used to leave an invisible layer swallowing every later touch).
+- longPressOn: 'BLOCK, Kelly'
+- extendedWaitUntil:
+    visible: 'Edit Event'
+    timeout: 5000
+- tapOn: 'Delete event'
+- extendedWaitUntil:
+    visible: 'Delete this block by Kelly\?'
+    timeout: 5000
+- tapOn:
+    id: 'edit-event-delete-confirm'
+- extendedWaitUntil:
+    notVisible: 'Delete Event\?'
+    timeout: 5000
+- assertNotVisible: 'BLOCK, Kelly'
+
+# Back still responds after the delete, and edits persist: reopening the timeline shows them.
+- tapOn:
+    id: 'game-timeline-back'
+- extendedWaitUntil:
+    visible: 'SAVED GAME'
+    timeout: 5000
+- tapOn:
+    id: 'header-actions-menu'
+- tapOn: '.*Timeline'
+- extendedWaitUntil:
+    visible: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'DROP, Joel'
+- assertVisible: 'GOAL, Mike'
+- assertVisible: 'ASSIST, Kelly'
+- assertNotVisible: 'BLOCK, Kelly'
+
+# Deleting the saved game returns to an empty saved-games list.
+- tapOn:
+    id: 'game-timeline-back'
+- extendedWaitUntil:
+    visible: 'SAVED GAME'
+    timeout: 5000
+- tapOn:
+    id: 'header-actions-menu'
+- tapOn: '.*Delete'
+- extendedWaitUntil:
+    visible: 'Delete Game\?'
+    timeout: 5000
+- tapOn: 'Delete'
+- extendedWaitUntil:
+    visible: 'SAVED GAMES'
+    timeout: 5000
+- assertNotVisible: '.*Rivals.*'
+- takeScreenshot:
+    path: .maestro/screenshots/basic-timeline-edit

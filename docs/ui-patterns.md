@@ -47,6 +47,13 @@ For transparent modal routes:
    `presentation: 'transparentModal'`
    `contentStyle: { backgroundColor: 'transparent' }`
 4. Use `router.dismissTo(...)` for deterministic exits.
+5. Never call `showAlert` (`components/ui/AlertProvider.tsx`) from a modal route. Its root RN
+   `<Modal>` cannot present over an Expo Router modal on iOS; it stays invisible and keeps
+   swallowing touches after the route closes. Confirm inside the sheet instead (a
+   `confirmingDelete` state that swaps the sheet body), as in `EditPlayerModal.tsx`,
+   `TeamManagementModal.tsx`, and `EditEventModal.tsx`. oxlint rejects importing `useAlert` in
+   `app/(modals)/`; it cannot see indirect calls, so keep `showAlert` out of hooks and
+   components that modal routes render.
 
 For screens and bottom sheets with text input, use `KeyboardAvoidingView` from
 `react-native-keyboard-controller` with `automaticOffset`; the root `KeyboardProvider` is configured

@@ -1,0 +1,79 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Gender Ratio Tracking
+tags:
+  - basic
+---
+# Gender ratio (Ratio Rule A / ABBA) in a basic game: the pregame requires a starting ratio and the
+# scoreboard indicator advances F2 -> M1 -> M2 with each point and rewinds on undo.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-basic'
+- extendedWaitUntil:
+    visible: 'BASIC SCOREBOARD'
+    timeout: 5000
+- tapOn: '.*Gender Ratio, OFF.*'
+- assertVisible: 'STARTING GENDER RATIO'
+- tapOn: 'Zoboomafoo'
+# Choosing who receives is not enough; the starting ratio is also required.
+- assertVisible:
+    text: '.*Start Game'
+    enabled: false
+- tapOn: 'FMP Majority'
+- tapOn: '.*Start Game'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# Point 1 is the second half of the opening pair.
+- assertVisible: 'F2'
+- tapOn: 'F2'
+- extendedWaitUntil:
+    visible: 'Ratio Rule A \(ABBA\)'
+    timeout: 5000
+- tapOn:
+    id: 'alert-modal-close'
+- extendedWaitUntil:
+    notVisible: 'Ratio Rule A \(ABBA\)'
+    timeout: 5000
+
+# An unattributed throwaway, then Team 2 scores: point 2 switches to men's majority.
+- tapOn: '.*T/A'
+- extendedWaitUntil:
+    visible: 'Who threw it away?'
+    timeout: 5000
+- tapOn: 'Unknown'
+- extendedWaitUntil:
+    visible: '.*OPP TURN'
+    timeout: 5000
+- tapOn: 'Score for Team 2'
+- extendedWaitUntil:
+    visible: 'M1'
+    timeout: 5000
+
+# Zoboomafoo scores: point 3 keeps men's majority.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn: 'Unknown'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    text: 'Unknown'
+    rightOf: 'Back'
+- extendedWaitUntil:
+    visible: 'M2'
+    timeout: 5000
+
+# Undoing the goal rewinds the ratio to point 2.
+- tapOn:
+    id: 'scoreboard-undo'
+- extendedWaitUntil:
+    visible: 'M1'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-gender-ratio

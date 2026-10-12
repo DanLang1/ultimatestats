@@ -514,6 +514,72 @@ describe('event correction controls', () => {
     expect(screen.queryByRole('button', { name: 'Casey' })).not.toBeOnTheScreen();
   });
 
+  it('confirms turnover deletion inside the sheet and can cancel back to the editor', async () => {
+    useGameStore.setState({
+      events: [
+        {
+          type: 'turnover',
+          team: 'team1',
+          subtype: 'block',
+          playerId: 'player-alex',
+          pointNumber: 1,
+        },
+      ],
+    });
+    setMockSearchParams({
+      eventIndex: '0',
+      eventType: 'turnover',
+      playerId: 'player-alex',
+      subtype: 'block',
+      originalTeam: 'team1',
+      gameId: 'current',
+    });
+    const user = userEvent.setup();
+    await renderScreen(<EditEventModal />);
+
+    await user.press(screen.getByRole('button', { name: 'Delete event' }));
+    expect(screen.getByText('Delete Event?')).toBeVisible();
+    expect(screen.getByText('Delete this block by Alex?')).toBeVisible();
+    await user.press(screen.getByTestId('edit-event-delete-cancel'));
+    expect(screen.getByText('Edit Event')).toBeVisible();
+    expect(useGameStore.getState().events).toHaveLength(1);
+
+    await user.press(screen.getByRole('button', { name: 'Delete event' }));
+    await user.press(screen.getByTestId('edit-event-delete-confirm'));
+    expect(useGameStore.getState().events).toHaveLength(0);
+    expect(router.back).toHaveBeenCalled();
+  });
+
+  it('deletes a saved-game turnover from the inline confirmation', async () => {
+    const game = createSavedBasicGame();
+    game.events = [
+      {
+        type: 'turnover',
+        team: 'team1',
+        subtype: 'drop',
+        playerId: null,
+        pointNumber: 1,
+      },
+    ];
+    useGameStore.setState({ savedGames: [game] });
+    setMockSearchParams({
+      eventIndex: '0',
+      eventType: 'turnover',
+      subtype: 'drop',
+      originalTeam: 'team1',
+      gameId: game.id,
+    });
+    const user = userEvent.setup();
+    await renderScreen(<EditEventModal />);
+
+    await user.press(screen.getByRole('button', { name: 'Delete event' }));
+    expect(screen.getByText('Delete this drop?')).toBeVisible();
+    await user.press(screen.getByTestId('edit-event-delete-confirm'));
+
+    await waitFor(() => expect(router.back).toHaveBeenCalled());
+    expect(useGameStore.getState().savedGames[0].events).toHaveLength(0);
+  });
+
   it.each(['Alex', 'Unknown'])(
     'reviews the thrower %s before selecting a 50/50 receiver',
     async (thrower) => {

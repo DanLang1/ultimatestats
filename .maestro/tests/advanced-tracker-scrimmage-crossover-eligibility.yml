@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Scrimmage Crossover Eligibility
 tags:
+  - advanced
   - scrimmage
 ---
 - runFlow:

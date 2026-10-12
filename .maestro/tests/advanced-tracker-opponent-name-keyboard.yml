@@ -1,6 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Opponent Name Keyboard
 tags:
+  - advanced
   - ui-setup
 ---
 - launchApp

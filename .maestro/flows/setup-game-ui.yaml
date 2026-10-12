@@ -1,24 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Setup Advanced Tracker Game Through UI
 ---
-- launchApp
-- openLink: ultimatestats-dev:///__maestro_seed__?mode=team
-
-- extendedWaitUntil:
-    visible:
-      id: 'maestro-setup-running'
-    timeout: 5000
-- retry:
-    maxRetries: 1
-    commands:
-      - extendedWaitUntil:
-          notVisible:
-            id: 'maestro-setup-running'
-          timeout: 15000
-- extendedWaitUntil:
-    visible:
-      text: 'DASHBOARD'
-    timeout: 15000
+- runFlow: setup-team-dashboard.yaml
 - tapOn:
     id: 'dashboard-new-game-button'
 - tapOn:

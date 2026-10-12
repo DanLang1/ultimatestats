@@ -6,21 +6,17 @@ name: Select Line and Handle Pull (Deterministic)
 - assertVisible:
     id: 'line-select-title'
 
-# Select 7 players for the line
+# Reload the previous point's line. Every seed line holds the same seven players, so the
+# newest recent line is always a full line; manual chip selection is covered by the UI setup
+# and preset flows.
 - tapOn:
-    id: 'player-chip-Joe'
+    id: 'line-select-load-line'
 - tapOn:
-    id: 'player-chip-Jon'
-- tapOn:
-    id: 'player-chip-Mike'
-- tapOn:
-    id: 'player-chip-Molly'
-- tapOn:
-    id: 'player-chip-Kelly'
-- tapOn:
-    id: 'player-chip-Rachel'
-- tapOn:
-    id: 'player-chip-Joel'
+    id: 'line-select-recent-.*'
+    index: 0
+- assertVisible:
+    id: 'line-select-confirm'
+    enabled: true
 
 # Confirm line selection
 - tapOn:

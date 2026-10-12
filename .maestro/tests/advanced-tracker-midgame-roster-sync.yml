@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Mid-Game Roster Sync
+tags:
+  - advanced
 ---
 # Seed a live single-team game where Joe has recorded a pickup action,
 # and use roster cards view so the inline active switches are addressable.
@@ -74,6 +76,7 @@ name: Advanced Tracker Mid-Game Roster Sync
     element:
       id: 'quick-edit-active-maestro-seed-player-molly'
     direction: DOWN
+    speed: 80
     timeout: 10000
 - tapOn:
     id: 'quick-edit-active-maestro-seed-player-molly'
@@ -82,6 +85,7 @@ name: Advanced Tracker Mid-Game Roster Sync
       id: 'quick-edit-active-maestro-seed-player-molly'
       checked: false
     direction: DOWN
+    speed: 80
     timeout: 10000
 
 # Return to the live tracker

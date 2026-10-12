@@ -55,23 +55,28 @@ Navigator `_layout.tsx` files are shells rather than independent screens. `app/_
 is an automated-test-only endpoint. Those files are intentionally excluded from the user-facing
 route suite.
 
-## Advanced-tracker end-to-end coverage
+## End-to-end (Maestro) suites
 
 Maestro runs against the installed iOS simulator app. Most flows enter through the test-only seed
-route and then exercise the real tracker UI; `advanced-tracker-ui-setup.yml` separately protects the
-full Dashboard → New Game → setup → line/pull entry path.
+route and then exercise the real UI. Each flow in `.maestro/tests/` is tagged by area; the flow files
+themselves describe what they cover.
 
-| Command                 | Scope                                                                                                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run maestro:smoke` | One fast advanced-tracker point/action smoke flow                                                                                                          |
-| `npm run maestro`       | Core menus, score bar, pulls, turnovers, stoppages, rare actions, cap modes, midpoint stats, live timers, and the full-UI setup smoke; excludes `extended` |
-| `npm run maestro:all`   | All core flows plus extended defense, pass-chain, full-cycle, and completed-game stats scenarios                                                           |
+| Command                     | Runs                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| `npm run maestro:smoke`     | One fast advanced-tracker smoke flow                         |
+| `npm run maestro`           | Every flow except those tagged `extended`                    |
+| `npm run maestro:all`       | Every flow                                                   |
+| `npm run maestro:advanced`  | Advanced tracker flows (tag `advanced`), including scrimmage |
+| `npm run maestro:scrimmage` | Scrimmage flows only (tag `scrimmage`)                       |
+| `npm run maestro:basic`     | Basic scoreboard flows (tag `basic`)                         |
+| `npm run maestro:team`      | Roster, team, and line preset flows (tag `team`)             |
+| `npm run maestro:ci`        | Same as `npm run maestro`, with a JUnit report               |
+
+Area commands include that area's `extended` flows. Tag every new flow with its area.
 
 Maestro coverage is intentionally narrower than route-test coverage. The screen suite gives every
-important route a fast deterministic check; Maestro protects the advanced-tracking journeys where
-cross-screen and native-device behavior carry the most risk. The extended
-`advanced-first-onboarding.yml` flow resets the persisted tutorial state and covers Welcome through
-the return to Dashboard, including line-ratio correction and core gestures.
+important route a fast deterministic check; Maestro protects journeys where cross-screen and
+native-device behavior carry the most risk.
 
 ## Manual Smoke Checklist
 

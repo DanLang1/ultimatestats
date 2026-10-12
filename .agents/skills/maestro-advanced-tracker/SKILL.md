@@ -34,6 +34,8 @@ smallest applicable npm Maestro suite documented in `docs/testing.md`.
   view. Confirm the state with a screenshot and user-visible assertions.
 - After a stall turnover, the disc is on the ground and offense-only rare-menu actions remain
   disabled until pickup.
+- Maestro text matching ignores case, and text selectors are regexes. See the selector notes in
+  `docs/testing.md` before matching titles, punctuation, or wide table rows.
 - Stall-defense leaves the rare menu in the disc-on-ground state. End the point and start a clean
   point before testing later offense actions.
 

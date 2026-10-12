@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Pull Tracking
+tags:
+  - advanced
 ---
 - runFlow:
     file: ../flows/setup-game.yaml

@@ -1,5 +1,7 @@
 appId: com.langdk.ultimatestats.dev
 name: Advanced Tracker Cap Modes
+tags:
+  - advanced
 ---
 - runFlow:
     file: ../flows/setup-cap-mode.yaml

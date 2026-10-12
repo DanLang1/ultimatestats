@@ -1,0 +1,24 @@
+appId: com.langdk.ultimatestats.dev
+name: Seed Basic Saved Game
+---
+# Saved 2-1 win over Rivals for Zoboomafoo, game to 2 with halftime off:
+#   Point 1: Mike throwaway, Kelly block, Joe goal from Jon.
+#   Point 2: Rivals goal.
+#   Point 3: Molly goal from Rachel.
+# Every point records the seven-player line. Lands on the saved game detail.
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicSavedGame
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible: 'SAVED GAME'
+    timeout: 15000

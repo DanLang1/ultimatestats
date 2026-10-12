@@ -1,0 +1,160 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Game Full Cycle
+tags:
+  - basic
+---
+# Dashboard -> New Game -> Basic pregame -> live scoring with stat attribution, turnovers,
+# undo, game completion, undoing the winning point, and the saved game timeline.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-basic'
+- extendedWaitUntil:
+    visible: 'BASIC SCOREBOARD'
+    timeout: 5000
+
+# Pregame: game to 2 with halftime off keeps the game to three points.
+# Setting cards expose their whole label (icon, name, value) as one element.
+- tapOn: '.*Game To, 15.*'
+- tapOn:
+    id: 'number-picker-clear'
+- tapOn:
+    id: 'number-picker-key-2'
+- tapOn:
+    id: 'number-picker-save'
+- assertVisible: '.*Game To, 2,.*'
+- tapOn: '.*Halftime, ON.*'
+- assertVisible: '.*Halftime, OFF.*'
+- assertVisible: '.*Stat Tracking, ON.*'
+# Stat tracking requires choosing who receives before starting.
+- assertVisible:
+    text: '.*Start Game'
+    enabled: false
+- tapOn: 'Zoboomafoo'
+- tapOn: '.*Start Game'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# Point 1: Zoboomafoo receives and scores, Joe from Jon.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Joe'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Jon'
+- extendedWaitUntil:
+    notVisible: 'Who threw the assist?'
+    timeout: 5000
+- assertVisible:
+    id: 'scoreboard-team1-score'
+    text: '1'
+
+# Point 2: Team 2 receives. Kelly blocks, Mike throws it away, Team 2 scores.
+# The action bar swaps between defensive and offensive turnover buttons with possession.
+- tapOn: '.*BLOCK'
+- extendedWaitUntil:
+    visible: 'Who made the block?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Kelly'
+- extendedWaitUntil:
+    visible: '.*T/A'
+    timeout: 5000
+- tapOn: '.*T/A'
+- extendedWaitUntil:
+    visible: 'Who threw it away?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Mike'
+- extendedWaitUntil:
+    visible: '.*OPP TURN'
+    timeout: 5000
+
+# Undo removes an accidental opponent goal without touching the turnovers.
+- tapOn: 'Score for Team 2'
+- assertVisible:
+    id: 'scoreboard-team2-score'
+    text: '1'
+- tapOn:
+    id: 'scoreboard-undo'
+- assertVisible:
+    id: 'scoreboard-team2-score'
+    text: '0'
+- assertVisible: '.*OPP TURN'
+- tapOn: 'Score for Team 2'
+- assertVisible:
+    id: 'scoreboard-team2-score'
+    text: '1'
+
+# Point 3: Molly scores from Rachel to win 2-1.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Molly'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Rachel'
+- extendedWaitUntil:
+    visible: 'GAME COMPLETE'
+    timeout: 5000
+- assertVisible: 'wins the game'
+
+# Undoing the winning point returns to a live 1-1 scoreboard; re-scoring finishes again.
+- tapOn: 'Undo Winning Point.*'
+- extendedWaitUntil:
+    visible:
+      id: 'scoreboard-team1-score'
+      text: '1'
+    timeout: 5000
+- assertVisible:
+    id: 'scoreboard-team2-score'
+    text: '1'
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Molly'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Rachel'
+- extendedWaitUntil:
+    visible: 'GAME COMPLETE'
+    timeout: 5000
+
+# Done opens the saved game, and its timeline reflects every attributed event once.
+- tapOn: 'Done.*'
+- extendedWaitUntil:
+    visible: 'SAVED GAME'
+    timeout: 5000
+- assertVisible: '2 - 1'
+- tapOn:
+    id: 'header-actions-menu'
+- tapOn: '.*Timeline'
+- extendedWaitUntil:
+    visible: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'GOAL, Joe'
+- assertVisible: 'ASSIST, Jon'
+- assertVisible: 'BLOCK, Kelly'
+- assertVisible: 'THROWAWAY, Mike'
+- assertVisible: 'GOAL, Molly'
+- assertVisible: 'ASSIST, Rachel'
+- assertVisible: '1 – 1'
+- assertVisible: '2 – 1'
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-game-full-cycle
