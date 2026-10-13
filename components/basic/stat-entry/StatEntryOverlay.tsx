@@ -1,5 +1,6 @@
 import { BasicEntryOverlay } from '@/components/basic/BasicEntryOverlay';
 import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
+import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
 import { hasItems } from '@/lib/utils';
@@ -46,7 +47,7 @@ export function StatEntryOverlay({ onFinish }: StatEntryOverlayProps) {
       team1Score: state.team1Score,
       team2Score: state.team2Score,
       gameTo: state.gameTo,
-      timerTimeLeft: state.timerTimeLeft,
+      gameClockSecondsLeft: getGameClockSecondsLeft(state, Date.now()),
     });
 
     if (isGameOver) {

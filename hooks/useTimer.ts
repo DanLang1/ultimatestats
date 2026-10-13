@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { STOPWATCH_TICK_MS, TIMER_TICK_MS } from '@/lib/constants';
 import { getSecondsUntil } from '@/lib/utils';
 
 /**
@@ -7,7 +8,7 @@ import { getSecondsUntil } from '@/lib/utils';
  * holds at the last tick, so callers derive paused or idle displays from their own timestamps.
  * Deriving from the system clock keeps timers drift-proof across re-renders.
  */
-export function useNow(enabled: boolean, intervalMs = 1000): number {
+export function useNow(enabled: boolean, intervalMs = TIMER_TICK_MS): number {
   const [now, setNow] = useState(Date.now);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ interface CountdownSecondsOptions {
 export function useCountdownSeconds({
   startedAt,
   durationSeconds,
-  intervalMs = 1000,
+  intervalMs = TIMER_TICK_MS,
 }: CountdownSecondsOptions): number {
   const now = useNow(startedAt !== null, intervalMs);
   if (startedAt === null) return durationSeconds;
@@ -68,7 +69,7 @@ export function useStopwatch(initialElapsedMs = 0) {
       const delta = now - (lastTickRef.current || now);
       lastTickRef.current = now;
       setElapsed((prev) => prev + delta);
-    }, 100);
+    }, STOPWATCH_TICK_MS);
 
     return () => clearInterval(interval);
   }, [isRunning]);

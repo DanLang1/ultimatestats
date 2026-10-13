@@ -12,7 +12,7 @@ export function useEndGame() {
     team2Score,
     currentTeam,
     team2Name,
-    setTimerActive,
+    pauseGameClock,
     setCurrentGameStatus,
     setPostGameFlowPending,
     saveCurrentGame,
@@ -41,8 +41,7 @@ export function useEndGame() {
           text: 'End Game',
           style: 'destructive',
           onPress: async () => {
-            // Stop timer
-            setTimerActive(false);
+            pauseGameClock();
 
             // Save game if stat tracking enabled
             if (statTrackingEnabled) {

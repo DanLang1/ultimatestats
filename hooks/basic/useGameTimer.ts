@@ -1,78 +1,51 @@
 import { useEffect } from 'react';
 
+import { useNow } from '@/hooks/useTimer';
+import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
+/**
+ * The basic game clock (hard cap countdown). Seconds left derive from the persisted deadline, so
+ * the store is written only on start, pause, reset, and the two one-shot transitions below.
+ */
 export function useGameTimer() {
-  const { hardCapMins, softCapMins } = useSettingsStore();
-  const {
-    setSoftCapPending,
-    softCapPending,
-    timerIsActive: isActive,
-    setTimerActive: setIsActive,
-    timerEndTime: endTime,
-    setTimerEndTime: setEndTime,
-    timerTimeLeft: timeLeft,
-    setTimerTimeLeft: setTimeLeft,
-  } = useGameStore();
+  const hardCapMins = useSettingsStore((state) => state.hardCapMins);
+  const softCapMins = useSettingsStore((state) => state.softCapMins);
+  const timerEndTime = useGameStore((state) => state.timerEndTime);
+  const timerTimeLeft = useGameStore((state) => state.timerTimeLeft);
+  const softCapPending = useGameStore((state) => state.softCapPending);
+  const setSoftCapPending = useGameStore((state) => state.setSoftCapPending);
+  const startGameClock = useGameStore((state) => state.startGameClock);
+  const pauseGameClock = useGameStore((state) => state.pauseGameClock);
+  const expireGameClock = useGameStore((state) => state.expireGameClock);
+  const resetGameClock = useGameStore((state) => state.resetGameClock);
 
-  /**
-   * setInterval prone to inconsistent times, so using a date reference to calculate remaining time
-   * Instead of tracking time since last 'tick' with setInterval (which can be inconsistent), we check when the timer should end (endTime) and calculate remaining time (endTime - now)
-   */
+  const isActive = timerEndTime !== null;
+  const now = useNow(isActive);
+  const timeLeft = getGameClockSecondsLeft({ timerEndTime, timerTimeLeft }, now);
+
+  // Soft cap pending and hard cap expiry are the clock's only store writes while it runs. They
+  // are checked against the wall clock on every tick so a delayed or backgrounded tick still
+  // lands them, and they are idempotent when several screens mount this hook at once.
+  const shouldMarkSoftCapPending = isActive && !softCapPending && timeLeft <= softCapMins * 60;
+  const hasExpired = isActive && timeLeft === 0;
+
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isActive && endTime) {
-      interval = setInterval(() => {
-        const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-        setTimeLeft(remaining);
+    if (shouldMarkSoftCapPending) setSoftCapPending(true);
+  }, [shouldMarkSoftCapPending, setSoftCapPending]);
 
-        // Check for Softcap
-        if (!softCapPending && remaining <= softCapMins * 60) {
-          setSoftCapPending(true);
-        }
-
-        if (remaining === 0) {
-          setIsActive(false);
-          setEndTime(null);
-        }
-      }, 500);
-    }
-    return () => clearInterval(interval);
-  }, [
-    isActive,
-    endTime,
-    softCapPending,
-    softCapMins,
-    setSoftCapPending,
-    setIsActive,
-    setEndTime,
-    setTimeLeft,
-  ]);
+  useEffect(() => {
+    if (hasExpired) expireGameClock();
+  }, [hasExpired, expireGameClock]);
 
   const toggleTimer = () => {
-    if (!isActive) {
-      // Start
-      const targetTime = Date.now() + timeLeft * 1000;
-      setEndTime(targetTime);
-      setIsActive(true);
-    } else {
-      // Pause
-      if (endTime) {
-        const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-        setTimeLeft(remaining);
-      }
-      setEndTime(null);
-      setIsActive(false);
-    }
+    if (isActive) pauseGameClock();
+    else startGameClock();
   };
 
   const resetTimer = () => {
-    setIsActive(false);
-    setEndTime(null);
-    setTimeLeft(hardCapMins * 60);
+    resetGameClock(hardCapMins * 60);
   };
 
   return {

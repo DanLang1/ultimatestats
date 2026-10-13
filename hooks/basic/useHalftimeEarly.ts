@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 
 import { useAlert } from '@/components/ui/AlertProvider';
+import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { canTriggerHalftimeEarly } from '@/lib/basic/halftimeUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 
@@ -23,10 +24,12 @@ export function useHalftimeEarly() {
     team1Score,
     team2Score,
     gameTo,
-    timerTimeLeft,
     events,
   };
-  const canTriggerEarly = canTriggerHalftimeEarly(guardState);
+  const canTriggerEarly = canTriggerHalftimeEarly(
+    guardState,
+    getRecordedGameClockSecondsLeft({ timerTimeLeft }),
+  );
 
   const confirmHalftimeEarly = () => {
     showAlert({

@@ -7,19 +7,28 @@
 Use the centralized `checkGameOver` function from `lib/basic/gameUtils.ts`:
 
 ```typescript
+import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver, getWinner } from '@/lib/basic/gameUtils';
 
 const isGameOver = checkGameOver({
   team1Score,
   team2Score,
   gameTo,
-  timerTimeLeft,
+  gameClockSecondsLeft: getGameClockSecondsLeft({ timerEndTime, timerTimeLeft }, Date.now()),
 });
 
 if (isGameOver) {
   const winner = getWinner(team1Score, team2Score);
 }
 ```
+
+While the clock runs, the store's `timerTimeLeft` is the remainder captured at the last start or
+pause, not the live value; only `timerEndTime` is live. Store actions and event handlers derive the
+clock with `getGameClockSecondsLeft(state, Date.now())`, which reads the deadline while running so
+a hard cap is detected even before the expiry effect in `useGameTimer` writes it. Render-time checks
+(screen redirects, dashboard status, the halftime-early guard) use
+`getRecordedGameClockSecondsLeft(state)` instead: it stays pure, never ticks, and relies on that
+expiry effect as the single writer of the hard cap.
 
 ## Win Condition Rules
 
@@ -34,7 +43,7 @@ if (isGameOver) {
 
 ### Hard Cap (Timer Expires)
 
-- `timerTimeLeft === 0` indicates hard cap
+- `getGameClockSecondsLeft(...) === 0` indicates hard cap
 - Highest score wins immediately (no cap target required)
 - Ties: game continues until a team leads
 

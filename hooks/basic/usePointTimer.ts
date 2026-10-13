@@ -16,7 +16,7 @@ export function usePointTimer() {
 
   const isActive = currentPointStartTime !== null;
   const isPaused = pointTimerPausedElapsed !== null;
-  const now = useNow(isActive && !isPaused, 500);
+  const now = useNow(isActive && !isPaused);
 
   let elapsedMs = 0;
   if (isActive) {

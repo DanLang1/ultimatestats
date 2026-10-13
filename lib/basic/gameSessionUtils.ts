@@ -7,7 +7,8 @@ type GameSessionState = {
   team1Score: number;
   team2Score: number;
   gameTo: number;
-  timerTimeLeft: number;
+  /** Live seconds left on the game clock, from `getGameClockSecondsLeft`. */
+  gameClockSecondsLeft: number;
   currentGameStatus: GameSessionStatus;
   events: readonly unknown[];
   currentPoint: number;
@@ -29,7 +30,7 @@ export function getGameSessionStatus(state: GameSessionState): GameSessionStatus
       team1Score: state.team1Score,
       team2Score: state.team2Score,
       gameTo: state.gameTo,
-      timerTimeLeft: state.timerTimeLeft,
+      gameClockSecondsLeft: state.gameClockSecondsLeft,
     });
 
   if (isCompleted) {

@@ -77,7 +77,7 @@ export interface GameState {
 
   isSoftCap: boolean;
   softCapPending: boolean;
-  timerIsActive: boolean;
+  /** Absolute hard-cap deadline while the clock runs; null while paused, reset, or expired. */
   timerEndTime: number | null;
   timerTimeLeft: number;
   currentGameStatus: GameSessionStatus;
@@ -131,8 +131,14 @@ export interface GameState {
   resetTimeouts: (count: number) => void;
   resetGame: () => void;
   setSoftCapPending: (pending: boolean) => void;
-  setTimerActive: (active: boolean) => void;
-  setTimerEndTime: (time: number | null) => void;
+  /** Starts the hard-cap countdown from `timerTimeLeft`; no-op while already running. */
+  startGameClock: () => void;
+  /** Stops the countdown and stores the live remainder in `timerTimeLeft`. */
+  pauseGameClock: () => void;
+  /** Marks the hard cap reached: zero seconds left, clock stopped. */
+  expireGameClock: () => void;
+  /** Stops the countdown and sets a fresh duration in seconds. */
+  resetGameClock: (seconds: number) => void;
   setTimerTimeLeft: (seconds: number) => void;
   setCurrentGameStatus: (status: GameSessionStatus) => void;
   setPostGameFlowPending: (pending: boolean) => void;

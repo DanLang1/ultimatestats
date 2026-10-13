@@ -5,7 +5,7 @@ describe('getGameSessionStatus', () => {
     team1Score: 0,
     team2Score: 0,
     gameTo: 15,
-    timerTimeLeft: 3600,
+    gameClockSecondsLeft: 3600,
     currentGameStatus: 'fresh',
     events: [],
     currentPoint: 1,

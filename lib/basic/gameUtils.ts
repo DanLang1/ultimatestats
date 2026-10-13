@@ -5,7 +5,8 @@
 import { GenderRatio } from '@/lib/genderRatioUtils';
 
 export interface GameActiveState {
-  timerIsActive: boolean;
+  /** `timerEndTime !== null` on the game store. */
+  isGameClockRunning: boolean;
   team1Score: number;
   team2Score: number;
   firstPointRatio: GenderRatio | null;
@@ -16,17 +17,18 @@ export interface GameActiveState {
 /**
  * Check if a game is considered "in progress" based on current state.
  * A game is active if any of the following are true:
- * - Timer is running
+ * - The game clock is running
  * - Either team has scored
  * - FMP/MMP ratio has been selected for first point
  * - A line has been set for the current point
  * - Lines have been recorded for previous points
  */
 export function isGameActive(state: GameActiveState): boolean {
-  const { timerIsActive, team1Score, team2Score, firstPointRatio, currentLine, pointLines } = state;
+  const { isGameClockRunning, team1Score, team2Score, firstPointRatio, currentLine, pointLines } =
+    state;
 
   return (
-    timerIsActive ||
+    isGameClockRunning ||
     team1Score !== 0 ||
     team2Score !== 0 ||
     firstPointRatio !== null ||
@@ -39,7 +41,8 @@ export interface GameOverState {
   team1Score: number;
   team2Score: number;
   gameTo: number;
-  timerTimeLeft: number;
+  /** Live seconds left on the game clock, from `getGameClockSecondsLeft`. */
+  gameClockSecondsLeft: number;
 }
 
 /**
@@ -47,12 +50,12 @@ export interface GameOverState {
  * Per USAU rules:
  * - Normal: game ends when one team reaches gameTo and is ahead
  * - Softcap: gameTo is adjusted to higherScore + 1 after point completes
- * - Hardcap (timer = 0): game ends if one team is ahead (universe point rule)
+ * - Hardcap (clock at 0): game ends if one team is ahead (universe point rule)
  */
 export function checkGameOver(state: GameOverState): boolean {
-  const { team1Score, team2Score, gameTo, timerTimeLeft } = state;
+  const { team1Score, team2Score, gameTo, gameClockSecondsLeft } = state;
 
-  const isHardcap = timerTimeLeft === 0;
+  const isHardcap = gameClockSecondsLeft === 0;
   const notTied = team1Score !== team2Score;
 
   // Hardcap: game ends immediately if one team is ahead

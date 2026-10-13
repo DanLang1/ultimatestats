@@ -60,7 +60,7 @@ describe.each(['portrait', 'landscape'] as const)('match status in %s', (orienta
       team1Score: 3,
       team2Score: 2,
       timerTimeLeft: 0,
-      timerIsActive: false,
+      timerEndTime: null,
     });
     await renderScreen(<GameInfoScreen />);
     expect(screen.getByText('HARDCAP')).toBeVisible();

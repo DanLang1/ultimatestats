@@ -21,6 +21,7 @@ import { useEventToast } from '@/components/toast/hooks/useEventToast';
 import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
 import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
 import { getContrastingTextColor } from '@/lib/colorUtils';
@@ -138,11 +139,12 @@ export default function LiveScoreboard() {
       return;
     }
 
+    const state = useGameStore.getState();
     const isGameOver = checkGameOver({
-      team1Score: useGameStore.getState().team1Score,
-      team2Score: useGameStore.getState().team2Score,
-      gameTo: useGameStore.getState().gameTo,
-      timerTimeLeft: useGameStore.getState().timerTimeLeft,
+      team1Score: state.team1Score,
+      team2Score: state.team2Score,
+      gameTo: state.gameTo,
+      gameClockSecondsLeft: getGameClockSecondsLeft(state, Date.now()),
     });
 
     if (isGameOver) {

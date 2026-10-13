@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
-
+import { useNow } from '@/hooks/useTimer';
 import { formatTimerSeconds, getSecondsUntil } from '@/lib/utils';
 
 interface PausableCountdownOptions {
   /** Absolute timestamp when the countdown hits zero; `null` while paused. */
   endTime: number | null;
   setEndTime: (time: number | null) => void;
-  /** Seconds remaining; the source of truth while paused. */
+  /** Seconds remaining as of the last pause or adjustment; the source of truth while paused. */
   timeLeft: number;
   setTimeLeft: (seconds: number) => void;
   minSeconds: number;
@@ -14,28 +13,21 @@ interface PausableCountdownOptions {
 }
 
 /**
- * Store-backed break countdown with drift-proof timing. Uses absolute timestamps (endTime)
- * instead of interval-based counting, and keeps running past zero so overtime is visible.
+ * Store-backed break countdown with drift-proof timing. While running, seconds left derive from
+ * the absolute `endTime` on each local tick; the store is written only on toggle and adjust. The
+ * countdown keeps running past zero so overtime is visible.
  */
 export function usePausableCountdown({
   endTime,
   setEndTime,
-  timeLeft,
+  timeLeft: pausedTimeLeft,
   setTimeLeft,
   minSeconds,
   maxSeconds,
 }: PausableCountdownOptions) {
   const isRunning = endTime !== null;
-
-  useEffect(() => {
-    if (endTime === null) return undefined;
-
-    const interval = setInterval(() => {
-      setTimeLeft(getSecondsUntil(endTime, Date.now()));
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [endTime, setTimeLeft]);
+  const now = useNow(isRunning);
+  const timeLeft = endTime === null ? pausedTimeLeft : getSecondsUntil(endTime, now);
 
   const toggleTimer = () => {
     if (endTime === null) {

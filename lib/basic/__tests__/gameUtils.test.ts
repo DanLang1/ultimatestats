@@ -5,7 +5,7 @@ describe('checkGameOver', () => {
     team1Score: 0,
     team2Score: 0,
     gameTo: 15,
-    timerTimeLeft: 3600, // 1 hour remaining
+    gameClockSecondsLeft: 3600, // 1 hour remaining
   };
 
   describe('Normal game (no caps)', () => {
@@ -35,7 +35,7 @@ describe('checkGameOver', () => {
 
   describe('Hardcap game (timer = 0)', () => {
     // At hardcap, game ends immediately if one team is ahead (universe point rule)
-    const hardcapState = { ...baseState, timerTimeLeft: 0 };
+    const hardcapState = { ...baseState, gameClockSecondsLeft: 0 };
 
     it('returns true when one team is ahead (even if below gameTo)', () => {
       expect(checkGameOver({ ...hardcapState, team1Score: 3, team2Score: 1 })).toBe(true);

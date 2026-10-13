@@ -20,6 +20,13 @@ Source: `store/basic/gameStore.ts` and `store/basic/gameStore.types.ts`.
 Owns the basic live game, active team/roster, scores, game format, timers, possession, basic
 `GameEvent[]`, pending entry state, point lines, saved basic games, and saved teams.
 
+Timers persist only deadlines and paused remainders (`timerEndTime`/`timerTimeLeft`,
+`halftimeEndTime`/`halftimeTimeLeft`, `timeoutEndTime`/`timeoutTimeLeft`, and the point timer's
+start and paused-elapsed fields). Seconds left are derived on each local tick with `useNow`; the
+store is written only on start, pause, adjust, soft-cap pending, and hard-cap expiry. This matters
+because the whole store, saved games included, is one persisted AsyncStorage record. Read the live
+clock through `getGameClockSecondsLeft`, never from `timerTimeLeft` directly.
+
 Advanced code currently reads shared team/roster concepts from this store, but must not place
 advanced game state or advanced saved records here. See the proposed ownership cleanup in
 `docs/future-features/shared-team-roster-store.md`.

@@ -1,0 +1,102 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Game Clock Across Restart
+tags:
+  - basic
+---
+# The hard-cap clock derives from a persisted deadline: it keeps counting across an app restart
+# while running, and holds its remainder across a restart while paused.
+- runFlow: ../flows/setup-basic-game.yaml
+
+# Idle at the configured hard cap.
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+      TIMER_KEY: idleSeconds
+- assertTrue: ${output.idleSeconds === 90 * 60}
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+
+# Start: counts down.
+- tapOn:
+    id: 'scoreboard-clock-toggle'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+      TIMER_KEY: beforeRestartSeconds
+
+# Restart while running: the clock resumes from the persisted deadline and is still counting.
+- launchApp
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 15000
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+      TIMER_KEY: afterRestartSeconds
+- assertTrue: ${output.afterRestartSeconds < output.beforeRestartSeconds && output.afterRestartSeconds > output.beforeRestartSeconds - 120}
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+
+# Pause: holds its value, and the paused remainder survives a restart unchanged.
+- tapOn:
+    id: 'scoreboard-clock-toggle'
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+      TIMER_KEY: pausedSeconds
+- launchApp
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 15000
+- runFlow:
+    file: ../flows/read-timer-seconds.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+      TIMER_KEY: pausedAfterRestartSeconds
+- assertTrue: ${output.pausedAfterRestartSeconds === output.pausedSeconds}
+- runFlow:
+    file: ../flows/assert-timer-paused.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+
+# Resume after the restart and score the halftime point; the live game flow still completes.
+- tapOn:
+    id: 'scoreboard-clock-toggle'
+- runFlow:
+    file: ../flows/assert-timer-running.yaml
+    env:
+      TIMER_ID: scoreboard-clock-value
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Joe'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Jon'
+- extendedWaitUntil:
+    visible:
+      id: 'halftime-modal-continue'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-game-clock

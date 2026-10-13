@@ -2,6 +2,7 @@ import { Redirect, usePathname } from 'expo-router';
 
 import LiveScoreboard from '@/components/basic/scoreboard/LiveScoreboard';
 import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
+import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -29,7 +30,7 @@ export default function BasicScoreboard() {
     team1Score,
     team2Score,
     gameTo,
-    timerTimeLeft,
+    gameClockSecondsLeft: getRecordedGameClockSecondsLeft({ timerTimeLeft }),
   });
 
   if (currentGameStatus === 'finished' && pathname === '/Scoreboard') {

@@ -101,11 +101,13 @@ export interface HalftimeEarlyGuardState {
   team1Score: number;
   team2Score: number;
   gameTo: number;
-  timerTimeLeft: number;
   events: GameEvent[];
 }
 
-function isHalftimeEarlyRelevant(state: HalftimeEarlyGuardState): boolean {
+function isHalftimeEarlyRelevant(
+  state: HalftimeEarlyGuardState,
+  gameClockSecondsLeft: number,
+): boolean {
   return (
     state.autoHalftimeEnabled &&
     state.gameHalf === 1 &&
@@ -113,15 +115,22 @@ function isHalftimeEarlyRelevant(state: HalftimeEarlyGuardState): boolean {
       team1Score: state.team1Score,
       team2Score: state.team2Score,
       gameTo: state.gameTo,
-      timerTimeLeft: state.timerTimeLeft,
+      gameClockSecondsLeft,
     }) &&
     !hasReachedHalftime(state.events, state.autoHalftimeEnabled)
   );
 }
 
-export function canTriggerHalftimeEarly(state: HalftimeEarlyGuardState): boolean {
+/**
+ * `gameClockSecondsLeft` comes from `getGameClockSecondsLeft` in store actions and from
+ * `getRecordedGameClockSecondsLeft` in render; see `lib/basic/gameClockUtils.ts`.
+ */
+export function canTriggerHalftimeEarly(
+  state: HalftimeEarlyGuardState,
+  gameClockSecondsLeft: number,
+): boolean {
   const lastEvent = state.events[state.events.length - 1];
-  return isHalftimeEarlyRelevant(state) && lastEvent?.type === 'goal';
+  return isHalftimeEarlyRelevant(state, gameClockSecondsLeft) && lastEvent?.type === 'goal';
 }
 
 export interface HalftimeScoreResult {

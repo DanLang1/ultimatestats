@@ -49,7 +49,6 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
   const timeoutSecondsLeft = useCountdownSeconds({
     startedAt: activeStoppage?.reason === 'timeout' ? stoppageTimestamp : null,
     durationSeconds: effectiveDuration,
-    intervalMs: 250,
   });
 
   const adjustTimeout = (deltaSeconds: number) => {

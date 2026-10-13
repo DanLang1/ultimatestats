@@ -1,4 +1,5 @@
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { getGameSessionStatus } from '@/lib/basic/gameSessionUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 
@@ -33,7 +34,7 @@ export function useDashboardSession() {
     team1Score,
     team2Score,
     gameTo,
-    timerTimeLeft,
+    gameClockSecondsLeft: getRecordedGameClockSecondsLeft({ timerTimeLeft }),
     currentGameStatus,
     events,
     currentPoint,

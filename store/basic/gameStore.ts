@@ -6,6 +6,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { hasPlayerRecordedAdvancedActions } from '@/lib/advancedTracking/participantSync';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
 import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
@@ -108,7 +109,6 @@ function resetGameState(state: GameState, hardCapMinutes: number) {
   state.pendingTurnoverEntry = null;
   state.eventToastSignal = null;
   state.currentPoint = 1;
-  state.timerIsActive = false;
   state.timerEndTime = null;
   state.timerTimeLeft = hardCapMinutes * 60;
   state.currentGameStatus = 'fresh';
@@ -151,7 +151,6 @@ export const useGameStore = create<GameState>()(
         baseGameTo: 15,
         isSoftCap: false,
         softCapPending: false,
-        timerIsActive: false,
         timerEndTime: null,
         timerTimeLeft: 90 * 60,
         currentGameStatus: 'fresh',
@@ -289,7 +288,8 @@ export const useGameStore = create<GameState>()(
             //
             // At hardcap (timer=0), we skip soft cap adjustment - game ends immediately
             // when one team is ahead (universe point rule).
-            const isHardcap = state.timerTimeLeft === 0;
+            const gameClockSecondsLeft = getGameClockSecondsLeft(state, Date.now());
+            const isHardcap = gameClockSecondsLeft === 0;
             if (state.softCapPending && !state.isSoftCap && !isHardcap) {
               state.isSoftCap = true;
               state.softCapPending = false;
@@ -309,7 +309,7 @@ export const useGameStore = create<GameState>()(
               team1Score: state.team1Score,
               team2Score: state.team2Score,
               gameTo: state.gameTo,
-              timerTimeLeft: state.timerTimeLeft,
+              gameClockSecondsLeft,
             });
             if (isHalftimeGoal && !gameWon) {
               applyHalftimeTransition(state);
@@ -379,7 +379,7 @@ export const useGameStore = create<GameState>()(
           let didTrigger = false;
 
           set((state: GameState) => {
-            if (!canTriggerHalftimeEarly(state)) {
+            if (!canTriggerHalftimeEarly(state, getGameClockSecondsLeft(state, Date.now()))) {
               return;
             }
 
@@ -566,14 +566,28 @@ export const useGameStore = create<GameState>()(
             state.softCapPending = pending;
           }),
 
-        setTimerActive: (active: boolean) =>
+        startGameClock: () =>
           set((state: GameState) => {
-            state.timerIsActive = active;
+            if (state.timerEndTime !== null) return;
+            state.timerEndTime = Date.now() + state.timerTimeLeft * 1000;
           }),
 
-        setTimerEndTime: (time: number | null) =>
+        pauseGameClock: () =>
           set((state: GameState) => {
-            state.timerEndTime = time;
+            state.timerTimeLeft = getGameClockSecondsLeft(state, Date.now());
+            state.timerEndTime = null;
+          }),
+
+        expireGameClock: () =>
+          set((state: GameState) => {
+            state.timerTimeLeft = 0;
+            state.timerEndTime = null;
+          }),
+
+        resetGameClock: (seconds: number) =>
+          set((state: GameState) => {
+            state.timerTimeLeft = seconds;
+            state.timerEndTime = null;
           }),
 
         setTimerTimeLeft: (seconds: number) =>
@@ -1395,6 +1409,8 @@ export const useGameStore = create<GameState>()(
           baseGameTo: state.baseGameTo,
           isSoftCap: state.isSoftCap,
           softCapPending: state.softCapPending,
+          // The running deadline is persisted so the hard cap keeps counting across a restart.
+          timerEndTime: state.timerEndTime,
           timerTimeLeft: state.timerTimeLeft,
           currentGameStatus: state.currentGameStatus,
           isPostGameFlowPending: state.isPostGameFlowPending,

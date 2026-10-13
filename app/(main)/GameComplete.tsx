@@ -3,6 +3,7 @@ import { Redirect, router, Stack } from 'expo-router';
 import { GameCompleteContent } from '@/components/game-complete/GameCompleteContent';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
+import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver, getWinner } from '@/lib/basic/gameUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 
@@ -17,7 +18,7 @@ export default function GameCompleteScreen() {
     undoLastAction,
     timerTimeLeft,
     currentGameStatus,
-    setTimerActive,
+    pauseGameClock,
     setPostGameFlowPending,
     currentGameId,
   } = useGameStore();
@@ -25,7 +26,12 @@ export default function GameCompleteScreen() {
   const { finishActiveGameSession, restoreBasicGameSession } = useGameSessionActions();
 
   const team1Name = currentTeam.name;
-  const isGameOver = checkGameOver({ team1Score, team2Score, gameTo, timerTimeLeft });
+  const isGameOver = checkGameOver({
+    team1Score,
+    team2Score,
+    gameTo,
+    gameClockSecondsLeft: getRecordedGameClockSecondsLeft({ timerTimeLeft }),
+  });
 
   if (!isGameOver && currentGameStatus !== 'finished') {
     return <Redirect href="/Scoreboard" />;
@@ -40,7 +46,7 @@ export default function GameCompleteScreen() {
   const loserScore = team1Won ? team2Score : team1Score;
 
   const handleGoHome = () => {
-    setTimerActive(false);
+    pauseGameClock();
     setPostGameFlowPending(false);
     finishActiveGameSession();
     if (statTrackingEnabled && currentGameId != null) {

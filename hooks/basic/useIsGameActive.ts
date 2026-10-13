@@ -7,7 +7,7 @@ import { useSettingsStore } from '@/store/settingsStore';
  * Pulls from both gameStore and settingsStore to check all conditions.
  */
 export function useIsGameActive(): boolean {
-  const timerIsActive = useGameStore((s) => s.timerIsActive);
+  const timerEndTime = useGameStore((s) => s.timerEndTime);
   const team1Score = useGameStore((s) => s.team1Score);
   const team2Score = useGameStore((s) => s.team2Score);
   const currentLine = useGameStore((s) => s.currentLine);
@@ -15,7 +15,7 @@ export function useIsGameActive(): boolean {
   const firstPointRatio = useSettingsStore((s) => s.firstPointRatio);
 
   return isGameActive({
-    timerIsActive,
+    isGameClockRunning: timerEndTime !== null,
     team1Score,
     team2Score,
     firstPointRatio,

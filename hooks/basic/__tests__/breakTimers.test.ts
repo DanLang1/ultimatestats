@@ -42,9 +42,10 @@ describe.each([
     const { result } = await renderHook(useTimer);
     await act(() => result.current.toggleTimer());
     expect(useGameStore.getState()[endField]).toBe(190000);
+    // Advancing fake timers also advances the system clock, so the tick lands at 112800.
     await act(() => {
-      jest.setSystemTime(112300);
-      jest.advanceTimersByTime(500);
+      jest.setSystemTime(111800);
+      jest.advanceTimersByTime(1000);
     });
     expect(result.current.timeLeft).toBe(78);
     await act(() => result.current.toggleTimer());
@@ -101,7 +102,7 @@ describe.each([
 describe('game clock', () => {
   it('pauses and resets to the configured hard cap duration', async () => {
     useSettingsStore.setState({ hardCapMins: 80 });
-    useGameStore.setState({ timerTimeLeft: 90, timerIsActive: false, timerEndTime: null });
+    useGameStore.setState({ timerTimeLeft: 90, timerEndTime: null });
     const { result } = await renderHook(useGameTimer);
     await act(() => result.current.toggleTimer());
     expect(useGameStore.getState().timerEndTime).toBe(190000);
@@ -109,11 +110,7 @@ describe('game clock', () => {
       jest.setSystemTime(112300);
       result.current.toggleTimer();
     });
-    expect(useGameStore.getState()).toMatchObject({
-      timerTimeLeft: 78,
-      timerEndTime: null,
-      timerIsActive: false,
-    });
+    expect(useGameStore.getState()).toMatchObject({ timerTimeLeft: 78, timerEndTime: null });
     await act(() => result.current.resetTimer());
     expect(result.current.timeLeft).toBe(4800);
     expect(result.current.isActive).toBe(false);
@@ -123,7 +120,6 @@ describe('game clock', () => {
     useSettingsStore.setState({ softCapMins: 1 });
     useGameStore.setState({
       timerTimeLeft: 90,
-      timerIsActive: false,
       timerEndTime: null,
       softCapPending: false,
     });
@@ -135,10 +131,36 @@ describe('game clock', () => {
     expect(useGameStore.getState().softCapPending).toBe(true);
     await act(() => {
       jest.setSystemTime(210000);
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersByTime(1000);
     });
     expect(result.current.timeLeft).toBe(0);
-    expect(useGameStore.getState()).toMatchObject({ timerEndTime: null, timerIsActive: false });
+    expect(useGameStore.getState().timerEndTime).toBeNull();
+  });
+
+  it('ticks the display without writing the store until a transition fires', async () => {
+    useSettingsStore.setState({ softCapMins: 0 });
+    useGameStore.setState({ timerTimeLeft: 90, timerEndTime: null });
+    const { result } = await renderHook(useGameTimer);
+    await act(() => result.current.toggleTimer());
+    const writes = jest.fn();
+    const unsubscribe = useGameStore.subscribe(writes);
+    await act(() => {
+      jest.advanceTimersByTime(10000);
+    });
+    expect(result.current.timeLeft).toBe(80);
+    expect(writes).not.toHaveBeenCalled();
+    expect(useGameStore.getState().timerTimeLeft).toBe(90);
+    unsubscribe();
+  });
+
+  it('keeps counting from a persisted deadline after a restart', async () => {
+    // A rehydrated store holds the deadline from before the restart but a stale remainder.
+    useGameStore.setState({ timerTimeLeft: 90, timerEndTime: 160000 });
+    const { result } = await renderHook(useGameTimer);
+    expect(result.current.isActive).toBe(true);
+    expect(result.current.timeLeft).toBe(60);
+    await act(() => result.current.toggleTimer());
+    expect(useGameStore.getState()).toMatchObject({ timerTimeLeft: 60, timerEndTime: null });
   });
 });
 

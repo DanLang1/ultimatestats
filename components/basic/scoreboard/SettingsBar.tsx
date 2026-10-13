@@ -71,7 +71,9 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Timer Text */}
       <View style={styles.timerContainer}>
-        <ThemedText style={[styles.timerText, { color: barContentColor }]}>
+        <ThemedText
+          testID="scoreboard-clock-value"
+          style={[styles.timerText, { color: barContentColor }]}>
           {formatTimerSeconds(timeLeft)}
         </ThemedText>
         {capIcon}

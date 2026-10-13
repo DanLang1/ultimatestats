@@ -87,7 +87,6 @@ export const BetweenPointDisplay = ({
   const timeoutSecondsLeft = useCountdownSeconds({
     startedAt: activeTimeout?.transition.startedAt ?? null,
     durationSeconds: DEFAULT_TIMEOUT_SECONDS,
-    intervalMs: 250,
   });
 
   let timerColor = palette.success;
