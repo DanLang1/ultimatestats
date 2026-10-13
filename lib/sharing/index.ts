@@ -7,7 +7,7 @@ export {
   serializeGames,
   serializeTeam,
 } from './serialize';
-export { uploadPayload, fetchPayload, SharePayloadNotFoundError } from './share';
+export { uploadPayload, fetchPayload, SharePayloadNotFoundError, ShareUploadError } from './share';
 export type { ShowcasePayload } from './showcase';
 export { fetchShowcaseList, fetchShowcasePayload, incrementShowcaseImportCount } from './showcase';
-export { validatePayload } from './validate';
+export { InvalidSharePayloadError, validatePayload } from './validate';

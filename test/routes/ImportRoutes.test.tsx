@@ -213,11 +213,42 @@ describe('shared-link import', () => {
     const client = createTestQueryClient();
     await renderScreen(<ImportScreen />, { queryClient: client });
     expect(
-      await screen.findByText('Could not load shared data. The link may have expired.'),
+      await screen.findByText('Could not load shared data. Check your connection and try again.'),
     ).toBeVisible();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await userEvent.setup().press(screen.getByText('OK'));
     expect(router.dismissTo).toHaveBeenCalledWith('/');
+  });
+
+  it.each([
+    [
+      'a missing record',
+      jsonResponse({ code: 'PGRST116', message: 'No rows' }, 406),
+      'This share link was not found. It may have been removed or mistyped.',
+    ],
+    [
+      'a payload from a newer app',
+      jsonResponse({ payload: { ...serializeGame(createSavedBasicGame()), schemaVersion: 999 } }),
+      'This was shared from a newer version of U-Stat. Update the app to import it.',
+    ],
+    [
+      'a payload over the import limits',
+      jsonResponse({
+        payload: serializeGames(
+          Array.from({ length: 11 }, (_, i) => ({ ...createSavedBasicGame(), id: `game-${i}` })),
+        ),
+      }),
+      'This shared data is larger than the app can import.',
+    ],
+    [
+      'a corrupt payload',
+      jsonResponse({ payload: { ...serializeGame(createSavedBasicGame()), data: null } }),
+      'This shared data is invalid or incomplete and cannot be imported.',
+    ],
+  ])('explains %s', async (_case, response, message) => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(response);
+    await renderScreen(<ImportScreen />, { queryClient: createTestQueryClient() });
+    expect(await screen.findByText(message)).toBeVisible();
   });
 
   it.each(['game', 'games', 'team'] as const)(

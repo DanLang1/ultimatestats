@@ -67,6 +67,29 @@ Current limits are defined in `lib/sharing/validate.ts`:
 
 When these limits change, update validation tests and this document together.
 
+Sharing is stricter than import: the saved-games screen allows up to `MAX_SHARE_GAMES` (10) basic
+games but only `MAX_SHARE_ADVANCED_GAMES` (4) advanced games per link, because larger advanced
+payloads exceed the server's `payload_size_limit` constraint. Import keeps accepting 10 advanced
+games so links created before the cap still work. Shared payloads are purged after 30 days, so the
+import limit can drop to 4 once pre-cap links have expired; see `docs/tech-debt.md`.
+
+`uploadPayload()` runs `validatePayload()` on outgoing payloads too, so a share the recipient could
+never import is blocked before upload.
+
+## Errors
+
+Validation throws `InvalidSharePayloadError` with a `reason` of `malformed`, `exceeds-limit`, or
+`newer-version`. Upload failures throw `ShareUploadError` with a `reason` of `network` (status 0),
+`too-large` (HTTP 413 or the `payload_size_limit` check constraint), or `server`.
+
+- Share UI: `getShareUploadErrorMessage()` in `lib/sharing/shareActionUtils.ts` maps these to
+  user copy and falls back to each screen's `errorMessage`. Network failures and local data over
+  the share limits are not reported to Sentry. Malformed local data is reported, since it means our
+  own records fail validation. Other upload failures, including server size refusals, are reported
+  with status, code, and payload length.
+- Import UI: `useShareImport` shows distinct copy for not found, newer version, over limits,
+  invalid data, and connection failures.
+
 ## Key Files
 
 | Area                 | Source                                      |

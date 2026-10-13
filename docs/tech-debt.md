@@ -44,6 +44,20 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
+## P3 - Lower Advanced Games Import Limit to Match Share Cap
+
+- Sharing allows at most `MAX_SHARE_ADVANCED_GAMES` (4) advanced games per link, but import still
+  accepts 10 so links created before the cap keep working.
+- Shared payloads are purged from Supabase after 30 days. Not before ~30 days after the release that
+  ships the share cap, lower the `advanced-games` import limit to 4.
+- `validate.ts` uses one `MAX_BULK_GAMES` for both `games` and `advanced-games`; split it so
+  basic imports stay at 10. Update `lib/__tests__/validatePayload.test.ts` and
+  `docs/features/sharing.md` with the change.
+- References:
+  `lib/sharing/validate.ts`
+  `lib/constants.ts`
+  `docs/features/sharing.md` - Validation and Limits
+
 ## P3 - Store Architecture Refactor
 
 - `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.

@@ -6,12 +6,17 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { reportError } from '@/lib/sentry';
+import {
+  getShareUploadErrorMessage,
+  getShareUploadErrorReport,
+} from '@/lib/sharing/shareActionUtils';
 import { Fonts } from '@/theme/theme';
 
 import { AlertModal } from './AlertModal';
 
 export interface ShareConfirmModalContentProps {
   onConfirm: () => Promise<string>;
+  /** Shown for server and unknown failures; size, network, and data errors get specific copy. */
   errorMessage: string;
   onCancel: () => void;
   onCloseReady?: () => void;
@@ -39,8 +44,9 @@ export function ShareConfirmModalContent({
       setShareUrl(url);
       setDidCopy(false);
     } catch (error) {
-      reportError('share-link-create', error);
-      setInlineError(errorMessage);
+      const report = getShareUploadErrorReport(error);
+      if (report.shouldReport) reportError('share-link-create', error, report.extra);
+      setInlineError(getShareUploadErrorMessage(error, errorMessage));
     } finally {
       setIsLoading(false);
     }

@@ -46,6 +46,13 @@ export const MIN_PLAYED_AT_YEAR = 1968;
 /** Maximum number of games that can be shared at once. */
 export const MAX_SHARE_GAMES = 10;
 
+/**
+ * Maximum number of advanced games that can be shared at once. Advanced games are much larger than
+ * basic games and more than a day's worth exceeds the share server's payload size limit. Import
+ * still accepts up to `MAX_SHARE_GAMES` so existing links keep working.
+ */
+export const MAX_SHARE_ADVANCED_GAMES = 4;
+
 /** Maximum character length for tournament names. */
 export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 

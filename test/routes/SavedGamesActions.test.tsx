@@ -91,6 +91,46 @@ it.each(['basic', 'advanced'] as const)(
   },
 );
 
+it('caps advanced game shares at four while basic shares allow more', async () => {
+  const rivals = ['Rival A', 'Rival B', 'Rival C', 'Rival D', 'Rival E'];
+  useGameStore.setState({
+    savedTeams: [testTeam],
+    savedGames: rivals.map((team2Name, i) => ({
+      ...createSavedBasicGame(),
+      id: `basic-${i}`,
+      team2Name: `Basic ${team2Name}`,
+    })),
+  });
+  for (const [i, label] of rivals.entries()) {
+    await useSavedAdvancedGamesStore.getState().saveGame(
+      createAdvancedGameScenario({
+        id: `advanced-${i}`,
+        status: 'final',
+        sides: [
+          { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+          { id: 'opponent', label: `Advanced ${label}`, trackingMode: 'anonymous' },
+        ],
+      }).build(),
+    );
+  }
+  const user = userEvent.setup();
+  await renderScreen(<SavedGameStatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+
+  for (const label of rivals) await user.press(screen.getByText(`Advanced ${label}`));
+  await user.press(screen.getByText('Share (5)'));
+  expect(screen.queryByText('Share Data?')).not.toBeOnTheScreen();
+  await user.press(screen.getByText('Advanced Rival E'));
+  await user.press(screen.getByText('Share (4)'));
+  expect(screen.getByText('Share Data?')).toBeVisible();
+  await user.press(screen.getByText('Cancel'));
+
+  for (const label of rivals.slice(0, 4)) await user.press(screen.getByText(`Advanced ${label}`));
+  for (const label of rivals) await user.press(screen.getByText(`Basic ${label}`));
+  await user.press(screen.getByText('Share (5)'));
+  expect(screen.getByText('Share Data?')).toBeVisible();
+});
+
 it.each(['basic', 'advanced'] as const)(
   'deletes selected %s games and their tournament links after confirmation',
   async (kind) => {

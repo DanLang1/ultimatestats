@@ -15,6 +15,7 @@ Review against repository contracts first, taste second.
 3. Exported types and tests describe current implemented behavior; `AGENTS.md` and maintained domain
    docs describe intended contracts. If they disagree, report the inconsistency instead of silently
    choosing one source.
+4. I value code that is human readable, hate fallbacks, and prefer asserts, which allow catching early bugs. Fallbacks hide bugs by passing unexpected data downstream and bloat the code.
 
 ## Check against the repository contracts
 

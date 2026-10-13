@@ -1,8 +1,20 @@
 import { createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 
 import { serializeGame, serializeGames, serializeTeam } from '../sharing/serialize';
-import { fetchPayload, SharePayloadNotFoundError, uploadPayload } from '../sharing/share';
-import { runPendingShareAction } from '../sharing/shareActionUtils';
+import {
+  fetchPayload,
+  SharePayloadNotFoundError,
+  ShareUploadError,
+  uploadPayload,
+} from '../sharing/share';
+import {
+  getShareUploadErrorMessage,
+  getShareUploadErrorReport,
+  runPendingShareAction,
+  SHARE_INVALID_DATA_ERROR_MESSAGE,
+  SHARE_NETWORK_ERROR_MESSAGE,
+  SHARE_TOO_LARGE_ERROR_MESSAGE,
+} from '../sharing/shareActionUtils';
 import {
   fetchShowcaseList,
   fetchShowcasePayload,
@@ -58,6 +70,54 @@ describe('sharing transport', () => {
     );
   });
 
+  it('classifies an upload the server rejects as too large', async () => {
+    respond({ message: 'Payload Too Large' }, 413);
+    const upload = uploadPayload(serializeGame(createSavedBasicGame()));
+    await expect(upload).rejects.toBeInstanceOf(ShareUploadError);
+    await expect(upload).rejects.toMatchObject({ reason: 'too-large', status: 413 });
+  });
+
+  it('classifies an upload refused by the payload size constraint as too large', async () => {
+    respond(
+      {
+        code: '23514',
+        message:
+          'new row for relation "shared_payloads" violates check constraint "payload_size_limit"',
+      },
+      400,
+    );
+    await expect(uploadPayload(serializeGame(createSavedBasicGame()))).rejects.toMatchObject({
+      reason: 'too-large',
+    });
+  });
+
+  it('keeps other check violations as server failures', async () => {
+    respond({ code: '23514', message: 'violates check constraint "type_check"' }, 400);
+    await expect(uploadPayload(serializeGame(createSavedBasicGame()))).rejects.toMatchObject({
+      reason: 'server',
+    });
+  });
+
+  it('classifies an upload that never reaches the server as a network failure', async () => {
+    jest.spyOn(global, 'fetch').mockRejectedValueOnce(new TypeError('Network request failed'));
+    await expect(uploadPayload(serializeGame(createSavedBasicGame()))).rejects.toMatchObject({
+      reason: 'network',
+      status: 0,
+    });
+  });
+
+  it('refuses to upload a payload the recipient could not import', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch');
+    const games = Array.from({ length: 11 }, (_, i) => ({
+      ...createSavedBasicGame(),
+      id: `g-${i}`,
+    }));
+    await expect(uploadPayload(serializeGames(games))).rejects.toMatchObject({
+      reason: 'exceeds-limit',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('downloads only the requested record and validates its envelope', async () => {
     const payload = serializeTeam(testTeam, []);
     const fetchMock = respond({ payload: { ...payload, appVersion: 123 } });
@@ -88,6 +148,37 @@ describe('sharing transport', () => {
     await expect(fetchPayload('abc123')).rejects.toThrow(
       'Failed to fetch shared payload: Record not found',
     );
+  });
+
+  it.each([
+    [413, SHARE_TOO_LARGE_ERROR_MESSAGE, true],
+    [0, SHARE_NETWORK_ERROR_MESSAGE, false],
+    [500, 'fallback', true],
+  ] as const)(
+    'maps a %i upload failure to user copy and reporting',
+    async (status, message, shouldReport) => {
+      if (status === 0) {
+        jest.spyOn(global, 'fetch').mockRejectedValueOnce(new TypeError('Network request failed'));
+      } else {
+        respond({ message: 'failed' }, status);
+      }
+      const error = await uploadPayload(serializeGame(createSavedBasicGame())).catch((e) => e);
+      expect(getShareUploadErrorMessage(error, 'fallback')).toBe(message);
+      expect(getShareUploadErrorReport(error).shouldReport).toBe(shouldReport);
+    },
+  );
+
+  it('explains a payload that fails the import rules before upload', async () => {
+    const base = createSavedBasicGame();
+    const game = { ...base, events: Array.from({ length: 501 }, () => base.events[0]) };
+    const tooLarge = await uploadPayload(serializeGame(game)).catch((e) => e);
+    expect(getShareUploadErrorMessage(tooLarge, 'fallback')).toBe(SHARE_TOO_LARGE_ERROR_MESSAGE);
+    expect(getShareUploadErrorReport(tooLarge).shouldReport).toBe(false);
+    const corrupt = await uploadPayload(serializeTeam({ ...testTeam, name: '' }, [])).catch(
+      (e) => e,
+    );
+    expect(getShareUploadErrorMessage(corrupt, 'fallback')).toBe(SHARE_INVALID_DATA_ERROR_MESSAGE);
+    expect(getShareUploadErrorReport(corrupt).shouldReport).toBe(true);
   });
 
   it('rejects an absent pending action', () => {

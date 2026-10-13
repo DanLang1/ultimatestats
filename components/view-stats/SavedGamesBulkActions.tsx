@@ -8,16 +8,16 @@ import { Fonts } from '@/theme/theme';
 
 interface SavedGamesBulkActionsProps {
   selectedCount: number;
+  maxShareCount: number;
   onDelete: () => void;
   onShare: () => void;
   onCancel: () => void;
   isVisible: boolean;
 }
 
-const MAX_BULK_SHARE = 10;
-
 export default function SavedGamesBulkActions({
   selectedCount,
+  maxShareCount,
   onDelete,
   onShare,
   onCancel,
@@ -30,7 +30,7 @@ export default function SavedGamesBulkActions({
 
   if (!isVisible || selectedCount === 0) return null;
 
-  const shareDisabled = selectedCount > MAX_BULK_SHARE;
+  const shareDisabled = selectedCount > maxShareCount;
 
   return (
     <View style={styles.bottomBar}>

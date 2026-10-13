@@ -29,6 +29,19 @@ const MAX_BULK_GAMES = 10;
 const VALID_THROW_RESULTS = new Set<string>(THROW_RESULTS);
 const VALID_THROW_TYPES = new Set<string>(THROW_TYPES);
 
+export type InvalidSharePayloadReason = 'malformed' | 'exceeds-limit' | 'newer-version';
+
+/** A shared payload that cannot be imported, either on download or when checked before upload. */
+export class InvalidSharePayloadError extends Error {
+  readonly reason: InvalidSharePayloadReason;
+
+  constructor(message: string, reason: InvalidSharePayloadReason = 'malformed') {
+    super(message);
+    this.name = 'InvalidSharePayloadError';
+    this.reason = reason;
+  }
+}
+
 function isString(val: unknown): val is string {
   return typeof val === 'string';
 }
@@ -56,84 +69,84 @@ function sanitizeString(val: unknown): string {
 
 function validateGame(data: unknown): asserts data is SavedGame {
   if (!isRecord(data)) {
-    throw new Error('Invalid payload: missing data');
+    throw new InvalidSharePayloadError('Invalid payload: missing data');
   }
   if (!isString(data.id) || data.id.length === 0) {
-    throw new Error('Invalid payload: missing data id');
+    throw new InvalidSharePayloadError('Invalid payload: missing data id');
   }
   if (!isString(data.team2Name)) {
-    throw new Error('Invalid game: missing team2Name');
+    throw new InvalidSharePayloadError('Invalid game: missing team2Name');
   }
   if (!isNumber(data.team1Score) || !isNumber(data.team2Score)) {
-    throw new Error('Invalid game: missing scores');
+    throw new InvalidSharePayloadError('Invalid game: missing scores');
   }
   if (data.playedAt !== undefined && !isNumber(data.playedAt)) {
-    throw new Error('Invalid game: invalid playedAt');
+    throw new InvalidSharePayloadError('Invalid game: invalid playedAt');
   }
   if (!Array.isArray(data.events)) {
-    throw new Error('Invalid game: missing events');
+    throw new InvalidSharePayloadError('Invalid game: missing events');
   }
   if (data.events.length > MAX_PAYLOAD_EVENTS) {
-    throw new Error('Invalid game: too many events');
+    throw new InvalidSharePayloadError('Invalid game: too many events', 'exceeds-limit');
   }
   if (!isRecord(data.team1) || !Array.isArray(data.team1.roster)) {
-    throw new Error('Invalid game: missing team1 roster');
+    throw new InvalidSharePayloadError('Invalid game: missing team1 roster');
   }
   if (data.team1.roster.length > MAX_ROSTER_SIZE) {
-    throw new Error('Invalid game: roster too large');
+    throw new InvalidSharePayloadError('Invalid game: roster too large', 'exceeds-limit');
   }
 }
 
 function validateTeam(data: unknown): asserts data is SavedTeam {
   if (!isRecord(data)) {
-    throw new Error('Invalid team: missing data');
+    throw new InvalidSharePayloadError('Invalid team: missing data');
   }
   if (!isString(data.id) || data.id.length === 0) {
-    throw new Error('Invalid payload: missing data id');
+    throw new InvalidSharePayloadError('Invalid payload: missing data id');
   }
   if (!isString(data.name) || data.name.length === 0) {
-    throw new Error('Invalid team: missing name');
+    throw new InvalidSharePayloadError('Invalid team: missing name');
   }
   if (!Array.isArray(data.roster)) {
-    throw new Error('Invalid team: missing roster');
+    throw new InvalidSharePayloadError('Invalid team: missing roster');
   }
   if (data.roster.length > MAX_ROSTER_SIZE) {
-    throw new Error('Invalid team: roster too large');
+    throw new InvalidSharePayloadError('Invalid team: roster too large', 'exceeds-limit');
   }
 }
 
 function validatePlayerRef(ref: unknown): asserts ref is PlayerRef {
   if (!isRecord(ref)) {
-    throw new Error('Invalid advanced game: invalid player reference');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid player reference');
   }
   if (ref.refType === 'participant') {
     if (!isString(ref.participantId) || ref.participantId.length === 0) {
-      throw new Error('Invalid advanced game: missing participantId');
+      throw new InvalidSharePayloadError('Invalid advanced game: missing participantId');
     }
     return;
   }
   if (ref.refType !== 'unknown' && ref.refType !== 'untracked') {
-    throw new Error('Invalid advanced game: invalid player reference type');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid player reference type');
   }
 }
 
 function validateFieldLocation(location: unknown): asserts location is FieldLocation {
   if (!isRecord(location)) {
-    throw new Error('Invalid advanced game: invalid field location');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid field location');
   }
   if (location.locationType === 'zone') {
     if (!isString(location.zoneId)) {
-      throw new Error('Invalid advanced game: missing zoneId');
+      throw new InvalidSharePayloadError('Invalid advanced game: missing zoneId');
     }
     return;
   }
   if (location.locationType === 'xy') {
     if (!isNumber(location.x) || !isNumber(location.y)) {
-      throw new Error('Invalid advanced game: invalid xy location');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid xy location');
     }
     return;
   }
-  throw new Error('Invalid advanced game: invalid field location type');
+  throw new InvalidSharePayloadError('Invalid advanced game: invalid field location type');
 }
 
 function validateOptionalPlayerRef(ref: unknown) {
@@ -151,14 +164,18 @@ function validateOptionalFieldLocation(location: unknown) {
 function validateOptionalThrowDetails(details: unknown, result: ThrowResult) {
   if (details === undefined) return;
   if (!isRecord(details) || !isThrowType(details.type)) {
-    throw new Error('Invalid advanced game: invalid throw details');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid throw details');
   }
   const eligibleTypes = getEligibleThrowTypes(result);
   if (!eligibleTypes.includes(details.type)) {
     if (details.type === 'backfield_reset') {
-      throw new Error('Invalid advanced game: backfield reset details require a turnover result');
+      throw new InvalidSharePayloadError(
+        'Invalid advanced game: backfield reset details require a turnover result',
+      );
     }
-    throw new Error('Invalid advanced game: throw details require an eligible throw result');
+    throw new InvalidSharePayloadError(
+      'Invalid advanced game: throw details require an eligible throw result',
+    );
   }
 }
 
@@ -167,15 +184,15 @@ function validateAdvancedAction(
   fullRosterSideIds: Set<string>,
 ): asserts action is PossessionAction {
   if (!isRecord(action)) {
-    throw new Error('Invalid advanced game: invalid action');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid action');
   }
   if (!isString(action.id) || action.id.length === 0) {
-    throw new Error('Invalid advanced game: missing action id');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing action id');
   }
 
   if (action.kind === 'pull') {
     if (!isString(action.sideId) || !isString(action.receivingSideId)) {
-      throw new Error('Invalid advanced game: invalid pull side');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid pull side');
     }
     validatePlayerRef(action.puller);
     validateOptionalPlayerRef(action.receiver);
@@ -187,14 +204,14 @@ function validateAdvancedAction(
       action.result !== 'dropped' &&
       action.result !== 'roller'
     ) {
-      throw new Error('Invalid advanced game: invalid pull result');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid pull result');
     }
     return;
   }
 
   if (action.kind === 'disc_pickup') {
     if (!isString(action.sideId)) {
-      throw new Error('Invalid advanced game: invalid pickup side');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid pickup side');
     }
     validatePlayerRef(action.player);
     validateOptionalFieldLocation(action.location);
@@ -203,7 +220,7 @@ function validateAdvancedAction(
 
   if (action.kind === 'throw') {
     if (!isString(action.sideId)) {
-      throw new Error('Invalid advanced game: invalid throw side');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid throw side');
     }
     validatePlayerRef(action.thrower);
     validateOptionalPlayerRef(action.toPlayer);
@@ -211,10 +228,12 @@ function validateAdvancedAction(
     validateOptionalFieldLocation(action.origin);
     validateOptionalFieldLocation(action.target);
     if (!isThrowResult(action.result)) {
-      throw new Error('Invalid advanced game: invalid throw result');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid throw result');
     }
     if (action.details !== undefined && !fullRosterSideIds.has(action.sideId)) {
-      throw new Error('Invalid advanced game: throw details require a fully tracked side');
+      throw new InvalidSharePayloadError(
+        'Invalid advanced game: throw details require a fully tracked side',
+      );
     }
     validateOptionalThrowDetails(action.details, action.result);
     return;
@@ -226,47 +245,48 @@ function validateAdvancedAction(
       action.reason !== 'injury' &&
       action.reason !== 'manual_pause'
     ) {
-      throw new Error('Invalid advanced game: invalid stoppage reason');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid stoppage reason');
     }
     if (action.sideId !== undefined && !isString(action.sideId)) {
-      throw new Error('Invalid advanced game: invalid stoppage side');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid stoppage side');
     }
     return;
   }
 
-  throw new Error('Invalid advanced game: invalid action kind');
+  throw new InvalidSharePayloadError('Invalid advanced game: invalid action kind');
 }
 
 function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGame {
   if (!isRecord(data)) {
-    throw new Error('Invalid advanced game: missing data');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing data');
   }
   if (!isString(data.id) || data.id.length === 0) {
-    throw new Error('Invalid payload: missing data id');
+    throw new InvalidSharePayloadError('Invalid payload: missing data id');
   }
   if (!isNumber(data.schemaVersion)) {
-    throw new Error('Invalid advanced game: missing schemaVersion');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing schemaVersion');
   }
   if (data.schemaVersion > ADVANCED_TRACKING_SCHEMA_VERSION) {
-    throw new Error(
+    throw new InvalidSharePayloadError(
       `Invalid advanced game: schema version ${data.schemaVersion} is newer than supported version ${ADVANCED_TRACKING_SCHEMA_VERSION}`,
+      'newer-version',
     );
   }
   if (!isNumber(data.createdAt) || !isNumber(data.updatedAt)) {
-    throw new Error('Invalid advanced game: missing timestamps');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing timestamps');
   }
   if (data.importedAt !== undefined && !isNumber(data.importedAt)) {
-    throw new Error('Invalid advanced game: invalid importedAt');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid importedAt');
   }
   if (data.status !== 'in_progress' && data.status !== 'final' && data.status !== 'terminated') {
-    throw new Error('Invalid advanced game: invalid status');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid status');
   }
   if (!isString(data.focusSideId) || !isString(data.initialReceivingSideId)) {
-    throw new Error('Invalid advanced game: missing side ids');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing side ids');
   }
   if (data.flip !== undefined) {
     if (!isRecord(data.flip) || (data.flip.result !== 'won' && data.flip.result !== 'lost')) {
-      throw new Error('Invalid advanced game: invalid flip result');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid flip result');
     }
     if (
       data.flip.choice !== undefined &&
@@ -274,22 +294,27 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
       data.flip.choice !== 'defense' &&
       data.flip.choice !== 'side'
     ) {
-      throw new Error('Invalid advanced game: invalid flip choice');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid flip choice');
     }
     if (data.flip.result === 'lost' && data.flip.choice !== undefined) {
-      throw new Error('Invalid advanced game: lost flip cannot include a choice');
+      throw new InvalidSharePayloadError(
+        'Invalid advanced game: lost flip cannot include a choice',
+      );
     }
   }
   if (!isRecord(data.settings) || !isString(data.settings.locationMode)) {
-    throw new Error('Invalid advanced game: missing settings');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing settings');
   }
   const { possessionCount, actionCount } = validateAdvancedGameStructure(data);
 
   if (possessionCount > MAX_ADVANCED_POSSESSIONS) {
-    throw new Error('Invalid advanced game: too many possessions');
+    throw new InvalidSharePayloadError(
+      'Invalid advanced game: too many possessions',
+      'exceeds-limit',
+    );
   }
   if (actionCount > MAX_ADVANCED_ACTIONS) {
-    throw new Error('Invalid advanced game: too many actions');
+    throw new InvalidSharePayloadError('Invalid advanced game: too many actions', 'exceeds-limit');
   }
 }
 
@@ -298,28 +323,31 @@ function validateAdvancedGameStructure(data: Record<string, unknown>): {
   actionCount: number;
 } {
   if (!Array.isArray(data.sides) || data.sides.length !== 2) {
-    throw new Error('Invalid advanced game: expected two sides');
+    throw new InvalidSharePayloadError('Invalid advanced game: expected two sides');
   }
   const fullRosterSideIds = new Set<string>();
   for (const side of data.sides) {
     validateAdvancedSide(side, fullRosterSideIds);
   }
   if (!Array.isArray(data.participants)) {
-    throw new Error('Invalid advanced game: missing participants');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing participants');
   }
   if (data.participants.length > MAX_ADVANCED_PARTICIPANTS) {
-    throw new Error('Invalid advanced game: too many participants');
+    throw new InvalidSharePayloadError(
+      'Invalid advanced game: too many participants',
+      'exceeds-limit',
+    );
   }
   for (const participant of data.participants) {
     if (!isRecord(participant) || !isString(participant.id) || !isString(participant.name)) {
-      throw new Error('Invalid advanced game: invalid participant');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid participant');
     }
   }
   if (!Array.isArray(data.points)) {
-    throw new Error('Invalid advanced game: missing points');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing points');
   }
   if (data.points.length > MAX_ADVANCED_POINTS) {
-    throw new Error('Invalid advanced game: too many points');
+    throw new InvalidSharePayloadError('Invalid advanced game: too many points', 'exceeds-limit');
   }
 
   let possessionCount = 0;
@@ -334,10 +362,10 @@ function validateAdvancedGameStructure(data: Record<string, unknown>): {
 
 function validateAdvancedSide(side: unknown, fullRosterSideIds: Set<string>): void {
   if (!isRecord(side) || !isString(side.id) || !isString(side.label)) {
-    throw new Error('Invalid advanced game: invalid side');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid side');
   }
   if (side.trackingMode !== 'full-roster' && side.trackingMode !== 'anonymous') {
-    throw new Error('Invalid advanced game: invalid tracking mode');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid tracking mode');
   }
   if (side.trackingMode === 'full-roster') fullRosterSideIds.add(side.id);
 }
@@ -347,15 +375,15 @@ function validateAdvancedPoint(
   fullRosterSideIds: Set<string>,
 ): { possessionCount: number; actionCount: number } {
   if (!isRecord(point) || !isString(point.id) || !Array.isArray(point.lines)) {
-    throw new Error('Invalid advanced game: invalid point');
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid point');
   }
   for (const line of point.lines) {
     if (!isRecord(line) || !isString(line.sideId) || !Array.isArray(line.participantIds)) {
-      throw new Error('Invalid advanced game: invalid point line');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid point line');
     }
   }
   if (!Array.isArray(point.possessions)) {
-    throw new Error('Invalid advanced game: missing possessions');
+    throw new InvalidSharePayloadError('Invalid advanced game: missing possessions');
   }
   if (point.revivalPauses !== undefined) {
     if (
@@ -368,16 +396,16 @@ function validateAdvancedPoint(
           pause.resumedAt < pause.pausedAt,
       )
     ) {
-      throw new Error('Invalid advanced game: invalid point revival pause');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid point revival pause');
     }
   }
   let actionCount = 0;
   for (const possession of point.possessions) {
     if (!isRecord(possession) || !isString(possession.id) || !isString(possession.sideId)) {
-      throw new Error('Invalid advanced game: invalid possession');
+      throw new InvalidSharePayloadError('Invalid advanced game: invalid possession');
     }
     if (!Array.isArray(possession.actions)) {
-      throw new Error('Invalid advanced game: missing actions');
+      throw new InvalidSharePayloadError('Invalid advanced game: missing actions');
     }
     actionCount += possession.actions.length;
     for (const action of possession.actions) {
@@ -390,7 +418,7 @@ function validateAdvancedPoint(
         (possession.redZone.anonymousScaffold !== undefined &&
           possession.redZone.anonymousScaffold !== true)
       ) {
-        throw new Error('Invalid advanced game: invalid red-zone data');
+        throw new InvalidSharePayloadError('Invalid advanced game: invalid red-zone data');
       }
       if (possession.redZone.anonymousScaffold === true) {
         const [scaffoldAction] = possession.actions;
@@ -401,12 +429,12 @@ function validateAdvancedPoint(
           !isRecord(scaffoldAction.player) ||
           scaffoldAction.player.refType !== 'untracked'
         ) {
-          throw new Error('Invalid advanced game: invalid red-zone data');
+          throw new InvalidSharePayloadError('Invalid advanced game: invalid red-zone data');
         }
       }
       const enteredAt = possession.redZone.enteredAt;
       if (isFiniteNumber(point.startedAt) && enteredAt < point.startedAt) {
-        throw new Error('Invalid advanced game: invalid red-zone data');
+        throw new InvalidSharePayloadError('Invalid advanced game: invalid red-zone data');
       }
       const outcomeAction = possession.actions.findLast(
         (action) => isRecord(action) && action.kind !== 'stoppage',
@@ -417,7 +445,7 @@ function validateAdvancedPoint(
         ((outcomeAction.kind === 'throw' && outcomeAction.result !== 'complete') ||
           (outcomeAction.kind === 'pull' && outcomeAction.result === 'dropped'));
       if (outcomeIsResolved && isFiniteNumber(outcomeRecordedAt) && enteredAt > outcomeRecordedAt) {
-        throw new Error('Invalid advanced game: invalid red-zone data');
+        throw new InvalidSharePayloadError('Invalid advanced game: invalid red-zone data');
       }
     }
   }
@@ -428,17 +456,17 @@ const MAX_PRESETS = 20;
 
 function validatePresets(presets: unknown[]) {
   if (presets.length > MAX_PRESETS) {
-    throw new Error('Invalid payload: too many presets');
+    throw new InvalidSharePayloadError('Invalid payload: too many presets', 'exceeds-limit');
   }
   for (const preset of presets) {
     if (!isRecord(preset)) {
-      throw new Error('Invalid preset: not an object');
+      throw new InvalidSharePayloadError('Invalid preset: not an object');
     }
     if (!isString(preset.id) || !isString(preset.name) || !isString(preset.teamId)) {
-      throw new Error('Invalid preset: missing required fields');
+      throw new InvalidSharePayloadError('Invalid preset: missing required fields');
     }
     if (!Array.isArray(preset.playerIds)) {
-      throw new Error('Invalid preset: missing playerIds');
+      throw new InvalidSharePayloadError('Invalid preset: missing playerIds');
     }
   }
 }
@@ -448,13 +476,16 @@ function validateGamesPayload(
   schemaVersion: number,
 ): SharedPayload {
   if (!Array.isArray(payload.data)) {
-    throw new Error('Invalid payload: games data must be an array');
+    throw new InvalidSharePayloadError('Invalid payload: games data must be an array');
   }
   if (payload.data.length === 0) {
-    throw new Error('Invalid payload: no games in payload');
+    throw new InvalidSharePayloadError('Invalid payload: no games in payload');
   }
   if (payload.data.length > MAX_BULK_GAMES) {
-    throw new Error(`Invalid payload: too many games (max ${MAX_BULK_GAMES})`);
+    throw new InvalidSharePayloadError(
+      `Invalid payload: too many games (max ${MAX_BULK_GAMES})`,
+      'exceeds-limit',
+    );
   }
   for (const item of payload.data) {
     validateGame(item);
@@ -473,13 +504,16 @@ function validateAdvancedGamesPayload(
   schemaVersion: number,
 ): SharedPayload {
   if (!Array.isArray(payload.data)) {
-    throw new Error('Invalid payload: advanced games data must be an array');
+    throw new InvalidSharePayloadError('Invalid payload: advanced games data must be an array');
   }
   if (payload.data.length === 0) {
-    throw new Error('Invalid payload: no games in payload');
+    throw new InvalidSharePayloadError('Invalid payload: no games in payload');
   }
   if (payload.data.length > MAX_BULK_GAMES) {
-    throw new Error(`Invalid payload: too many games (max ${MAX_BULK_GAMES})`);
+    throw new InvalidSharePayloadError(
+      `Invalid payload: too many games (max ${MAX_BULK_GAMES})`,
+      'exceeds-limit',
+    );
   }
   const games = payload.data.map((item) => {
     validateAdvancedGame(item);
@@ -496,12 +530,12 @@ function validateAdvancedGamesPayload(
 
 export function validatePayload(raw: unknown): SharedPayload {
   if (!isRecord(raw)) {
-    throw new Error('Invalid payload: not an object');
+    throw new InvalidSharePayloadError('Invalid payload: not an object');
   }
 
   const schemaVersion = raw.schemaVersion;
   if (!isNumber(schemaVersion)) {
-    throw new Error('Invalid payload: missing schemaVersion');
+    throw new InvalidSharePayloadError('Invalid payload: missing schemaVersion');
   }
 
   if (
@@ -511,7 +545,7 @@ export function validatePayload(raw: unknown): SharedPayload {
     raw.type !== 'team' &&
     raw.type !== 'games'
   ) {
-    throw new Error('Invalid payload: unknown type');
+    throw new InvalidSharePayloadError('Invalid payload: unknown type');
   }
 
   const currentSchemaVersion =
@@ -519,8 +553,9 @@ export function validatePayload(raw: unknown): SharedPayload {
       ? ADVANCED_TRACKING_SCHEMA_VERSION
       : CURRENT_SCHEMA_VERSION;
   if (schemaVersion > currentSchemaVersion) {
-    throw new Error(
+    throw new InvalidSharePayloadError(
       `Invalid payload: schema version ${schemaVersion} is newer than supported version ${currentSchemaVersion}`,
+      'newer-version',
     );
   }
 

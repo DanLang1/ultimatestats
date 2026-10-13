@@ -16,7 +16,7 @@ import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { MAX_SHARE_GAMES } from '@/lib/constants';
+import { MAX_SHARE_ADVANCED_GAMES, MAX_SHARE_GAMES } from '@/lib/constants';
 import {
   advancedGameSummaryToListItem,
   basicGameToListItem,
@@ -66,6 +66,8 @@ export default function SavedGameStatsScreen() {
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
+  const isAdvancedSelection = selectedGameKind === 'advanced';
+  const maxShareCount = isAdvancedSelection ? MAX_SHARE_ADVANCED_GAMES : MAX_SHARE_GAMES;
 
   const releaseNavigationGuard = () => {
     setTimeout(() => {
@@ -173,10 +175,11 @@ export default function SavedGameStatsScreen() {
     const count = selectedSavedGameIds.size;
     if (count === 0) return;
 
-    if (count > MAX_SHARE_GAMES) {
+    if (count > maxShareCount) {
+      const gameLabel = isAdvancedSelection ? 'advanced games' : 'games';
       showAlert({
         title: 'Too many games',
-        message: `You can share up to ${MAX_SHARE_GAMES} games at a time.`,
+        message: `You can share up to ${maxShareCount} ${gameLabel} at a time.`,
       });
       return;
     }
@@ -291,6 +294,7 @@ export default function SavedGameStatsScreen() {
       <SavedGamesBulkActions
         isVisible={selectedSavedGameIds.size > 0}
         selectedCount={selectedSavedGameIds.size}
+        maxShareCount={maxShareCount}
         onDelete={handleBulkDeleteGames}
         onShare={handleBulkShareGames}
         onCancel={handleExitSelectionMode}

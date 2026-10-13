@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { fetchPayload, SharedPayload, SharePayloadNotFoundError } from '@/lib/sharing';
+import {
+    fetchPayload,
+    InvalidSharePayloadError,
+    SharedPayload,
+    SharePayloadNotFoundError,
+} from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -68,6 +73,29 @@ function deriveImportState(
   return { status: 'preview-games', payload, games: payload.data, updateCount };
 }
 
+function getShareImportErrorMessage(error: Error): string {
+  if (error instanceof SharePayloadNotFoundError) {
+    return 'This share link was not found. It may have been removed or mistyped.';
+  }
+  if (error instanceof InvalidSharePayloadError) {
+    if (error.reason === 'newer-version') {
+      return 'This was shared from a newer version of U-Stat. Update the app to import it.';
+    }
+    if (error.reason === 'exceeds-limit') {
+      return 'This shared data is larger than the app can import.';
+    }
+    return 'This shared data is invalid or incomplete and cannot be imported.';
+  }
+  return 'Could not load shared data. Please try again later.';
+}
+
+function isExpectedShareImportError(error: Error): boolean {
+  return (
+    error instanceof SharePayloadNotFoundError ||
+    (error instanceof InvalidSharePayloadError && error.reason === 'newer-version')
+  );
+}
+
 export function useShareImport(shareId: string | undefined) {
   const { savedGames, savedTeams } = useGameStore();
   const { data: advancedGameSummaries } = useAdvancedGameSummaries();
@@ -83,17 +111,14 @@ export function useShareImport(shareId: string | undefined) {
       return payload;
     },
     enabled: !!shareId,
-    meta: { isExpectedError: (error) => error instanceof SharePayloadNotFoundError },
+    meta: { isExpectedError: isExpectedShareImportError },
   });
 
   let importState: ShareImportState | null = null;
   if (doneState) {
     importState = doneState;
   } else if (query.isError) {
-    importState = {
-      status: 'error',
-      message: 'Could not load shared data. The link may have expired.',
-    };
+    importState = { status: 'error', message: getShareImportErrorMessage(query.error) };
   } else if (query.data) {
     importState = deriveImportState(query.data, savedGames, advancedGameSummaries, savedTeams);
   }
