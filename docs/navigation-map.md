@@ -30,20 +30,18 @@ Layout behavior is defined across:
 1. `/` waits for `useTutorialStore` hydration.
 2. If onboarding is incomplete, `/` -> `/TutorialIntro`
 3. `/TutorialIntro` -> `/TutorialAdvancedLineSelect` for a tutorial-owned line-selection exercise.
-4. `/TutorialAdvancedLineSelect` -> `/TutorialAdvancedTracker` for pass, throwaway, block, drop,
-   pressure, and goal gestures.
-5. Completing those gestures marks onboarding and the advanced tutorial complete, then opens the
+4. `/TutorialAdvancedLineSelect` -> `/TutorialAdvancedTracker` for Buttons practice.
+5. Completing practice marks onboarding and the advanced tutorial complete, then opens the
    normal `/Dashboard` screen. Users can build or import their roster and start Advanced through
    the existing production flows when they are ready; the tutorial does not establish a session.
 
-There is no skip action during first-launch instruction. Exiting line selection or gesture practice
-returns to `/Dashboard` without marking onboarding complete, so the next cold entry starts again at
-`/TutorialIntro`. Existing users are never automatically routed into a tutorial. New Game always
+Exiting line selection or practice during first-launch instruction also marks onboarding complete,
+so skipping is permanent. Existing users are never automatically routed into a tutorial. New Game always
 opens the requested basic, advanced, or scrimmage setup directly.
 
 Help launches the Advanced Tutorial, Basic Scoreboard Guide, and Basic Stats Guide with a typed
 `help` origin and returns each guide to `/Dashboard`. Advanced tracker practice uses the `tracker`
-origin, runs the six gesture steps, and returns to the live tracker. Voluntary advanced completion may
+origin and returns to the live tracker. Voluntary advanced completion may
 set `hasSeenAdvancedTutorial` but never changes `hasSeenOnboarding`.
 
 ### Transparent Modals

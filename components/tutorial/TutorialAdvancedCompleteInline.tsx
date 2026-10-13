@@ -7,11 +7,13 @@ import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 interface TutorialAdvancedCompleteInlineProps {
+  body: string;
   buttonLabel: string;
   onFinish: () => void;
 }
 
 export default function TutorialAdvancedCompleteInline({
+  body,
   buttonLabel,
   onFinish,
 }: TutorialAdvancedCompleteInlineProps) {
@@ -29,9 +31,7 @@ export default function TutorialAdvancedCompleteInline({
       <ThemedText style={[styles.title, { color: palette.textInverse }]}>
         Advanced Tutorial Complete
       </ThemedText>
-      <ThemedText style={[styles.body, { color: palette.textMuted }]}>
-        Swipe up for goal, down for drops or throwaways
-      </ThemedText>
+      <ThemedText style={[styles.body, { color: palette.textMuted }]}>{body}</ThemedText>
       <Pressable
         onPress={onFinish}
         style={({ pressed }) => [

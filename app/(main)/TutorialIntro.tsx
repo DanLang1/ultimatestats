@@ -5,15 +5,16 @@ import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanim
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { exitAdvancedTutorial } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 const FEATURES = [
   {
-    icon: 'gesture-swipe-vertical' as const,
+    icon: 'gesture-tap' as const,
     title: 'Simple Tracking',
-    description: 'Tap/swipe to record passes and actions',
+    description: 'Tap to record passes and actions',
   },
   {
     icon: 'chart-line' as const,
@@ -22,8 +23,8 @@ const FEATURES = [
   },
   {
     icon: 'share-variant' as const,
-    title: 'Simple Sharing',
-    description: 'No account needed, share games and teams with a link',
+    title: 'Share With a Link',
+    description: 'No account needed, share games and teams',
   },
 ] as const;
 
@@ -34,6 +35,34 @@ export default function TutorialIntroRoute() {
   const styles = createStyles(sizeClass, useRowLayout);
   const iconSize = scaleBySizeClass(28, sizeClass);
 
+  const ctaActions = (
+    <>
+      <Pressable
+        onPress={() =>
+          router.replace({
+            pathname: '/TutorialAdvancedLineSelect',
+            params: { origin: 'onboarding', variant: 'buttons' },
+          })
+        }
+        style={({ pressed }) => [
+          styles.ctaButton,
+          { backgroundColor: pressed ? palette.accentOverlay30 : palette.accent },
+        ]}>
+        <ThemedText style={[styles.ctaText, { color: palette.textOnAccent }]}>
+          See How It Works
+        </ThemedText>
+      </Pressable>
+      <Pressable
+        testID="tutorial-intro-skip"
+        accessibilityRole="button"
+        onPress={() => exitAdvancedTutorial('onboarding')}
+        hitSlop={8}
+        style={({ pressed }) => [styles.skipButton, pressed && { opacity: 0.6 }]}>
+        <ThemedText style={[styles.skipText, { color: palette.textMuted }]}>Skip</ThemedText>
+      </Pressable>
+    </>
+  );
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
@@ -41,27 +70,13 @@ export default function TutorialIntroRoute() {
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.heroSection}>
             <ThemedText style={[styles.appName, { color: palette.textInverse }]}>U-Stat</ThemedText>
             <ThemedText style={[styles.tagline, { color: palette.textMuted }]}>
-              Ultimate Frisbee Scoreboard / Stat Tracker
+              Open-Source Ultimate Frisbee Stat Tracker
             </ThemedText>
           </Animated.View>
 
           {useRowLayout && (
             <Animated.View entering={FadeInUp.delay(600).springify()} style={styles.footer}>
-              <Pressable
-                onPress={() =>
-                  router.replace({
-                    pathname: '/TutorialAdvancedLineSelect',
-                    params: { origin: 'onboarding' },
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.ctaButton,
-                  { backgroundColor: pressed ? palette.accentOverlay30 : palette.accent },
-                ]}>
-                <ThemedText style={[styles.ctaText, { color: palette.textOnAccent }]}>
-                  Continue
-                </ThemedText>
-              </Pressable>
+              {ctaActions}
             </Animated.View>
           )}
         </View>
@@ -99,21 +114,7 @@ export default function TutorialIntroRoute() {
 
             {!useRowLayout && (
               <Animated.View entering={FadeInUp.delay(900).springify()} style={styles.footer}>
-                <Pressable
-                  onPress={() =>
-                    router.replace({
-                      pathname: '/TutorialAdvancedLineSelect',
-                      params: { origin: 'onboarding' },
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.ctaButton,
-                    { backgroundColor: pressed ? palette.accentOverlay30 : palette.accent },
-                  ]}>
-                  <ThemedText style={[styles.ctaText, { color: palette.textOnAccent }]}>
-                    Continue
-                  </ThemedText>
-                </Pressable>
+                {ctaActions}
               </Animated.View>
             )}
           </View>
@@ -240,6 +241,15 @@ function createStyles(sizeClass: 'small' | 'medium' | 'large', useRowLayout: boo
     },
     ctaText: {
       fontSize: getSizeClassValue({ small: 16, medium: 18, large: 20 }, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    skipButton: {
+      marginTop: getSizeClassValue({ small: 8, medium: 10, large: 12 }, sizeClass),
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+    },
+    skipText: {
+      fontSize: getSizeClassValue({ small: 15, medium: 16, large: 18 }, sizeClass),
       fontFamily: Fonts.semiBold,
     },
   });

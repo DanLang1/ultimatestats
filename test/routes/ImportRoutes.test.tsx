@@ -213,7 +213,7 @@ describe('shared-link import', () => {
     const client = createTestQueryClient();
     await renderScreen(<ImportScreen />, { queryClient: client });
     expect(
-      await screen.findByText('Could not load shared data. Check your connection and try again.'),
+      await screen.findByText('Could not load shared data. Please try again later.'),
     ).toBeVisible();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await userEvent.setup().press(screen.getByText('OK'));

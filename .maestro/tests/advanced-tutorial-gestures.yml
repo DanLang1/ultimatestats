@@ -1,0 +1,66 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Gestures Tutorial
+tags:
+  - advanced
+  - extended
+---
+# Help -> Advanced Tutorial: Gestures, completed with swipes and returned to Dashboard.
+- runFlow: ../flows/setup-team-dashboard.yaml
+
+# The Help row starts underneath the tab bar.
+- swipe:
+    start: '50%,70%'
+    end: '50%,40%'
+- tapOn:
+    id: 'dashboard-help-button'
+- scrollUntilVisible:
+    element: '.*Advanced Tutorial: Gestures.*'
+    direction: DOWN
+- tapOn: '.*Advanced Tutorial: Gestures.*'
+
+- assertVisible:
+    id: 'tutorial-line-select-screen'
+- tapOn:
+    id: 'line-select-quick-preset-tutorial-d-line'
+- tapOn:
+    id: 'line-select-confirm'
+
+- assertVisible: 'STEP 1 OF 6'
+- assertNotVisible:
+    id: 'offense-throwaway'
+- tapOn:
+    id: 'tracker-chip-Mark'
+- assertVisible: 'STEP 2 OF 6'
+- swipe:
+    from:
+      id: 'tracker-chip-Mark'
+    direction: DOWN
+    duration: 500
+- assertVisible: 'STEP 3 OF 6'
+- tapOn:
+    id: 'tracker-chip-Rachel'
+- assertVisible: 'STEP 4 OF 6'
+- swipe:
+    from:
+      id: 'tracker-chip-Jules'
+    direction: DOWN
+    duration: 500
+- assertVisible: 'STEP 5 OF 6'
+- tapOn:
+    id: 'tracker-more-button'
+- tapOn:
+    id: 'tutorial-pressure-action'
+- tapOn:
+    id: 'tracker-chip-Harper'
+- assertVisible: 'STEP 6 OF 6'
+- swipe:
+    from:
+      id: 'tracker-chip-Kelly'
+    direction: UP
+    duration: 500
+
+- assertVisible: 'Advanced Tutorial Complete'
+- tapOn: 'DONE'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 10000

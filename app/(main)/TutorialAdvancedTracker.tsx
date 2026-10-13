@@ -5,13 +5,17 @@ import { ThemedText } from '@/components/ThemedText';
 import TutorialAdvancedActionCard from '@/components/tutorial/TutorialAdvancedActionCard';
 import TutorialAdvancedCompleteInline from '@/components/tutorial/TutorialAdvancedCompleteInline';
 import { TUTORIAL_ADVANCED_PARTICIPANTS } from '@/components/tutorial/tutorialAdvancedData';
+import TutorialAdvancedFooter from '@/components/tutorial/TutorialAdvancedFooter';
 import TutorialAdvancedPlayerGrid from '@/components/tutorial/TutorialAdvancedPlayerGrid';
 import TutorialAdvancedRareActionsSheet from '@/components/tutorial/TutorialAdvancedRareActionsSheet';
 import {
-  getTutorialExitRoute,
+  exitAdvancedTutorial,
+  parseTutorialAdvancedVariant,
   parseTutorialOrigin,
 } from '@/components/tutorial/tutorialNavigation';
-import useTutorialAdvancedGameState from '@/components/tutorial/useTutorialAdvancedGameState';
+import useTutorialAdvancedGameState, {
+  TUTORIAL_ADVANCED_COMPLETION_TEXT,
+} from '@/components/tutorial/useTutorialAdvancedGameState';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -20,10 +24,12 @@ import { Fonts } from '@/theme/theme';
 export default function TutorialAdvancedTrackerRoute() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const { origin: rawOrigin } = useLocalSearchParams<{
+  const { origin: rawOrigin, variant: rawVariant } = useLocalSearchParams<{
     origin?: string;
+    variant?: string;
   }>();
   const origin = parseTutorialOrigin(rawOrigin);
+  const variant = parseTutorialAdvancedVariant(rawVariant);
   const styles = createStyles(sizeClass);
 
   const finish = () => {
@@ -40,43 +46,17 @@ export default function TutorialAdvancedTrackerRoute() {
     if (origin === 'help') router.replace('/Dashboard');
   };
 
-  const gameState = useTutorialAdvancedGameState();
-  const showBetweenPoint = gameState.result === 'goal';
-  const cue = (() => {
-    if (gameState.result != null) return { playerId: null, direction: null };
-    if (gameState.step === 'pass-to-mark') {
-      return { playerId: 'line-mark', direction: 'right' as const };
-    }
-    if (gameState.step === 'drop-by-jules') {
-      return { playerId: 'line-jules', direction: 'down' as const };
-    }
-    if (
-      gameState.step === 'throwaway-by-mark' &&
-      gameState.discHolderRef?.refType === 'participant'
-    ) {
-      return {
-        playerId: gameState.discHolderRef.participantId,
-        direction: 'down' as const,
-      };
-    }
-    if (gameState.step === 'goal-to-kelly') {
-      return { playerId: 'line-kelly', direction: 'up' as const };
-    }
-    if (gameState.step === 'block-by-rachel') {
-      return { playerId: 'line-rachel', direction: 'right' as const };
-    }
-    if (gameState.step === 'pressure-by-harper' && gameState.pressureArmed) {
-      return { playerId: 'line-harper', direction: 'right' as const };
-    }
-    return { playerId: null, direction: null };
-  })();
+  const gameState = useTutorialAdvancedGameState(variant);
+  const { cue } = gameState;
+  const chipCue = cue.target === 'chip' ? cue : null;
+  const footerCueButton = cue.target === 'footer' ? cue.button : null;
   const holderName =
     gameState.discHolderRef?.refType === 'participant'
       ? (TUTORIAL_ADVANCED_PARTICIPANTS.find(
           (participant) => participant.id === gameState.discHolderRef?.participantId,
         )?.name ?? null)
       : null;
-  const exit = () => router.replace(getTutorialExitRoute(origin));
+  const exit = () => exitAdvancedTutorial(origin);
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -97,22 +77,28 @@ export default function TutorialAdvancedTrackerRoute() {
         result={gameState.lastResult}
         holderName={holderName}
         oppHasDisc={gameState.oppHasDisc}
-        pressureArmed={gameState.pressureArmed}
-        isPressureStep={gameState.step === 'pressure-by-harper'}
-        onOpenPressureMenu={gameState.openPressureMenu}
+        armedModifier={gameState.armedModifier}
+        showMore={gameState.showMore}
+        showMoreCue={cue.target === 'more'}
+        onOpenMoreMenu={gameState.openMoreMenu}
+        onCancelModifier={gameState.cancelModifier}
       />
 
       <TutorialAdvancedRareActionsSheet
-        visible={gameState.pressureMenuOpen}
-        onClose={gameState.closePressureMenu}
+        visible={gameState.moreMenuOpen}
+        onClose={gameState.closeMoreMenu}
         onPressure={gameState.selectPressure}
       />
 
-      {showBetweenPoint ? (
-        <TutorialAdvancedCompleteInline buttonLabel="DONE" onFinish={finish} />
+      {gameState.isComplete ? (
+        <TutorialAdvancedCompleteInline
+          body={TUTORIAL_ADVANCED_COMPLETION_TEXT[variant]}
+          buttonLabel="DONE"
+          onFinish={finish}
+        />
       ) : (
-        <View style={styles.surface}>
-          {gameState.result == null && (
+        <>
+          <View style={styles.surface}>
             <View style={styles.directions}>
               <ThemedText style={[styles.title, { color: palette.textInverse }]}>
                 {gameState.title}
@@ -121,19 +107,28 @@ export default function TutorialAdvancedTrackerRoute() {
                 {gameState.correctionMessage ?? gameState.message}
               </ThemedText>
             </View>
-          )}
-          <View style={styles.grid}>
-            <TutorialAdvancedPlayerGrid
-              participants={TUTORIAL_ADVANCED_PARTICIPANTS}
-              discHolderRef={gameState.discHolderRef}
-              oppHasDisc={gameState.oppHasDisc}
-              handlers={gameState.handlers}
-              cuePlayerId={cue.playerId}
-              cueDirection={cue.direction}
-              passModifier={gameState.pressureArmed ? 'pressure' : null}
-            />
+            <View style={styles.grid}>
+              <TutorialAdvancedPlayerGrid
+                participants={TUTORIAL_ADVANCED_PARTICIPANTS}
+                discHolderRef={gameState.discHolderRef}
+                oppHasDisc={gameState.oppHasDisc}
+                handlers={gameState.handlers}
+                cuePlayerId={chipCue?.playerId ?? null}
+                cueDirection={chipCue?.direction ?? null}
+                passModifier={gameState.armedModifier}
+              />
+            </View>
           </View>
-        </View>
+          {variant === 'buttons' && (
+            <TutorialAdvancedFooter
+              oppHasDisc={gameState.oppHasDisc}
+              isRowHidden={gameState.armedModifier != null}
+              cueButton={footerCueButton}
+              onThrowaway={gameState.footerHandlers.onThrowaway}
+              onArmTapAction={gameState.footerHandlers.onArmTapAction}
+            />
+          )}
+        </>
       )}
     </View>
   );

@@ -22,6 +22,7 @@ import {
 } from '@/components/advancedTracking/TrackerSurface';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import type { TutorialAdvancedVariant } from '@/components/tutorial/tutorialNavigation';
 import { useTheme } from '@/context/ThemeContext';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
@@ -188,10 +189,10 @@ export default function AdvancedTrackerScreen() {
       return nextHeight;
     });
   };
-  const handleAdvancedTutorial = () => {
+  const handleAdvancedTutorial = (variant: TutorialAdvancedVariant) => {
     router.push({
       pathname: '/TutorialAdvancedTracker',
-      params: { origin: 'tracker' },
+      params: { origin: 'tracker', variant },
     });
   };
 

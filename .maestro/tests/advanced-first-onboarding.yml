@@ -22,9 +22,9 @@ tags:
             id: 'maestro-setup-running'
           timeout: 15000
 - extendedWaitUntil:
-    visible: 'Ultimate Frisbee Scoreboard / Stat Tracker'
+    visible: 'Open-Source Ultimate Frisbee Stat Tracker'
     timeout: 15000
-- tapOn: 'Continue'
+- tapOn: 'See How It Works'
 
 - assertVisible:
     id: 'tutorial-line-select-screen'
@@ -35,39 +35,31 @@ tags:
 - tapOn:
     id: 'line-select-confirm'
 
-- assertVisible: 'STEP 1 OF 6'
-- tapOn:
-    id: 'tracker-chip-Mark'
-- assertVisible: 'STEP 2 OF 6'
-- swipe:
-    from:
-      id: 'tracker-chip-Mark'
-    direction: DOWN
-    duration: 500
-- assertVisible: 'STEP 3 OF 6'
+- assertVisible: 'STEP 1 OF 5'
 - tapOn:
     id: 'tracker-chip-Rachel'
-- assertVisible: 'STEP 4 OF 6'
-- swipe:
-    from:
-      id: 'tracker-chip-Jules'
-    direction: DOWN
-    duration: 500
-- assertVisible: 'STEP 5 OF 6'
+- assertVisible: 'STEP 2 OF 5'
+- tapOn:
+    id: 'tracker-chip-Mark'
+- assertVisible: 'STEP 3 OF 5'
+- tapOn:
+    id: 'offense-throwaway'
+- assertVisible: 'STEP 4 OF 5'
 - tapOn:
     id: 'tracker-more-button'
 - tapOn:
     id: 'tutorial-pressure-action'
 - tapOn:
     id: 'tracker-chip-Harper'
-- assertVisible: 'STEP 6 OF 6'
-- swipe:
-    from:
-      id: 'tracker-chip-Kelly'
-    direction: UP
-    duration: 500
+- assertVisible: 'STEP 5 OF 5'
+- tapOn:
+    id: 'offense-goal'
+- assertVisible: 'Tap who scored'
+- tapOn:
+    id: 'tracker-chip-Kelly'
 
 - assertVisible: 'Advanced Tutorial Complete'
+- assertVisible: 'Swipes work too.*'
 - tapOn: 'DONE'
 - extendedWaitUntil:
     visible: 'New Game'

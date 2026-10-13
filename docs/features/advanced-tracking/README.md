@@ -48,11 +48,11 @@ The tracker's top bar keeps a labeled Help button visible. `TrackerHelpSheet` pr
 “What happened?” reference with a fixed list of core gestures — scored (swipe up or Goal),
 throwaway (swipe down or T/A), drop (swipe down or Drop), and block (tap) — plus a “Something else
 happened” row that points at More for actions like stall and Callahan. Help only opens local UI: it
-does not record actions or change clocks. Users can return directly to tracking or open practice.
-Tracker-launched practice covers six gestures — pass, throwaway, block, drop, pressure, and goal —
-returns to the tracker, and does not run onboarding line selection or roster setup.
+does not record actions or change clocks. Practice comes in Buttons and Gestures variants (see
+`TUTORIAL_ADVANCED_STEPS`); tracker-launched practice returns to the tracker and skips line
+selection.
 
-Fresh-install onboarding introduces advanced line selection before gesture practice. That screen is
+Fresh-install onboarding introduces advanced line selection before Buttons practice. That screen is
 a tutorial-owned implementation with local fixture state. It may reuse neutral visual primitives,
 but it does not use advanced-store state or add tutorial conditionals to production line-selection
 components. Production and tutorial structure are kept aligned by a visible-contract test.

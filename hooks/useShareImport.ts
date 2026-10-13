@@ -5,10 +5,10 @@ import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGa
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import {
-    fetchPayload,
-    InvalidSharePayloadError,
-    SharedPayload,
-    SharePayloadNotFoundError,
+  fetchPayload,
+  InvalidSharePayloadError,
+  SharedPayload,
+  SharePayloadNotFoundError,
 } from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';

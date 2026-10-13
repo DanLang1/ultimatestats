@@ -30,20 +30,33 @@ describe('tutorial routes', () => {
     const user = userEvent.setup();
     await renderScreen(<TutorialIntroRoute />);
 
-    expect(screen.getByText('Ultimate Frisbee Scoreboard / Stat Tracker')).toBeVisible();
+    expect(screen.getByText('Open-Source Ultimate Frisbee Stat Tracker')).toBeVisible();
     expect(screen.getByText('Detailed Stats')).toBeVisible();
 
-    await user.press(screen.getByText('Continue'));
+    await user.press(screen.getByText('See How It Works'));
 
     expect(router.replace).toHaveBeenCalledWith({
       pathname: '/TutorialAdvancedLineSelect',
-      params: { origin: 'onboarding' },
+      params: { origin: 'onboarding', variant: 'buttons' },
     });
+  });
+
+  it('permanently skips onboarding from the intro', async () => {
+    const user = userEvent.setup();
+    await renderScreen(<TutorialIntroRoute />);
+
+    await user.press(screen.getByRole('button', { name: 'Skip' }));
+
+    expect(useTutorialStore.getState()).toMatchObject({
+      hasSeenOnboarding: true,
+      hasSeenAdvancedTutorial: true,
+    });
+    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
   });
 
   it('teaches line selection without modifying persistent game data', async () => {
     const user = userEvent.setup();
-    setMockSearchParams({ origin: 'onboarding' });
+    setMockSearchParams({ origin: 'onboarding', variant: 'buttons' });
     await renderScreen(<TutorialAdvancedLineSelectRoute />);
 
     expect(screen.getByText('Load a Line')).toBeVisible();
@@ -56,7 +69,7 @@ describe('tutorial routes', () => {
 
     expect(router.replace).toHaveBeenCalledWith({
       pathname: '/TutorialAdvancedTracker',
-      params: { origin: 'onboarding' },
+      params: { origin: 'onboarding', variant: 'buttons' },
     });
     expect(useGameStore.getState().currentTeam.roster).toEqual([]);
     expect(useLinePresetsStore.getState().presets).toEqual([]);
@@ -64,18 +77,80 @@ describe('tutorial routes', () => {
     expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
   });
 
-  it('exits first-launch line selection without completing onboarding', async () => {
+  it('permanently skips onboarding when exiting first-launch line selection', async () => {
     const user = userEvent.setup();
-    setMockSearchParams({ origin: 'onboarding' });
+    setMockSearchParams({ origin: 'onboarding', variant: 'buttons' });
     await renderScreen(<TutorialAdvancedLineSelectRoute />);
 
     await user.press(screen.getByRole('button', { name: 'Exit tutorial' }));
 
     expect(useTutorialStore.getState()).toMatchObject({
-      hasSeenOnboarding: false,
-      hasSeenAdvancedTutorial: false,
+      hasSeenOnboarding: true,
+      hasSeenAdvancedTutorial: true,
     });
     expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+  });
+
+  it('permanently skips onboarding when exiting first-launch practice', async () => {
+    const user = userEvent.setup();
+    setMockSearchParams({ origin: 'onboarding', variant: 'buttons' });
+    await renderScreen(<TutorialAdvancedTrackerRoute />);
+
+    await user.press(screen.getByRole('button', { name: 'Exit tutorial' }));
+
+    expect(useTutorialStore.getState()).toMatchObject({
+      hasSeenOnboarding: true,
+      hasSeenAdvancedTutorial: true,
+    });
+    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+  });
+
+  it('teaches the footer buttons and finishes onboarding with the swipe tip', async () => {
+    const user = userEvent.setup();
+    setMockSearchParams({ origin: 'onboarding', variant: 'buttons' });
+    await renderScreen(<TutorialAdvancedTrackerRoute />);
+
+    expect(screen.getByText('STEP 1 OF 5')).toBeVisible();
+    await user.press(screen.getByTestId('tracker-chip-Rachel'));
+
+    expect(screen.getByText('STEP 2 OF 5')).toBeVisible();
+    await user.press(screen.getByTestId('tracker-chip-Mark'));
+
+    expect(screen.getByText('Tap T/A to record a throwaway by Mark.')).toBeVisible();
+    await user.press(screen.getByTestId('offense-throwaway'));
+
+    expect(screen.getByText('STEP 4 OF 5')).toBeVisible();
+    await user.press(screen.getByTestId('tracker-more-button'));
+    await user.press(screen.getByTestId('tutorial-pressure-action'));
+    await user.press(screen.getByTestId('tracker-chip-Harper'));
+
+    expect(screen.getByText('STEP 5 OF 5')).toBeVisible();
+    await user.press(screen.getByTestId('offense-goal'));
+    expect(screen.getByText('Tap who scored')).toBeVisible();
+    expect(screen.queryByTestId('tutorial-offense-row')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('tutorial-offense-row', { includeHiddenElements: true })).toHaveProp(
+      'pointerEvents',
+      'none',
+    );
+    await user.press(screen.getByTestId('tracker-chip-Kelly'));
+
+    expect(screen.getByText('Advanced Tutorial Complete')).toBeVisible();
+    expect(screen.getByText(/Swipes work too/)).toBeVisible();
+    await user.press(screen.getByText('DONE'));
+
+    expect(useTutorialStore.getState()).toMatchObject({
+      hasSeenOnboarding: true,
+      hasSeenAdvancedTutorial: true,
+    });
+    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+  });
+
+  it('keeps the gestures tutorial free of footer buttons', async () => {
+    setMockSearchParams({ origin: 'help', variant: 'gestures' });
+    await renderScreen(<TutorialAdvancedTrackerRoute />);
+
+    expect(screen.getByText('STEP 1 OF 6')).toBeVisible();
+    expect(screen.queryByTestId('offense-throwaway')).toBeNull();
   });
 
   it('runs the real basic tutorial state and can exit to Dashboard', async () => {

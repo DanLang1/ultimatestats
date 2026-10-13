@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import type { TutorialAdvancedVariant } from '@/components/tutorial/tutorialNavigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { BottomSheetActionRow } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
@@ -19,7 +20,7 @@ interface TrackerHomeMenuProps {
   onGameNote: () => void;
   onStartSecondHalfEarly: () => void;
   onEndGameEarly: () => void;
-  onAdvancedTutorial: () => void;
+  onAdvancedTutorial: (variant: TutorialAdvancedVariant) => void;
 }
 
 export const TrackerHomeMenu = ({
@@ -73,9 +74,9 @@ export const TrackerHomeMenu = ({
     onEndGameEarly();
   };
 
-  const handleAdvancedTutorial = () => {
+  const handleAdvancedTutorial = (variant: TutorialAdvancedVariant) => {
     onClose();
-    onAdvancedTutorial();
+    onAdvancedTutorial(variant);
   };
 
   return (
@@ -124,10 +125,17 @@ export const TrackerHomeMenu = ({
           />
 
           <BottomSheetActionRow
-            testID="tracker-menu-advanced-tutorial"
+            testID="tracker-menu-advanced-tutorial-buttons"
+            icon="gesture-tap"
+            label="Tutorial: Buttons"
+            onPress={() => handleAdvancedTutorial('buttons')}
+          />
+
+          <BottomSheetActionRow
+            testID="tracker-menu-advanced-tutorial-gestures"
             icon="gesture-swipe-vertical"
-            label="Advanced Tutorial"
-            onPress={handleAdvancedTutorial}
+            label="Tutorial: Gestures"
+            onPress={() => handleAdvancedTutorial('gestures')}
           />
 
           <View style={[styles.section, { borderTopColor: palette.overlay10 }]}>

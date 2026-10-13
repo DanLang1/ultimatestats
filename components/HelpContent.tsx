@@ -251,7 +251,10 @@ export default function HelpContent({
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          router.push({ pathname: '/TutorialAdvancedLineSelect', params: { origin: 'help' } });
+          router.push({
+            pathname: '/TutorialAdvancedLineSelect',
+            params: { origin: 'help', variant: 'buttons' },
+          });
         }}>
         <MaterialCommunityIcons
           name="school-outline"
@@ -260,10 +263,40 @@ export default function HelpContent({
         />
         <View style={styles.tutorialButtonContent}>
           <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
-            Advanced Tutorial
+            Advanced Tutorial: Buttons
           </ThemedText>
           <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
-            Practice line selection and advanced gestures
+            Practice line selection and the action buttons
+          </ThemedText>
+        </View>
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={metrics.buttonIconSize}
+          color={palette.textMuted}
+        />
+      </Pressable>
+
+      <View style={styles.buttonSpacer} />
+
+      <Pressable
+        style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
+        onPress={() => {
+          router.push({
+            pathname: '/TutorialAdvancedLineSelect',
+            params: { origin: 'help', variant: 'gestures' },
+          });
+        }}>
+        <MaterialCommunityIcons
+          name="gesture-swipe-vertical"
+          size={metrics.buttonIconSize}
+          color={palette.accent}
+        />
+        <View style={styles.tutorialButtonContent}>
+          <ThemedText style={[styles.tutorialButtonTitle, { color: palette.textInverse }]}>
+            Advanced Tutorial: Gestures
+          </ThemedText>
+          <ThemedText style={[styles.tutorialButtonSubtitle, { color: palette.textMuted }]}>
+            Practice line selection and swipe gestures
           </ThemedText>
         </View>
         <MaterialCommunityIcons

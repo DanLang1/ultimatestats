@@ -2,19 +2,24 @@ import { router, useLocalSearchParams } from 'expo-router';
 
 import TutorialAdvancedLineSelection from '@/components/tutorial/TutorialAdvancedLineSelection';
 import {
-  getTutorialExitRoute,
+  exitAdvancedTutorial,
+  parseTutorialAdvancedVariant,
   parseTutorialOrigin,
 } from '@/components/tutorial/tutorialNavigation';
 
 export default function TutorialAdvancedLineSelectRoute() {
-  const { origin: rawOrigin } = useLocalSearchParams<{ origin?: string }>();
+  const { origin: rawOrigin, variant: rawVariant } = useLocalSearchParams<{
+    origin?: string;
+    variant?: string;
+  }>();
   const origin = parseTutorialOrigin(rawOrigin);
+  const variant = parseTutorialAdvancedVariant(rawVariant);
 
   return (
     <TutorialAdvancedLineSelection
-      onBack={() => router.replace(getTutorialExitRoute(origin))}
+      onBack={() => exitAdvancedTutorial(origin)}
       onComplete={() =>
-        router.replace({ pathname: '/TutorialAdvancedTracker', params: { origin } })
+        router.replace({ pathname: '/TutorialAdvancedTracker', params: { origin, variant } })
       }
     />
   );

@@ -42,13 +42,18 @@ describe('home information routes', () => {
 
     await user.press(screen.getByTestId('tracker-help-close'));
 
-    await user.press(screen.getByText('Advanced Tutorial'));
+    await user.press(screen.getByText('Advanced Tutorial: Buttons'));
+    await user.press(screen.getByText('Advanced Tutorial: Gestures'));
     await user.press(screen.getByText('Basic Scoreboard Guide'));
     await user.press(screen.getByText('Basic Stats Guide'));
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/TutorialAdvancedLineSelect',
-      params: { origin: 'help' },
+      params: { origin: 'help', variant: 'buttons' },
+    });
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/TutorialAdvancedLineSelect',
+      params: { origin: 'help', variant: 'gestures' },
     });
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/TutorialScoreboard',
