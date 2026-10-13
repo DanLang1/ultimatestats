@@ -4,6 +4,8 @@ U-Stat is a mobile app for tracking Ultimate Frisbee stats. I used Ultianalytics
 
 Tech stack is React Native/Expo. Can check package.json for deps list.
 
+**Download:** [App Store](https://apps.apple.com/us/app/u-stat/id6760956387) · [Google Play](https://play.google.com/store/apps/details?id=com.langdk.ultimatestats) · **Feedback:** [Discord](https://discord.gg/AjsmqhZ2GH)
+
 ### Prerequisites
 
 - Node.js 25.8.1 (see [`.nvmrc`](.nvmrc))

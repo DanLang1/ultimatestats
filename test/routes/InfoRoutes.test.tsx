@@ -7,6 +7,7 @@ import AboutScreen from '@/app/(main)/(hub)/(home)/About';
 import HelpScreen from '@/app/(main)/(hub)/(home)/Help';
 import PartnersScreen from '@/app/(main)/(hub)/(home)/Partners';
 import ShowcaseScreen from '@/app/(main)/(hub)/(home)/Showcase';
+import { CHANGELOG } from '@/lib/changelog';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
@@ -26,6 +27,31 @@ describe('home information routes', () => {
     expect(screen.getByText(/Version /)).toBeVisible();
     expect(screen.getByText("WHAT'S NEW")).toBeVisible();
     expect(await AsyncStorage.getItem('ultimatestats_last_seen_version')).not.toBeNull();
+  });
+
+  it('shows only the current changelog entry until older versions are expanded', async () => {
+    const user = userEvent.setup();
+    const [current, previous] = CHANGELOG;
+    await renderScreen(<AboutScreen />);
+
+    expect(screen.getByText(`v${current.version}`)).toBeVisible();
+    expect(screen.queryByText(`v${previous.version}`)).toBeNull();
+
+    await user.press(screen.getByText(`Show older versions (${CHANGELOG.length - 1})`));
+    expect(screen.getByText(`v${previous.version}`)).toBeVisible();
+
+    await user.press(screen.getByText('Hide older versions'));
+    expect(screen.queryByText(`v${previous.version}`)).toBeNull();
+  });
+
+  it('links to the public GitHub repository from About', async () => {
+    const openUrl = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    await renderScreen(<AboutScreen />);
+
+    await userEvent.setup().press(screen.getByText('View on GitHub'));
+
+    expect(openUrl).toHaveBeenCalledWith('https://github.com/DanLang1/ultimatestats');
+    openUrl.mockRestore();
   });
 
   it('renders Help content and routes to the real tutorial entry points', async () => {
