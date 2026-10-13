@@ -1,6 +1,5 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -18,15 +17,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  hasPointEnded,
-} from '@/lib/advancedTracking/trackingUtils';
-import { PassModifier } from '@/lib/advancedTracking/types';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { TrackerFooterMode } from '@/lib/advancedTracking/trackerSessionView';
 import { Fonts } from '@/theme/theme';
 
 const FOOTER_BOTTOM_PADDING = 48;
@@ -35,119 +26,74 @@ const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 12;
 
 interface TrackerActionFooterProps {
-  onStartNextPoint: () => void;
+  mode: TrackerFooterMode;
   voiceControls: VoiceStatCommandsControls;
   canUseVoice: boolean;
   offenseActions: OffenseActionsProps;
-  passModifier: PassModifier;
-  isAwaitingMidPointPickup: boolean;
+  onOppScored: () => void;
+  onOppTurnover: () => void;
 }
 
 export const TrackerActionFooter = ({
-  onStartNextPoint,
+  mode,
   voiceControls,
   canUseVoice,
   offenseActions,
-  passModifier,
-  isAwaitingMidPointPickup,
+  onOppScored,
+  onOppTurnover,
 }: TrackerActionFooterProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const insets = useSafeAreaInsets();
-
-  const game = useAdvancedTrackingStore((state) => state.currentGame);
-  const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
-  if (!game) return null;
-
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const pointIsOver = hasPointEnded(point);
-  const activeSideId = getActiveSideId(possession, game);
-  const oppHasDisc =
-    !areBothSidesFullyTracked(game) && !pointIsOver && activeSideId !== game.focusSideId;
   const styles = createStyles(sizeClass, insets.bottom);
 
-  const handleOppTurnover = () => {
-    recordCaptureIntent({ kind: 'anonymous-opponent-turnover' });
-  };
-
-  const handleOppScored = () => {
-    recordCaptureIntent({ kind: 'anonymous-opponent-goal' });
+  // A modifier (More menu, Goal, or Drop) owns the next tap. Hide the row but keep its
+  // space so the player grid does not resize under the user's finger.
+  const isRowHidden = mode.hidden;
+  const rowVisibilityProps = {
+    pointerEvents: isRowHidden ? ('none' as const) : ('auto' as const),
+    accessibilityElementsHidden: isRowHidden,
+    importantForAccessibility: isRowHidden ? ('no-hide-descendants' as const) : ('auto' as const),
   };
 
   let content: React.ReactNode;
-
-  if (pointIsOver) {
+  if (mode.kind === 'defense') {
     content = (
-      <View style={styles.pointOverRow}>
-        <Pressable
-          testID="tracker-next-point"
-          onPress={onStartNextPoint}
-          style={({ pressed }) => [
-            styles.nextPointBtn,
-            {
-              backgroundColor: palette.successOverlay10,
-              borderColor: palette.successOverlay15,
-            },
-            pressed && { opacity: 0.7 },
-          ]}>
-          <MaterialCommunityIcons
-            name="arrow-right-circle"
-            size={scaleBySizeClass(20, sizeClass)}
-            color={palette.success}
-            style={{ marginRight: 8 }}
-          />
-          <ThemedText style={[styles.btnText, { color: palette.success }]}>NEXT POINT</ThemedText>
-        </Pressable>
-      </View>
-    );
-  } else {
-    // A modifier (More menu, Goal, or Drop) owns the next tap. Hide the row but keep its
-    // space so the player grid does not resize under the user's finger.
-    const isRowHidden = passModifier !== null;
-    const rowVisibilityProps = {
-      pointerEvents: isRowHidden ? ('none' as const) : ('auto' as const),
-      accessibilityElementsHidden: isRowHidden,
-      importantForAccessibility: isRowHidden ? ('no-hide-descendants' as const) : ('auto' as const),
-    };
-    let offenseRowContent: React.ReactNode = (
-      <>
-        <View pointerEvents="none" style={styles.voiceFeedbackOverlay}>
-          <TrackerVoiceFeedbackPill controls={voiceControls} />
-        </View>
-        <TrackerVoiceButton controls={voiceControls} disabled={!canUseVoice} />
-        <OffenseActions {...offenseActions} />
-      </>
-    );
-    // A mid-point pickup has nothing to act on but the player grid, so a prompt replaces the
-    // disabled buttons.
-    if (isAwaitingMidPointPickup) {
-      offenseRowContent = (
-        <View
-          testID="tracker-pickup-prompt"
-          accessibilityRole="text"
-          style={[styles.pickupPrompt, { borderColor: palette.overlay10 }]}>
-          <ThemedText
-            numberOfLines={1}
-            style={[styles.pickupPromptText, { color: palette.textMuted }]}>
-            {PICKUP_PROMPT_TEXT}
-          </ThemedText>
-        </View>
-      );
-    }
-    content = oppHasDisc ? (
       <View
         testID="tracker-defense-row"
         {...rowVisibilityProps}
         style={[styles.defenseRow, isRowHidden && styles.hiddenRow]}>
-        <DefenseActions onOppScored={handleOppScored} onOppTurnover={handleOppTurnover} />
+        <DefenseActions onOppScored={onOppScored} onOppTurnover={onOppTurnover} />
       </View>
-    ) : (
+    );
+  } else {
+    content = (
       <View
         testID="tracker-offense-row"
         {...rowVisibilityProps}
         style={[styles.offenseRow, isRowHidden && styles.hiddenRow]}>
-        {offenseRowContent}
+        {mode.kind === 'pickup' ? (
+          // A mid-point pickup has nothing to act on but the player grid, so a prompt replaces
+          // the disabled buttons.
+          <View
+            testID="tracker-pickup-prompt"
+            accessibilityRole="text"
+            style={[styles.pickupPrompt, { borderColor: palette.overlay10 }]}>
+            <ThemedText
+              numberOfLines={1}
+              style={[styles.pickupPromptText, { color: palette.textMuted }]}>
+              {PICKUP_PROMPT_TEXT}
+            </ThemedText>
+          </View>
+        ) : (
+          <>
+            <View pointerEvents="none" style={styles.voiceFeedbackOverlay}>
+              <TrackerVoiceFeedbackPill controls={voiceControls} />
+            </View>
+            <TrackerVoiceButton controls={voiceControls} disabled={!canUseVoice} />
+            <OffenseActions {...offenseActions} />
+          </>
+        )}
       </View>
     );
   }
@@ -205,27 +151,6 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
       right: 0,
       paddingBottom: 8,
       zIndex: 20,
-    },
-    pointOverRow: {
-      flex: 1,
-      flexDirection: 'row',
-    },
-    nextPointBtn: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
-      borderRadius: 16,
-      borderCurve: 'continuous',
-      borderWidth: 1,
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-    },
-    btnText: {
-      fontFamily: Fonts.black,
-      fontSize: scaleBySizeClass(14, sizeClass),
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
     },
   });
 }

@@ -32,6 +32,10 @@ Owns the loaded `currentGame`, `currentGameId`, live tracker mutations, recent u
 halftime timer state, and recovery pointer. The game and undo stack are persisted as one atomic
 SQLite snapshot for restart recovery. It does not own the saved-game catalog.
 
+Live tracker UI state (current point, possession, disc holder, opponent possession, pickup, and
+footer mode) is derived from `currentGame` by `getTrackerSessionView`, never stored. The armed tap
+modifier (`passModifier`) is transient local state on the tracker screen.
+
 ### Advanced Saved Games: `useSavedAdvancedGamesStore`
 
 Source: `store/advancedTracking/savedGamesStore.ts`.

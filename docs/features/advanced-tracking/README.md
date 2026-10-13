@@ -73,11 +73,22 @@ goal, using the same prompt, cancel control, and chip highlighting as More-menu 
 opponent has the disc, the row shows Opp Goal and Opp Turn instead. While any modifier (More menu,
 Goal, or Drop) owns the next tap, the whole row, offense or defense and including voice, is hidden
 from view and from assistive tech until that modifier is used or canceled from the prompt; its
-space stays reserved so the player grid does not resize. When the disc is on the ground
+space stays reserved so the player grid does not resize. While any modifier is armed, the last-action
+card offers only Cancel, not More, so another action cannot silently replace the armed one; cancel
+first to choose a different rare action. When the disc is on the ground
 mid-point (after a turnover), a non-interactive “TAP WHO HAS THE DISC” prompt replaces the
 actions until a player picks it up; the opening pull keeps the actions so Drop can record a dropped
 pull, and before the pull the last-action card shows the same prompt. Every footer row shares
 `FOOTER_ACTION_HEIGHT`. In scrimmage, the actions apply to whichever side holds the disc.
+
+The tracker screen derives this once per render with `getTrackerSessionView(game, { passModifier })`
+in `lib/advancedTracking/trackerSessionView.ts` (via `useTrackerSession`), and passes the resulting
+`TrackerSessionView` to the last-action card and rare menu. The footer is presentational: it renders
+the view's `footerMode` (`offense`, `defense`, or `pickup`, each carrying `hidden` while a modifier
+owns the next tap) plus callbacks, and never reads the store. `footerMode` is `null` once the point
+is over or play is stopped, and no footer shows. Add new footer or card states to the session view
+rather than re-deriving point, possession, or holder in a component. The armed `passModifier` stays
+local to the tracker screen.
 
 ## State and Persistence
 

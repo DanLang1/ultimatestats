@@ -30,7 +30,7 @@ export type ButtonMode =
   | { kind: 'more-only'; onMore: () => void }
   | { kind: 'next-only'; onNext: () => void; label?: string }
   | { kind: 'none' }
-  | { kind: 'cancel-more'; onCancel: () => void; onMore: () => void; isDanger?: boolean }
+  | { kind: 'cancel-only'; onCancel: () => void; isDanger?: boolean }
   | { kind: 'undo-only'; onUndo: () => void };
 
 interface LastActionCardFrameProps {
@@ -53,10 +53,7 @@ export const LastActionCardFrame = ({
   const styles = createStyles(sizeClass, palette);
   const [cardWidth, setCardWidth] = useState(0);
 
-  const showMore =
-    buttonMode.kind === 'undo-more' ||
-    buttonMode.kind === 'more-only' ||
-    buttonMode.kind === 'cancel-more';
+  const showMore = buttonMode.kind === 'undo-more' || buttonMode.kind === 'more-only';
   const showUndo = buttonMode.kind === 'undo-more' || buttonMode.kind === 'undo-only';
   const canUseCompactActions = sizeClass === 'small';
   const compactActionThreshold = scaleBySizeClass(COMPACT_ACTIONS_CARD_WIDTH, sizeClass);
@@ -70,7 +67,7 @@ export const LastActionCardFrame = ({
   };
 
   let primaryAction: React.ReactNode = null;
-  if (buttonMode.kind === 'cancel-more') {
+  if (buttonMode.kind === 'cancel-only') {
     primaryAction = (
       <Pressable
         testID="tracker-cancel-modifier"

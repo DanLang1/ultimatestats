@@ -14,23 +14,15 @@ import { TurnoverHeader } from '@/components/advancedTracking/bottomCard/Turnove
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { TrackerSessionView } from '@/lib/advancedTracking/trackerSessionView';
 import {
-  getActiveSideId,
   getGoalInfo,
   getLastTurnoverEvent,
   getLatestThrowDetailsTarget,
   getPassChainEvents,
-  getSafeDiscHolderRef,
-  getTrackerDisplaySideId,
   ThrowDetailsTarget,
   TurnoverEventInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  hasPointEnded,
-} from '@/lib/advancedTracking/trackingUtils';
 import {
   getEligibleThrowTypes,
   Participant,
@@ -45,6 +37,7 @@ import { Fonts, Palette } from '@/theme/theme';
 const EXPANDED_TURNOVER_TEXT_LIMIT = 12;
 
 type TrackerLastActionCardProps = {
+  session: TrackerSessionView;
   passModifier: PassModifier;
   onCancelModifier: () => void;
   onMorePress: () => void;
@@ -103,6 +96,7 @@ type TrackerLastActionCardModel =
     };
 
 export const TrackerLastActionCard = ({
+  session,
   passModifier,
   onCancelModifier,
   onMorePress,
@@ -110,23 +104,20 @@ export const TrackerLastActionCard = ({
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
+  const onUndo = useAdvancedTrackingStore((state) => state.undoLastOperation);
+  const undoStack = useAdvancedTrackingStore((state) => state.undoStack);
+  const updateThrowType = useAdvancedTrackingStore((state) => state.updateThrowType);
+
   const {
-    currentGame: game,
-    undoLastOperation: onUndo,
-    undoStack,
-    updateThrowType,
-  } = useAdvancedTrackingStore();
-  if (!game) return null;
-
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const pointIsOver = hasPointEnded(point);
-
-  const activeSideId = getActiveSideId(possession, game);
-  const tracksBothSides = areBothSidesFullyTracked(game);
-  const perspectiveSideId = getTrackerDisplaySideId(game, possession, point);
-  const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
-  const discHolderRef = getSafeDiscHolderRef(possession, perspectiveSideId, point);
+    game,
+    point,
+    possession,
+    pointIsOver,
+    tracksBothSides,
+    perspectiveSideId,
+    oppHasDisc,
+    canUseRareMenu,
+  } = session;
   const lastOppPossession =
     point?.possessions.findLast(
       (previousPossession) => previousPossession.sideId !== perspectiveSideId,
@@ -180,7 +171,7 @@ export const TrackerLastActionCard = ({
     tracksBothSides,
     participants: game.participants,
     oppHasDisc,
-    canUseRareMenu: !pointIsOver && (oppHasDisc || discHolderRef != null),
+    canUseRareMenu,
     lastFocusPossession,
     lastOppPossession,
     focusHasStarted,
@@ -268,12 +259,7 @@ function getTrackerLastActionCardModel({
     return {
       kind: 'modifier',
       accentColor,
-      buttonMode: {
-        kind: 'cancel-more',
-        onCancel: onCancelModifier,
-        onMore: onMorePress,
-        isDanger: isDangerModifier,
-      },
+      buttonMode: { kind: 'cancel-only', onCancel: onCancelModifier, isDanger: isDangerModifier },
       preferCompactActions: true,
       content: <ModifierPrompt modifier={passModifier} />,
     };

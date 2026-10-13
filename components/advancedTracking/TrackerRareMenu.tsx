@@ -9,21 +9,13 @@ import {
 } from '@/components/ui/BottomSheetActionRow';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  getActiveSideId,
-  getSafeDiscHolderRef,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  hasPointEnded,
-} from '@/lib/advancedTracking/trackingUtils';
+import { TrackerSessionView } from '@/lib/advancedTracking/trackerSessionView';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
 interface TrackerRareMenuProps {
+  session: TrackerSessionView;
   visible: boolean;
   onClose: () => void;
   setPassModifier: (m: PassModifier) => void;
@@ -38,24 +30,18 @@ type RareAction = {
   onPress: () => void;
 };
 
-export const TrackerRareMenu = ({ visible, onClose, setPassModifier }: TrackerRareMenuProps) => {
+export const TrackerRareMenu = ({
+  session,
+  visible,
+  onClose,
+  setPassModifier,
+}: TrackerRareMenuProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const { currentGame: game, recordCaptureIntent } = useAdvancedTrackingStore();
-  if (!game) return null;
-
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const pointIsOver = hasPointEnded(point);
-  const activeSideId = getActiveSideId(possession, game);
-  const tracksBothSides = areBothSidesFullyTracked(game);
-  const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
-  const trackedPossessionSideId = tracksBothSides
-    ? (possession?.sideId ?? game.focusSideId)
-    : game.focusSideId;
-  const discHolderRef = getSafeDiscHolderRef(possession, trackedPossessionSideId, point);
+  const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
+  const { pointIsOver, oppHasDisc, tracksBothSides, discHolderRef } = session;
 
   const handleOppBlock = () => {
     if (!discHolderRef || pointIsOver) return;

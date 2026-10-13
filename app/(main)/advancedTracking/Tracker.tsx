@@ -25,27 +25,15 @@ import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
+import { useTrackerSession } from '@/hooks/advancedTracking/useTrackerSession';
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getActiveBetweenPointTimeout,
-  getActiveGameClockPause,
-  getActiveSideId,
-  getActiveStoppage,
   getEffectiveLineParticipantIds,
   getPointAdjustedTimestamp,
-  getSafeDiscHolderRef,
-  getTrackerPickupState,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import {
-  canStartSecondHalfEarly,
-  getCurrentPoint,
-  getCurrentPossession,
-  hasPointEnded,
-  isAdvancedGameOver,
-  getOtherSideId,
-} from '@/lib/advancedTracking/trackingUtils';
+import { canStartSecondHalfEarly, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -59,7 +47,6 @@ export default function AdvancedTrackerScreen() {
   const styles = createStyles(palette, sizeClass);
   const insets = useSafeAreaInsets();
 
-  const game = useAdvancedTrackingStore((state) => state.currentGame);
   const undoStack = useAdvancedTrackingStore((state) => state.undoStack);
   const isHalftimeBreakActive = useAdvancedTrackingStore((state) => state.isHalftimeBreakActive);
   const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
@@ -70,7 +57,6 @@ export default function AdvancedTrackerScreen() {
   const triggerHalftimeEarly = useAdvancedTrackingStore((state) => state.triggerHalftimeEarly);
   const updateGameMetadata = useAdvancedTrackingStore((state) => state.updateGameMetadata);
   const updatePointNote = useAdvancedTrackingStore((state) => state.updatePointNote);
-  const participants = useLiveRosterParticipants(game?.participants ?? []);
   const [showDevModal, setShowDevModal] = useState(false);
   const [showHomeMenu, setShowHomeMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -81,68 +67,20 @@ export default function AdvancedTrackerScreen() {
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
   const [trackingSurfaceHeight, setTrackingSurfaceHeight] = useState<number | null>(null);
 
-  const point = game ? getCurrentPoint(game) : null;
-  const possession = game ? getCurrentPossession(game) : null;
-  const activeStoppage = getActiveStoppage(possession);
-  const activeGameClockPause = game ? getActiveGameClockPause(game) : null;
-  const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
-  const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
-  const activeBetweenPointTimeout = game ? getActiveBetweenPointTimeout(game) : null;
-
-  const gameStartedAt = game?.points[0]?.startedAt ?? null;
-
-  const pointIsOver = hasPointEnded(point);
-  const lastUndoEntry = undoStack.at(-1);
-  const showStartSecondHalfEarly = canStartSecondHalfEarly(game ?? undefined, lastUndoEntry);
-  const showInPointControls = !activeStoppage && !activeGameClockPause && !pointIsOver;
-  const showPostPointLastActionCard = pointIsOver && activeBetweenPointTimeout == null;
-  const showLastActionCard = showInPointControls || showPostPointLastActionCard;
-  const activeSideId = game ? getActiveSideId(possession, game) : '';
-  const tracksBothSides = game != null && areBothSidesFullyTracked(game);
-  const oppHasDisc = game
-    ? !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId
-    : false;
-  const canChangeLine = !pointIsOver && passModifier == null;
-  const trackedPossessionSideId = tracksBothSides
-    ? (possession?.sideId ?? game?.focusSideId ?? '')
-    : (game?.focusSideId ?? '');
-  const discHolderRef = getSafeDiscHolderRef(possession, trackedPossessionSideId, point);
-  const { canDropOpeningPull, isAwaitingMidPointPickup } = getTrackerPickupState({
-    possession,
-    pointIsOver,
-    oppHasDisc,
-    discHolderRef,
-  });
-  // An armed modifier owns the next tap; disabling voice also stops any active listening.
-  const canUseVoice =
-    passModifier === null &&
-    !pointIsOver &&
-    !activeStoppage &&
-    activeGameClockPause === null &&
-    !oppHasDisc &&
-    discHolderRef != null;
-  const displaySideId = (() => {
-    if (!game) return '';
-    if (!tracksBothSides) return game.focusSideId;
-    if (
-      passModifier === 'block' ||
-      passModifier === 'callahan' ||
-      passModifier === 'stall' ||
-      passModifier === 'pressure'
-    ) {
-      return getOtherSideId(game, activeSideId);
-    }
-    return activeSideId;
-  })();
-  const activeIds = game && point ? getEffectiveLineParticipantIds(point, displaySideId) : [];
+  // Hooks run before the no-game redirect below, so they read the nullable session directly.
+  const session = useTrackerSession(passModifier);
+  const participants = useLiveRosterParticipants(session?.game.participants ?? []);
+  const activeIds = session?.point
+    ? getEffectiveLineParticipantIds(session.point, session.displaySideId)
+    : [];
   const activeParticipants = participants.filter((p) => activeIds.includes(p.id));
   const activeVoiceParticipants = buildVoiceParticipantContexts(activeParticipants);
 
   const handlers = useTrackerHandlers({
-    pointIsOver,
-    oppHasDisc,
-    discHolderRef,
-    canDropOpeningPull,
+    pointIsOver: session?.pointIsOver ?? false,
+    oppHasDisc: session?.oppHasDisc ?? false,
+    discHolderRef: session?.discHolderRef ?? null,
+    canDropOpeningPull: session?.canDropOpeningPull ?? false,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
@@ -150,12 +88,12 @@ export default function AdvancedTrackerScreen() {
   });
 
   const voiceControls = useVoiceStatCommands({
-    enabled: canUseVoice,
+    enabled: session?.canUseVoice ?? false,
     activeParticipants: activeVoiceParticipants,
-    pointIsOver,
-    oppHasDisc,
-    possession,
-    discHolderRef,
+    pointIsOver: session?.pointIsOver ?? false,
+    oppHasDisc: session?.oppHasDisc ?? false,
+    possession: session?.possession ?? null,
+    discHolderRef: session?.discHolderRef ?? null,
     recordCaptureIntent,
   });
 
@@ -168,9 +106,29 @@ export default function AdvancedTrackerScreen() {
     return () => subscription.remove();
   });
 
-  if (!game) {
+  if (!session) {
     return <Redirect href="/Dashboard" />;
   }
+
+  const {
+    game,
+    point,
+    pointIsOver,
+    discHolderRef,
+    oppHasDisc,
+    canDropOpeningPull,
+    activeStoppage,
+    activeGameClockPause,
+    isPlayLive,
+  } = session;
+  const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
+  const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
+  const activeBetweenPointTimeout = getActiveBetweenPointTimeout(game);
+  const gameStartedAt = game.points[0]?.startedAt ?? null;
+  const showStartSecondHalfEarly = canStartSecondHalfEarly(game, undoStack.at(-1));
+  const showPostPointLastActionCard = pointIsOver && activeBetweenPointTimeout == null;
+  const showLastActionCard = isPlayLive || showPostPointLastActionCard;
+  const canChangeLine = !pointIsOver && passModifier == null;
 
   if (isAdvancedGameOver(game)) {
     return <Redirect href="/advancedTracking/TrackerGameComplete" />;
@@ -289,6 +247,7 @@ export default function AdvancedTrackerScreen() {
       />
       {showLastActionCard && (
         <TrackerLastActionCard
+          session={session}
           passModifier={passModifier}
           onCancelModifier={() => setPassModifier(null)}
           onMorePress={() => setShowRareMenu(true)}
@@ -301,19 +260,20 @@ export default function AdvancedTrackerScreen() {
         onLayout={handleTrackingSurfaceLayout}>
         {renderTrackingSurface()}
       </View>
-      {showInPointControls && (
+      {session.footerMode && (
         <TrackerActionFooter
-          onStartNextPoint={handleStartNextPoint}
+          mode={session.footerMode}
           voiceControls={voiceControls}
-          canUseVoice={canUseVoice}
+          canUseVoice={session.canUseVoice}
           offenseActions={offenseActions}
-          passModifier={passModifier}
-          isAwaitingMidPointPickup={isAwaitingMidPointPickup}
+          onOppScored={() => recordCaptureIntent({ kind: 'anonymous-opponent-goal' })}
+          onOppTurnover={() => recordCaptureIntent({ kind: 'anonymous-opponent-turnover' })}
         />
       )}
 
-      {showInPointControls && (
+      {isPlayLive && (
         <TrackerRareMenu
+          session={session}
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}
           setPassModifier={setPassModifier}
@@ -352,7 +312,7 @@ export default function AdvancedTrackerScreen() {
         />
       )}
 
-      {!activeStoppage && !activeGameClockPause && canChangeLine && (
+      {isPlayLive && canChangeLine && (
         <TrackerLineChangeMenu
           visible={showLineChangeMenu}
           onClose={() => setShowLineChangeMenu(false)}

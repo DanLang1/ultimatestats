@@ -516,6 +516,25 @@ describe('advanced tracking routes', () => {
       expect(screen.getByTestId('tracker-offense-row')).toBeVisible();
     });
 
+    it.each([
+      ['Drop', ['offense-drop']],
+      ['Goal', ['offense-goal']],
+      ['50/50 from More', ['tracker-more-button', 'rare-menu-50-50']],
+    ])('offers only Cancel while %s owns the next tap', async (_label, armingTestIds) => {
+      const user = userEvent.setup();
+      arrangeHolderPossession();
+      await renderScreen(<TrackerScreen />);
+
+      for (const testID of armingTestIds) await user.press(screen.getByTestId(testID));
+
+      expect(screen.getByTestId('tracker-cancel-modifier')).toBeVisible();
+      expect(screen.queryByTestId('tracker-more-button')).not.toBeOnTheScreen();
+
+      await user.press(screen.getByTestId('tracker-cancel-modifier'));
+
+      expect(screen.getByTestId('tracker-more-button')).toBeVisible();
+    });
+
     it.each(['rare-menu-pressure', 'rare-menu-callahan', 'rare-menu-stall'])(
       'hides the defense row while %s owns the next tap',
       async (rareActionTestId) => {
