@@ -41,6 +41,8 @@ type TrackerLastActionCardProps = {
   passModifier: PassModifier;
   onCancelModifier: () => void;
   onMorePress: () => void;
+  /** Fill the parent's height, as in the tablet landscape header row. */
+  fillHeight?: boolean;
 };
 
 type BottomCardButtonMode = React.ComponentProps<typeof LastActionCardFrame>['buttonMode'];
@@ -100,6 +102,7 @@ export const TrackerLastActionCard = ({
   passModifier,
   onCancelModifier,
   onMorePress,
+  fillHeight,
 }: TrackerLastActionCardProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -205,7 +208,8 @@ export const TrackerLastActionCard = ({
     <LastActionCardFrame
       accentColor={model.accentColor}
       buttonMode={model.buttonMode}
-      preferCompactActions={model.preferCompactActions}>
+      preferCompactActions={model.preferCompactActions}
+      fillHeight={fillHeight}>
       {model.content}
     </LastActionCardFrame>
   );

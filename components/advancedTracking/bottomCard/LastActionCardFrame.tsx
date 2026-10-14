@@ -41,6 +41,8 @@ interface LastActionCardFrameProps {
   buttonMode: ButtonMode;
   preferCompactActions?: boolean;
   moreAdornment?: React.ReactNode;
+  /** Fill the parent's height; the parent owns the vertical spacing around the card. */
+  fillHeight?: boolean;
 }
 
 export const LastActionCardFrame = ({
@@ -49,10 +51,11 @@ export const LastActionCardFrame = ({
   buttonMode,
   preferCompactActions = false,
   moreAdornment,
+  fillHeight = false,
 }: LastActionCardFrameProps) => {
   const { palette } = useTheme();
   const { sizeClass, isCompactHeight } = useLayout();
-  const styles = createStyles(sizeClass, isCompactHeight, palette);
+  const styles = createStyles(sizeClass, isCompactHeight, palette, fillHeight);
   const [cardWidth, setCardWidth] = useState(0);
 
   const showMore = buttonMode.kind === 'undo-more' || buttonMode.kind === 'more-only';
@@ -189,18 +192,25 @@ export const LastActionCardFrame = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, isCompactHeight: boolean, palette: Palette) {
+function createStyles(
+  sizeClass: SizeClass,
+  isCompactHeight: boolean,
+  palette: Palette,
+  fillHeight: boolean,
+) {
   const cardPaddingVertical = isCompactHeight
     ? COMPACT_CARD_PADDING_VERTICAL
     : CARD_PADDING_VERTICAL;
   const outerPaddingVertical = isCompactHeight ? COMPACT_OUTER_PADDING_VERTICAL : OUTER_PADDING;
   return StyleSheet.create({
     outerContainer: {
+      ...(fillHeight ? { flex: 1 } : {}),
       paddingHorizontal: scaleBySizeClass(OUTER_PADDING, sizeClass),
-      paddingVertical: scaleBySizeClass(outerPaddingVertical, sizeClass),
+      paddingVertical: fillHeight ? 0 : scaleBySizeClass(outerPaddingVertical, sizeClass),
       backgroundColor: 'transparent',
     },
     card: {
+      ...(fillHeight ? { flex: 1 } : {}),
       flexDirection: 'row',
       alignItems: 'center',
       gap: scaleBySizeClass(12, sizeClass),

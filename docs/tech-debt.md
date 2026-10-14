@@ -16,26 +16,18 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
-## P2 - Advanced Tracker Tablet Landscape Layout
+## P3 - Advanced Tracker Tablet Landscape Polish
 
-- Tablet landscape stacks the portrait strips (cap bar, scorecard, last-action card, grid, footer)
-  full width. Chrome takes most of the height, so chips are smaller than in portrait (~95pt iPad
-  mini, ~120pt iPad Pro 13"), while the scorecard, card, and footer buttons stretch across empty
-  width. Nine grid items in five columns leave a ragged second row. Phones are unaffected:
-  `small` landscape shows `LandscapeUnsupported`.
-- Proposed: a sidebar layout. The player grid takes the full height on the left in three columns;
-  a ~300-360pt right column holds the cap bar, scorecard, last-action card, and a 2x2 action pad.
-  This needs a separate landscape render path in the tracker screen (allowed when the UI differs
-  per orientation), a 2x2 footer variant, and checks of the voice feedback pill, rare menu, and
-  modals in the new position. Open question: fixed right sidebar or handedness-aware.
-- Smaller interim option: put the scorecard and last-action card side by side in landscape to give
-  the grid roughly 90-110pt more height.
+- Tablet landscape puts the scorecard and last-action card side by side in one header row above a
+  five-column grid. Undo and More sit in the top-right corner, outside thumb reach when the tablet
+  is held by its sides. If that grip turns out to be common, move Undo and More into the ends of
+  the footer row in landscape (it has spare width) and hide them on the card.
+- A sidebar layout (grid full height on the left, chrome in a right column) was built and rejected:
+  it lost the portrait look and left dead space in the sidebar. Do not retry it.
 - References:
   `app/(main)/advanced-tracking/tracker.tsx`
+  `components/advancedTracking/bottomCard/LastActionCardFrame.tsx`
   `components/advancedTracking/TrackerActionFooter.tsx`
-  `components/advancedTracking/TrackerPlayerGrid.tsx`
-  `components/advancedTracking/TrackerScoreBar.tsx`
-  `docs/responsive-layout.md`
 
 ## P3 - Basic Timeout Modal
 

@@ -3,6 +3,14 @@ import { StyleSheet, View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 
+const DOT_SIZE = 8;
+const DOTS_MARGIN_TOP = 4;
+
+/** Height the page dots add below the score bar card. */
+export function getScoreBarPaginationHeight(sizeClass: SizeClass): number {
+  return scaleBySizeClass(DOTS_MARGIN_TOP, sizeClass) + scaleBySizeClass(DOT_SIZE, sizeClass);
+}
+
 interface ScoreBarPaginationProps {
   isExpanded: boolean;
 }
@@ -33,7 +41,7 @@ export const ScoreBarPagination = ({ isExpanded }: ScoreBarPaginationProps) => {
 };
 
 function createStyles(sizeClass: SizeClass) {
-  const dotSize = scaleBySizeClass(8, sizeClass);
+  const dotSize = scaleBySizeClass(DOT_SIZE, sizeClass);
 
   return StyleSheet.create({
     paginationDots: {
@@ -41,7 +49,7 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'center',
       alignItems: 'center',
       gap: scaleBySizeClass(6, sizeClass),
-      marginTop: scaleBySizeClass(4, sizeClass),
+      marginTop: scaleBySizeClass(DOTS_MARGIN_TOP, sizeClass),
     },
     dot: {
       width: dotSize,

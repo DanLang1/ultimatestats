@@ -5,6 +5,7 @@ const WINDOWS = {
   portrait: { width: 390, height: 844 },
   landscape: { width: 844, height: 390 },
   tablet: { width: 900, height: 1200 },
+  tabletLandscape: { width: 1200, height: 900 },
 } as const;
 
 export type TestWindow = keyof typeof WINDOWS;

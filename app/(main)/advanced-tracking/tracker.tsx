@@ -15,7 +15,10 @@ import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
 import { TrackerLineChangeMenu } from '@/components/advancedTracking/TrackerLineChangeMenu';
 import { TrackerRareMenu } from '@/components/advancedTracking/TrackerRareMenu';
-import { TrackerScoreBar } from '@/components/advancedTracking/TrackerScoreBar';
+import {
+  getScoreBarCardInsets,
+  TrackerScoreBar,
+} from '@/components/advancedTracking/TrackerScoreBar';
 import {
   getTrackerSurfaceState,
   TrackerSurface,
@@ -232,6 +235,27 @@ export default function AdvancedTrackerScreen() {
     );
   };
 
+  // Past the phone-landscape guard above, landscape means a tablet. Its short screen puts the
+  // scorecard and last-action card side by side so the player grid keeps more height.
+  const hasLandscapeHeaderRow = isLandscape && showLastActionCard;
+  const scoreBar = (
+    <TrackerScoreBar
+      isHalfWidth={hasLandscapeHeaderRow}
+      pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+      pointTimerPausedAt={pointTimerPausedAt}
+      hideRedZoneControl={passModifier != null}
+    />
+  );
+  const lastActionCard = showLastActionCard && (
+    <TrackerLastActionCard
+      session={session}
+      passModifier={passModifier}
+      onCancelModifier={() => setPassModifier(null)}
+      onMorePress={() => setShowRareMenu(true)}
+      fillHeight={hasLandscapeHeaderRow}
+    />
+  );
+
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
@@ -241,18 +265,16 @@ export default function AdvancedTrackerScreen() {
         onHelpPress={() => setShowHelp(true)}
         game={game}
       />
-      <TrackerScoreBar
-        pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
-        pointTimerPausedAt={pointTimerPausedAt}
-        hideRedZoneControl={passModifier != null}
-      />
-      {showLastActionCard && (
-        <TrackerLastActionCard
-          session={session}
-          passModifier={passModifier}
-          onCancelModifier={() => setPassModifier(null)}
-          onMorePress={() => setShowRareMenu(true)}
-        />
+      {hasLandscapeHeaderRow ? (
+        <View testID="tracker-landscape-header" style={styles.landscapeHeader}>
+          <View style={styles.landscapeHeaderCell}>{scoreBar}</View>
+          <View style={styles.landscapeLastActionCell}>{lastActionCard}</View>
+        </View>
+      ) : (
+        <>
+          {scoreBar}
+          {lastActionCard}
+        </>
       )}
       <View
         collapsable={false}
@@ -344,8 +366,19 @@ export default function AdvancedTrackerScreen() {
 // --- Styles ---
 
 function createStyles(palette: Palette, sizeClass: SizeClass) {
+  const scoreBarCardInsets = getScoreBarCardInsets(sizeClass);
   return StyleSheet.create({
     container: { flex: 1 },
+    landscapeHeader: {
+      flexDirection: 'row',
+    },
+    landscapeHeaderCell: { flex: 1 },
+    // Matches the score bar's card edges, so both cards in the header row are the same height.
+    landscapeLastActionCell: {
+      flex: 1,
+      paddingTop: scoreBarCardInsets.top,
+      paddingBottom: scoreBarCardInsets.bottom,
+    },
     trackingSurface: {
       flex: 1,
       justifyContent: 'flex-start',

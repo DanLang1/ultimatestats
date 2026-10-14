@@ -2,9 +2,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { canCallTimeout, SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
+
+import { getScoreBarSize } from './scoreBarSizing';
 
 interface TimeoutButtonProps {
   teamName: string;
@@ -13,6 +15,7 @@ interface TimeoutButtonProps {
   onPress: () => void;
   testID?: string;
   stoppageActive?: boolean;
+  isHalfWidth: boolean;
 }
 
 const TEAM_NAME_FONT_SIZE: Record<SizeClass, number> = { small: 12, medium: 16, large: 20 };
@@ -28,11 +31,12 @@ export function TimeoutButton({
   onPress,
   testID,
   stoppageActive,
+  isHalfWidth,
 }: TimeoutButtonProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const canUse = canCallTimeout(state) && !stoppageActive;
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, isHalfWidth);
   const remainingLabel = getTimeoutSummary(state);
 
   return (
@@ -72,7 +76,7 @@ export function TimeoutButton({
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isHalfWidth: boolean) {
   return StyleSheet.create({
     action: {
       flex: 1,
@@ -84,15 +88,15 @@ function createStyles(sizeClass: SizeClass) {
       gap: 6,
     },
     pillButton: {
-      paddingHorizontal: getSizeClassValue(PILL_HORIZONTAL_PADDING, sizeClass),
-      paddingVertical: getSizeClassValue(PILL_VERTICAL_PADDING, sizeClass),
+      paddingHorizontal: getScoreBarSize(PILL_HORIZONTAL_PADDING, sizeClass, isHalfWidth),
+      paddingVertical: getScoreBarSize(PILL_VERTICAL_PADDING, sizeClass, isHalfWidth),
       borderRadius: 999,
       borderWidth: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
       alignItems: 'center',
       justifyContent: 'center',
     },
     pillText: {
-      fontSize: getSizeClassValue(PILL_TEXT_FONT_SIZE, sizeClass),
+      fontSize: getScoreBarSize(PILL_TEXT_FONT_SIZE, sizeClass, isHalfWidth),
       fontFamily: Fonts.black,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
@@ -100,14 +104,14 @@ function createStyles(sizeClass: SizeClass) {
       textAlign: 'center',
     },
     teamName: {
-      fontSize: getSizeClassValue(TEAM_NAME_FONT_SIZE, sizeClass),
+      fontSize: getScoreBarSize(TEAM_NAME_FONT_SIZE, sizeClass, isHalfWidth),
       fontFamily: Fonts.extraBold,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       textAlign: 'center',
     },
     remainingLabel: {
-      fontSize: getSizeClassValue(REMAINING_FONT_SIZE, sizeClass),
+      fontSize: getScoreBarSize(REMAINING_FONT_SIZE, sizeClass, isHalfWidth),
       fontFamily: Fonts.semiBold,
       letterSpacing: 0,
       textTransform: 'uppercase',

@@ -3,29 +3,47 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ScoreBarActionRow } from '@/components/advancedTracking/scoreBar/ScoreBarActionRow';
 import { ScoreBarMainRow } from '@/components/advancedTracking/scoreBar/ScoreBarMainRow';
-import { ScoreBarPagination } from '@/components/advancedTracking/scoreBar/ScoreBarPagination';
+import {
+  getScoreBarPaginationHeight,
+  ScoreBarPagination,
+} from '@/components/advancedTracking/scoreBar/ScoreBarPagination';
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { useTheme } from '@/context/ThemeContext';
-import { useLayout } from '@/hooks/useLayout';
+import { SizeClass, useLayout } from '@/hooks/useLayout';
+
+const SCORE_BAR_TOP_PADDING = 8;
+const SCORE_BAR_BOTTOM_PADDING = 4;
+
+/** Space above and below the score bar card, so a neighbor can line its edges up with the card. */
+export function getScoreBarCardInsets(sizeClass: SizeClass): { top: number; bottom: number } {
+  return {
+    top: SCORE_BAR_TOP_PADDING,
+    bottom: SCORE_BAR_BOTTOM_PADDING + getScoreBarPaginationHeight(sizeClass),
+  };
+}
 
 interface TrackerScoreBarProps {
+  /** Shares the tablet landscape header row with the last-action card. */
+  isHalfWidth: boolean;
   pointTimerAdjustedTimestamp: number | null;
   pointTimerPausedAt: number | null;
   hideRedZoneControl: boolean;
 }
 
 export const TrackerScoreBar = ({
+  isHalfWidth,
   pointTimerAdjustedTimestamp,
   pointTimerPausedAt,
   hideRedZoneControl,
 }: TrackerScoreBarProps) => {
   const { palette } = useTheme();
-  const { width } = useLayout();
+  const { width: windowWidth } = useLayout();
   const styles = createStyles();
   const [isExpanded, setIsExpanded] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const data = useScoreBarData();
 
+  const width = isHalfWidth ? Math.floor(windowWidth / 2) : windowWidth;
   const cardWidth = width - 20;
 
   const toggleExpanded = () => {
@@ -69,7 +87,7 @@ export const TrackerScoreBar = ({
             hideRedZoneControl={hideRedZoneControl}
           />
 
-          <ScoreBarActionRow width={cardWidth} />
+          <ScoreBarActionRow width={cardWidth} isHalfWidth={isHalfWidth} />
         </ScrollView>
       </View>
 
@@ -83,8 +101,8 @@ function createStyles() {
     scoreBarContainer: {
       position: 'relative',
       paddingHorizontal: 10,
-      paddingTop: 8,
-      paddingBottom: 4,
+      paddingTop: SCORE_BAR_TOP_PADDING,
+      paddingBottom: SCORE_BAR_BOTTOM_PADDING,
       zIndex: 10,
       gap: 0,
     },

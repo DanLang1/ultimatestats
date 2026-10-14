@@ -4,12 +4,15 @@ import { TimeoutButton } from '@/components/advancedTracking/scoreBar/TimeoutBut
 import { useScoreBarData } from '@/components/advancedTracking/scoreBar/useScoreBarData';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useSettingsStore } from '@/store/settingsStore';
 import { Fonts } from '@/theme/theme';
 
+import { getScoreBarSize } from './scoreBarSizing';
+
 interface ScoreBarActionRowProps {
   width: number;
+  isHalfWidth: boolean;
 }
 
 const CENTER_CARD_WIDTH: Record<SizeClass, number> = { small: 106, medium: 150, large: 190 };
@@ -19,10 +22,10 @@ const ROW_GAP: Record<SizeClass, number> = { small: 6, medium: 10, large: 14 };
 const ROW_HORIZONTAL_PADDING: Record<SizeClass, number> = { small: 12, medium: 18, large: 24 };
 const ROW_VERTICAL_PADDING: Record<SizeClass, number> = { small: 10, medium: 14, large: 18 };
 
-export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
+export const ScoreBarActionRow = ({ width, isHalfWidth }: ScoreBarActionRowProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const styles = createStyles(sizeClass, isHalfWidth);
   const data = useScoreBarData();
   const { mmpColor, fmpColor } = useSettingsStore();
 
@@ -59,6 +62,7 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
         color={palette.accent}
         onPress={() => handleTimeout(focusSideId)}
         stoppageActive={stoppageActive}
+        isHalfWidth={isHalfWidth}
       />
 
       <View style={styles.centerInfoCard}>
@@ -83,24 +87,25 @@ export const ScoreBarActionRow = ({ width }: ScoreBarActionRowProps) => {
         color={palette.success}
         onPress={() => handleTimeout(oppSideId)}
         stoppageActive={stoppageActive}
+        isHalfWidth={isHalfWidth}
       />
     </View>
   );
 };
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isHalfWidth: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'stretch',
-      gap: getSizeClassValue(ROW_GAP, sizeClass),
-      paddingHorizontal: getSizeClassValue(ROW_HORIZONTAL_PADDING, sizeClass),
-      paddingTop: getSizeClassValue(ROW_VERTICAL_PADDING, sizeClass),
-      paddingBottom: getSizeClassValue(ROW_VERTICAL_PADDING, sizeClass),
+      gap: getScoreBarSize(ROW_GAP, sizeClass, isHalfWidth),
+      paddingHorizontal: getScoreBarSize(ROW_HORIZONTAL_PADDING, sizeClass, isHalfWidth),
+      paddingTop: getScoreBarSize(ROW_VERTICAL_PADDING, sizeClass, isHalfWidth),
+      paddingBottom: getScoreBarSize(ROW_VERTICAL_PADDING, sizeClass, isHalfWidth),
     },
     centerInfoCard: {
-      width: getSizeClassValue(CENTER_CARD_WIDTH, sizeClass),
+      width: getScoreBarSize(CENTER_CARD_WIDTH, sizeClass, isHalfWidth),
       alignItems: 'center',
       justifyContent: 'center',
       gap: scaleBySizeClass(6, sizeClass),
@@ -114,12 +119,12 @@ function createStyles(sizeClass: SizeClass) {
       borderCurve: 'continuous',
     },
     ratioText: {
-      fontSize: getSizeClassValue(RATIO_FONT_SIZE, sizeClass),
+      fontSize: getScoreBarSize(RATIO_FONT_SIZE, sizeClass, isHalfWidth),
       fontFamily: Fonts.black,
       letterSpacing: 0.5,
     },
     gameToText: {
-      fontSize: getSizeClassValue(GAME_TO_FONT_SIZE, sizeClass),
+      fontSize: getScoreBarSize(GAME_TO_FONT_SIZE, sizeClass, isHalfWidth),
       fontFamily: Fonts.black,
       letterSpacing: 0.2,
       textAlign: 'center',
