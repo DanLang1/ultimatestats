@@ -13,7 +13,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
 import { useReclampOnResize } from '@/hooks/useReclampOnResize';
 import { Fonts } from '@/theme/theme';
@@ -220,13 +220,32 @@ type Metrics = {
 };
 
 function getMetrics(sizeClass: SizeClass): Metrics {
-  return {
-    iconSize: scaleBySizeClass(20, sizeClass),
-    containerRadius: scaleBySizeClass(28, sizeClass),
-    textSize: scaleBySizeClass(11, sizeClass),
-    estimatedWidth: scaleBySizeClass(280, sizeClass),
-    estimatedHeight: scaleBySizeClass(56, sizeClass),
-  };
+  return getSizeClassValue(
+    {
+      small: {
+        iconSize: 20,
+        containerRadius: 28,
+        textSize: 11,
+        estimatedWidth: 280,
+        estimatedHeight: 56,
+      },
+      medium: {
+        iconSize: 22,
+        containerRadius: 30,
+        textSize: 12,
+        estimatedWidth: 320,
+        estimatedHeight: 66,
+      },
+      large: {
+        iconSize: 24,
+        containerRadius: 34,
+        textSize: 13,
+        estimatedWidth: 360,
+        estimatedHeight: 74,
+      },
+    },
+    sizeClass,
+  );
 }
 
 function createStyles(metrics: Metrics) {

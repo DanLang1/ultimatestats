@@ -5,6 +5,8 @@ import {
   advancedGameSummaryToListItem,
   advancedGameToListItem,
   basicGameToListItem,
+  formatAggregateTeamMeta,
+  groupAdvancedGamesByTeam,
 } from '../gameListUtils';
 import type { SavedGame, SavedTeam } from '../storage';
 
@@ -251,5 +253,36 @@ describe('advancedGameSummaryToListItem', () => {
     expect(isCompletedAdvancedGameSummary({ ...advancedSummary, status: 'in_progress' })).toBe(
       false,
     );
+  });
+});
+
+describe('formatAggregateTeamMeta', () => {
+  it('pluralizes games and points independently', () => {
+    expect(formatAggregateTeamMeta(1, 1)).toBe('1 game • 1 point tracked');
+    expect(formatAggregateTeamMeta(2, 5)).toBe('2 games • 5 points tracked');
+  });
+});
+
+describe('groupAdvancedGamesByTeam', () => {
+  it('totals points played, not points scored, per focus team', () => {
+    const groups = groupAdvancedGamesByTeam([
+      advancedSummary,
+      { ...advancedSummary, id: 'summary2', myScore: 1, opponentScore: 0, pointsTracked: 1 },
+    ]);
+
+    expect(groups).toEqual([{ id: ZOO, name: 'Zoo', gameCount: 2, totalPoints: 23 }]);
+  });
+
+  it('groups by source team when known and sorts by game count', () => {
+    const groups = groupAdvancedGamesByTeam([
+      { ...advancedSummary, id: 'a', focusSourceTeamId: 'team-b', myTeamName: 'B' },
+      { ...advancedSummary, id: 'b', focusSourceTeamId: 'team-a', myTeamName: 'A' },
+      { ...advancedSummary, id: 'c', focusSourceTeamId: 'team-a', myTeamName: 'A' },
+    ]);
+
+    expect(groups.map((group) => [group.id, group.gameCount])).toEqual([
+      ['team-a', 2],
+      ['team-b', 1],
+    ]);
   });
 });

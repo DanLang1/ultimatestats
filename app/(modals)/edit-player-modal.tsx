@@ -7,12 +7,12 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getPlayerNumberIdentity,
   normalizePlayerNumber,
 } from '@/lib/advancedTracking/voiceNumberUtils';
-import { MAX_PLAYER_NUMBER_LENGTH, MODAL_MAX_WIDTH_FORM } from '@/lib/constants';
+import { MAX_PLAYER_NUMBER_LENGTH } from '@/lib/constants';
 import { hasPlayerRecordedStats, hasPlayerRecordedStatsInSavedGames } from '@/lib/playerUtils';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import {
@@ -492,8 +492,6 @@ export default function EditPlayerModal() {
 }
 
 function createStyles(sizeClass: SizeClass) {
-  const isTablet = sizeClass !== 'small';
-
   return StyleSheet.create({
     keyboardAvoidingView: {
       flex: 1,
@@ -502,10 +500,6 @@ function createStyles(sizeClass: SizeClass) {
       width: '100%',
       maxHeight: '92%',
       paddingTop: 10,
-      ...(isTablet && {
-        maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_FORM, sizeClass),
-        alignSelf: 'center',
-      }),
     },
     handle: {
       width: scaleBySizeClass(36, sizeClass),

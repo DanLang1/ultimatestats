@@ -7,6 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { formatTimestampForDisplay as formatDate } from '@/lib/dateUtils';
+import { formatAggregateTeamMeta, groupAdvancedGamesByTeam } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -24,35 +25,6 @@ interface AdvancedAggregateGamesListProps {
   tournamentFilter: string | null;
   onSetTournamentFilter: (tournamentId: string | null) => void;
   onCreateTournament: () => void;
-}
-
-interface SideGroup {
-  id: string;
-  name: string;
-  gameCount: number;
-  totalPoints: number;
-}
-
-function getSideGroups(games: AdvancedGameSummary[]): SideGroup[] {
-  const groupMap = new Map<string, SideGroup>();
-
-  for (const game of games) {
-    const teamId = game.focusSourceTeamId ?? game.focusSideId;
-    const existing = groupMap.get(teamId);
-    if (existing) {
-      existing.gameCount++;
-      existing.totalPoints += game.myScore;
-    } else {
-      groupMap.set(teamId, {
-        id: teamId,
-        name: game.myTeamName,
-        gameCount: 1,
-        totalPoints: game.myScore,
-      });
-    }
-  }
-
-  return Array.from(groupMap.values()).sort((a, b) => b.gameCount - a.gameCount);
 }
 
 export default function AdvancedAggregateGamesList({
@@ -255,7 +227,7 @@ export default function AdvancedAggregateGamesList({
       </ThemedText>
 
       <View style={styles.teamsList}>
-        {getSideGroups(games).map((team) => (
+        {groupAdvancedGamesByTeam(games).map((team) => (
           <Pressable
             key={team.id}
             style={[
@@ -268,8 +240,7 @@ export default function AdvancedAggregateGamesList({
                 {team.name}
               </ThemedText>
               <ThemedText style={[styles.teamMeta, { color: palette.textMuted }]}>
-                {team.gameCount} game{team.gameCount !== 1 ? 's' : ''} • {team.totalPoints} points
-                tracked
+                {formatAggregateTeamMeta(team.gameCount, team.totalPoints)}
               </ThemedText>
             </View>
             <MaterialCommunityIcons

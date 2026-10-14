@@ -52,7 +52,8 @@ export default function StatsContent({
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const cardBg = palette.overlay05;
+  // The summary card's own opaque fill; ensureContrast can't measure rgba overlays.
+  const cardBg = palette.statsCardBg;
   const t1TextColor = team1Color ? ensureContrast(team1Color, cardBg, 4.5) : palette.textInverse;
   const t2TextColor = team2Color ? ensureContrast(team2Color, cardBg, 4.5) : palette.textMuted;
   const playerStats = computePlayerStats(events, 'team1', roster);

@@ -14,6 +14,9 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
 
+const CLOSE_ICON_SIZE = 24;
+const CLOSE_BUTTON_PADDING = 4;
+
 export default function TeamManagementModal() {
   const { pregame } = useLocalSearchParams<{ pregame?: 'basic' | 'advanced' }>();
   const isPregame = pregame === 'basic' || pregame === 'advanced';
@@ -130,7 +133,7 @@ export default function TeamManagementModal() {
           style={styles.closeButton}>
           <MaterialCommunityIcons
             name="close"
-            size={scaleBySizeClass(24, sizeClass)}
+            size={scaleBySizeClass(CLOSE_ICON_SIZE, sizeClass)}
             color={palette.textMuted}
           />
         </Pressable>
@@ -213,11 +216,12 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       marginBottom: 20,
     },
+    // Matches the close button's width so the title centers on the sheet.
     headerSpacer: {
-      width: 24,
+      width: scaleBySizeClass(CLOSE_ICON_SIZE, sizeClass) + CLOSE_BUTTON_PADDING * 2,
     },
     closeButton: {
-      padding: 4,
+      padding: CLOSE_BUTTON_PADDING,
     },
     scrollView: {
       flexGrow: 0,

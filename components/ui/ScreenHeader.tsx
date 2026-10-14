@@ -4,10 +4,10 @@ import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-const TITLE_FONT_SIZE = 14;
+const TITLE_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 20 };
 
 type ScreenHeaderProps = {
   title: string;
@@ -118,7 +118,7 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
     },
     title: {
-      fontSize: scaleBySizeClass(TITLE_FONT_SIZE, sizeClass),
+      fontSize: getSizeClassValue(TITLE_FONT_SIZE, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(2, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',

@@ -20,7 +20,7 @@ import EventToast from '@/components/toast/EventToast';
 import { useEventToast } from '@/components/toast/hooks/useEventToast';
 import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
 import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
@@ -35,7 +35,7 @@ export default function LiveScoreboard() {
   const styles = createStyles(layout.isLandscape, layout.sizeClass);
   const insets = useSafeAreaInsets();
   const homeIconSize = scaleBySizeClass(30, layout.sizeClass);
-  const homeHitSlop = scaleBySizeClass(16, layout.sizeClass);
+  const homeHitSlop = getSizeClassValue({ small: 16, medium: 18, large: 20 }, layout.sizeClass);
   const portraitAspectRatio = layout.width > 0 ? layout.height / layout.width : 0;
   const isCompactVertical = !layout.isLandscape && portraitAspectRatio < 1.75;
   const topSafeInset = layout.isLandscape ? 0 : Math.max(12, Math.round(insets.top * 0.35));
@@ -309,7 +309,7 @@ export default function LiveScoreboard() {
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
-  const timerBarTranslateY = scaleBySizeClass(-28, sizeClass);
+  const timerBarTranslateY = getSizeClassValue({ small: -28, medium: -32, large: -36 }, sizeClass);
 
   return StyleSheet.create({
     container: {

@@ -549,10 +549,12 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
       letterSpacing: 1.5,
     },
+    // Cards are 48% wide; space-between puts the pair flush with both edges.
     settingsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 8,
+      justifyContent: 'space-between',
+      rowGap: 8,
     },
     settingValue: {
       fontSize: scaleBySizeClass(16, sizeClass),

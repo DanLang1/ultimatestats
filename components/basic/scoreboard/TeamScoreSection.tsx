@@ -4,7 +4,7 @@ import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
-import { getSizeClassValue, SizeClass, useLayout, scaleBySizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 
 interface TeamScoreSectionProps {
   teamName: string;
@@ -31,6 +31,9 @@ const TIMEOUT_HIT_SLOP = {
   left: 12,
   right: 12,
 } as const;
+
+// The floater diamond was 14pt beside 20pt dots on phones.
+const FLOATER_SIZE_RATIO = 0.7;
 
 export default function TeamScoreSection({
   teamName,
@@ -95,13 +98,7 @@ export default function TeamScoreSection({
               onPress={() => onTimeoutUse?.(index)}
               style={[
                 styles.timeoutIndicator,
-                timeout.isFloater && {
-                  width: 14,
-                  height: 14,
-                  borderWidth: 2,
-                  borderRadius: 0,
-                  transform: [{ rotate: '45deg' }],
-                },
+                timeout.isFloater && styles.floaterIndicator,
                 {
                   backgroundColor: timeout.active ? textColor : 'transparent',
                   borderColor: textColor,
@@ -137,7 +134,7 @@ function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
   const gap = getSizeClassValue({ small: 6, medium: 10, large: 12 }, sizeClass);
   const effectiveGap = isCompactVertical ? Math.max(4, Math.round(gap * 0.75)) : gap;
   const timeoutGap = isCompactVertical ? 12 : 15;
-  const timeoutSize = scaleBySizeClass(20, sizeClass);
+  const timeoutSize = getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass);
   const effectiveTimeoutSize = isCompactVertical
     ? Math.max(16, Math.round(timeoutSize * 0.8))
     : timeoutSize;
@@ -164,8 +161,15 @@ function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
     timeoutIndicator: {
       width: effectiveTimeoutSize,
       height: effectiveTimeoutSize,
-      borderRadius: 12,
+      borderRadius: effectiveTimeoutSize / 2,
       borderWidth: 2,
+    },
+    // A rotated square; sized from the dot so it keeps the same proportion on tablets.
+    floaterIndicator: {
+      width: Math.round(effectiveTimeoutSize * FLOATER_SIZE_RATIO),
+      height: Math.round(effectiveTimeoutSize * FLOATER_SIZE_RATIO),
+      borderRadius: 0,
+      transform: [{ rotate: '45deg' }],
     },
   });
 }

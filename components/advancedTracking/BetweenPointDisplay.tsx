@@ -68,8 +68,10 @@ export const BetweenPointDisplay = ({
 }: BetweenPointDisplayProps) => {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
+  // Landscape uses the phone density except on large tablets, which have the height for their own.
+  const isDense = isLandscape && sizeClass !== 'large';
 
-  const styles = createStyles(sizeClass, isLandscape);
+  const styles = createStyles(sizeClass, isDense);
   const { endBetweenPointTimeout, undoLastOperation, undoStack } = useAdvancedTrackingStore();
 
   const point = getCurrentPoint(game);
@@ -305,7 +307,7 @@ export const BetweenPointDisplay = ({
                       name={player.name}
                       number={player.number}
                       matchingType={player.matchingType}
-                      compact={sizeClass === 'small' || isLandscape}
+                      compact={sizeClass === 'small' || isDense}
                       onPress={() => {}}
                     />
                   ))}
@@ -365,8 +367,8 @@ export const BetweenPointDisplay = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
-  const densitySizeClass = isLandscape ? 'small' : sizeClass;
+function createStyles(sizeClass: SizeClass, isDense: boolean) {
+  const densitySizeClass = isDense ? 'small' : sizeClass;
 
   return StyleSheet.create({
     container: { flex: 1, justifyContent: 'space-between' },
@@ -481,7 +483,7 @@ function createStyles(sizeClass: SizeClass, isLandscape: boolean) {
     },
     timeoutContent: {
       alignItems: 'center',
-      paddingTop: scaleBySizeClass(isLandscape ? 24 : 80, densitySizeClass),
+      paddingTop: scaleBySizeClass(isDense ? 24 : 80, densitySizeClass),
       paddingHorizontal: scaleBySizeClass(32, densitySizeClass),
       width: '100%',
       flex: 1,

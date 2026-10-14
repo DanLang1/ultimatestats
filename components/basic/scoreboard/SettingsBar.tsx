@@ -8,7 +8,7 @@ import { AlertModal } from '@/components/ui/AlertModal';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameTimer } from '@/hooks/basic/useGameTimer';
-import { getSizeClassValue, SizeClass, useLayout, scaleBySizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { formatTimerSeconds } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -27,7 +27,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const iconSize = scaleBySizeClass(24, sizeClass);
+  const iconSize = getSizeClassValue({ small: 24, medium: 26, large: 28 }, sizeClass);
 
   const [showAbbaModal, setShowAbbaModal] = useState(false);
 
@@ -159,13 +159,12 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 }
 
 function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
-  const horizontalPadding = scaleBySizeClass(20, sizeClass);
-  const verticalPadding = scaleBySizeClass(10, sizeClass);
-  const minHeight = scaleBySizeClass(50, sizeClass);
-  const gap = scaleBySizeClass(15, sizeClass);
-  const timerTextSize = scaleBySizeClass(20, sizeClass);
-  const ratioTextSize = scaleBySizeClass(18, sizeClass);
-  // Not a size-class scale step; medium and large are hand-picked.
+  const horizontalPadding = getSizeClassValue({ small: 20, medium: 24, large: 28 }, sizeClass);
+  const verticalPadding = getSizeClassValue({ small: 10, medium: 12, large: 14 }, sizeClass);
+  const minHeight = getSizeClassValue({ small: 50, medium: 58, large: 64 }, sizeClass);
+  const gap = getSizeClassValue({ small: 15, medium: 18, large: 22 }, sizeClass);
+  const timerTextSize = getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass);
+  const ratioTextSize = getSizeClassValue({ small: 18, medium: 20, large: 22 }, sizeClass);
   const iconButtonPadding = getSizeClassValue({ small: 5, medium: 7, large: 8 }, sizeClass);
 
   return StyleSheet.create({
@@ -213,12 +212,12 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
     },
     abbaText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      lineHeight: scaleBySizeClass(20, sizeClass),
+      fontSize: getSizeClassValue({ small: 14, medium: 15, large: 16 }, sizeClass),
+      lineHeight: getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass),
       marginBottom: 12,
     },
     abbaSource: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+      fontSize: getSizeClassValue({ small: 12, medium: 13, large: 14 }, sizeClass),
       fontStyle: 'italic',
       marginTop: 4,
     },

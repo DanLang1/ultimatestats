@@ -6,8 +6,7 @@ import { ModalPlayerGrid } from '@/components/lines/ModalPlayerGrid';
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import { pluralize } from '@/lib/utils';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -212,8 +211,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     sheet: {
       width: '100%',
       height: isLandscape ? '96%' : '84%',
-      maxWidth: getSizeClassValue(MODAL_MAX_WIDTH_LARGE, sizeClass),
-      alignSelf: 'center',
       overflow: 'hidden',
     },
     header: {

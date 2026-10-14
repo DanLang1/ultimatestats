@@ -543,9 +543,9 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       marginTop: 12,
       flex: isLandscape ? 1 : 0,
       justifyContent: 'center',
+      // Spans the stat cards above so names and badges line up with their edges.
       width: '100%',
-      maxWidth: scaleBySizeClass(220, sizeClass),
-      alignSelf: 'center',
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
     },
     performerRowCompact: {
       flexDirection: 'row',

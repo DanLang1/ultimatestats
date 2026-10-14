@@ -64,7 +64,7 @@ export default function TimeOfPossessionSection({
           testID="time-of-possession-title"
           style={[styles.title, { color: palette.textMuted }]}>
           TIME OF POSSESSION
-          <ThemedText style={styles.pointsNote}>
+          <ThemedText style={[styles.pointsNote, { color: palette.textMuted }]}>
             {' · '}
             {topStats.timedPointCount} pt{topStats.timedPointCount !== 1 ? 's' : ''} timed
           </ThemedText>

@@ -37,6 +37,15 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerScoreBar.tsx`
   `docs/responsive-layout.md`
 
+## P3 - Basic Timeout Modal
+
+- The timeout modal labels the calling team "Team 1" / "Team 2" instead of the team names
+  (hard-coded from the last timeout event's `team1`/`team2`).
+- Consider rebuilding it as a bottom sheet so it matches the other in-game sheets; fix the label as
+  part of that.
+- References:
+  `app/(modals)/timeout-modal.tsx`
+
 ## P3 - Size-Class Scaling Helper
 
 - About 2,000 call sites spell out `scaleBySizeClass(x, sizeClass)` and ~220 spell out
@@ -45,15 +54,14 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `s.pick(map)` and `s.sizeClass`; style factories take `s` instead of `sizeClass`. Same factors and
   rounding, so a file-by-file codemod has no visual change. Keep `scaleBySizeClass` for non-React
   code and tests. Keep `isCompactHeight` out of `s`; screens opt in to it explicitly.
-- About 124 inline `getSizeClassValue({ small, medium, large }, sizeClass)` size tables in ~21 files
-  hard-code the old 1.1/1.2 steps, so they no longer follow the global scale (now 1.21/1.5). Convert
-  the ones that are really scaling to `scaleBySizeClass(smallValue)`; keep tables only for values
-  that differ by design (layout widths, column counts, deliberate tablet jumps). Already converted:
-  `LiveScoreboard`, `ScoreboardActionBar`, `SettingsBar`, `TeamScoreSection`, `ScreenHeader`,
-  `ChemistryMap`, `AdvancedChemistryMap`, and `TutorialActionBar` (two design tables kept: the
-  team score gap and settings bar icon padding).
 - Avoid auto-scaling every numeric style value (needs exceptions for `flex`, `opacity`,
   `aspectRatio`, hairlines). Semantic spacing/type tokens could layer on later.
+- Decide during the migration whether text should scale by size class at all. Platform guidance
+  (Apple HIG, Material 3) and large open-source React Native apps keep type sizes fixed across
+  devices, rely on the user's system text size, and use tablet space for layout instead. Option:
+  type at 1x on reading screens; in-game screens (advanced tracker, basic scoreboard) size text from
+  available space; spacing and touch targets may still scale. A 1.5x global scale was tried and
+  reverted (too large on reading screens).
 - References:
   `hooks/useLayout.ts`
   `docs/responsive-layout.md`

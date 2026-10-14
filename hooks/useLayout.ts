@@ -10,8 +10,8 @@ export type SizeClass = 'small' | 'medium' | 'large';
 
 const SIZE_CLASS_SCALE: Record<SizeClass, number> = {
   small: 1,
-  medium: 1.21,
-  large: 1.5,
+  medium: 1.1,
+  large: 1.2,
 };
 
 export type LayoutInfo = {

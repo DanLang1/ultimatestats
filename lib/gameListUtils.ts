@@ -93,3 +93,42 @@ export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): Gam
     importedAt: summary.importedAt,
   };
 }
+
+/** Aggregate team row subtitle, e.g. "2 games • 5 points tracked". */
+export function formatAggregateTeamMeta(gameCount: number, pointsTracked: number): string {
+  const games = `${gameCount} game${gameCount !== 1 ? 's' : ''}`;
+  const points = `${pointsTracked} point${pointsTracked !== 1 ? 's' : ''}`;
+  return `${games} • ${points} tracked`;
+}
+
+/** One focus team's row in the advanced aggregate list. */
+export interface AdvancedAggregateTeam {
+  id: string;
+  name: string;
+  gameCount: number;
+  /** Points played across the team's games, not points scored. */
+  totalPoints: number;
+}
+
+/** Groups advanced games by focus team (source team when known), most games first. */
+export function groupAdvancedGamesByTeam(games: AdvancedGameSummary[]): AdvancedAggregateTeam[] {
+  const groupMap = new Map<string, AdvancedAggregateTeam>();
+
+  for (const game of games) {
+    const teamId = game.focusSourceTeamId ?? game.focusSideId;
+    const existing = groupMap.get(teamId);
+    if (existing) {
+      existing.gameCount++;
+      existing.totalPoints += game.pointsTracked;
+    } else {
+      groupMap.set(teamId, {
+        id: teamId,
+        name: game.myTeamName,
+        gameCount: 1,
+        totalPoints: game.pointsTracked,
+      });
+    }
+  }
+
+  return Array.from(groupMap.values()).sort((a, b) => b.gameCount - a.gameCount);
+}

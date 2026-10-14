@@ -6,6 +6,7 @@ import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatDate } from '@/lib/basic/statsUtils';
+import { formatAggregateTeamMeta } from '@/lib/gameListUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SavedGame } from '@/lib/storage';
@@ -296,8 +297,7 @@ export default function AggregateGamesList({
                 {team.name}
               </ThemedText>
               <ThemedText style={[styles.teamMeta, { color: palette.textMuted }]}>
-                {team.gameCount} game{team.gameCount !== 1 ? 's' : ''} • {team.totalPoints} points
-                tracked
+                {formatAggregateTeamMeta(team.gameCount, team.totalPoints)}
               </ThemedText>
             </View>
             <MaterialCommunityIcons

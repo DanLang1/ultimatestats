@@ -11,7 +11,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
-import { SizeClass, useLayout, scaleBySizeClass } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useReclampOnResize } from '@/hooks/useReclampOnResize';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useUIStore } from '@/store/uiStore';
@@ -356,25 +356,45 @@ export function ScoreboardActionBar({
 }
 
 // ── Metrics ───────────────────────────────────────────────────────────
-// Base sizes scale by size class. Everything else is derived in createStyles via:
-//   d = (iconSize - 20) / 2   →   0 (small) | 2 (medium) | 5 (large)
+// Only the fields that don't scale linearly from iconSize are kept
+// explicit. Everything else is derived in createStyles via:
+//   d = (iconSize - 20) / 2   →   0 (small) | 1 (medium) | 2 (large)
 
 type ActionBarMetrics = {
   estimatedWidth: number; // needed for initial position / clamping math
   estimatedHeight: number; // needed for initial position / clamping math
   iconSize: number; // base action icon size; drives all icon + spacing derivations
-  containerRadius: number; // 28 → 34 → 42
+  containerRadius: number; // non-linear (28 → 30 → 34), keep explicit
   textSize: number; // button label text size
 };
 
 function getActionBarMetrics(sizeClass: SizeClass): ActionBarMetrics {
-  return {
-    estimatedWidth: scaleBySizeClass(BAR_WIDTH_INITIAL, sizeClass),
-    estimatedHeight: scaleBySizeClass(BAR_HEIGHT_INITIAL, sizeClass),
-    iconSize: scaleBySizeClass(20, sizeClass),
-    containerRadius: scaleBySizeClass(28, sizeClass),
-    textSize: scaleBySizeClass(11, sizeClass),
-  };
+  return getSizeClassValue(
+    {
+      small: {
+        estimatedWidth: BAR_WIDTH_INITIAL,
+        estimatedHeight: BAR_HEIGHT_INITIAL,
+        iconSize: 20,
+        containerRadius: 28,
+        textSize: 11,
+      },
+      medium: {
+        estimatedWidth: 320,
+        estimatedHeight: 66,
+        iconSize: 22,
+        containerRadius: 30,
+        textSize: 12,
+      },
+      large: {
+        estimatedWidth: 360,
+        estimatedHeight: 74,
+        iconSize: 24,
+        containerRadius: 34,
+        textSize: 13,
+      },
+    },
+    sizeClass,
+  );
 }
 
 function createStyles(metrics: ActionBarMetrics) {

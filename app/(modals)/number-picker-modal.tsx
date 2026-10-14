@@ -13,7 +13,10 @@ import { Fonts } from '@/theme/theme';
 export default function NumberPickerModal() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  // The side-by-side keypad is for landscape phones and small tablets; large tablets have the
+  // height for the full picker.
+  const isShortLandscape = isLandscape && sizeClass !== 'large';
+  const styles = createStyles(isShortLandscape, sizeClass);
   const { isActive, value, min, max, label, helperText, suffix, quickOptions, save, close } =
     useNumberPickerStore();
 
@@ -117,7 +120,7 @@ export default function NumberPickerModal() {
             </View>
 
             {/* Numpad */}
-            {isLandscape ? (
+            {isShortLandscape ? (
               <View style={styles.numpadContainer}>
                 <View style={styles.numpadRow}>
                   {[1, 2, 3, 4, 5].map((digit) => (
@@ -316,7 +319,7 @@ export default function NumberPickerModal() {
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(isShortLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -326,9 +329,9 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     container: {
       borderRadius: 16,
       borderWidth: 1,
-      width: isLandscape ? undefined : '92%',
-      maxWidth: isLandscape ? undefined : getSizeClassValue(MODAL_MAX_WIDTH_PICKER, sizeClass),
-      paddingHorizontal: isLandscape ? 20 : 14,
+      width: isShortLandscape ? undefined : '92%',
+      maxWidth: isShortLandscape ? undefined : getSizeClassValue(MODAL_MAX_WIDTH_PICKER, sizeClass),
+      paddingHorizontal: isShortLandscape ? 20 : 14,
       paddingVertical: 16,
       gap: 12,
     },
@@ -352,21 +355,21 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       lineHeight: scaleBySizeClass(16, sizeClass),
     },
     content: {
-      flexDirection: isLandscape ? 'row' : 'column',
-      alignItems: isLandscape ? 'center' : 'stretch',
-      gap: isLandscape ? 24 : 14,
+      flexDirection: isShortLandscape ? 'row' : 'column',
+      alignItems: isShortLandscape ? 'center' : 'stretch',
+      gap: isShortLandscape ? 24 : 14,
     },
     valueDisplayContainer: {
       flexDirection: 'row',
       alignItems: 'baseline',
       justifyContent: 'center',
-      minWidth: isLandscape ? 120 : 0,
-      paddingVertical: isLandscape ? 0 : 8,
-      borderBottomWidth: isLandscape ? 0 : 1,
+      minWidth: isShortLandscape ? 120 : 0,
+      paddingVertical: isShortLandscape ? 0 : 8,
+      borderBottomWidth: isShortLandscape ? 0 : 1,
       gap: 6,
     },
     largeValue: {
-      fontSize: scaleBySizeClass(isLandscape ? 44 : 38, sizeClass),
+      fontSize: scaleBySizeClass(isShortLandscape ? 44 : 38, sizeClass),
       fontFamily: Fonts.bold,
       fontVariant: ['tabular-nums'],
     },
@@ -404,8 +407,8 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     quickOptionsContainer: {
       flexDirection: 'row',
-      justifyContent: isLandscape ? 'flex-end' : 'flex-start',
-      flexWrap: isLandscape ? 'nowrap' : 'wrap',
+      justifyContent: isShortLandscape ? 'flex-end' : 'flex-start',
+      flexWrap: isShortLandscape ? 'nowrap' : 'wrap',
       gap: 8,
     },
     quickOptionChip: {
