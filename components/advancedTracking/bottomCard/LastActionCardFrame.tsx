@@ -14,15 +14,17 @@ export const LAST_ACTION_EYEBROW_LINE_HEIGHT = 14;
 export const LAST_ACTION_HEADER_LINE_HEIGHT = 18;
 const CONTENT_GAP = 2;
 const CARD_PADDING_VERTICAL = 12;
+const COMPACT_CARD_PADDING_VERTICAL = 8;
+const OUTER_PADDING = 8;
+const COMPACT_OUTER_PADDING_VERTICAL = 4;
 const CARD_BORDER_WIDTH = 1;
 // Sized for the tallest content (eyebrow + header + throw-type row) so the card never grows
 // mid-point; growth would shrink the player grid under the user's finger.
-const CARD_MIN_HEIGHT =
+const CARD_CONTENT_MIN_HEIGHT =
   LAST_ACTION_EYEBROW_LINE_HEIGHT +
   LAST_ACTION_HEADER_LINE_HEIGHT +
   THROW_TYPE_PROMPT_HEIGHT +
   CONTENT_GAP * 2 +
-  CARD_PADDING_VERTICAL * 2 +
   CARD_BORDER_WIDTH * 2;
 
 export type ButtonMode =
@@ -49,8 +51,8 @@ export const LastActionCardFrame = ({
   moreAdornment,
 }: LastActionCardFrameProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass, palette);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight, palette);
   const [cardWidth, setCardWidth] = useState(0);
 
   const showMore = buttonMode.kind === 'undo-more' || buttonMode.kind === 'more-only';
@@ -187,23 +189,28 @@ export const LastActionCardFrame = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass, palette: Palette) {
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean, palette: Palette) {
+  const cardPaddingVertical = isCompactHeight
+    ? COMPACT_CARD_PADDING_VERTICAL
+    : CARD_PADDING_VERTICAL;
+  const outerPaddingVertical = isCompactHeight ? COMPACT_OUTER_PADDING_VERTICAL : OUTER_PADDING;
   return StyleSheet.create({
     outerContainer: {
-      padding: scaleBySizeClass(8, sizeClass),
+      paddingHorizontal: scaleBySizeClass(OUTER_PADDING, sizeClass),
+      paddingVertical: scaleBySizeClass(outerPaddingVertical, sizeClass),
       backgroundColor: 'transparent',
     },
     card: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: scaleBySizeClass(12, sizeClass),
-      minHeight: scaleBySizeClass(CARD_MIN_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(CARD_CONTENT_MIN_HEIGHT + cardPaddingVertical * 2, sizeClass),
       backgroundColor: palette.trackerActionCardBg,
       borderRadius: 18,
       borderCurve: 'continuous',
       overflow: 'hidden',
       paddingHorizontal: scaleBySizeClass(14, sizeClass),
-      paddingVertical: scaleBySizeClass(CARD_PADDING_VERTICAL, sizeClass),
+      paddingVertical: scaleBySizeClass(cardPaddingVertical, sizeClass),
       shadowColor: palette.shadow,
       shadowOffset: { width: 0, height: 5 },
       shadowOpacity: 0.12,

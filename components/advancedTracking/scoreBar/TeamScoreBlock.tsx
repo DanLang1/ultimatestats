@@ -7,6 +7,10 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
 
+const SCORE_FONT_SIZE = 48;
+const COMPACT_SCORE_FONT_SIZE = 38;
+const SCORE_LINE_HEIGHT_EXTRA = 4;
+
 const TEAM_NAME_MIN_FONT_SCALE = 0.82;
 
 interface TeamScoreBlockProps {
@@ -27,8 +31,8 @@ export function TeamScoreBlock({
   timeoutDotsTestID,
 }: TeamScoreBlockProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
 
   return (
     <View style={styles.block}>
@@ -54,7 +58,8 @@ export function TeamScoreBlock({
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
+  const scoreFontSize = isCompactHeight ? COMPACT_SCORE_FONT_SIZE : SCORE_FONT_SIZE;
   return StyleSheet.create({
     block: {
       flex: 1,
@@ -83,10 +88,10 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'center',
     },
     score: {
-      fontSize: scaleBySizeClass(48, sizeClass),
+      fontSize: scaleBySizeClass(scoreFontSize, sizeClass),
       fontFamily: Fonts.black,
       fontVariant: ['tabular-nums'],
-      lineHeight: scaleBySizeClass(52, sizeClass),
+      lineHeight: scaleBySizeClass(scoreFontSize + SCORE_LINE_HEIGHT_EXTRA, sizeClass),
     },
   });
 }

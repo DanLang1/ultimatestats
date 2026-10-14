@@ -1,4 +1,9 @@
-import { getTrackerChipWidth } from '@/lib/advancedTracking/trackerLayoutUtils';
+import {
+  getTrackerChipContentScale,
+  getTrackerChipWidth,
+  isTrackerChipContentCompact,
+  TRACKER_CHIP_FULL_CONTENT_WIDTH,
+} from '@/lib/advancedTracking/trackerLayoutUtils';
 
 const baseInput = {
   screenWidth: 393,
@@ -22,5 +27,23 @@ describe('getTrackerChipWidth', () => {
 
   it('uses width sizing until the tracking surface has been measured', () => {
     expect(getTrackerChipWidth({ ...baseInput, availableHeight: null })).toBe(109);
+  });
+});
+
+describe('getTrackerChipContentScale', () => {
+  it('keeps full-size content at and above the full content width', () => {
+    expect(getTrackerChipContentScale(TRACKER_CHIP_FULL_CONTENT_WIDTH)).toBe(1);
+    expect(getTrackerChipContentScale(140)).toBe(1);
+  });
+
+  it('shrinks content proportionally for height-limited chips', () => {
+    expect(getTrackerChipContentScale(TRACKER_CHIP_FULL_CONTENT_WIDTH / 2)).toBe(0.5);
+  });
+});
+
+describe('isTrackerChipContentCompact', () => {
+  it('is compact only below the full content width', () => {
+    expect(isTrackerChipContentCompact(TRACKER_CHIP_FULL_CONTENT_WIDTH - 1)).toBe(true);
+    expect(isTrackerChipContentCompact(TRACKER_CHIP_FULL_CONTENT_WIDTH)).toBe(false);
   });
 });

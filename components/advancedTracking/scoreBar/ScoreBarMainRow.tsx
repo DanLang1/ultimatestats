@@ -26,8 +26,8 @@ export const ScoreBarMainRow = ({
   hideRedZoneControl,
 }: ScoreBarMainRowProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
   const data = useScoreBarData();
 
   if (!data) return null;
@@ -106,7 +106,8 @@ export const ScoreBarMainRow = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
+  const verticalPadding = isCompactHeight ? 6 : 10;
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -114,8 +115,7 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'stretch',
       gap: 6,
       paddingHorizontal: 12,
-      paddingTop: 10,
-      paddingBottom: 10,
+      paddingVertical: verticalPadding,
     },
     centerCard: {
       width: scaleBySizeClass(106, sizeClass),

@@ -1,7 +1,6 @@
-import { Platform, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
-import { FOOTER_ACTION_HEIGHT } from '@/components/advancedTracking/bottomCard/constants';
+import { getFooterActionHeight } from '@/components/advancedTracking/bottomCard/constants';
 import {
   OffenseActions,
   OffenseTapAction,
@@ -13,8 +12,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { TutorialFooterButton } from './useTutorialAdvancedGameState';
 
 // Frame copied from TrackerActionFooter, which always renders voice and the defense actions.
-const FOOTER_BOTTOM_PADDING = 48;
-const ANDROID_FOOTER_BOTTOM_PADDING = 20;
+const FOOTER_BOTTOM_PADDING = 20;
 const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 12;
 
@@ -37,9 +35,8 @@ export default function TutorialAdvancedFooter({
   onArmTapAction,
 }: TutorialAdvancedFooterProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const insets = useSafeAreaInsets();
-  const styles = createStyles(sizeClass, insets.bottom);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
 
   // Defense steps leave the row empty; its height stays reserved so the grid never moves.
   if (oppHasDisc) {
@@ -84,21 +81,18 @@ export default function TutorialAdvancedFooter({
   );
 }
 
-function createStyles(sizeClass: SizeClass, bottomInset: number) {
-  const footerBottomPadding =
-    Platform.OS === 'android' ? ANDROID_FOOTER_BOTTOM_PADDING : FOOTER_BOTTOM_PADDING;
-
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
   return StyleSheet.create({
     container: {
       position: 'relative',
       paddingHorizontal: FOOTER_HORIZONTAL_PADDING,
       paddingTop: FOOTER_TOP_PADDING,
-      paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
+      paddingBottom: scaleBySizeClass(FOOTER_BOTTOM_PADDING, sizeClass),
     },
     row: {
       flexDirection: 'row',
       position: 'relative',
-      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(getFooterActionHeight(isCompactHeight), sizeClass),
     },
     hiddenRow: {
       opacity: 0,

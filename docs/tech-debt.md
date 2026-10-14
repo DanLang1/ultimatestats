@@ -4,23 +4,6 @@ Last verified: Oct 14, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
-## P2 - Advanced Tracker Overflow on Small Phones
-
-- On iPhone SE (3rd generation), the live-point tracker is taller than the screen, so the footer
-  action row (T/A, Drop, Goal on offense; Opp Goal, Opp Turn on defense) is clipped at the bottom.
-  This predates the footer action buttons; the old full-width voice button was clipped the same way.
-- `getTrackerChipWidth` already shrinks chips to the measured surface height, so the extra height
-  comes from elsewhere. Unconfirmed suspects: the Line action tile growing taller than its chip
-  width, and `FOOTER_BOTTOM_PADDING` (48pt) on devices without a home indicator.
-- Related small-chip issues: "Unknown" wraps mid-word, and the Line tile's icon and label crowd
-  the tile edges.
-- References:
-  `app/(main)/advanced-tracking/tracker.tsx`
-  `components/advancedTracking/TrackerActionFooter.tsx`
-  `components/advancedTracking/TrackerPlayerGrid.tsx`
-  `components/advancedTracking/TrackerLineActionTile.tsx`
-  `lib/advancedTracking/trackerLayoutUtils.ts`
-
 ## P2 - BottomSheet Modal Wrapper
 
 - Several bottom-sheet callers manually wrap `BottomSheet` in a transparent React Native `Modal`. `BottomSheet` owns the overlay and sheet layout, but the caller-owned `Modal` is still needed today for native modal presentation and z-order.
@@ -32,6 +15,20 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerRareMenu.tsx`
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
+
+## P3 - Size-Class Scaling Helper
+
+- About 2,000 call sites spell out `scaleBySizeClass(x, sizeClass)` and ~220 spell out
+  `getSizeClassValue(map, sizeClass)`, and every style factory threads `sizeClass` through.
+- Cleanup: add a `useScale()` hook returning `s(x, options?)` bound to the current size class, with
+  `s.pick(map)` and `s.sizeClass`; style factories take `s` instead of `sizeClass`. Same factors and
+  rounding, so a file-by-file codemod has no visual change. Keep `scaleBySizeClass` for non-React
+  code and tests. Keep `isCompactHeight` out of `s`; screens opt in to it explicitly.
+- Avoid auto-scaling every numeric style value (needs exceptions for `flex`, `opacity`,
+  `aspectRatio`, hairlines). Semantic spacing/type tokens could layer on later.
+- References:
+  `hooks/useLayout.ts`
+  `docs/responsive-layout.md`
 
 ## P3 - Lower Advanced Games Import Limit to Match Share Cap
 

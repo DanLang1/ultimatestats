@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-import { FOOTER_ACTION_HEIGHT } from './constants';
+import { getFooterActionHeight } from './constants';
 
 interface DefenseActionsProps {
   onOppScored: () => void;
@@ -15,8 +15,8 @@ interface DefenseActionsProps {
 
 export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
 
   return (
     <View style={styles.row}>
@@ -66,7 +66,7 @@ export const DefenseActions = ({ onOppScored, onOppTurnover }: DefenseActionsPro
   );
 };
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
   return StyleSheet.create({
     row: {
       flex: 1,
@@ -78,7 +78,7 @@ function createStyles(sizeClass: SizeClass) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(getFooterActionHeight(isCompactHeight), sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

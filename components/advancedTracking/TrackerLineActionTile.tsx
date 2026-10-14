@@ -4,9 +4,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import {
+  getTrackerChipContentScale,
+  isTrackerChipContentCompact,
+} from '@/lib/advancedTracking/trackerLayoutUtils';
 import { Fonts } from '@/theme/theme';
 
 const TILE_BORDER_RADIUS = 12;
+const ICON_WRAP_SIZE = 40;
 
 interface TrackerLineActionTileProps {
   chipWidth: number;
@@ -16,6 +21,10 @@ interface TrackerLineActionTileProps {
 export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionTileProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
+  const contentScale = getTrackerChipContentScale(chipWidth);
+  // Below full size, the subtitle no longer fits under the icon and label.
+  const showSubtitle = !isTrackerChipContentCompact(chipWidth);
+  const iconWrapSize = Math.round(ICON_WRAP_SIZE * contentScale);
 
   return (
     <Pressable
@@ -30,10 +39,18 @@ export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionT
         },
         pressed && { opacity: 0.75 },
       ]}>
-      <View style={[styles.iconWrap, { backgroundColor: palette.accentOverlay10 }]}>
+      <View
+        style={[
+          styles.iconWrap,
+          {
+            width: iconWrapSize,
+            height: iconWrapSize,
+            backgroundColor: palette.accentOverlay10,
+          },
+        ]}>
         <MaterialCommunityIcons
           name="account-switch-outline"
-          size={scaleBySizeClass(24, sizeClass)}
+          size={scaleBySizeClass(24 * contentScale, sizeClass)}
           color={palette.accent}
         />
       </View>
@@ -48,17 +65,19 @@ export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionT
         numberOfLines={1}>
         Line
       </ThemedText>
-      <ThemedText
-        style={[
-          styles.subtitle,
-          {
-            color: palette.textMuted,
-            fontSize: scaleBySizeClass(10, sizeClass),
-          },
-        ]}
-        numberOfLines={1}>
-        Change
-      </ThemedText>
+      {showSubtitle && (
+        <ThemedText
+          style={[
+            styles.subtitle,
+            {
+              color: palette.textMuted,
+              fontSize: scaleBySizeClass(10, sizeClass),
+            },
+          ]}
+          numberOfLines={1}>
+          Change
+        </ThemedText>
+      )}
     </Pressable>
   );
 }
@@ -73,12 +92,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 10,
+    paddingHorizontal: 10,
     gap: 6,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',

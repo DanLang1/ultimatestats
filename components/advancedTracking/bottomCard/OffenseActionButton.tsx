@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-import { FOOTER_ACTION_HEIGHT } from './constants';
+import { getFooterActionHeight } from './constants';
 
 interface OffenseActionButtonProps {
   testID: string;
@@ -25,8 +25,8 @@ export const OffenseActionButton = ({
   onPress,
 }: OffenseActionButtonProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
 
   return (
     <Pressable
@@ -49,13 +49,13 @@ export const OffenseActionButton = ({
   );
 };
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
   return StyleSheet.create({
     btn: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(getFooterActionHeight(isCompactHeight), sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

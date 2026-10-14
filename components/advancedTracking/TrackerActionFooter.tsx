@@ -1,9 +1,8 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
 import {
-  FOOTER_ACTION_HEIGHT,
+  getFooterActionHeight,
   PICKUP_PROMPT_TEXT,
 } from '@/components/advancedTracking/bottomCard/constants';
 import { DefenseActions } from '@/components/advancedTracking/bottomCard/DefenseActions';
@@ -20,8 +19,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { TrackerFooterMode } from '@/lib/advancedTracking/trackerSessionView';
 import { Fonts } from '@/theme/theme';
 
-const FOOTER_BOTTOM_PADDING = 48;
-const ANDROID_FOOTER_BOTTOM_PADDING = 20;
+const FOOTER_BOTTOM_PADDING = 20;
 const FOOTER_HORIZONTAL_PADDING = 12;
 const FOOTER_TOP_PADDING = 12;
 
@@ -43,9 +41,8 @@ export const TrackerActionFooter = ({
   onOppTurnover,
 }: TrackerActionFooterProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const insets = useSafeAreaInsets();
-  const styles = createStyles(sizeClass, insets.bottom);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
 
   // A modifier (More menu, Goal, or Drop) owns the next tap. Hide the row but keep its
   // space so the player grid does not resize under the user's finger.
@@ -98,29 +95,24 @@ export const TrackerActionFooter = ({
     );
   }
 
-  // Always render the container so bottom safe-area padding is preserved.
+  // Always render the container so the footer's bottom padding is preserved.
   return <View style={styles.container}>{content}</View>;
 };
 
-function createStyles(sizeClass: SizeClass, bottomInset: number) {
-  let footerBottomPadding = FOOTER_BOTTOM_PADDING;
-  if (Platform.OS === 'android') {
-    footerBottomPadding = ANDROID_FOOTER_BOTTOM_PADDING;
-  }
-
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
   return StyleSheet.create({
     container: {
       position: 'relative',
       paddingHorizontal: FOOTER_HORIZONTAL_PADDING,
       paddingTop: FOOTER_TOP_PADDING,
-      paddingBottom: bottomInset + scaleBySizeClass(footerBottomPadding, sizeClass),
+      paddingBottom: scaleBySizeClass(FOOTER_BOTTOM_PADDING, sizeClass),
     },
+    // No `flex: 1` on the rows: in this auto-height container a zero flex basis lets Yoga size
+    // the footer without the row, so the buttons overflow the screen instead of shrinking the grid.
     defenseRow: {
-      flex: 1,
       flexDirection: 'row',
     },
     offenseRow: {
-      flex: 1,
       flexDirection: 'row',
       position: 'relative',
       gap: scaleBySizeClass(8, sizeClass),
@@ -130,7 +122,7 @@ function createStyles(sizeClass: SizeClass, bottomInset: number) {
     },
     pickupPrompt: {
       flex: 1,
-      minHeight: scaleBySizeClass(FOOTER_ACTION_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(getFooterActionHeight(isCompactHeight), sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 16,

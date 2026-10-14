@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
+import { getFooterActionHeight } from '@/components/advancedTracking/bottomCard/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { VoiceStatCommandsControls } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -10,8 +11,6 @@ import { Palette } from '@/theme/theme';
 
 import { AdvancedVoiceHintModal } from './AdvancedVoiceHintModal';
 
-const VOICE_BUTTON_HEIGHT = 62;
-
 interface TrackerVoiceButtonProps {
   controls: VoiceStatCommandsControls;
   disabled: boolean;
@@ -19,8 +18,8 @@ interface TrackerVoiceButtonProps {
 
 export const TrackerVoiceButton = ({ controls, disabled }: TrackerVoiceButtonProps) => {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, isCompactHeight } = useLayout();
+  const styles = createStyles(sizeClass, isCompactHeight);
   const hasSeenAdvancedVoiceHint = useTutorialStore((state) => state.hasSeenAdvancedVoiceHint);
   const [showVoiceHint, setShowVoiceHint] = useState(false);
 
@@ -81,11 +80,11 @@ function getAccentColor(status: VoiceStatCommandsControls['status'], palette: Pa
   return palette.accent;
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass, isCompactHeight: boolean) {
   return StyleSheet.create({
     button: {
       width: scaleBySizeClass(56, sizeClass),
-      minHeight: scaleBySizeClass(VOICE_BUTTON_HEIGHT, sizeClass),
+      minHeight: scaleBySizeClass(getFooterActionHeight(isCompactHeight), sizeClass),
       borderRadius: 16,
       borderCurve: 'continuous',
       borderWidth: 1,

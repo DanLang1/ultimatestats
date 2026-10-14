@@ -6,11 +6,14 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { isTrackerChipContentCompact } from '@/lib/advancedTracking/trackerLayoutUtils';
 import { Fonts } from '@/theme/theme';
 
 import { PassModifier } from './types';
 
 const CHIP_BORDER_RADIUS = 12;
+const CHIP_BODY_PADDING = 12;
+const COMPACT_CHIP_BODY_PADDING = 4;
 
 interface TrackerChipBaseProps {
   label: string;
@@ -44,6 +47,9 @@ export const TrackerChipBase = ({
   const { sizeClass } = useLayout();
   const { isHolder, isTargetable, oppHasDisc, canDropOpeningPull, passModifier } = state;
   const { tap, throwaway, goal, drop, pullDrop, oppSwipeDown } = actions;
+  // Height-limited chips on short phones give their padding to the label; long names may wrap.
+  const isCompact = isTrackerChipContentCompact(chipWidth);
+  const bodyPadding = isCompact ? COMPACT_CHIP_BODY_PADDING : CHIP_BODY_PADDING;
 
   const isHolderSV = useDerivedValue(() => isHolder);
   const isTargetableSV = useDerivedValue(() => isTargetable);
@@ -176,7 +182,11 @@ export const TrackerChipBase = ({
           ]}>
           <Pressable
             testID={`tracker-chip-${label}`}
-            style={({ pressed }) => [styles.chipBody, pressed && !oppHasDisc && { opacity: 0.75 }]}
+            style={({ pressed }) => [
+              styles.chipBody,
+              { padding: bodyPadding },
+              pressed && !oppHasDisc && { opacity: 0.75 },
+            ]}
             onPress={tap}>
             {playerNumber != null && playerNumber !== '' && (
               <View style={[styles.numberBadge, { backgroundColor: palette.overlay15 }]}>
@@ -215,7 +225,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
   },
   numberBadge: {
     position: 'absolute',

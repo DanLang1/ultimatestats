@@ -34,3 +34,16 @@ export function getTrackerChipWidth({
   chipWidth = Math.min(chipWidth, heightLimitedChipWidth);
   return chipWidth;
 }
+
+/** Chip width below which chip content (padding, icons, secondary labels) compacts. */
+export const TRACKER_CHIP_FULL_CONTENT_WIDTH = 90;
+
+/** Scale for chip content that must shrink with height-limited chips on short phones. */
+export function getTrackerChipContentScale(chipWidth: number): number {
+  return Math.min(1, chipWidth / TRACKER_CHIP_FULL_CONTENT_WIDTH);
+}
+
+/** Whether a chip is below full content size and should compact its padding and secondary text. */
+export function isTrackerChipContentCompact(chipWidth: number): boolean {
+  return chipWidth < TRACKER_CHIP_FULL_CONTENT_WIDTH;
+}

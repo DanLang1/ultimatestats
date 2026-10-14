@@ -1,6 +1,10 @@
 import { useWindowDimensions } from 'react-native';
 
-import { SIZE_CLASS_LARGE_THRESHOLD, SIZE_CLASS_MEDIUM_THRESHOLD } from '@/lib/constants';
+import {
+  COMPACT_HEIGHT_THRESHOLD,
+  SIZE_CLASS_LARGE_THRESHOLD,
+  SIZE_CLASS_MEDIUM_THRESHOLD,
+} from '@/lib/constants';
 
 export type SizeClass = 'small' | 'medium' | 'large';
 
@@ -15,6 +19,12 @@ export type LayoutInfo = {
   height: number;
   isLandscape: boolean;
   sizeClass: SizeClass;
+  /**
+   * Short window in the current orientation. Independent of `sizeClass`: fixed-height screens opt
+   * in to shrink their chrome, while scrolling screens can ignore it. Shrink only the fixed parts
+   * and let a measured flexible area (e.g. the tracker's player grid) take the freed space.
+   */
+  isCompactHeight: boolean;
 };
 
 type ScaleBySizeClassOptions = {
@@ -62,5 +72,6 @@ export function useLayout(): LayoutInfo {
     height,
     isLandscape: width > height,
     sizeClass,
+    isCompactHeight: height < COMPACT_HEIGHT_THRESHOLD,
   };
 }

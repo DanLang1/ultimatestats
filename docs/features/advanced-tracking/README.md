@@ -44,13 +44,8 @@ Returning from line selection and continuing creates a fresh game from the curre
 
 ## In-game Help
 
-The tracker's top bar keeps a labeled Help button visible. `TrackerHelpSheet` provides a
-“What happened?” reference with a fixed list of core gestures — scored (swipe up or Goal),
-throwaway (swipe down or T/A), drop (swipe down or Drop), and block (tap) — plus a “Something else
-happened” row that points at More for actions like stall and Callahan. Help only opens local UI: it
-does not record actions or change clocks. Practice comes in Buttons and Gestures variants (see
-`TUTORIAL_ADVANCED_STEPS`); tracker-launched practice returns to the tracker and skips line
-selection.
+Help only opens local UI: it does not record actions or change clocks. Tracker-launched practice
+returns to the tracker and skips line selection.
 
 Fresh-install onboarding introduces advanced line selection before Buttons practice. That screen is
 a tutorial-owned implementation with local fixture state. It may reuse neutral visual primitives,
@@ -78,17 +73,10 @@ card offers only Cancel, not More, so another action cannot silently replace the
 first to choose a different rare action. When the disc is on the ground
 mid-point (after a turnover), a non-interactive “TAP WHO HAS THE DISC” prompt replaces the
 actions until a player picks it up; the opening pull keeps the actions so Drop can record a dropped
-pull, and before the pull the last-action card shows the same prompt. Every footer row shares
-`FOOTER_ACTION_HEIGHT`. In scrimmage, the actions apply to whichever side holds the disc.
+pull, and before the pull the last-action card shows the same prompt. In scrimmage, the actions apply to whichever side holds the disc.
 
-The tracker screen derives this once per render with `getTrackerSessionView(game, { passModifier })`
-in `lib/advancedTracking/trackerSessionView.ts` (via `useTrackerSession`), and passes the resulting
-`TrackerSessionView` to the last-action card and rare menu. The footer is presentational: it renders
-the view's `footerMode` (`offense`, `defense`, or `pickup`, each carrying `hidden` while a modifier
-owns the next tap) plus callbacks, and never reads the store. `footerMode` is `null` once the point
-is over or play is stopped, and no footer shows. Add new footer or card states to the session view
-rather than re-deriving point, possession, or holder in a component. The armed `passModifier` stays
-local to the tracker screen.
+Footer and last-action card states come from `TrackerSessionView`; add new states there rather than
+re-deriving point, possession, or holder in a component.
 
 ## State and Persistence
 
@@ -144,18 +132,6 @@ without a concrete requirement and migration plan.
   optional manual huck/reset tags, derived analytics, and the boundary with location tracking.
 - [Advanced red-zone possession tracking](../../future-features/advanced-red-zone-tracking.md) —
   implemented live possession tagging with conversion and pause-adjusted timing analytics.
-
-## Primary Source Folders
-
-| Area                 | Location                                    |
-| -------------------- | ------------------------------------------- |
-| Routes               | `app/(main)/advanced-tracking/`             |
-| Tracker UI           | `components/advancedTracking/`              |
-| Live hooks           | `hooks/advancedTracking/`                   |
-| Domain and analytics | `lib/advancedTracking/`                     |
-| Live state           | `store/advancedTracking/trackingStore.ts`   |
-| Saved records        | `store/advancedTracking/savedGamesStore.ts` |
-| Device workflows     | `.maestro/tests/advanced-tracker-*`         |
 
 Exported types and tests describe current implemented behavior; these maintained documents describe
 the intended domain contracts. If they disagree, reconcile the inconsistency and update the

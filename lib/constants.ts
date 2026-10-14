@@ -81,6 +81,9 @@ export const SIZE_CLASS_MEDIUM_THRESHOLD = 600;
 /** Smallest dimension >= this → `large` size class (tablets, desktop). */
 export const SIZE_CLASS_LARGE_THRESHOLD = 790;
 
+/** Window height < this → `isCompactHeight` (iPhone SE, phones in landscape). */
+export const COMPACT_HEIGHT_THRESHOLD = 700;
+
 // ── Modal max widths by size class (dp) ──────────────────────────────
 // Use with getSizeClassValue() for responsive modal sheet sizing.
 
