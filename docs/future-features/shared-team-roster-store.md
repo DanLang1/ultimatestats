@@ -10,7 +10,7 @@ reads roster/team data from the basic game store.
 
 Current known imports:
 
-- `app/(main)/advancedTracking/PreGameConfirm.tsx`
+- `app/(main)/advanced-tracking/pre-game-confirm.tsx`
 - `components/advancedTracking/TrackerLineScreen.tsx`
 - `hooks/advancedTracking/useLiveRosterParticipants.ts`
 - `store/advancedTracking/trackingStore.ts` (roster-to-participant sync subscription and

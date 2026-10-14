@@ -153,7 +153,7 @@ export default function AdvancedPlayerStatsView({
               disabled={!hasMultipleImpactSections}
               onPress={() =>
                 router.push({
-                  pathname: '/AdvancedGameSelectorModal',
+                  pathname: '/advanced-game-selector-modal',
                   params: {
                     participantId,
                     sideId: perspectiveSideId,

@@ -31,5 +31,5 @@ export default function ShareLinkRedirectScreen() {
     return <Redirect href="/" />;
   }
 
-  return <Redirect href={{ pathname: '/Import', params: { shareId: id } }} />;
+  return <Redirect href={{ pathname: '/import', params: { shareId: id } }} />;
 }

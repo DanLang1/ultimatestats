@@ -94,7 +94,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
         <Pressable
-          onPress={() => router.push('/ViewStats')}
+          onPress={() => router.push('/view-stats')}
           style={styles.iconButton}
           accessibilityLabel="View stats"
           accessibilityRole="button"
@@ -105,7 +105,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Info */}
       <Pressable
-        onPress={() => router.push('/GameInfo')}
+        onPress={() => router.push('/game-info')}
         style={styles.iconButton}
         accessibilityLabel="Game info"
         accessibilityRole="button"
@@ -115,7 +115,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
       {/* Settings */}
       <Pressable
-        onPress={() => router.push('/Settings')}
+        onPress={() => router.push('/settings')}
         style={styles.iconButton}
         accessibilityLabel="Settings"
         accessibilityRole="button"

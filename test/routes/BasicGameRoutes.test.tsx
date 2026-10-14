@@ -2,13 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import GameCompleteScreen from '@/app/(main)/GameComplete';
-import GameFormatScreen from '@/app/(main)/GameFormat';
-import LineEditorScreen from '@/app/(main)/LineEditor';
-import LinePresetEditor from '@/app/(main)/LinePresetEditor';
-import PreGameConfirm from '@/app/(main)/PreGameConfirm';
-import SettingsScreen from '@/app/(main)/Settings';
-import NumberPickerModal from '@/app/(modals)/NumberPickerModal';
+import GameCompleteScreen from '@/app/(main)/game-complete';
+import GameFormatScreen from '@/app/(main)/game-format';
+import LineEditorScreen from '@/app/(main)/line-editor';
+import LinePresetEditor from '@/app/(main)/line-preset-editor';
+import PreGameConfirm from '@/app/(main)/pre-game-confirm';
+import SettingsScreen from '@/app/(main)/settings';
+import NumberPickerModal from '@/app/(modals)/number-picker-modal';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -28,7 +28,7 @@ describe('basic game routes', () => {
   it('redirects before rendering protected game-format content without an active session', async () => {
     await renderScreen(<GameFormatScreen />);
 
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard', {
+    expect(router.replace).toHaveBeenCalledWith('/dashboard', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });
@@ -56,7 +56,7 @@ describe('basic game routes', () => {
 
     await user.press(screen.getByText('Start Game'));
 
-    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+    expect(router.dismissTo).toHaveBeenCalledWith('/scoreboard');
   });
 
   it('finishes a completed game and clears the active session', async () => {
@@ -72,7 +72,7 @@ describe('basic game routes', () => {
     await user.press(screen.getByText('Done'));
 
     expect(useGameSessionStore.getState().activeGameType).toBeNull();
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('keeps app preferences in Settings and team management out', async () => {
@@ -96,7 +96,7 @@ describe('basic game routes', () => {
     await user.press(screen.getByText('Start Game'));
 
     expect(useSettingsStore.getState().firstPointRatio).toBe('more-women');
-    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+    expect(router.dismissTo).toHaveBeenCalledWith('/scoreboard');
   });
 
   it('commits the opponent when starting a scoreboard-only game with the input focused', async () => {
@@ -111,7 +111,7 @@ describe('basic game routes', () => {
     });
     await user.press(screen.getByText('Start Game'));
     expect(useGameStore.getState().team2Name).toBe('New Rivals');
-    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+    expect(router.dismissTo).toHaveBeenCalledWith('/scoreboard');
   });
 
   it('handles the empty-line route without replacing its real store hooks', async () => {
@@ -124,7 +124,7 @@ describe('basic game routes', () => {
 
     await user.press(screen.getByText('Skip for Now'));
 
-    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+    expect(router.dismissTo).toHaveBeenCalledWith('/scoreboard');
   });
 
   it('renders the empty line-preset route from the real preset store', async () => {
@@ -156,7 +156,7 @@ describe('pre-game settings', () => {
       const user = userEvent.setup();
       const view = await renderScreen(<PreGameConfirm />);
       await user.press(screen.getByText(label));
-      expect(router.push).toHaveBeenCalledWith('/NumberPickerModal');
+      expect(router.push).toHaveBeenCalledWith('/number-picker-modal');
       await view.rerender(<NumberPickerModal />);
       await user.press(screen.getByText('C'));
       for (const digit of value) await user.press(screen.getAllByText(digit).at(-1)!);
@@ -212,7 +212,7 @@ describe('pre-game settings', () => {
     expect(useGameStore.getState().possession).toBe('team2');
     expect(useTutorialStore.getState().shouldShowStatsTutorialOnNextGameStart).toBe(true);
     expect(router.replace).toHaveBeenCalledWith({
-      pathname: '/TutorialStatIntro',
+      pathname: '/tutorial-stat-intro',
       params: { origin: 'onboarding' },
     });
   });
@@ -226,6 +226,6 @@ describe('pre-game settings', () => {
     expect(useGameStore.getState().pointTimerEnabled).toBe(true);
     await user.press(screen.getByText('Set Line'));
     expect(useSettingsStore.getState().lineCallingEnabled).toBe(true);
-    expect(router.replace).toHaveBeenCalledWith('/LineEditor');
+    expect(router.replace).toHaveBeenCalledWith('/line-editor');
   });
 });

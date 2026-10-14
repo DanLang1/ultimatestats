@@ -3,7 +3,7 @@ import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { Linking, Platform } from 'react-native';
 
-import DashboardScreen from '@/app/(main)/(hub)/(home)/Dashboard';
+import DashboardScreen from '@/app/(main)/(hub)/(home)/dashboard';
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -60,7 +60,7 @@ describe('<DashboardScreen />', () => {
 
     expect(useGameSessionStore.getState().activeGameType).toBe('basic');
     expect(useGameStore.getState().currentGameStatus).toBe('fresh');
-    expect(router.replace).toHaveBeenCalledWith('/PreGameConfirm');
+    expect(router.replace).toHaveBeenCalledWith('/pre-game-confirm');
   });
 
   it('starts advanced setup directly for an existing user with no advanced tutorial flag', async () => {
@@ -73,7 +73,7 @@ describe('<DashboardScreen />', () => {
 
     expect(useGameSessionStore.getState().activeGameType).toBe('advanced');
     expect(router.replace).toHaveBeenCalledWith({
-      pathname: '/advancedTracking/PreGameConfirm',
+      pathname: '/advanced-tracking/pre-game-confirm',
       params: {},
     });
   });
@@ -94,7 +94,7 @@ describe('<DashboardScreen />', () => {
 
     await user.press(screen.getByText('Resume Game'));
 
-    expect(router.navigate).toHaveBeenCalledWith('/Scoreboard');
+    expect(router.navigate).toHaveBeenCalledWith('/scoreboard');
   });
 
   it('routes to settings from a user press', async () => {
@@ -103,7 +103,7 @@ describe('<DashboardScreen />', () => {
 
     await user.press(screen.getByText('App Settings'));
 
-    expect(router.push).toHaveBeenCalledWith('/Settings');
+    expect(router.push).toHaveBeenCalledWith('/settings');
   });
 });
 
@@ -117,13 +117,13 @@ it('opens data, roster, and help destinations when saved games and a roster exis
   const user = userEvent.setup();
   await renderScreen(<DashboardScreen />, { queryClient });
   const destinations = [
-    ['Saved Games', '/SavedGameStats'],
-    ['Aggregate Stats', '/AggregateStats'],
-    ['Team Line Presets', '/LinePresetEditor'],
-    ['Showcase (Beta)', '/Showcase'],
-    ['Partners', '/Partners'],
-    ['Help', '/Help'],
-    ['About', '/About'],
+    ['Saved Games', '/saved-game-stats'],
+    ['Aggregate Stats', '/aggregate-stats'],
+    ['Team Line Presets', '/line-preset-editor'],
+    ['Showcase (Beta)', '/showcase'],
+    ['Partners', '/partners'],
+    ['Help', '/help'],
+    ['About', '/about'],
   ] as const;
   for (const [label, route] of destinations) {
     await user.press(screen.getByRole('button', { name: label }));
@@ -131,7 +131,7 @@ it('opens data, roster, and help destinations when saved games and a roster exis
   }
   await user.press(screen.getByRole('button', { name: 'Manage Team' }));
   expect(router.push).toHaveBeenLastCalledWith({
-    pathname: '/EditRoster',
+    pathname: '/edit-roster',
     params: { teamName: testTeam.name },
   });
 });
@@ -143,13 +143,13 @@ it('resumes advanced line setup and starts a scrimmage after warning about the a
   await renderScreen(<DashboardScreen />, { queryClient });
   expect(screen.queryByText('Game Timeline')).not.toBeOnTheScreen();
   await user.press(screen.getByText('Resume Game'));
-  expect(router.navigate).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect');
+  expect(router.navigate).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
   await user.press(screen.getByText('New Game'));
   expect(screen.getByText('This will clear the current in-progress game')).toBeVisible();
   await user.press(screen.getByText('Scrimmage'));
   expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
   expect(router.replace).toHaveBeenCalledWith({
-    pathname: '/advancedTracking/PreGameConfirm',
+    pathname: '/advanced-tracking/pre-game-confirm',
     params: { gameType: 'scrimmage' },
   });
 });
@@ -162,9 +162,9 @@ it('offers review actions for a completed game after its active session is clear
   expect(screen.getByText('LAST COMPLETED GAME')).toBeVisible();
   expect(screen.queryByText('Resume Game')).not.toBeOnTheScreen();
   await user.press(screen.getByText('View Stats'));
-  expect(router.push).toHaveBeenLastCalledWith('/ViewStats');
+  expect(router.push).toHaveBeenLastCalledWith('/view-stats');
   await user.press(screen.getByText('Game Timeline'));
-  expect(router.push).toHaveBeenLastCalledWith('/GameTimeline');
+  expect(router.push).toHaveBeenLastCalledWith('/game-timeline');
 });
 
 it.each(['ios', 'android'] as const)(

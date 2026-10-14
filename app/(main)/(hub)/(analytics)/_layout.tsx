@@ -7,7 +7,7 @@ export default function HubStatsLayout() {
 
   return (
     <Stack
-      initialRouteName="ViewStats"
+      initialRouteName="view-stats"
       screenOptions={{
         headerShown: false,
         animation: 'none',

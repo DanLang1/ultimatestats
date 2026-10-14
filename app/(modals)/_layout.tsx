@@ -10,10 +10,10 @@ export default function ModalsLayout() {
         gestureEnabled: false,
         contentStyle: { backgroundColor: 'transparent' },
       }}>
-      <Stack.Screen name="NumberPickerModal" options={{ animation: 'fade' }} />
-      <Stack.Screen name="EditPlayerModal" options={{ animation: 'fade' }} />
-      <Stack.Screen name="EditDurationModal" options={{ animation: 'fade' }} />
-      <Stack.Screen name="EditPointLineModal" options={{ animation: 'fade' }} />
+      <Stack.Screen name="number-picker-modal" options={{ animation: 'fade' }} />
+      <Stack.Screen name="edit-player-modal" options={{ animation: 'fade' }} />
+      <Stack.Screen name="edit-duration-modal" options={{ animation: 'fade' }} />
+      <Stack.Screen name="edit-point-line-modal" options={{ animation: 'fade' }} />
     </Stack>
   );
 }

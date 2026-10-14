@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import AggregateStatsScreen from '@/app/(main)/(hub)/(analytics)/AggregateStats';
+import AggregateStatsScreen from '@/app/(main)/(hub)/(analytics)/aggregate-stats';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -120,7 +120,7 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     );
     expect(screen.queryByText('View Combined (1 game)')).not.toBeOnTheScreen();
     await user.press(screen.getByText('Create'));
-    expect(router.push).toHaveBeenCalledWith('/CreateTournament');
+    expect(router.push).toHaveBeenCalledWith('/create-tournament');
   });
 });
 

@@ -104,7 +104,7 @@ export default function StatsTable({
       gameTo,
       autoHalftimeEnabled,
     );
-    router.push('/PlayerStats');
+    router.push('/player-stats');
   };
 
   // Merge in players who have playing time but no stat events

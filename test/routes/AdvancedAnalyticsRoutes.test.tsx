@@ -2,10 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId]';
-import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/playerStats';
-import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/timeline/[gameId]';
-import TimelineEditLineScreen from '@/app/(main)/advancedTracking/TimelineEditLine';
+import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/[gameId]';
+import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/player-stats';
+import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/timeline/[gameId]';
+import TimelineEditLineScreen from '@/app/(main)/advanced-tracking/timeline-edit-line';
 import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
@@ -90,7 +90,7 @@ describe('advanced analytics routes', () => {
     await renderScreen(<AdvancedGameScreen />);
     expect(screen.getByText('Game not found.')).toBeVisible();
     await userEvent.setup().press(screen.getByText('Go to Saved Games'));
-    expect(router.replace).toHaveBeenCalledWith('/SavedGameStats');
+    expect(router.replace).toHaveBeenCalledWith('/saved-game-stats');
   });
 
   it('shows the share action for a terminated advanced game', async () => {
@@ -652,7 +652,7 @@ describe('advanced analytics routes', () => {
     expect(screen.queryByText('Correct Final Lineup')).not.toBeOnTheScreen();
     expect(router.replace).toHaveBeenCalledWith(
       {
-        pathname: '/advancedTracking/analytics/timeline/[gameId]',
+        pathname: '/advanced-tracking/analytics/timeline/[gameId]',
         params: { gameId: game.id },
       },
       { relativeToDirectory: undefined, withAnchor: undefined },

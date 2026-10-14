@@ -2,14 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import TutorialAdvancedLineSelectRoute from '@/app/(main)/TutorialAdvancedLineSelect';
-import TutorialAdvancedTrackerRoute from '@/app/(main)/TutorialAdvancedTracker';
-import TutorialCompleteRoute from '@/app/(main)/TutorialComplete';
-import TutorialIntroRoute from '@/app/(main)/TutorialIntro';
-import TutorialScoreboardRoute from '@/app/(main)/TutorialScoreboard';
-import TutorialStatCompleteRoute from '@/app/(main)/TutorialStatComplete';
-import TutorialStatIntroRoute from '@/app/(main)/TutorialStatIntro';
-import TutorialStatScoreboardRoute from '@/app/(main)/TutorialStatScoreboard';
+import TutorialAdvancedLineSelectRoute from '@/app/(main)/tutorial-advanced-line-select';
+import TutorialAdvancedTrackerRoute from '@/app/(main)/tutorial-advanced-tracker';
+import TutorialCompleteRoute from '@/app/(main)/tutorial-complete';
+import TutorialIntroRoute from '@/app/(main)/tutorial-intro';
+import TutorialScoreboardRoute from '@/app/(main)/tutorial-scoreboard';
+import TutorialStatCompleteRoute from '@/app/(main)/tutorial-stat-complete';
+import TutorialStatIntroRoute from '@/app/(main)/tutorial-stat-intro';
+import TutorialStatScoreboardRoute from '@/app/(main)/tutorial-stat-scoreboard';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
@@ -36,7 +36,7 @@ describe('tutorial routes', () => {
     await user.press(screen.getByText('See How It Works'));
 
     expect(router.replace).toHaveBeenCalledWith({
-      pathname: '/TutorialAdvancedLineSelect',
+      pathname: '/tutorial-advanced-line-select',
       params: { origin: 'onboarding', variant: 'buttons' },
     });
   });
@@ -51,7 +51,7 @@ describe('tutorial routes', () => {
       hasSeenOnboarding: true,
       hasSeenAdvancedTutorial: true,
     });
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('teaches line selection without modifying persistent game data', async () => {
@@ -68,7 +68,7 @@ describe('tutorial routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
 
     expect(router.replace).toHaveBeenCalledWith({
-      pathname: '/TutorialAdvancedTracker',
+      pathname: '/tutorial-advanced-tracker',
       params: { origin: 'onboarding', variant: 'buttons' },
     });
     expect(useGameStore.getState().currentTeam.roster).toEqual([]);
@@ -88,7 +88,7 @@ describe('tutorial routes', () => {
       hasSeenOnboarding: true,
       hasSeenAdvancedTutorial: true,
     });
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('permanently skips onboarding when exiting first-launch practice', async () => {
@@ -102,7 +102,7 @@ describe('tutorial routes', () => {
       hasSeenOnboarding: true,
       hasSeenAdvancedTutorial: true,
     });
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('teaches the footer buttons and finishes onboarding with the swipe tip', async () => {
@@ -142,7 +142,7 @@ describe('tutorial routes', () => {
       hasSeenOnboarding: true,
       hasSeenAdvancedTutorial: true,
     });
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('keeps the gestures tutorial free of footer buttons', async () => {
@@ -165,7 +165,7 @@ describe('tutorial routes', () => {
     await user.press(screen.getByRole('button', { name: 'Exit tutorial' }));
 
     expect(useTutorialStore.getState().hasSeenOnboarding).toBe(true);
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('completes onboarding and returns home without replacing the current game', async () => {
@@ -180,7 +180,7 @@ describe('tutorial routes', () => {
 
     expect(useTutorialStore.getState().hasSeenOnboarding).toBe(true);
     expect(useGameStore.getState().team1Score).toBe(3);
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('returns a help-launched basic guide without changing onboarding completion', async () => {
@@ -191,7 +191,7 @@ describe('tutorial routes', () => {
     await user.press(screen.getByRole('button', { name: 'Exit tutorial' }));
 
     expect(useTutorialStore.getState().hasSeenOnboarding).toBe(false);
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('runs the real stat tutorial state and closes it from the exit control', async () => {
@@ -204,7 +204,7 @@ describe('tutorial routes', () => {
     await user.press(screen.getByRole('button', { name: 'Exit tutorial' }));
 
     expect(useTutorialStore.getState().hasSeenStatsTutorial).toBe(true);
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('introduces the basic stats tutorial before the simulated game', async () => {
@@ -217,7 +217,7 @@ describe('tutorial routes', () => {
 
     await user.press(screen.getByText('Start Tutorial'));
 
-    expect(router.replace).toHaveBeenCalledWith('/TutorialStatScoreboard');
+    expect(router.replace).toHaveBeenCalledWith('/tutorial-stat-scoreboard');
   });
 
   it('closes the completed stat tutorial and returns to the dashboard', async () => {
@@ -232,7 +232,7 @@ describe('tutorial routes', () => {
 
     expect(useTutorialStore.getState().hasSeenStatsTutorial).toBe(true);
     expect(useTutorialStore.getState().shouldShowStatsTutorialOnNextGameStart).toBe(false);
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('exits the advanced tutorial to its source without completing it', async () => {
@@ -248,7 +248,7 @@ describe('tutorial routes', () => {
     await user.press(screen.getByRole('button', { name: 'Exit tutorial' }));
 
     expect(useTutorialStore.getState().hasSeenAdvancedTutorial).toBe(false);
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('marks both first-launch tutorial flags in one onboarding transition', async () => {

@@ -3,7 +3,7 @@ import { act, fireEvent, screen, userEvent, waitFor } from '@testing-library/rea
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
 
-import EditRosterScreen from '@/app/(main)/(hub)/(team)/EditRoster';
+import EditRosterScreen from '@/app/(main)/(hub)/(team)/edit-roster';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -41,7 +41,7 @@ describe('<EditRosterScreen />', () => {
     expect(router.push).not.toHaveBeenCalled();
 
     await act(() => actionsModal.props.onDismiss());
-    expect(router.push).toHaveBeenCalledWith('/TeamManagementModal');
+    expect(router.push).toHaveBeenCalledWith('/team-management-modal');
     await act(() => actionsModal.props.onDismiss());
     expect(router.push).toHaveBeenCalledTimes(1);
   });
@@ -55,7 +55,7 @@ describe('<EditRosterScreen />', () => {
     expect(screen.getByTestId('empty-roster-import-usau')).toBeVisible();
     await user.press(screen.getByTestId('empty-roster-import-usau'));
 
-    expect(router.push).toHaveBeenCalledWith('/ImportTeam');
+    expect(router.push).toHaveBeenCalledWith('/import-team');
   });
 
   it('loads a sample team from the empty roster state', async () => {
@@ -123,7 +123,7 @@ describe('<EditRosterScreen />', () => {
 
     await user.press(screen.getByText('Alex'));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/EditPlayerModal',
+      pathname: '/edit-player-modal',
       params: { playerId: 'player-alex' },
     });
   });
@@ -317,7 +317,7 @@ describe('roster management', () => {
     await user.press(screen.getByText('Chips'));
     expect(screen.queryByTestId('quick-edit-active-player-alex')).not.toBeOnTheScreen();
     await user.press(screen.getByText('Switch'));
-    expect(router.push).toHaveBeenCalledWith('/TeamManagementModal');
+    expect(router.push).toHaveBeenCalledWith('/team-management-modal');
     await user.press(screen.getByTestId('screen-header-back'));
     expect(router.back).toHaveBeenCalledTimes(1);
   });

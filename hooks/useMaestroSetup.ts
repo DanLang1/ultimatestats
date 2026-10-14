@@ -76,12 +76,12 @@ async function seedMaestroState(params: MaestroSetupParams): Promise<Href> {
 
   if (params.mode === 'team') {
     await seedMaestroTeamPrerequisites({ clearActiveGame: true });
-    return '/Dashboard';
+    return '/dashboard';
   }
 
   if (params.mode === 'scrimmageTeam') {
     await seedMaestroTeamPrerequisites({ clearActiveGame: true, gameType: 'scrimmage' });
-    return '/Dashboard';
+    return '/dashboard';
   }
 
   if (params.mode === 'basicSavedGame') {
@@ -91,12 +91,12 @@ async function seedMaestroState(params: MaestroSetupParams): Promise<Href> {
 
   if (params.mode === 'basicSavedGames') {
     await seedMaestroBasicSavedGames();
-    return '/AggregateStats';
+    return '/aggregate-stats';
   }
 
   if (params.mode === 'basicCancelPendingGoal') {
     await seedMaestroBasicCancelPendingGoalScenario();
-    return '/Scoreboard';
+    return '/scoreboard';
   }
 
   await seedAdvancedTrackerTestGame({
@@ -107,7 +107,7 @@ async function seedMaestroState(params: MaestroSetupParams): Promise<Href> {
     rosterView: parseRosterView(params.rosterView),
     trackerState: parseTrackerState(params.trackerState),
   });
-  return '/advancedTracking/Tracker';
+  return '/advanced-tracking/tracker';
 }
 
 function parseGameTo(gameTo: string | undefined): number {

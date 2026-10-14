@@ -68,7 +68,7 @@ export function TournamentPickerModal({
 
   const handleCreateNew = () => {
     onClose();
-    router.push('/CreateTournament');
+    router.push('/create-tournament');
   };
 
   const iconSize = scaleBySizeClass(20, sizeClass);

@@ -272,7 +272,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
                 },
                 pressed && { opacity: 0.7 },
               ]}
-              onPress={() => router.push('/advancedTracking/TrackerInjurySub')}>
+              onPress={() => router.push('/advanced-tracking/tracker-injury-sub')}>
               <ThemedText style={[styles.actionBtnText, { color: palette.neutral }]}>
                 EDIT SUB
               </ThemedText>

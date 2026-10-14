@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import GameInfoScreen from '@/app/(main)/(hub)/(game)/GameInfo';
-import BasicScoreboard from '@/app/(main)/(hub)/(game)/Scoreboard';
+import GameInfoScreen from '@/app/(main)/(hub)/(game)/game-info';
+import BasicScoreboard from '@/app/(main)/(hub)/(game)/scoreboard';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { arrangeBasicGame } from '@/test/fixtures/domain';
@@ -22,7 +22,7 @@ describe('live basic-game routes', () => {
   it('renders the real live scoreboard and records a score press', async () => {
     const user = userEvent.setup();
     arrangeBasicGame();
-    setMockPathname('/Scoreboard');
+    setMockPathname('/scoreboard');
     await renderScreen(<BasicScoreboard />);
 
     expect(screen.getByText('Windchill')).toBeVisible();

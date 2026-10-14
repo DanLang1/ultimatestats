@@ -23,7 +23,7 @@ export default function AdvancedGameRecoveryScreen({
   const styles = createStyles(sizeClass);
   const emptyStateText = isLoading ? 'Loading game...' : 'Game not found.';
   const handleBack = () => {
-    if (from === 'gameComplete') router.replace('/Dashboard');
+    if (from === 'gameComplete') router.replace('/dashboard');
     else router.back();
   };
   return (
@@ -51,7 +51,7 @@ export default function AdvancedGameRecoveryScreen({
         </ThemedText>
         {!isLoading && (
           <Pressable
-            onPress={() => router.replace('/SavedGameStats')}
+            onPress={() => router.replace('/saved-game-stats')}
             style={[styles.recoverButton, { backgroundColor: palette.overlay10 }]}>
             <ThemedText style={[styles.recoverButtonText, { color: palette.accent }]}>
               Go to Saved Games

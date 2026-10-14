@@ -271,7 +271,7 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
             aggregateInfo && aggregateGameIds
               ? (participantId) =>
                   router.push({
-                    pathname: '/advancedTracking/analytics/playerStats',
+                    pathname: '/advanced-tracking/analytics/player-stats',
                     params: {
                       gameId: 'aggregate',
                       participantId,
@@ -281,7 +281,7 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
                   })
               : (participantId) =>
                   router.push({
-                    pathname: '/advancedTracking/analytics/playerStats',
+                    pathname: '/advanced-tracking/analytics/player-stats',
                     params: { gameId, participantId, sideId: perspectiveSideId },
                   })
           }

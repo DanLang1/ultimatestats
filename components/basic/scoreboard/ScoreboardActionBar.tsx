@@ -338,7 +338,7 @@ export function ScoreboardActionBar({
         <Pressable
           style={styles.dragHandle}
           onPress={
-            pendingTimeoutModal ? () => router.push('/TimeoutModal') : toggleActionBarOrientation
+            pendingTimeoutModal ? () => router.push('/timeout-modal') : toggleActionBarOrientation
           }>
           <MaterialCommunityIcons
             name={dragHandleIcon}

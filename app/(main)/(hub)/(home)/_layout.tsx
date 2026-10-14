@@ -7,7 +7,7 @@ export default function HubHomeLayout() {
 
   return (
     <Stack
-      initialRouteName="Dashboard"
+      initialRouteName="dashboard"
       screenOptions={{
         headerShown: false,
         animation: 'none',

@@ -1,7 +1,7 @@
 import { act, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import TrackerScreen from '@/app/(main)/advancedTracking/Tracker';
+import TrackerScreen from '@/app/(main)/advanced-tracking/tracker';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { participantRef } from '@/test/fixtures/advancedGameBuilder';
 import { arrangeAdvancedPickupGame } from '@/test/fixtures/domain';
@@ -158,7 +158,7 @@ describe('stoppages', () => {
     await renderScreen(<TrackerScreen />);
     expect(screen.getByText('INJURY')).toBeVisible();
     await user.press(screen.getByTestId('stoppage-edit-sub'));
-    expect(router.push).toHaveBeenCalledWith('/advancedTracking/TrackerInjurySub');
+    expect(router.push).toHaveBeenCalledWith('/advanced-tracking/tracker-injury-sub');
   });
 
   it('bounds timeout adjustments and starts the next timeout with its default duration', async () => {

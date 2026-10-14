@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import ShowcaseScreen from '@/app/(main)/(hub)/(home)/Showcase';
+import ShowcaseScreen from '@/app/(main)/(hub)/(home)/showcase';
 import { serializeAdvancedGame, serializeGame } from '@/lib/sharing/serialize';
 import type { ShowcaseGameMeta } from '@/lib/sharing/showcaseTypes';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -92,7 +92,7 @@ it.each(['game', 'advanced-game'] as const)(
     });
     await user.press(screen.getByText('View Game'));
     expect(router.push).toHaveBeenCalledWith({
-      pathname: type === 'game' ? '/saved-games/[gameId]' : '/advancedTracking/analytics/[gameId]',
+      pathname: type === 'game' ? '/saved-games/[gameId]' : '/advanced-tracking/analytics/[gameId]',
       params: { gameId: payload.data.id },
     });
   },

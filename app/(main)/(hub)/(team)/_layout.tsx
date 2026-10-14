@@ -7,7 +7,7 @@ export default function HubTeamLayout() {
 
   return (
     <Stack
-      initialRouteName="EditRoster"
+      initialRouteName="edit-roster"
       screenOptions={{
         headerShown: false,
         animation: 'none',

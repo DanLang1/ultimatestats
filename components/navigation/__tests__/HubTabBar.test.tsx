@@ -46,7 +46,7 @@ beforeEach(() => {
   resetAllStores();
   resetMockRouter();
   mockSegments = [];
-  setMockPathname('/Dashboard');
+  setMockPathname('/dashboard');
 });
 
 it('routes a focused tab to its root and dispatches other tabs through the navigator', async () => {
@@ -54,7 +54,7 @@ it('routes a focused tab to its root and dispatches other tabs through the navig
   const user = userEvent.setup();
   await renderScreen(<HubTabBar {...props} />);
   await user.press(screen.getByRole('button', { name: 'Home', selected: true }));
-  expect(router.navigate).toHaveBeenCalledWith('/Dashboard');
+  expect(router.navigate).toHaveBeenCalledWith('/dashboard');
   await user.press(screen.getByRole('button', { name: 'Stats' }));
   expect(mockNavigate).toHaveBeenCalledWith('(analytics)');
   expect(mockEmit).toHaveBeenCalledWith({
@@ -73,8 +73,8 @@ it('honors a prevented tab press', async () => {
 });
 
 it.each([
-  ['basic', '/Scoreboard'],
-  ['advanced', '/advancedTracking/TrackerLineSelect'],
+  ['basic', '/scoreboard'],
+  ['advanced', '/advanced-tracking/tracker-line-select'],
 ] as const)('resumes the active %s game when pressing Game', async (mode, destination) => {
   if (mode === 'basic') arrangeBasicGame();
   else arrangeAdvancedGame();
@@ -91,7 +91,7 @@ it('offers a new game when no session is active', async () => {
   expect(router.navigate).not.toHaveBeenCalled();
 });
 
-it.each(['/saved-games/game-1', '/advancedTracking/analytics/game-1'])(
+it.each(['/saved-games/game-1', '/advanced-tracking/analytics/game-1'])(
   'marks Stats active on nested analytics %s',
   async (pathname) => {
     setMockPathname(pathname);
@@ -101,8 +101,8 @@ it.each(['/saved-games/game-1', '/advancedTracking/analytics/game-1'])(
 );
 
 it.each(['scoreboard', 'modal'])('hides hub controls on %s', async (surface) => {
-  if (surface === 'scoreboard') setMockPathname('/Scoreboard');
-  else mockSegments = ['(modals)', 'EditEventModal'];
+  if (surface === 'scoreboard') setMockPathname('/scoreboard');
+  else mockSegments = ['(modals)', 'edit-event-modal'];
   await renderScreen(<HubTabBar {...tabProps()} />);
   expect(screen.queryByRole('button', { name: 'Home' })).not.toBeOnTheScreen();
 });

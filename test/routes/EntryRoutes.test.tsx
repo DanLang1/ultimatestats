@@ -23,7 +23,7 @@ describe('entry routes', () => {
 
     await renderScreen(<IndexRoute />);
 
-    expect(router.replace).toHaveBeenCalledWith('/TutorialIntro', {
+    expect(router.replace).toHaveBeenCalledWith('/tutorial-intro', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });
@@ -35,7 +35,7 @@ describe('entry routes', () => {
 
     await renderScreen(<IndexRoute />);
 
-    expect(router.replace).toHaveBeenCalledWith('/Scoreboard', {
+    expect(router.replace).toHaveBeenCalledWith('/scoreboard', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });

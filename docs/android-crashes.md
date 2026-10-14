@@ -5,12 +5,12 @@
 
 ## Confirmed Case
 
-`app/(main)/LineEditor.tsx` previously triggered an Android native `addViewAt` crash when confirming
+`app/(main)/line-editor.tsx` previously triggered an Android native `addViewAt` crash when confirming
 a line caused a route dismissal and a substantial live-store/render update in the same frame.
 
 The current workaround:
 
-1. Dismisses deterministically to `/Scoreboard`.
+1. Dismisses deterministically to `/scoreboard`.
 2. Defers the line-state update with `requestIdleCallback`.
 
 Keep that ordering unless the crash is re-tested and shown to be resolved on supported Android
@@ -42,12 +42,12 @@ keep the exception local to the reproduced callsite.
 A reported Android Fabric `addViewAt` / child-already-has-parent crash occurs when Resume replaces
 an injury in/out summary with the live player grid, and also on Confirm Sub before Resume.
 
-`Tracker.tsx` keeps the tracking surface on a non-collapsible native parent so Fabric does not
+`tracker.tsx` keeps the tracking surface on a non-collapsible native parent so Fabric does not
 flatten that swap. A `key={surfaceState.kind}` remount was tried and removed: Confirm writes the
 injury stoppage while Tracker is still mounted, so that key also remounted live-point → stoppage in
 the same turn as `TrackerInjurySub` dismissed.
 
-`TrackerInjurySub.tsx` matches the Line Correction pattern by awaiting persistence
+`tracker-injury-sub.tsx` matches the Line Correction pattern by awaiting persistence
 (`await persistCurrentLiveGame()`) before invoking `router.back()`. This ensures the injury record
 is saved before dismissal and was also used to separate the updates in time. A persistence await
 does not guarantee that native mounting has finished; retain it for the persistence contract,
@@ -81,7 +81,7 @@ SET LINE / SAVE LINE on Android after changes to these native hierarchy boundari
 
 ## Halftime Line Save
 
-Saving a halftime line (`TrackerLineSelect.tsx` in `prepare` mode) dismisses back to Tracker.
+Saving a halftime line (`tracker-line-select.tsx` in `prepare` mode) dismisses back to Tracker.
 Pending line edits update the underlying Tracker while the selection route is mounted. The pending
 selection changes neither the current game nor undo stack, so live snapshot persistence dedupes by
 both references and does not start a new SQLite write; awaiting it may only await an
@@ -90,4 +90,4 @@ already-resolved promise.
 A persistence await was tried and was insufficient; an additional animation-frame wait was then
 tried as a timing workaround. The current code has removed those halftime waits and dismisses
 directly, with the non-collapsible selection grid wrapper providing the structural fix described
-above. The pre-pull confirm path (`router.push('/advancedTracking/PullTracking')`) is unchanged.
+above. The pre-pull confirm path (`router.push('/advanced-tracking/pull-tracking')`) is unchanged.

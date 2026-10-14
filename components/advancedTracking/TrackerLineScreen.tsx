@@ -491,7 +491,7 @@ export const TrackerLineScreen = ({
         }}
         onEditPresets={() => {
           setShowLinePicker(false);
-          router.push('/LinePresetEditor');
+          router.push('/line-preset-editor');
         }}
         recentLines={recentLines}
         selectedRecentPointNumber={selectedRecentPointNumber}

@@ -16,7 +16,7 @@ export default function ShowcaseHintBanner() {
 
   const handlePress = () => {
     dismissShowcaseHint();
-    router.push('/Showcase');
+    router.push('/showcase');
   };
 
   return (

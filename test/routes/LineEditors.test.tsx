@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import LineEditorScreen from '@/app/(main)/LineEditor';
-import LinePresetEditor from '@/app/(main)/LinePresetEditor';
+import LineEditorScreen from '@/app/(main)/line-editor';
+import LinePresetEditor from '@/app/(main)/line-preset-editor';
 import type { GameEvent } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
@@ -94,7 +94,7 @@ it('switches from a preset to a recent line and opens preset management from the
   expect(screen.getByTestId('player-chip-Blair')).not.toBeSelected();
   await user.press(screen.getByTestId('line-select-load-line'));
   await user.press(screen.getByText('Edit Presets'));
-  expect(router.push).toHaveBeenCalledWith('/LinePresetEditor');
+  expect(router.push).toHaveBeenCalledWith('/line-preset-editor');
   expect(screen.queryByText('Load Line')).not.toBeOnTheScreen();
 });
 

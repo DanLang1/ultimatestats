@@ -21,14 +21,14 @@ export function useNewGameLauncher() {
       startAdvancedGameSession();
       const gameType = mode === 'scrimmage' ? 'scrimmage' : undefined;
       router.replace({
-        pathname: '/advancedTracking/PreGameConfirm',
+        pathname: '/advanced-tracking/pre-game-confirm',
         params: gameType ? { gameType } : {},
       });
       return;
     }
 
     startBasicGameSession();
-    router.replace('/PreGameConfirm');
+    router.replace('/pre-game-confirm');
   };
 
   return {

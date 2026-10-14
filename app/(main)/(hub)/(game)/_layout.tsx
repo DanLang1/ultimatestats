@@ -9,7 +9,7 @@ export default function HubGameLayout() {
 
   return (
     <Stack
-      initialRouteName="Scoreboard"
+      initialRouteName="scoreboard"
       screenOptions={{
         headerShown: false,
         animation: 'none',

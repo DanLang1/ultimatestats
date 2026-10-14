@@ -74,7 +74,7 @@ export default function AdvancedSavedGameStatsScreen({
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
   const handleBack = () => {
     if (from === 'gameComplete') {
-      router.replace('/Dashboard');
+      router.replace('/dashboard');
       return;
     }
 
@@ -183,7 +183,7 @@ export default function AdvancedSavedGameStatsScreen({
           onPress: async () => {
             await deleteSavedGame(gameId);
             await removeGameFromTournament('advanced', gameId);
-            router.replace('/SavedGameStats');
+            router.replace('/saved-game-stats');
           },
         },
       ],
@@ -237,7 +237,7 @@ export default function AdvancedSavedGameStatsScreen({
       label: 'Timeline',
       onPress: () =>
         router.push({
-          pathname: '/advancedTracking/analytics/timeline/[gameId]',
+          pathname: '/advanced-tracking/analytics/timeline/[gameId]',
           params: { gameId },
         }),
       advancedMenuIcon: 'chart-timeline-variant',

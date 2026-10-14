@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import EditDurationModal from '@/app/(modals)/EditDurationModal';
+import EditDurationModal from '@/app/(modals)/edit-duration-modal';
 import type { GameEvent } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { arrangeBasicGame, createSavedBasicGame } from '@/test/fixtures/domain';

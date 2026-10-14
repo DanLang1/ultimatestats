@@ -3,8 +3,8 @@ import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 
-import ImportScreen from '@/app/(main)/Import';
-import ImportTeamScreen from '@/app/(main)/ImportTeam';
+import ImportScreen from '@/app/(main)/import';
+import ImportTeamScreen from '@/app/(main)/import-team';
 import {
   serializeAdvancedGame,
   serializeAdvancedGames,
@@ -138,10 +138,10 @@ describe('shared-link import', () => {
         });
       else if (kind === 'advanced-game')
         expect(router.push).toHaveBeenCalledWith({
-          pathname: '/advancedTracking/analytics/[gameId]',
+          pathname: '/advanced-tracking/analytics/[gameId]',
           params: { gameId: 'first' },
         });
-      else expect(router.push).toHaveBeenCalledWith('/SavedGameStats');
+      else expect(router.push).toHaveBeenCalledWith('/saved-game-stats');
     },
   );
 
@@ -167,7 +167,7 @@ describe('shared-link import', () => {
       expect(useLinePresetsStore.getState().presets).toContainEqual(preset);
       expect(useGameStore.getState().currentTeam.id).toBe(active ? previous.id : incoming.id);
       await user.press(screen.getByText('View Team'));
-      expect(router.push).toHaveBeenCalledWith('/EditRoster');
+      expect(router.push).toHaveBeenCalledWith('/edit-roster');
     },
   );
 
@@ -350,7 +350,7 @@ describe('USAU team import', () => {
       } else {
         expect(useGameStore.getState().currentTeam.name).toBe('Imported Club');
         expect(router.replace).toHaveBeenCalledWith({
-          pathname: '/EditRoster',
+          pathname: '/edit-roster',
           params: { teamName: 'Imported Club' },
         });
       }

@@ -94,7 +94,7 @@ describe('AdvancedStatsContent', () => {
     await userEvent.press(screen.getByTestId('advanced-stats-row-joe'));
 
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/advancedTracking/analytics/playerStats',
+      pathname: '/advanced-tracking/analytics/player-stats',
       params: {
         gameId: game.id,
         participantId: 'joe',

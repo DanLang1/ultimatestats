@@ -3,7 +3,7 @@ import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 
-import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/SavedGameStats';
+import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/saved-game-stats';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -181,7 +181,7 @@ it('cancels sharing without losing selection and clears selection when search ch
   expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
   expect(screen.queryByText('First Rival')).not.toBeOnTheScreen();
   await user.press(screen.getByTestId('header-action-aggregate'));
-  expect(router.push).toHaveBeenCalledWith('/AggregateStats');
+  expect(router.push).toHaveBeenCalledWith('/aggregate-stats');
 });
 
 it.each(['basic', 'advanced'] as const)(
@@ -194,7 +194,8 @@ it.each(['basic', 'advanced'] as const)(
     await user.press(screen.getByText('Second Rival'));
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith({
-      pathname: kind === 'basic' ? '/saved-games/[gameId]' : '/advancedTracking/analytics/[gameId]',
+      pathname:
+        kind === 'basic' ? '/saved-games/[gameId]' : '/advanced-tracking/analytics/[gameId]',
       params: { gameId: 'first' },
     });
   },

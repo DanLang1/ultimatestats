@@ -3,13 +3,13 @@ import { captureException } from '@sentry/react-native';
 import { act, screen, userEvent, waitFor, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import AdvancedPreGameConfirm from '@/app/(main)/advancedTracking/PreGameConfirm';
-import PullTrackingScreen from '@/app/(main)/advancedTracking/PullTracking';
-import TrackerScreen from '@/app/(main)/advancedTracking/Tracker';
-import TrackerEditLineScreen from '@/app/(main)/advancedTracking/TrackerEditLine';
-import TrackerGameCompleteScreen from '@/app/(main)/advancedTracking/TrackerGameComplete';
-import TrackerInjurySubScreen from '@/app/(main)/advancedTracking/TrackerInjurySub';
-import TrackerLineSelectScreen from '@/app/(main)/advancedTracking/TrackerLineSelect';
+import AdvancedPreGameConfirm from '@/app/(main)/advanced-tracking/pre-game-confirm';
+import PullTrackingScreen from '@/app/(main)/advanced-tracking/pull-tracking';
+import TrackerScreen from '@/app/(main)/advanced-tracking/tracker';
+import TrackerEditLineScreen from '@/app/(main)/advanced-tracking/tracker-edit-line';
+import TrackerGameCompleteScreen from '@/app/(main)/advanced-tracking/tracker-game-complete';
+import TrackerInjurySubScreen from '@/app/(main)/advanced-tracking/tracker-injury-sub';
+import TrackerLineSelectScreen from '@/app/(main)/advanced-tracking/tracker-line-select';
 import * as advancedStorage from '@/lib/advancedTracking/storage';
 import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
@@ -288,7 +288,7 @@ describe('advanced tracking routes', () => {
   it('redirects before rendering protected tracker content without a current game', async () => {
     await renderScreen(<TrackerScreen />);
 
-    expect(router.replace).toHaveBeenCalledWith('/Dashboard', {
+    expect(router.replace).toHaveBeenCalledWith('/dashboard', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });
@@ -587,7 +587,7 @@ describe('advanced tracking routes', () => {
       await user.press(screen.getByTestId('tracker-undo-button'));
 
       expect(useAdvancedTrackingStore.getState().currentGame?.points).toHaveLength(0);
-      expect(router.replace).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect', {
+      expect(router.replace).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select', {
         relativeToDirectory: undefined,
         withAnchor: undefined,
       });
@@ -608,7 +608,7 @@ describe('advanced tracking routes', () => {
       expect(game?.points).toHaveLength(1);
       expect(game?.points[0].possessions[0].actions[0]).toMatchObject({ result: 'inbound' });
       expect(router.replace).not.toHaveBeenCalledWith(
-        '/advancedTracking/TrackerLineSelect',
+        '/advanced-tracking/tracker-line-select',
         expect.anything(),
       );
     });
@@ -775,7 +775,7 @@ describe('advanced tracking routes', () => {
 
     await user.press(screen.getByTestId('advanced-tracker-edit-roster'));
 
-    expect(router.push).toHaveBeenCalledWith('/EditRoster');
+    expect(router.push).toHaveBeenCalledWith('/edit-roster');
   });
 
   it('creates an advanced game through the real pre-game route', async () => {
@@ -790,7 +790,7 @@ describe('advanced tracking routes', () => {
 
     expect(useAdvancedTrackingStore.getState().currentGame?.sides[0].label).toBe('Windchill');
     expect(useAdvancedTrackingStore.getState().currentGame?.flip).toBeUndefined();
-    expect(router.push).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect');
+    expect(router.push).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
   });
 
   it('uses the focused opponent draft when creating a game', async () => {
@@ -891,7 +891,7 @@ describe('advanced tracking routes', () => {
     expect(screen.getByText('SAVE LINE')).toBeVisible();
     await user.press(screen.getByTestId('line-select-confirm'));
 
-    expect(router.dismissTo).toHaveBeenCalledWith('/advancedTracking/Tracker');
+    expect(router.dismissTo).toHaveBeenCalledWith('/advanced-tracking/tracker');
     expect(router.push).not.toHaveBeenCalled();
     expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
     expect(useAdvancedTrackingStore.getState().halftimeTimerStartedAt).toBe(halftimeTimerStartedAt);
@@ -1006,7 +1006,7 @@ describe('advanced tracking routes', () => {
     ]);
     expect(state.currentGame?.points[0].genderRatio).toBe('more-women');
     expect(state.pendingNextPointLineSelection).toBeNull();
-    expect(router.dismissTo).toHaveBeenCalledWith('/advancedTracking/Tracker');
+    expect(router.dismissTo).toHaveBeenCalledWith('/advanced-tracking/tracker');
   });
 
   it('redirects pull tracking to line selection when the pending line is incomplete', async () => {
@@ -1017,7 +1017,7 @@ describe('advanced tracking routes', () => {
 
     await renderScreen(<PullTrackingScreen />);
 
-    expect(router.replace).toHaveBeenCalledWith('/advancedTracking/TrackerLineSelect', {
+    expect(router.replace).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });
@@ -1084,13 +1084,13 @@ describe('advanced tracking routes', () => {
 
     await user.press(screen.getByTestId('halftime-between-point-set-line'));
     expect(router.push).toHaveBeenLastCalledWith({
-      pathname: '/advancedTracking/TrackerLineSelect',
+      pathname: '/advanced-tracking/tracker-line-select',
       params: { mode: 'prepare' },
     });
     expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
 
     await user.press(screen.getByTestId('halftime-between-point-start-next'));
-    expect(router.push).toHaveBeenLastCalledWith('/advancedTracking/TrackerLineSelect');
+    expect(router.push).toHaveBeenLastCalledWith('/advanced-tracking/tracker-line-select');
     expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
   });
 
@@ -1869,7 +1869,7 @@ describe('advanced tracking routes', () => {
     expect(
       useAdvancedTrackingStore.getState().currentGame?.points[0].possessions[0].actions.at(-1),
     ).toMatchObject({ kind: 'disc_pickup' });
-    expect(router.replace).toHaveBeenCalledWith('/advancedTracking/Tracker');
+    expect(router.replace).toHaveBeenCalledWith('/advanced-tracking/tracker');
   });
 
   it('persists the winning throw classification when Game Complete is finished', async () => {
@@ -1928,7 +1928,7 @@ describe('advanced tracking routes', () => {
       expect(screen.getByTestId('game-complete-undo')).toBeEnabled();
       await user.press(screen.getByTestId('game-complete-finish'));
       expect(router.replace).toHaveBeenCalledWith({
-        pathname: '/advancedTracking/analytics/[gameId]',
+        pathname: '/advanced-tracking/analytics/[gameId]',
         params: { gameId: before.currentGameId, from: 'gameComplete' },
       });
       expect(useAdvancedTrackingStore.getState().currentGame?.status).toBe(

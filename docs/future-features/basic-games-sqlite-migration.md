@@ -136,12 +136,12 @@ without assuming every saved game is already in memory.
 Screens and utilities that currently read `savedGames` directly would need review.
 Likely touch points:
 
-- `app/(main)/(hub)/(analytics)/ViewStats.tsx`
-- `app/(main)/(hub)/(analytics)/SavedGameStats.tsx`
-- `app/(main)/(hub)/(analytics)/AggregateStats.tsx`
+- `app/(main)/(hub)/(analytics)/view-stats.tsx`
+- `app/(main)/(hub)/(analytics)/saved-game-stats.tsx`
+- `app/(main)/(hub)/(analytics)/aggregate-stats.tsx`
 - `app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`
-- `app/(main)/(hub)/(analytics)/GameTimeline.tsx`
-- `app/(main)/Import.tsx`
+- `app/(main)/(hub)/(analytics)/game-timeline.tsx`
+- `app/(main)/import.tsx`
 - `components/view-stats/SavedGamesList.tsx`
 - `components/view-stats/AggregateGamesList.tsx`
 - sharing/export flows that serialize selected saved games

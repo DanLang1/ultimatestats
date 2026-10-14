@@ -51,7 +51,7 @@ export function useEndGame() {
             setCurrentGameStatus('finished');
             setPostGameFlowPending(true);
             finishActiveGameSession();
-            router.push('/GameComplete');
+            router.push('/game-complete');
           },
         },
       ],

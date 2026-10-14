@@ -2,12 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import CreateTournamentScreen from '@/app/(main)/(hub)/(analytics)/CreateTournament';
-import GameTimelineScreen from '@/app/(main)/(hub)/(analytics)/GameTimeline';
-import PlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/PlayerStats';
+import CreateTournamentScreen from '@/app/(main)/(hub)/(analytics)/create-tournament';
+import GameTimelineScreen from '@/app/(main)/(hub)/(analytics)/game-timeline';
+import PlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/player-stats';
+import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/saved-game-stats';
 import SavedGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]';
-import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/SavedGameStats';
-import ViewStatsScreen from '@/app/(main)/(hub)/(analytics)/ViewStats';
+import ViewStatsScreen from '@/app/(main)/(hub)/(analytics)/view-stats';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { GameEvent, PointLineRecord } from '@/lib/storage/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -171,7 +171,7 @@ describe('basic analytics routes', () => {
     await user.press(screen.getByLabelText('Edit point 1 line'));
 
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/EditPointLineModal',
+      pathname: '/edit-point-line-modal',
       params: { pointNumber: '1', gameId: 'current' },
     });
   });
@@ -293,7 +293,7 @@ it('sorts live player stats and opens analytics for a player with only line part
   await user.press(screen.getByText('PP'));
   expectNameOrder(['Blair', 'Casey', 'Alex']);
   await user.press(screen.getByText('Casey'));
-  expect(router.push).toHaveBeenCalledWith('/PlayerStats');
+  expect(router.push).toHaveBeenCalledWith('/player-stats');
   expect(usePlayerStatsStore.getState()).toMatchObject({
     playerId: 'player-casey',
     team: 'team1',
@@ -379,7 +379,7 @@ describe('basic timeline editing', () => {
       expect(screen.getByText('OPP BLOCK')).toBeVisible();
       await user.press(screen.getByText('50/50'));
       expect(router.push).toHaveBeenLastCalledWith({
-        pathname: '/EditDurationModal',
+        pathname: '/edit-duration-modal',
         params: {
           eventIndex: '0',
           gameId,
@@ -390,7 +390,7 @@ describe('basic timeline editing', () => {
       });
       await user.press(screen.getByText('FLOATER'));
       expect(router.push).toHaveBeenLastCalledWith({
-        pathname: '/EditDurationModal',
+        pathname: '/edit-duration-modal',
         params: {
           eventIndex: '1',
           gameId,
@@ -401,7 +401,7 @@ describe('basic timeline editing', () => {
       });
       await user.press(screen.getByText('GOAL'));
       expect(router.push).toHaveBeenLastCalledWith({
-        pathname: '/EditDurationModal',
+        pathname: '/edit-duration-modal',
         params: {
           eventIndex: '5',
           gameId,
@@ -412,7 +412,7 @@ describe('basic timeline editing', () => {
       });
       await user.longPress(screen.getByText('GOAL'));
       expect(router.push).toHaveBeenLastCalledWith({
-        pathname: '/EditEventModal',
+        pathname: '/edit-event-modal',
         params: {
           eventIndex: '5',
           eventType: 'goal',
@@ -423,7 +423,7 @@ describe('basic timeline editing', () => {
       });
       await user.longPress(screen.getByText('ASSIST'));
       expect(router.push).toHaveBeenLastCalledWith({
-        pathname: '/EditEventModal',
+        pathname: '/edit-event-modal',
         params: {
           eventIndex: '5',
           eventType: 'goal',
@@ -434,7 +434,7 @@ describe('basic timeline editing', () => {
       });
       await user.longPress(screen.getByText('50/50'));
       expect(router.push).toHaveBeenLastCalledWith({
-        pathname: '/EditEventModal',
+        pathname: '/edit-event-modal',
         params: {
           eventIndex: '0',
           eventType: 'turnover',

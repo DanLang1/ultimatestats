@@ -18,27 +18,27 @@ export function useActiveGameSession(): ActiveGameSession {
     if (activeAdvancedGame == null) return null;
 
     if (isAdvancedGameOver(activeAdvancedGame)) {
-      return '/advancedTracking/TrackerGameComplete';
+      return '/advanced-tracking/tracker-game-complete';
     }
 
     if (activeAdvancedGame.points.length > 0) {
-      return '/advancedTracking/Tracker';
+      return '/advanced-tracking/tracker';
     }
 
-    return '/advancedTracking/TrackerLineSelect';
+    return '/advanced-tracking/tracker-line-select';
   });
 
   if (activeGameType === 'basic') {
-    return { kind: 'basic', route: '/Scoreboard' };
+    return { kind: 'basic', route: '/scoreboard' };
   }
 
   if (activeGameType !== 'advanced') {
-    return { kind: 'none', route: '/Dashboard' };
+    return { kind: 'none', route: '/dashboard' };
   }
 
   if (activeAdvancedGameRoute != null) {
     return { kind: 'advanced', route: activeAdvancedGameRoute };
   }
 
-  return { kind: 'none', route: '/Dashboard' };
+  return { kind: 'none', route: '/dashboard' };
 }

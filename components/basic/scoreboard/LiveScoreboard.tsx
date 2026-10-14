@@ -154,19 +154,19 @@ export default function LiveScoreboard() {
       useGameStore.getState().setCurrentGameStatus('finished');
       useGameStore.getState().setPostGameFlowPending(true);
       finishActiveGameSession();
-      router.push('/GameComplete');
+      router.push('/game-complete');
       return;
     }
 
     if (isHalftime) {
-      router.push('/HalftimeModal');
+      router.push('/halftime-modal');
       return;
     }
 
     if (shouldShowLinePrompt()) {
-      router.push('/LineEditor');
+      router.push('/line-editor');
     } else if (pointTimerEnabled && statTrackingEnabled) {
-      router.push('/PointSummaryModal');
+      router.push('/point-summary-modal');
     }
   };
 
@@ -195,12 +195,12 @@ export default function LiveScoreboard() {
 
   const handleStatEntryFinish = (destination: StatEntryDestination) => {
     if (destination === 'line-editor') {
-      router.push('/LineEditor');
+      router.push('/line-editor');
       return;
     }
 
     if (destination === 'point-summary') {
-      router.push('/PointSummaryModal');
+      router.push('/point-summary-modal');
     }
   };
 
@@ -228,7 +228,7 @@ export default function LiveScoreboard() {
           if (!team1Combined[index]?.active) return;
           if (team1Combined[index]?.disabled) return;
           toggleTimeout(true, index);
-          router.push('/TimeoutModal');
+          router.push('/timeout-modal');
         }}
         hasPossession={possessionTrackingEnabled ? possession === 'team1' : undefined}
       />
@@ -238,7 +238,7 @@ export default function LiveScoreboard() {
       </View>
 
       <Pressable
-        onPress={() => router.push('/Dashboard')}
+        onPress={() => router.push('/dashboard')}
         testID="scoreboard-home-button"
         hitSlop={homeHitSlop}
         style={styles.floatingHomeButton}>
@@ -251,7 +251,7 @@ export default function LiveScoreboard() {
 
       {lineCallingEnabled && currentGameStatus !== 'finished' && (
         <Pressable
-          onPress={() => router.push({ pathname: '/LineEditor', params: { mode: 'edit-line' } })}
+          onPress={() => router.push({ pathname: '/line-editor', params: { mode: 'edit-line' } })}
           accessibilityLabel="Edit current line"
           accessibilityRole="button"
           testID="scoreboard-edit-line"
@@ -280,7 +280,7 @@ export default function LiveScoreboard() {
           if (!team2Combined[index]?.active) return;
           if (team2Combined[index]?.disabled) return;
           toggleTimeout(false, index);
-          router.push('/TimeoutModal');
+          router.push('/timeout-modal');
         }}
         hasPossession={possessionTrackingEnabled ? possession === 'team2' : undefined}
       />

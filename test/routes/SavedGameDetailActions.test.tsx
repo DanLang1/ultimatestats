@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
-import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advancedTracking/analytics/[gameId]';
+import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/[gameId]';
 import BasicGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -159,7 +159,7 @@ it.each(['basic', 'advanced'] as const)(
     expect(useTournamentStore.getState().gameLinks).toHaveLength(1);
     await user.press(screen.getByTestId('header-action-delete'));
     await user.press(screen.getByText('Delete'));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/SavedGameStats'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/saved-game-stats'));
     expect(useTournamentStore.getState().gameLinks).toHaveLength(0);
     if (kind === 'basic') expect(useGameStore.getState().savedGames).toHaveLength(0);
     else expect(await useSavedAdvancedGamesStore.getState().loadGame(id)).toBeNull();
@@ -170,7 +170,8 @@ it.each(['basic', 'advanced'] as const)('opens the timeline for the %s record', 
   const id = await arrangeDetail(kind);
   await userEvent.setup().press(screen.getByTestId('header-action-timeline'));
   expect(router.push).toHaveBeenCalledWith({
-    pathname: kind === 'basic' ? '/GameTimeline' : '/advancedTracking/analytics/timeline/[gameId]',
+    pathname:
+      kind === 'basic' ? '/game-timeline' : '/advanced-tracking/analytics/timeline/[gameId]',
     params: { gameId: id },
   });
 });
@@ -180,7 +181,7 @@ it.each([undefined, 'gameComplete'] as const)(
   async (from) => {
     await arrangeDetail('advanced', from);
     await userEvent.setup().press(screen.getByTestId('screen-header-back'));
-    if (from) expect(router.replace).toHaveBeenCalledWith('/Dashboard');
+    if (from) expect(router.replace).toHaveBeenCalledWith('/dashboard');
     else expect(router.back).toHaveBeenCalledTimes(1);
   },
 );
@@ -194,7 +195,7 @@ it.each(['basic', 'advanced'] as const)(
       queryClient,
     });
     await userEvent.setup().press(await screen.findByText('Go to Saved Games'));
-    expect(router.replace).toHaveBeenCalledWith('/SavedGameStats');
+    expect(router.replace).toHaveBeenCalledWith('/saved-game-stats');
   },
 );
 

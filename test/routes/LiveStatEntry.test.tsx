@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, userEvent } from '@testing-library/react-native';
 
-import BasicScoreboard from '@/app/(main)/(hub)/(game)/Scoreboard';
+import BasicScoreboard from '@/app/(main)/(hub)/(game)/scoreboard';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -16,7 +16,7 @@ beforeEach(async () => {
   resetMockRouter();
   await AsyncStorage.clear();
   arrangeBasicGame({ statTrackingEnabled: true });
-  setMockPathname('/Scoreboard');
+  setMockPathname('/scoreboard');
 });
 
 it.each(['goal_first', 'assist_first'] as const)(

@@ -149,7 +149,7 @@ without a concrete requirement and migration plan.
 
 | Area                 | Location                                    |
 | -------------------- | ------------------------------------------- |
-| Routes               | `app/(main)/advancedTracking/`              |
+| Routes               | `app/(main)/advanced-tracking/`             |
 | Tracker UI           | `components/advancedTracking/`              |
 | Live hooks           | `hooks/advancedTracking/`                   |
 | Domain and analytics | `lib/advancedTracking/`                     |

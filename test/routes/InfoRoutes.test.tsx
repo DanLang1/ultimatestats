@@ -3,10 +3,10 @@ import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { Linking } from 'react-native';
 
-import AboutScreen from '@/app/(main)/(hub)/(home)/About';
-import HelpScreen from '@/app/(main)/(hub)/(home)/Help';
-import PartnersScreen from '@/app/(main)/(hub)/(home)/Partners';
-import ShowcaseScreen from '@/app/(main)/(hub)/(home)/Showcase';
+import AboutScreen from '@/app/(main)/(hub)/(home)/about';
+import HelpScreen from '@/app/(main)/(hub)/(home)/help';
+import PartnersScreen from '@/app/(main)/(hub)/(home)/partners';
+import ShowcaseScreen from '@/app/(main)/(hub)/(home)/showcase';
 import { CHANGELOG } from '@/lib/changelog';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
@@ -74,19 +74,19 @@ describe('home information routes', () => {
     await user.press(screen.getByText('Basic Stats Guide'));
 
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/TutorialAdvancedLineSelect',
+      pathname: '/tutorial-advanced-line-select',
       params: { origin: 'help', variant: 'buttons' },
     });
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/TutorialAdvancedLineSelect',
+      pathname: '/tutorial-advanced-line-select',
       params: { origin: 'help', variant: 'gestures' },
     });
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/TutorialScoreboard',
+      pathname: '/tutorial-scoreboard',
       params: { origin: 'help' },
     });
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/TutorialStatIntro',
+      pathname: '/tutorial-stat-intro',
       params: { origin: 'help' },
     });
   });

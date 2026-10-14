@@ -15,7 +15,7 @@ describe('public share-link route', () => {
     await renderScreen(<ShareLinkRedirectScreen />);
 
     expect(router.replace).toHaveBeenCalledWith(
-      { pathname: '/Import', params: { shareId: 'share-123' } },
+      { pathname: '/import', params: { shareId: 'share-123' } },
       { relativeToDirectory: undefined, withAnchor: undefined },
     );
   });

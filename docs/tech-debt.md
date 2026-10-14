@@ -1,6 +1,6 @@
 # Tech Debt Backlog
 
-Last verified: July 30, 2026
+Last verified: Oct 14, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
@@ -15,7 +15,7 @@ This document tracks intentionally deferred cleanup work discovered during the d
 - Related small-chip issues: "Unknown" wraps mid-word, and the Line tile's icon and label crowd
   the tile edges.
 - References:
-  `app/(main)/advancedTracking/Tracker.tsx`
+  `app/(main)/advanced-tracking/tracker.tsx`
   `components/advancedTracking/TrackerActionFooter.tsx`
   `components/advancedTracking/TrackerPlayerGrid.tsx`
   `components/advancedTracking/TrackerLineActionTile.tsx`
@@ -60,20 +60,10 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `store/basic/gameStore.ts`
   `store/basic/gameStore.types.ts`
 
-## P3 - Expo Router Naming
-
-- Standardize route filenames to lowercase kebab-case for long-term consistency (for example `GameInfo.tsx` -> `game-info.tsx`) with a planned migration that preserves existing links during rollout.
-- Hub routes are now grouped by home, game, analytics, and team. Remaining top-level basic,
-  tutorial, settings, import, and advanced routes should move only when there is a concrete
-  navigation benefit.
-- References:
-  `app/(main)/_layout.tsx`
-  `app/(main)/(hub)/`
-
 ## P3 - Duplicated Logic
 
 - Extract shared hooks/components to eliminate duplication.
 - References:
-  `app/(main)/PreGameConfirm.tsx` + `app/(main)/advancedTracking/PreGameConfirm.tsx` — identical card layouts
+  `app/(main)/pre-game-confirm.tsx` + `app/(main)/advanced-tracking/pre-game-confirm.tsx` — identical card layouts
   `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
   `store/basic/gameStore.types.ts` + `store/basic/gameStore.ts` — `addTurnoverEvent` parameter type defined inline in both

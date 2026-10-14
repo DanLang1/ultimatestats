@@ -155,7 +155,7 @@ export default function ShowcaseCard({ game }: ShowcaseCardProps) {
           if (showViewGame && viewGameId) {
             if (viewGameType === 'advanced-game') {
               router.push({
-                pathname: '/advancedTracking/analytics/[gameId]',
+                pathname: '/advanced-tracking/analytics/[gameId]',
                 params: { gameId: viewGameId },
               });
               return;

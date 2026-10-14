@@ -21,7 +21,7 @@ export default function IndexRoute() {
   }
 
   if (!hasSeenOnboarding) {
-    return <Redirect href="/TutorialIntro" />;
+    return <Redirect href="/tutorial-intro" />;
   }
 
   return <Redirect href={activeSession.route} />;

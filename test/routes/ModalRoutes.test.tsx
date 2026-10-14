@@ -2,15 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import AdvancedGameSelectorModal from '@/app/(modals)/AdvancedGameSelectorModal';
-import EditEventModal from '@/app/(modals)/EditEventModal';
-import EditPlayerModal from '@/app/(modals)/EditPlayerModal';
-import EditPointLineModal from '@/app/(modals)/EditPointLineModal';
-import GameSelectorModal from '@/app/(modals)/GameSelectorModal';
-import HalftimeModal from '@/app/(modals)/HalftimeModal';
-import PointSummaryModal from '@/app/(modals)/PointSummaryModal';
-import TeamManagementModal from '@/app/(modals)/TeamManagementModal';
-import TimeoutModal from '@/app/(modals)/TimeoutModal';
+import AdvancedGameSelectorModal from '@/app/(modals)/advanced-game-selector-modal';
+import EditEventModal from '@/app/(modals)/edit-event-modal';
+import EditPlayerModal from '@/app/(modals)/edit-player-modal';
+import EditPointLineModal from '@/app/(modals)/edit-point-line-modal';
+import GameSelectorModal from '@/app/(modals)/game-selector-modal';
+import HalftimeModal from '@/app/(modals)/halftime-modal';
+import PointSummaryModal from '@/app/(modals)/point-summary-modal';
+import TeamManagementModal from '@/app/(modals)/team-management-modal';
+import TimeoutModal from '@/app/(modals)/timeout-modal';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
@@ -40,7 +40,7 @@ describe('modal routes', () => {
 
     await renderScreen(<EditPlayerModal />);
 
-    expect(router.replace).toHaveBeenCalledWith('/EditRoster', {
+    expect(router.replace).toHaveBeenCalledWith('/edit-roster', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });
@@ -172,7 +172,7 @@ describe('modal routes', () => {
     await renderScreen(<EditPointLineModal />);
 
     expect(screen.queryByTestId('edit-point-line-modal')).not.toBeOnTheScreen();
-    expect(router.replace).toHaveBeenCalledWith('/GameTimeline', {
+    expect(router.replace).toHaveBeenCalledWith('/game-timeline', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });
@@ -599,9 +599,9 @@ describe('continuing game breaks', () => {
   });
 
   it.each([
-    [true, false, '/LineEditor'],
-    [true, true, '/Scoreboard'],
-    [false, false, '/Scoreboard'],
+    [true, false, '/line-editor'],
+    [true, true, '/scoreboard'],
+    [false, false, '/scoreboard'],
   ] as const)(
     'continues halftime with line calling %s and confirmation %s',
     async (lineCallingEnabled, lineConfirmedForNextPoint, destination) => {
@@ -617,11 +617,11 @@ describe('continuing game breaks', () => {
       expect(screen.getByText('YOU RECEIVE')).toBeVisible();
       if (lineCallingEnabled) {
         await user.press(screen.getByText('SET LINE'));
-        expect(router.push).toHaveBeenCalledWith('/LineEditor');
+        expect(router.push).toHaveBeenCalledWith('/line-editor');
       }
       await user.press(screen.getByText('CONTINUE'));
       expect(useGameStore.getState().isHalftimeBreak).toBe(false);
-      if (destination === '/LineEditor') expect(router.replace).toHaveBeenCalledWith(destination);
+      if (destination === '/line-editor') expect(router.replace).toHaveBeenCalledWith(destination);
       else expect(router.dismissTo).toHaveBeenCalledWith(destination);
     },
   );
@@ -655,10 +655,10 @@ describe('continuing game breaks', () => {
     expect(screen.getByText('+1')).toBeVisible();
     expect(screen.getByText('-1')).toBeVisible();
     await user.press(screen.getByText('SET LINE'));
-    expect(router.push).toHaveBeenCalledWith('/LineEditor');
+    expect(router.push).toHaveBeenCalledWith('/line-editor');
     await user.press(screen.getByText('CONTINUE'));
     expect(useGameStore.getState().isHalftimeBreak).toBe(false);
-    expect(router.replace).toHaveBeenCalledWith('/LineEditor');
+    expect(router.replace).toHaveBeenCalledWith('/line-editor');
   });
 
   it('ends an opponent timeout and resumes the paused point timer', async () => {

@@ -34,43 +34,43 @@ type TabConfig = {
 const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
   '(home)': {
     activeIcon: 'view-dashboard',
-    activePathnames: ['/Dashboard', '/Help', '/About', '/Showcase'],
-    href: '/Dashboard',
+    activePathnames: ['/dashboard', '/help', '/about', '/showcase'],
+    href: '/dashboard',
     inactiveIcon: 'view-dashboard-outline',
     label: 'Home',
-    rootRoute: 'Dashboard',
+    rootRoute: 'dashboard',
   },
   '(analytics)': {
     activeIcon: 'chart-bar',
     activePathnames: [
-      '/ViewStats',
-      '/PlayerStats',
-      '/SavedGameStats',
-      '/AggregateStats',
-      '/GameTimeline',
+      '/view-stats',
+      '/player-stats',
+      '/saved-game-stats',
+      '/aggregate-stats',
+      '/game-timeline',
     ],
-    activePathPrefixes: ['/advancedTracking/analytics/', '/saved-games/'],
-    href: '/ViewStats',
+    activePathPrefixes: ['/advanced-tracking/analytics/', '/saved-games/'],
+    href: '/view-stats',
     inactiveIcon: 'chart-bar',
     label: 'Stats',
-    rootRoute: 'ViewStats',
+    rootRoute: 'view-stats',
   },
   '(game)': {
     activeIcon: 'scoreboard',
-    activePathnames: ['/Scoreboard', '/GameInfo'],
-    activePathPrefixes: ['/advancedTracking/Tracker', '/advancedTracking/PullTracking'],
-    href: '/Scoreboard',
+    activePathnames: ['/scoreboard', '/game-info'],
+    activePathPrefixes: ['/advanced-tracking/tracker', '/advanced-tracking/pull-tracking'],
+    href: '/scoreboard',
     inactiveIcon: 'scoreboard-outline',
     label: 'Game',
-    rootRoute: 'Scoreboard',
+    rootRoute: 'scoreboard',
   },
   '(team)': {
     activeIcon: 'account-group',
-    activePathnames: ['/EditRoster'],
-    href: '/EditRoster',
+    activePathnames: ['/edit-roster'],
+    href: '/edit-roster',
     inactiveIcon: 'account-group-outline',
     label: 'Team',
-    rootRoute: 'EditRoster',
+    rootRoute: 'edit-roster',
   },
 };
 
@@ -104,7 +104,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
   const bottomPadding = scaleBySizeClass(6, sizeClass);
   const isLightTheme = themeMode === 'light';
 
-  if (pathname === '/Scoreboard' || segments.some((s) => MODAL_SEGMENTS.has(s))) {
+  if (pathname === '/scoreboard' || segments.some((s) => MODAL_SEGMENTS.has(s))) {
     return null;
   }
 

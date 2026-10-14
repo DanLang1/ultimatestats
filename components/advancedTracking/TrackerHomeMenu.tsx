@@ -41,17 +41,17 @@ export const TrackerHomeMenu = ({
 
   const handleGoHome = () => {
     onClose();
-    router.dismissTo('/Dashboard');
+    router.dismissTo('/dashboard');
   };
 
   const handleViewStats = () => {
     onClose();
-    router.push('/ViewStats');
+    router.push('/view-stats');
   };
 
   const handleGameFormat = () => {
     onClose();
-    router.push('/GameFormat');
+    router.push('/game-format');
   };
 
   const handleGameClockPause = () => {

@@ -19,9 +19,9 @@ export function parseTutorialAdvancedVariant(variant: string | undefined): Tutor
 
 export function getTutorialExitRoute(
   origin: TutorialOrigin,
-): '/Dashboard' | '/advancedTracking/Tracker' {
-  if (origin === 'tracker') return '/advancedTracking/Tracker';
-  return '/Dashboard';
+): '/dashboard' | '/advanced-tracking/tracker' {
+  if (origin === 'tracker') return '/advanced-tracking/tracker';
+  return '/dashboard';
 }
 
 /** Leaves the advanced tutorial early. Skipping first-run onboarding is permanent. */

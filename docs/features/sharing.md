@@ -34,7 +34,7 @@ https://u-stat.app/s/<payload-type>/<share-id>
 ```
 
 The route `app/s/[kind]/[shareId].tsx` accepts only the supported payload types and declaratively
-redirects to `/Import`. The import screen loads the payload through `useShareImport`, previews what
+redirects to `/import`. The import screen loads the payload through `useShareImport`, previews what
 will be created or replaced, and performs the appropriate basic or advanced persistence action.
 
 ## Import Rules
@@ -99,7 +99,7 @@ Validation throws `InvalidSharePayloadError` with a `reason` of `malformed`, `ex
 | Validation           | `lib/sharing/validate.ts`                   |
 | Upload and fetch     | `lib/sharing/share.ts`                      |
 | Import state         | `hooks/useShareImport.ts`                   |
-| Import UI            | `app/(main)/Import.tsx`                     |
+| Import UI            | `app/(main)/import.tsx`                     |
 | Deep-link redirect   | `app/s/[kind]/[shareId].tsx`                |
 | Basic persistence    | `store/basic/gameStore.ts`                  |
 | Advanced persistence | `store/advancedTracking/savedGamesStore.ts` |

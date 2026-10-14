@@ -1,6 +1,6 @@
 ---
 name: advanced-tracker-change-safety
-description: Safely plan, implement, review, or test advanced-tracker behavior while preserving data integrity across capture, side attribution, analytics, persistence, and exports. Use for any change to `app/(main)/advancedTracking/`, `app/(main)/(hub)/(analytics)/advancedTracking/`, `components/advancedTracking/`, `hooks/advancedTracking/`, `lib/advancedTracking/`, `store/advancedTracking/`, or `.maestro/tests/advanced-tracker-*` and for changes that directly affect those routes or folders.
+description: Safely plan, implement, review, or test advanced-tracker behavior while preserving data integrity across capture, side attribution, analytics, persistence, and exports. Use for any change to `app/(main)/advanced-tracking/`, `app/(main)/(hub)/(analytics)/advanced-tracking/`, `components/advancedTracking/`, `hooks/advancedTracking/`, `lib/advancedTracking/`, `store/advancedTracking/`, or `.maestro/tests/advanced-tracker-*` and for changes that directly affect those routes or folders.
 ---
 
 # Advanced Tracker Change Safety

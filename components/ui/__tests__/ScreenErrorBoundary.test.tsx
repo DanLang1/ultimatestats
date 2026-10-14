@@ -27,12 +27,12 @@ it.each([true, false])(
     if (development) expect(screen.getByText(error.message)).toBeVisible();
     else expect(screen.queryByText(error.message)).not.toBeOnTheScreen();
     await userEvent.setup().press(screen.getByText('Go to Dashboard'));
-    expect(router.dismissTo).toHaveBeenCalledWith('/Dashboard');
+    expect(router.dismissTo).toHaveBeenCalledWith('/dashboard');
   },
 );
 
 it('retries in place when Dashboard itself fails', async () => {
-  setMockPathname('/Dashboard');
+  setMockPathname('/dashboard');
   const retry = jest.fn().mockResolvedValue(undefined);
   await renderScreen(<ScreenErrorBoundary error={new Error('dashboard failed')} retry={retry} />);
   await userEvent.setup().press(screen.getByText('Try Again'));

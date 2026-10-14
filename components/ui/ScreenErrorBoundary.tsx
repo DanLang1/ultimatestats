@@ -10,7 +10,7 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
  * screens stay mounted, so a failed tab keeps showing this fallback until the app restarts.
  */
 function ScreenErrorFallback({ error, retry }: ErrorBoundaryProps) {
-  const isDashboard = usePathname() === '/Dashboard';
+  const isDashboard = usePathname() === '/dashboard';
 
   if (isDashboard) {
     return <ErrorFallback error={error} actionLabel="Try Again" onAction={() => void retry()} />;
@@ -19,7 +19,7 @@ function ScreenErrorFallback({ error, retry }: ErrorBoundaryProps) {
     <ErrorFallback
       error={error}
       actionLabel="Go to Dashboard"
-      onAction={() => router.dismissTo('/Dashboard')}
+      onAction={() => router.dismissTo('/dashboard')}
     />
   );
 }

@@ -252,7 +252,7 @@ export default function HelpContent({
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
           router.push({
-            pathname: '/TutorialAdvancedLineSelect',
+            pathname: '/tutorial-advanced-line-select',
             params: { origin: 'help', variant: 'buttons' },
           });
         }}>
@@ -282,7 +282,7 @@ export default function HelpContent({
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
           router.push({
-            pathname: '/TutorialAdvancedLineSelect',
+            pathname: '/tutorial-advanced-line-select',
             params: { origin: 'help', variant: 'gestures' },
           });
         }}>
@@ -311,7 +311,7 @@ export default function HelpContent({
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          router.push({ pathname: '/TutorialScoreboard', params: { origin: 'help' } });
+          router.push({ pathname: '/tutorial-scoreboard', params: { origin: 'help' } });
         }}>
         <MaterialCommunityIcons
           name="scoreboard-outline"
@@ -338,7 +338,7 @@ export default function HelpContent({
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}
         onPress={() => {
-          router.push({ pathname: '/TutorialStatIntro', params: { origin: 'help' } });
+          router.push({ pathname: '/tutorial-stat-intro', params: { origin: 'help' } });
         }}>
         <MaterialCommunityIcons
           name="chart-line"
