@@ -16,6 +16,27 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
+## P2 - Advanced Tracker Tablet Landscape Layout
+
+- Tablet landscape stacks the portrait strips (cap bar, scorecard, last-action card, grid, footer)
+  full width. Chrome takes most of the height, so chips are smaller than in portrait (~95pt iPad
+  mini, ~120pt iPad Pro 13"), while the scorecard, card, and footer buttons stretch across empty
+  width. Nine grid items in five columns leave a ragged second row. Phones are unaffected:
+  `small` landscape shows `LandscapeUnsupported`.
+- Proposed: a sidebar layout. The player grid takes the full height on the left in three columns;
+  a ~300-360pt right column holds the cap bar, scorecard, last-action card, and a 2x2 action pad.
+  This needs a separate landscape render path in the tracker screen (allowed when the UI differs
+  per orientation), a 2x2 footer variant, and checks of the voice feedback pill, rare menu, and
+  modals in the new position. Open question: fixed right sidebar or handedness-aware.
+- Smaller interim option: put the scorecard and last-action card side by side in landscape to give
+  the grid roughly 90-110pt more height.
+- References:
+  `app/(main)/advanced-tracking/tracker.tsx`
+  `components/advancedTracking/TrackerActionFooter.tsx`
+  `components/advancedTracking/TrackerPlayerGrid.tsx`
+  `components/advancedTracking/TrackerScoreBar.tsx`
+  `docs/responsive-layout.md`
+
 ## P3 - Size-Class Scaling Helper
 
 - About 2,000 call sites spell out `scaleBySizeClass(x, sizeClass)` and ~220 spell out
@@ -24,6 +45,13 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `s.pick(map)` and `s.sizeClass`; style factories take `s` instead of `sizeClass`. Same factors and
   rounding, so a file-by-file codemod has no visual change. Keep `scaleBySizeClass` for non-React
   code and tests. Keep `isCompactHeight` out of `s`; screens opt in to it explicitly.
+- About 124 inline `getSizeClassValue({ small, medium, large }, sizeClass)` size tables in ~21 files
+  hard-code the old 1.1/1.2 steps, so they no longer follow the global scale (now 1.21/1.5). Convert
+  the ones that are really scaling to `scaleBySizeClass(smallValue)`; keep tables only for values
+  that differ by design (layout widths, column counts, deliberate tablet jumps). Already converted:
+  `LiveScoreboard`, `ScoreboardActionBar`, `SettingsBar`, `TeamScoreSection`, `ScreenHeader`,
+  `ChemistryMap`, `AdvancedChemistryMap`, and `TutorialActionBar` (two design tables kept: the
+  team score gap and settings bar icon padding).
 - Avoid auto-scaling every numeric style value (needs exceptions for `flex`, `opacity`,
   `aspectRatio`, hairlines). Semantic spacing/type tokens could layer on later.
 - References:

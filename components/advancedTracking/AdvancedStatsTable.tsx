@@ -186,11 +186,15 @@ function hasColumn(columns: ColumnDef[], key: SortKey): boolean {
   return columns.some((column) => column.key === key);
 }
 
-function getNameColumnWidth(names: string[]): number {
+function getNameColumnWidth(names: string[], sizeClass: SizeClass): number {
   const longestNameLength = names.reduce((max, name) => Math.max(max, name.trim().length), 0);
   const contentWidth = longestNameLength * NAME_COLUMN_CHARACTER_WIDTH;
   const desiredWidth = contentWidth + NAME_COLUMN_HORIZONTAL_PADDING;
-  return Math.min(NAME_COLUMN_MAX_WIDTH, Math.max(NAME_COLUMN_MIN_WIDTH, desiredWidth));
+  // The name font scales by size class, so its width budget must too.
+  return scaleBySizeClass(
+    Math.min(NAME_COLUMN_MAX_WIDTH, Math.max(NAME_COLUMN_MIN_WIDTH, desiredWidth)),
+    sizeClass,
+  );
 }
 
 function getStatColumnTestID(key: SortKey): string {
@@ -234,7 +238,7 @@ export default function AdvancedStatsTable({
     visiblePlayerStats = playerStats.filter(hasAnyThrowTypeStat);
   }
   const playerNames = visiblePlayerStats.map((stats) => getName(stats.participantId));
-  const nameColumnWidth = getNameColumnWidth(playerNames);
+  const nameColumnWidth = getNameColumnWidth(playerNames, sizeClass);
 
   const sorted = [...visiblePlayerStats].sort((a, b) => {
     const dir = sortConfig.direction === 'asc' ? 1 : -1;

@@ -4,7 +4,7 @@ import ScoreDisplay from '@/components/ScoreDisplay';
 import TeamText from '@/components/TeamText';
 import { ThemedView } from '@/components/ThemedView';
 import { useHaptics } from '@/hooks/useHaptics';
-import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getSizeClassValue, SizeClass, useLayout, scaleBySizeClass } from '@/hooks/useLayout';
 
 interface TeamScoreSectionProps {
   teamName: string;
@@ -133,10 +133,11 @@ export default function TeamScoreSection({
 }
 
 function createStyles(sizeClass: SizeClass, isCompactVertical: boolean) {
+  // Tablets get a deliberately larger jump than the size-class scale gives.
   const gap = getSizeClassValue({ small: 6, medium: 10, large: 12 }, sizeClass);
   const effectiveGap = isCompactVertical ? Math.max(4, Math.round(gap * 0.75)) : gap;
   const timeoutGap = isCompactVertical ? 12 : 15;
-  const timeoutSize = getSizeClassValue({ small: 20, medium: 22, large: 24 }, sizeClass);
+  const timeoutSize = scaleBySizeClass(20, sizeClass);
   const effectiveTimeoutSize = isCompactVertical
     ? Math.max(16, Math.round(timeoutSize * 0.8))
     : timeoutSize;

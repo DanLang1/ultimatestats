@@ -9,6 +9,8 @@ interface ReclampOptions {
   translateY: SharedValue<number>;
   effectiveWidth: number;
   effectiveHeight: number;
+  /** Until the user drags the element, keep it horizontally centered on its measured width. */
+  keepCentered: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export function useReclampOnResize({
   translateY,
   effectiveWidth,
   effectiveHeight,
+  keepCentered,
 }: ReclampOptions) {
   const { width: screenWidth, height: screenHeight, isLandscape } = useLayout();
   const insets = useSafeAreaInsets();
@@ -33,7 +36,9 @@ export function useReclampOnResize({
     const topBound = insets.top + 40;
     const bottomBound = screenHeight - insets.top - insets.bottom - effectiveHeight - 48;
 
-    const clampedX = Math.max(leftBound, Math.min(translateX.get(), rightBound));
+    const clampedX = keepCentered
+      ? (screenWidth - effectiveWidth) / 2
+      : Math.max(leftBound, Math.min(translateX.get(), rightBound));
 
     const didFlipToPortrait = wasLandscape.current && !isLandscape;
     wasLandscape.current = isLandscape;
@@ -53,5 +58,6 @@ export function useReclampOnResize({
     translateX,
     translateY,
     isLandscape,
+    keepCentered,
   ]);
 }

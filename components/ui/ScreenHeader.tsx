@@ -4,10 +4,10 @@ import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-const TITLE_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 20 };
+const TITLE_FONT_SIZE = 14;
 
 type ScreenHeaderProps = {
   title: string;
@@ -44,6 +44,10 @@ export function ScreenHeader({
     <View style={[styles.header, containerStyle]}>
       <Pressable
         testID="screen-header-back"
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        accessibilityElementsHidden={!onBack}
+        importantForAccessibility={onBack ? 'auto' : 'no-hide-descendants'}
         onPress={onBack}
         disabled={!onBack}
         style={[
@@ -114,7 +118,7 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
     },
     title: {
-      fontSize: getSizeClassValue(TITLE_FONT_SIZE, sizeClass),
+      fontSize: scaleBySizeClass(TITLE_FONT_SIZE, sizeClass),
       fontFamily: Fonts.bold,
       letterSpacing: scaleBySizeClass(2, sizeClass, { rounding: 'none' }),
       textTransform: 'uppercase',

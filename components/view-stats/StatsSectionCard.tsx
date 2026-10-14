@@ -8,6 +8,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts, type Palette } from '@/theme/theme';
 
+const INFO_BUTTON_SIZE = 44;
+const INFO_ICON_SIZE = 15;
+
 export interface SectionCardInfo {
   accessibilityLabel: string;
   title: string;
@@ -52,7 +55,7 @@ export default function StatsSectionCard({ title, testID, info, children }: Stat
             onPress={() => showAlert({ title: info.title, message: info.message })}>
             <MaterialCommunityIcons
               name="information-outline"
-              size={scaleBySizeClass(15, sizeClass)}
+              size={scaleBySizeClass(INFO_ICON_SIZE, sizeClass)}
               color={palette.textMuted}
             />
           </Pressable>
@@ -105,9 +108,12 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       gap: 12,
       marginBottom: 12,
     },
+    // A fixed 44pt touch target; negative margins keep it from making the header taller than the
+    // headers without an info button.
     infoButton: {
-      height: scaleBySizeClass(44, sizeClass),
-      width: scaleBySizeClass(44, sizeClass),
+      height: INFO_BUTTON_SIZE,
+      width: INFO_BUTTON_SIZE,
+      marginVertical: -(INFO_BUTTON_SIZE - scaleBySizeClass(INFO_ICON_SIZE, sizeClass)) / 2,
       alignItems: 'center',
       justifyContent: 'center',
     },

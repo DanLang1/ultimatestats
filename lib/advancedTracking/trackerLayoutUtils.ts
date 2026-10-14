@@ -47,3 +47,15 @@ export function getTrackerChipContentScale(chipWidth: number): number {
 export function isTrackerChipContentCompact(chipWidth: number): boolean {
   return chipWidth < TRACKER_CHIP_FULL_CONTENT_WIDTH;
 }
+
+/** Chip width above which chip text and icons grow with the chip (tablets). */
+const TRACKER_CHIP_CONTENT_GROWTH_WIDTH = 140;
+const TRACKER_CHIP_CONTENT_MAX_GROWTH = 1.6;
+
+/** Scale for chip text and icons on large chips, so labels stay proportional to the chip. */
+export function getTrackerChipContentGrowth(chipWidth: number): number {
+  return Math.min(
+    TRACKER_CHIP_CONTENT_MAX_GROWTH,
+    Math.max(1, chipWidth / TRACKER_CHIP_CONTENT_GROWTH_WIDTH),
+  );
+}

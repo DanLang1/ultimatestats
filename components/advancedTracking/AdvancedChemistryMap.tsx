@@ -4,7 +4,7 @@ import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 import { ThemedText } from '@/components/ThemedText';
 import ChemistryConnectionsDisclosure from '@/components/view-stats/ChemistryConnectionsDisclosure';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedChemistryConnection } from '@/lib/advancedTracking/advancedChemistryUtils';
 import { CHEMISTRY_MAP_VISIBLE_CONNECTIONS } from '@/lib/constants';
 import { Fonts } from '@/theme/theme';
@@ -59,7 +59,7 @@ export default function AdvancedChemistryMap({
     return null;
   }
 
-  const svgWidth = getSizeClassValue({ small: 320, medium: 352, large: 384 }, sizeClass);
+  const svgWidth = scaleBySizeClass(320, sizeClass);
   const minNodeRadius = scaleBySizeClass(16, sizeClass);
   const maxNodeRadius = scaleBySizeClass(24, sizeClass);
   const centerNodeRadius = scaleBySizeClass(22, sizeClass);
@@ -290,7 +290,7 @@ function createStyles(sizeClass: SizeClass) {
       marginBottom: 8,
     },
     columnHeader: {
-      width: 100,
+      width: scaleBySizeClass(100, sizeClass),
       alignItems: 'center',
     },
     headerText: {

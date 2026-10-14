@@ -30,8 +30,8 @@ interface TrackerPlayerGridProps {
 
 const PORTRAIT_MAX_CHIP_WIDTH = {
   small: 180,
-  medium: 170,
-  large: 190,
+  medium: 220,
+  large: 260,
 } as const;
 const LANDSCAPE_MAX_CHIP_WIDTH = {
   small: 180,
@@ -160,6 +160,8 @@ function createStyles(sizeClass: SizeClass, gap: number, verticalPadding: number
   return StyleSheet.create({
     gridContainer: {
       alignSelf: 'center',
+      // Center in the tracking surface so space left by capped chips splits evenly above and below.
+      marginVertical: 'auto',
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',

@@ -40,10 +40,16 @@ interface MenuSection {
   items: MenuItem[];
 }
 
+const CONTENT_PADDING = 24;
+const SECTION_GAP = 24;
+const SECTION_MIN_WIDTH = 280;
+const DESCRIPTION_LINE_HEIGHT = 16;
+const DESCRIPTION_MAX_LINES = 2;
+
 export default function DashboardScreen() {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
+  const { sizeClass, width } = useLayout();
+  const styles = createStyles(sizeClass, isMultiColumnDashboard(width, sizeClass));
   const metrics = createMetrics(sizeClass);
   const { resetStatsTutorial } = useTutorialStore();
   const {
@@ -372,7 +378,9 @@ export default function DashboardScreen() {
                         </View>
                       )}
                     </View>
-                    <ThemedText style={[styles.menuItemDescription, { color: palette.textMuted }]}>
+                    <ThemedText
+                      numberOfLines={DESCRIPTION_MAX_LINES}
+                      style={[styles.menuItemDescription, { color: palette.textMuted }]}>
                       {item.disabled ? 'Enable stat tracking first' : item.description}
                     </ThemedText>
                   </View>
@@ -631,21 +639,30 @@ export default function DashboardScreen() {
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+// Sections wrap into columns once two fit side by side.
+function isMultiColumnDashboard(width: number, sizeClass: SizeClass): boolean {
+  const contentWidth = width - scaleBySizeClass(CONTENT_PADDING, sizeClass) * 2;
+  const twoSectionsWidth =
+    scaleBySizeClass(SECTION_MIN_WIDTH, sizeClass) * 2 + scaleBySizeClass(SECTION_GAP, sizeClass);
+  return contentWidth >= twoSectionsWidth;
+}
+
+function createStyles(sizeClass: SizeClass, isMultiColumn: boolean) {
+  const descriptionLineHeight = scaleBySizeClass(DESCRIPTION_LINE_HEIGHT, sizeClass);
   return StyleSheet.create({
     container: {
       flex: 1,
     },
     scrollContent: {
-      padding: scaleBySizeClass(24, sizeClass),
+      padding: scaleBySizeClass(CONTENT_PADDING, sizeClass),
       paddingTop: scaleBySizeClass(8, sizeClass),
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: scaleBySizeClass(24, sizeClass),
+      gap: scaleBySizeClass(SECTION_GAP, sizeClass),
     },
     section: {
       flex: 1,
-      minWidth: scaleBySizeClass(280, sizeClass),
+      minWidth: scaleBySizeClass(SECTION_MIN_WIDTH, sizeClass),
       gap: scaleBySizeClass(12, sizeClass),
     },
     sectionTitle: {
@@ -702,6 +719,13 @@ function createStyles(sizeClass: SizeClass) {
     },
     menuItemDescription: {
       fontSize: scaleBySizeClass(12, sizeClass),
+      // Side-by-side columns reserve both lines so cards stay the same height across columns.
+      ...(isMultiColumn
+        ? {
+            lineHeight: descriptionLineHeight,
+            minHeight: descriptionLineHeight * DESCRIPTION_MAX_LINES,
+          }
+        : {}),
     },
     updateBanner: {
       flexDirection: 'row',

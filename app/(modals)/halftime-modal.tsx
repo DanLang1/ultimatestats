@@ -437,7 +437,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
       flexShrink: 1,
-      maxWidth: isLandscape ? 260 : 180,
+      maxWidth: scaleBySizeClass(isLandscape ? 260 : 180, sizeClass),
     },
     headerText: {
       fontSize: scaleBySizeClass(12, sizeClass),
@@ -469,7 +469,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: -4,
-      maxWidth: 100,
+      maxWidth: scaleBySizeClass(100, sizeClass),
     },
     timerCompact: {
       flexDirection: 'row',
@@ -485,7 +485,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     },
     timerDisplayCompact: {
       alignItems: 'center',
-      minWidth: 90,
+      minWidth: scaleBySizeClass(90, sizeClass),
     },
     timerValueCompact: {
       fontSize: scaleBySizeClass(36, sizeClass),
@@ -544,7 +544,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       flex: isLandscape ? 1 : 0,
       justifyContent: 'center',
       width: '100%',
-      maxWidth: 220,
+      maxWidth: scaleBySizeClass(220, sizeClass),
       alignSelf: 'center',
     },
     performerRowCompact: {
@@ -557,7 +557,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     performerRankCompact: {
       fontSize: scaleBySizeClass(12, sizeClass),
       fontFamily: Fonts.extraBold,
-      width: 16,
+      width: scaleBySizeClass(16, sizeClass),
     },
     performerNameCompact: {
       flex: 1,
@@ -568,7 +568,7 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       paddingHorizontal: 6,
       paddingVertical: 1,
       borderRadius: 4,
-      minWidth: 28,
+      minWidth: scaleBySizeClass(28, sizeClass),
       alignItems: 'center',
     },
     performerStatCompact: {

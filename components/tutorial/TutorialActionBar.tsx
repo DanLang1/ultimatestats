@@ -9,10 +9,11 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
 import { useReclampOnResize } from '@/hooks/useReclampOnResize';
 import { Fonts } from '@/theme/theme';
@@ -62,6 +63,7 @@ export default function TutorialActionBar({
   const dragOpacity = useSharedValue(1);
   const boxWidth = useSharedValue(metrics.estimatedWidth);
   const boxHeight = useSharedValue(metrics.estimatedHeight);
+  const [hasDragged, setHasDragged] = useState(false);
   const [measuredSize, setMeasuredSize] = useState({
     width: metrics.estimatedWidth,
     height: metrics.estimatedHeight,
@@ -72,6 +74,7 @@ export default function TutorialActionBar({
     translateY,
     effectiveWidth: measuredSize.width,
     effectiveHeight: measuredSize.height,
+    keepCentered: !hasDragged,
   });
 
   const clampPosition = (x: number, y: number) => {
@@ -112,6 +115,7 @@ export default function TutorialActionBar({
       const finalClamped = clampPosition(translateX.get(), translateY.get());
       translateX.set(withSpring(finalClamped.x));
       translateY.set(withSpring(finalClamped.y));
+      scheduleOnRN(setHasDragged, true);
     });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -216,32 +220,13 @@ type Metrics = {
 };
 
 function getMetrics(sizeClass: SizeClass): Metrics {
-  return getSizeClassValue(
-    {
-      small: {
-        iconSize: 20,
-        containerRadius: 28,
-        textSize: 11,
-        estimatedWidth: 280,
-        estimatedHeight: 56,
-      },
-      medium: {
-        iconSize: 22,
-        containerRadius: 30,
-        textSize: 12,
-        estimatedWidth: 320,
-        estimatedHeight: 66,
-      },
-      large: {
-        iconSize: 24,
-        containerRadius: 34,
-        textSize: 13,
-        estimatedWidth: 360,
-        estimatedHeight: 74,
-      },
-    },
-    sizeClass,
-  );
+  return {
+    iconSize: scaleBySizeClass(20, sizeClass),
+    containerRadius: scaleBySizeClass(28, sizeClass),
+    textSize: scaleBySizeClass(11, sizeClass),
+    estimatedWidth: scaleBySizeClass(280, sizeClass),
+    estimatedHeight: scaleBySizeClass(56, sizeClass),
+  };
 }
 
 function createStyles(metrics: Metrics) {

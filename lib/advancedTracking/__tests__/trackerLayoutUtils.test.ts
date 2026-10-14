@@ -1,4 +1,5 @@
 import {
+  getTrackerChipContentGrowth,
   getTrackerChipContentScale,
   getTrackerChipWidth,
   isTrackerChipContentCompact,
@@ -45,5 +46,16 @@ describe('isTrackerChipContentCompact', () => {
   it('is compact only below the full content width', () => {
     expect(isTrackerChipContentCompact(TRACKER_CHIP_FULL_CONTENT_WIDTH - 1)).toBe(true);
     expect(isTrackerChipContentCompact(TRACKER_CHIP_FULL_CONTENT_WIDTH)).toBe(false);
+  });
+});
+
+describe('getTrackerChipContentGrowth', () => {
+  it('keeps phone-sized chips at full size', () => {
+    expect(getTrackerChipContentGrowth(120)).toBe(1);
+  });
+
+  it('grows content with large chips up to a cap', () => {
+    expect(getTrackerChipContentGrowth(210)).toBe(1.5);
+    expect(getTrackerChipContentGrowth(400)).toBe(1.6);
   });
 });

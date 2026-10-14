@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { LinePreset } from '@/lib/storage/types';
@@ -33,26 +34,11 @@ export function PresetListView({
   const [isDragging, setIsDragging] = useState(false);
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.primary, paddingTop: 16 }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={onClose}
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-          testID="line-presets-back"
-          style={styles.backButton}
-          hitSlop={12}>
-          <MaterialCommunityIcons
-            name="arrow-left"
-            size={scaleBySizeClass(24, sizeClass)}
-            color={palette.textInverse}
-          />
-        </Pressable>
-        <ThemedText style={[styles.headerTitle, { color: palette.textInverse }]}>
-          Line Presets
-        </ThemedText>
-        <View style={styles.headerActions}>
+    <View style={[styles.container, { backgroundColor: palette.primary }]}>
+      <ScreenHeader
+        title="Line Presets"
+        onBack={onClose}
+        rightSlot={
           <Pressable
             onPress={onCreateNew}
             accessibilityLabel="New preset"
@@ -65,8 +51,8 @@ export function PresetListView({
               color={palette.textOnAccent}
             />
           </Pressable>
-        </View>
-      </View>
+        }
+      />
 
       {/* Preset List */}
       <ScrollView
@@ -106,30 +92,9 @@ function createStyles(sizeClass: SizeClass) {
     container: {
       flex: 1,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingBottom: 8,
-    },
-    backButton: {
-      padding: 8,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
     addButton: {
-      padding: 8,
-      borderRadius: 20,
-    },
-    headerTitle: {
-      fontSize: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.bold,
-      flex: 1,
-      textAlign: 'center',
+      padding: scaleBySizeClass(8, sizeClass),
+      borderRadius: scaleBySizeClass(20, sizeClass),
     },
     listContainer: {
       flex: 1,

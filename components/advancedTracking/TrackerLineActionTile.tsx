@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import {
+  getTrackerChipContentGrowth,
   getTrackerChipContentScale,
   isTrackerChipContentCompact,
 } from '@/lib/advancedTracking/trackerLayoutUtils';
@@ -21,10 +22,12 @@ interface TrackerLineActionTileProps {
 export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionTileProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const contentScale = getTrackerChipContentScale(chipWidth);
+  const contentGrowth = getTrackerChipContentGrowth(chipWidth);
+  // The icon shrinks on compact chips and grows on large ones; text only grows.
+  const iconScale = getTrackerChipContentScale(chipWidth) * contentGrowth;
   // Below full size, the subtitle no longer fits under the icon and label.
   const showSubtitle = !isTrackerChipContentCompact(chipWidth);
-  const iconWrapSize = Math.round(ICON_WRAP_SIZE * contentScale);
+  const iconWrapSize = Math.round(ICON_WRAP_SIZE * iconScale);
 
   return (
     <Pressable
@@ -50,7 +53,7 @@ export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionT
         ]}>
         <MaterialCommunityIcons
           name="account-switch-outline"
-          size={scaleBySizeClass(24 * contentScale, sizeClass)}
+          size={scaleBySizeClass(24 * iconScale, sizeClass)}
           color={palette.accent}
         />
       </View>
@@ -59,7 +62,7 @@ export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionT
           styles.label,
           {
             color: palette.textInverse,
-            fontSize: scaleBySizeClass(14, sizeClass),
+            fontSize: scaleBySizeClass(14 * contentGrowth, sizeClass),
           },
         ]}
         numberOfLines={1}>
@@ -71,7 +74,7 @@ export function TrackerLineActionTile({ chipWidth, onPress }: TrackerLineActionT
             styles.subtitle,
             {
               color: palette.textMuted,
-              fontSize: scaleBySizeClass(10, sizeClass),
+              fontSize: scaleBySizeClass(10 * contentGrowth, sizeClass),
             },
           ]}
           numberOfLines={1}>

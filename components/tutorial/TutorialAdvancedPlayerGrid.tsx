@@ -6,6 +6,7 @@ import type { PassModifier } from '@/components/advancedTracking/types';
 import TutorialAnimatedArrow from '@/components/tutorial/TutorialAnimatedArrow';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { getTrackerChipWidth } from '@/lib/advancedTracking/trackerLayoutUtils';
 import type { Participant, PlayerRef } from '@/lib/advancedTracking/types';
 
 interface TutorialAdvancedPlayerGridProps {
@@ -16,9 +17,11 @@ interface TutorialAdvancedPlayerGridProps {
   cuePlayerId: string | null;
   cueDirection: 'up' | 'down' | 'right' | null;
   passModifier: PassModifier;
+  availableHeight: number | null;
 }
 
-const PORTRAIT_MAX_CHIP_WIDTH = { small: 180, medium: 170, large: 190 } as const;
+// Match the production tracker grid's chip caps.
+const PORTRAIT_MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
 const LANDSCAPE_MAX_CHIP_WIDTH = { small: 180, medium: 220, large: 260 } as const;
 const PORTRAIT_COLUMNS = 3;
 const LANDSCAPE_COLUMNS = 5;
@@ -31,6 +34,7 @@ export default function TutorialAdvancedPlayerGrid({
   cuePlayerId,
   cueDirection,
   passModifier,
+  availableHeight,
 }: TutorialAdvancedPlayerGridProps) {
   const { palette } = useTheme();
   const { width, sizeClass, isLandscape } = useLayout();
@@ -42,11 +46,18 @@ export default function TutorialAdvancedPlayerGrid({
 
   while (items.length % columns !== 0) items.push(null);
 
-  const availableChipWidth = Math.floor(
-    (width - horizontalPadding * 2 - gap * (columns - 1)) / columns,
-  );
   const maxChipWidths = isLandscape ? LANDSCAPE_MAX_CHIP_WIDTH : PORTRAIT_MAX_CHIP_WIDTH;
-  const chipWidth = Math.min(availableChipWidth, getSizeClassValue(maxChipWidths, sizeClass));
+  const chipWidth = getTrackerChipWidth({
+    screenWidth: width,
+    horizontalPadding,
+    gap,
+    columns,
+    maxChipWidth: getSizeClassValue(maxChipWidths, sizeClass),
+    availableHeight,
+    rowCount: items.length / columns,
+    verticalPadding,
+    sideLabelHeight: 0,
+  });
   const gridWidth = chipWidth * columns + gap * (columns - 1) + horizontalPadding * 2;
 
   return (

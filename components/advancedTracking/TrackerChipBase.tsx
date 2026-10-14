@@ -6,7 +6,10 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
-import { isTrackerChipContentCompact } from '@/lib/advancedTracking/trackerLayoutUtils';
+import {
+  getTrackerChipContentGrowth,
+  isTrackerChipContentCompact,
+} from '@/lib/advancedTracking/trackerLayoutUtils';
 import { Fonts } from '@/theme/theme';
 
 import { PassModifier } from './types';
@@ -49,6 +52,7 @@ export const TrackerChipBase = ({
   const { tap, throwaway, goal, drop, pullDrop, oppSwipeDown } = actions;
   // Height-limited chips on short phones give their padding to the label; long names may wrap.
   const isCompact = isTrackerChipContentCompact(chipWidth);
+  const contentGrowth = getTrackerChipContentGrowth(chipWidth);
   const bodyPadding = isCompact ? COMPACT_CHIP_BODY_PADDING : CHIP_BODY_PADDING;
 
   const isHolderSV = useDerivedValue(() => isHolder);
@@ -193,7 +197,7 @@ export const TrackerChipBase = ({
                 <ThemedText
                   style={[
                     styles.numberText,
-                    { color: textColor, fontSize: scaleBySizeClass(10, sizeClass) },
+                    { color: textColor, fontSize: scaleBySizeClass(10 * contentGrowth, sizeClass) },
                   ]}>
                   #{playerNumber}
                 </ThemedText>
@@ -202,7 +206,7 @@ export const TrackerChipBase = ({
             <ThemedText
               style={[
                 styles.chipText,
-                { fontSize: scaleBySizeClass(14, sizeClass), color: textColor },
+                { fontSize: scaleBySizeClass(14 * contentGrowth, sizeClass), color: textColor },
               ]}
               numberOfLines={2}>
               {label}

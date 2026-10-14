@@ -190,10 +190,10 @@ export default function StatsTable({
     { key: 'name', label: 'PLAYER' },
     { key: 'plusMinus', label: '+/-' },
     { key: 'goals', label: 'Goals' },
-    { key: 'assists', label: 'Assists' },
-    { key: 'blocks', label: 'Blocks' },
+    { key: 'assists', label: 'Ast' },
+    { key: 'blocks', label: 'Blk' },
     { key: 'throwaways', label: 'T/A' },
-    { key: 'drops', label: 'Drops' },
+    { key: 'drops', label: 'Drp' },
   ];
   const playingTimeColumns: { key: SortKey; label: string }[] = [
     { key: 'oEfficiency', label: 'O-Eff' },
@@ -251,10 +251,34 @@ export default function StatsTable({
             </View>
             <View style={styles.legendItem}>
               <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                Ast
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
+                Assists
+              </ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                Blk
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
+                Blocks
+              </ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
                 T/A
               </ThemedText>
               <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
                 Throwaways
+              </ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <ThemedText style={[styles.legendAbbr, { color: palette.textInverse }]}>
+                Drp
+              </ThemedText>
+              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
+                Drops
               </ThemedText>
             </View>
             <View style={styles.legendItem}>

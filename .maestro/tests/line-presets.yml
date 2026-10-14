@@ -126,7 +126,7 @@ tags:
 
 # Presets persist when the editor is reopened.
 - tapOn:
-    id: 'line-presets-back'
+    id: 'screen-header-back'
 - extendedWaitUntil:
     visible: 'DASHBOARD'
     timeout: 5000

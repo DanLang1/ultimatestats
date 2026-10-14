@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import TutorialAdvancedActionCard from '@/components/tutorial/TutorialAdvancedActionCard';
@@ -57,6 +58,11 @@ export default function TutorialAdvancedTrackerRoute() {
         )?.name ?? null)
       : null;
   const exit = () => exitAdvancedTutorial(origin);
+  const [gridHeight, setGridHeight] = useState<number | null>(null);
+  const handleGridLayout = (event: LayoutChangeEvent) => {
+    const nextHeight = Math.floor(event.nativeEvent.layout.height);
+    setGridHeight((currentHeight) => (currentHeight === nextHeight ? currentHeight : nextHeight));
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
@@ -107,8 +113,9 @@ export default function TutorialAdvancedTrackerRoute() {
                 {gameState.correctionMessage ?? gameState.message}
               </ThemedText>
             </View>
-            <View style={styles.grid}>
+            <View style={styles.grid} onLayout={handleGridLayout}>
               <TutorialAdvancedPlayerGrid
+                availableHeight={gridHeight}
                 participants={TUTORIAL_ADVANCED_PARTICIPANTS}
                 discHolderRef={gameState.discHolderRef}
                 oppHasDisc={gameState.oppHasDisc}
