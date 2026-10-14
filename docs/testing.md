@@ -178,6 +178,29 @@ npm run maestro:ci
 
 The Maestro npm scripts disable Maestro CLI analytics for predictable agent runs.
 
+### Driving Simulators Directly
+
+For visual checks across devices (iPhone SE, a large iPhone, iPad mini, a large iPad), run ad hoc
+flows with `MAESTRO_CLI_NO_ANALYTICS=1 maestro --device <udid> test -e OUT=<dir> <flow>` and
+`takeScreenshot: ${OUT}/<name>`. Things that are not obvious:
+
+- Maestro's iOS driver always binds host port 7001, so run one Maestro command at a time against
+  one simulator. Concurrent runs on two simulators send commands to the wrong device.
+- Every seed resets Settings → Orientation to Portrait (`resetMaestroSetupState`), which blocks
+  `setOrientation`. To test landscape after seeding, set Orientation to System first (for example
+  `openLink: ultimatestats-dev:///settings` then `tapOn: 'System'`).
+- If a simulator ignores `setOrientation` or taps land at rotated coordinates, reboot it
+  (`xcrun simctl shutdown <udid>` then `xcrun simctl boot <udid>`).
+- A fresh install opens the Expo dev launcher. Connect with
+  `ultimatestats-dev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081`. Skip the dev-menu
+  onboarding sheet with
+  `xcrun simctl spawn <udid> defaults write com.langdk.ultimatestats.dev EXDevMenuIsOnboardingFinished -bool YES`.
+- Install the dev build on another simulator by copying the built app:
+  `xcrun simctl install <udid> "$(xcrun simctl get_app_container <source-udid> com.langdk.ultimatestats.dev app)"`.
+- After a source change, relaunch the app before capturing; Fast Refresh does not always re-run
+  layout measurement.
+- The DEV button overlaps the Goal footer button on small phones, which can intercept taps there.
+
 Use `.agents/skills/maestro-advanced-tracker/SKILL.md` before adding or extending advanced tracker
 flows.
 

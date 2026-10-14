@@ -1,6 +1,6 @@
 ---
 name: code-simplification
-description: Simplify U-Stat code, or perform a focused readability review, without changing behavior. Use for explicit refactors, duplication removal, complex control flow, or post-feature cleanup. Do not use as the primary workflow for a broad correctness or data-integrity diff review; use code-review instead.
+description: Simplify U-Stat code, or perform a focused readability review, without changing behavior. Use for explicit refactors, duplication removal, complex control flow, or post-feature cleanup. Do not use as the primary workflow for a broad correctness or data-integrity diff review; use u-stat-code-review instead.
 ---
 
 # Code Simplification

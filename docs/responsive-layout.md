@@ -21,6 +21,23 @@ Settings; screens never lock or unlock orientation themselves.
   landscape and a horizontal `ScrollView` in portrait), separate style sets and render paths are
   acceptable. Discuss with the engineer when the right approach is unclear.
 
+## Sizing by Size Class
+
+- Default to `scaleBySizeClass(phoneValue, sizeClass)` for fonts, spacing, and icons.
+- Use a `getSizeClassValue({ small, medium, large })` table only when a value differs by design
+  rather than by scale (layout widths, column counts, a deliberately larger tablet jump), and say
+  why in a comment.
+- Derive dependent sizes from the same scaled value instead of fixed numbers: a circle's radius is
+  half its scaled size, and a spacer that balances a scaled icon uses that icon's scaled width. A
+  fixed `maxWidth` around scaled text truncates it on tablets.
+
+## Layout Gotchas
+
+- **`flex: 1` on a child of an auto-height column hides its height.** The child gets a zero flex
+  basis, so the parent is laid out as if the child had no height and the child overflows. A footer
+  measured this way pushed its buttons off small screens. Give such children their natural height
+  (no `flex: 1`); use `flex: 1` only where the parent has a constrained height.
+
 ## Rotation Gotchas
 
 - **`transform: undefined` crashes on rotation.** React Native iterates the transform array, so omit
