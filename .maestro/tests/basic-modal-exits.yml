@@ -1,0 +1,114 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Modal Exits
+tags:
+  - basic
+---
+# Every live basic-game modal returns to the screen that opened it: the pregame number picker,
+# the point summary (both exits), and the timeout modal close. Finishes by leaving the game
+# through the hub to confirm the stack under the scoreboard is intact.
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-basic'
+- extendedWaitUntil:
+    visible: 'BASIC SCOREBOARD'
+    timeout: 5000
+
+# Number picker save returns to pregame with the new value.
+- tapOn: '.*Game To, 15.*'
+- extendedWaitUntil:
+    visible:
+      id: 'number-picker-save'
+    timeout: 5000
+- tapOn:
+    id: 'number-picker-clear'
+- tapOn:
+    id: 'number-picker-key-3'
+- tapOn:
+    id: 'number-picker-save'
+- extendedWaitUntil:
+    visible: '.*Game To, 3,.*'
+    timeout: 5000
+- assertVisible: 'BASIC SCOREBOARD'
+
+- tapOn: '.*Halftime, ON.*'
+- tapOn: '.*Point Timer, OFF.*'
+- assertVisible: '.*Point Timer, ON.*'
+- tapOn: 'Zoboomafoo'
+- tapOn: '.*Start Game'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+
+# Point summary: SKIP TIMER returns to the scoreboard without starting the next point.
+- tapOn: 'Score for Zoboomafoo'
+- extendedWaitUntil:
+    visible: 'Who scored?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Joe'
+- extendedWaitUntil:
+    visible: 'Who threw the assist?'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Jon'
+- extendedWaitUntil:
+    visible: 'Point 1 Complete'
+    timeout: 5000
+- tapOn: 'SKIP TIMER'
+- extendedWaitUntil:
+    notVisible: 'Point 1 Complete'
+    timeout: 5000
+- assertVisible:
+    id: 'scoreboard-team1-score'
+    text: '1'
+
+# Point summary: START TIMER returns to the scoreboard.
+- tapOn: 'Score for Team 2'
+- extendedWaitUntil:
+    visible: 'Point 2 Complete'
+    timeout: 5000
+- tapOn: '.*START TIMER'
+- extendedWaitUntil:
+    notVisible: 'Point 2 Complete'
+    timeout: 5000
+- assertVisible:
+    id: 'scoreboard-team2-score'
+    text: '1'
+
+# Timeout: closing the modal keeps the timeout pending; the action bar then ends it.
+- tapOn: 'Use timeout 1 for Zoboomafoo'
+- extendedWaitUntil:
+    visible:
+      id: 'timeout-modal-end'
+    timeout: 5000
+- tapOn:
+    id: 'timeout-modal-close'
+- extendedWaitUntil:
+    notVisible:
+      id: 'timeout-modal-end'
+    timeout: 5000
+- tapOn: '.*END TIMEOUT'
+- extendedWaitUntil:
+    visible: '.*OPP D'
+    timeout: 5000
+- assertVisible: 'Score for Zoboomafoo'
+
+# Home and the Game tab still route back to the live game after every modal exit.
+- tapOn:
+    id: 'scoreboard-home-button'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+- tapOn:
+    id: 'hub-tab-game'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+- assertVisible:
+    id: 'scoreboard-team2-score'
+    text: '1'
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-modal-exits

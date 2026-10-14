@@ -4,17 +4,6 @@ Last verified: July 30, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
-## P1 - Modal Navigation Consistency
-
-- Replace `router.back()` / `router.dismiss()` in modal exits with `router.dismissTo(...)` per modal navigation rules.
-- For modals launched from non-root screens, use explicit parent destinations (for example `router.dismissTo('/GameInfo')`).
-- References:
-  `docs/navigation-map.md` - Modal Exit Contract
-  `app/(modals)/EditDurationModal.tsx`
-  `app/(modals)/NumberPickerModal.tsx`
-  `app/(modals)/EditEventModal.tsx`
-  `app/(modals)/AdvancedGameSelectorModal.tsx`
-
 ## P2 - Advanced Tracker Overflow on Small Phones
 
 - On iPhone SE (3rd generation), the live-point tracker is taller than the screen, so the footer
@@ -78,7 +67,6 @@ This document tracks intentionally deferred cleanup work discovered during the d
   tutorial, settings, import, and advanced routes should move only when there is a concrete
   navigation benefit.
 - References:
-  `docs/navigation-map.md`
   `app/(main)/_layout.tsx`
   `app/(main)/(hub)/`
 

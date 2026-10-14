@@ -10,118 +10,29 @@ Use this to choose test coverage quickly based on the feature you changed.
 | One route's rendering, guard, accessibility, or local interaction                      | React Native Testing Library screen test | Correctness depends on a real route transition or native control              |
 | Navigation, modal sequence, gesture, native behavior, or multi-screen tracker workflow | Maestro E2E test                         | Also add a unit or screen regression for the underlying defect when practical |
 
-`npm test` runs both Jest unit/domain tests and React Native Testing Library screen tests. It does
-not run Maestro or launch a simulator.
+`npm test` runs the Jest unit/domain and React Native Testing Library screen tests, plus the oxlint
+plugin tests. It does not run Maestro or launch a simulator.
 
-## Automated Test Targets
+## Test Locations
 
 Logic tests live in `__tests__/` directories near the code they cover. Expo Router route tests live
 in `test/routes/` because the `app/` directory is reserved for route and layout files. Shared
 route-test fixtures, native-boundary adapters, and provider wrappers also live in `test/`.
 
-| Change Area                           | Primary Tests                                                                                                                                                                                                                               |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Game end rules / scoring caps         | `lib/basic/__tests__/gameUtils.test.ts`, `lib/basic/__tests__/timeoutUtils.test.ts`                                                                                                                                                         |
-| Halftime marker utilities             | `lib/basic/__tests__/halftimeUtils.test.ts`                                                                                                                                                                                                 |
-| Gender ratio / line expectations      | `lib/__tests__/genderRatioUtils.test.ts`, `lib/__tests__/lineUtils.test.ts`                                                                                                                                                                 |
-| Event timeline / point reconstruction | `lib/basic/__tests__/timelineUtils.test.ts`                                                                                                                                                                                                 |
-| Player/team stats calculations        | `lib/basic/__tests__/statsUtils.test.ts`, `lib/basic/__tests__/teamStatsUtils.test.ts`, `lib/basic/__tests__/playerStatsUtils.test.ts`, `lib/basic/__tests__/playingTimeStatsUtils.test.ts`, `lib/basic/__tests__/timingStatsUtils.test.ts` |
-| Import/share payload behavior         | `lib/__tests__/importTeamTransform.test.ts`                                                                                                                                                                                                 |
-| Saved-game schema migrations          | `lib/storage/__tests__/migrations.test.ts`                                                                                                                                                                                                  |
-
-## User-facing route coverage
-
-| Route group             | Covered routes                                                                                                                                                                                                | Test target                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Entry and recovery      | `/`, `+not-found`, `/s/[kind]/[shareId]`                                                                                                                                                                      | `test/routes/EntryRoutes.test.tsx`, `test/routes/ShareLinkRedirect.test.tsx`                                  |
-| Home                    | `Dashboard`, `About`, `Help`, `Partners`                                                                                                                                                                      | `test/routes/Dashboard.test.tsx`, `test/routes/InfoRoutes.test.tsx`                                           |
-| Showcase                | `Showcase` (import and view-count flow)                                                                                                                                                                       | `test/routes/Showcase.test.tsx`                                                                               |
-| Basic game              | `PreGameConfirm`, `Scoreboard`, `GameInfo`, `GameFormat`, `GameComplete`, `Settings`, `LinePresetEditor`, pre-game settings via `NumberPickerModal`                                                           | `test/routes/BasicGameRoutes.test.tsx`, `test/routes/LiveGameRoutes.test.tsx`                                 |
-| Basic live stat entry   | `Scoreboard` stat-entry overlay (goal, assist, turnover, 50/50 attribution)                                                                                                                                   | `test/routes/LiveStatEntry.test.tsx`                                                                          |
-| Line editing            | `LineEditor`, `LinePresetEditor`                                                                                                                                                                              | `test/routes/LineEditors.test.tsx`                                                                            |
-| Roster                  | `EditRoster` (roster management, bulk edit, team actions, sharing)                                                                                                                                            | `test/routes/EditRoster.test.tsx`                                                                             |
-| Basic analytics         | `ViewStats`, `PlayerStats`, `GameTimeline`, `SavedGameStats` (empty state), `CreateTournament`, `/saved-games/[gameId]`                                                                                       | `test/routes/BasicAnalyticsRoutes.test.tsx`                                                                   |
-| Aggregate stats         | `AggregateStats` (selection, tournaments, combined-stats recovery)                                                                                                                                            | `test/routes/AggregateStats.test.tsx`                                                                         |
-| Saved-game actions      | `SavedGameStats` (search, bulk selection, sharing), `/saved-games/[gameId]` and `advancedTracking/analytics/[gameId]` (sharing, export, timeline navigation)                                                  | `test/routes/SavedGamesActions.test.tsx`, `test/routes/SavedGameDetailActions.test.tsx`                       |
-| Tutorials               | `TutorialIntro`, `TutorialAdvancedLineSelect`, `TutorialAdvancedTracker`, `TutorialScoreboard`, `TutorialComplete`, `TutorialStatIntro`, `TutorialStatScoreboard`, `TutorialStatComplete`                     | `test/routes/TutorialRoutes.test.tsx`, `components/tutorial/__tests__/TutorialAdvancedLineSelection.test.tsx` |
-| Advanced game           | `advancedTracking/PreGameConfirm`, `TrackerLineSelect`, `PullTracking`, `Tracker`, `TrackerEditLine`, `TrackerInjurySub`, `TrackerGameComplete`                                                               | `test/routes/AdvancedRoutes.test.tsx`                                                                         |
-| Advanced tracker breaks | `advancedTracking/Tracker` between-point halftime and timeout, and stoppage overlays                                                                                                                          | `test/routes/AdvancedTrackerBreaks.test.tsx`                                                                  |
-| Advanced analytics      | `advancedTracking/analytics/[gameId]`, `advancedTracking/analytics/playerStats` (including player chemistry), `advancedTracking/analytics/timeline/[gameId]`                                                  | `test/routes/AdvancedAnalyticsRoutes.test.tsx`                                                                |
-| Import                  | `Import` (shared-link import), `ImportTeam` (USAU roster import)                                                                                                                                              | `test/routes/ImportRoutes.test.tsx`                                                                           |
-| Modal routes            | `AdvancedGameSelectorModal`, `EditEventModal`, `EditPlayerModal`, `EditPointLineModal`, `GameSelectorModal`, `HalftimeModal`, `NumberPickerModal`, `PointSummaryModal`, `TeamManagementModal`, `TimeoutModal` | `test/routes/ModalRoutes.test.tsx`                                                                            |
-| Duration editing        | `EditDurationModal` (point and event durations, keypad)                                                                                                                                                       | `test/routes/DurationEditing.test.tsx`                                                                        |
-
-Navigator `_layout.tsx` files are shells rather than independent screens. `app/__maestro_seed__.tsx`
-is an automated-test-only endpoint. Those files are intentionally excluded from the user-facing
-route suite.
+Every user-facing route needs a screen test in `test/routes/`. Navigator `_layout.tsx` shells and
+the test-only routes (`app/__maestro_seed__.tsx`, `app/(main)/__dev_crash__.tsx`) are excluded.
 
 ## End-to-end (Maestro) suites
 
 Maestro runs against the installed iOS simulator app. Most flows enter through the test-only seed
-route and then exercise the real UI. Each flow in `.maestro/tests/` is tagged by area; the flow files
-themselves describe what they cover.
-
-| Command                     | Runs                                                         |
-| --------------------------- | ------------------------------------------------------------ |
-| `npm run maestro:smoke`     | One fast advanced-tracker smoke flow                         |
-| `npm run maestro`           | Every flow except those tagged `extended`                    |
-| `npm run maestro:all`       | Every flow                                                   |
-| `npm run maestro:advanced`  | Advanced tracker flows (tag `advanced`), including scrimmage |
-| `npm run maestro:scrimmage` | Scrimmage flows only (tag `scrimmage`)                       |
-| `npm run maestro:basic`     | Basic scoreboard flows (tag `basic`)                         |
-| `npm run maestro:team`      | Roster, team, and line preset flows (tag `team`)             |
-| `npm run maestro:ci`        | Same as `npm run maestro`, with a JUnit report               |
-
-Area commands include that area's `extended` flows. Tag every new flow with its area.
+route and then exercise the real UI. Each flow in `.maestro/tests/` is tagged by area (the
+`maestro:*` scripts in `package.json` select by tag); the flow files themselves describe what they
+cover. Tag every new flow with its area. The default `npm run maestro` run excludes flows tagged
+`extended`; area commands include them.
 
 Maestro coverage is intentionally narrower than route-test coverage. The screen suite gives every
 important route a fast deterministic check; Maestro protects journeys where cross-screen and
 native-device behavior carry the most risk.
-
-## Manual Smoke Checklist
-
-### Scoreboard / Live Game
-
-1. Score for both teams.
-2. Undo last action.
-3. Trigger turnover flow and timeout flow.
-4. Verify point transition/summary behavior.
-
-### Stat Entry / Turnover Entry
-
-1. Record goal + assist.
-2. Record each turnover subtype.
-3. Cancel/dismiss path should not corrupt score/events.
-
-### Timeline / Event Editing
-
-1. Open timeline for current game.
-2. Edit goal and turnover events.
-3. Delete an event and verify totals remain coherent.
-
-### View Stats / Player Stats
-
-1. Open team and player views.
-2. Switch tabs/filters/saved games.
-3. Validate key totals against known events.
-
-## Command Quick Start
-
-```bash
-# Unit/domain and screen integration suites
-npm test
-
-# Screen integration suites only
-npm run test:routes
-
-# Focused target examples
-npx jest gameUtils
-npx jest timelineUtils
-npx jest statsUtils
-
-# Installed-app advanced-tracker E2E suite
-npm run maestro
-```
 
 ## When to Add a New Test
 

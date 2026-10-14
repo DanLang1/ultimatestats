@@ -8,6 +8,7 @@ import {
   seedAdvancedTrackerTestGame,
   seedMaestroBasicCancelPendingGoalScenario,
   seedMaestroBasicSavedGame,
+  seedMaestroBasicSavedGames,
   seedMaestroOnboardingPrerequisites,
   seedMaestroTeamPrerequisites,
   waitForMaestroStoresToHydrate,
@@ -86,6 +87,11 @@ async function seedMaestroState(params: MaestroSetupParams): Promise<Href> {
   if (params.mode === 'basicSavedGame') {
     const gameId = await seedMaestroBasicSavedGame();
     return { pathname: '/saved-games/[gameId]', params: { gameId } };
+  }
+
+  if (params.mode === 'basicSavedGames') {
+    await seedMaestroBasicSavedGames();
+    return '/AggregateStats';
   }
 
   if (params.mode === 'basicCancelPendingGoal') {

@@ -66,7 +66,7 @@ export default function EditPlayerModal() {
   const saveDisabled = nameExists || numberExists || !name.trim();
 
   const handleDismiss = () => {
-    router.dismissTo('/EditRoster');
+    router.back();
   };
 
   const handleActiveChange = (nextIsActive: boolean) => {
@@ -109,7 +109,7 @@ export default function EditPlayerModal() {
     const updatedTeam = { ...latestTeam, roster: updatedRoster };
     setCurrentTeam(updatedTeam);
     await saveCurrentTeam(updatedTeam);
-    router.dismissTo('/EditRoster');
+    router.back();
   };
 
   const handleNumberChange = (value: string) => {
@@ -130,7 +130,7 @@ export default function EditPlayerModal() {
     setCurrentTeam({ ...currentTeam, roster: newRoster });
     removePlayerFromPresets(playerId);
     await saveCurrentTeam();
-    router.dismissTo('/EditRoster');
+    router.back();
   };
 
   // Check for stats

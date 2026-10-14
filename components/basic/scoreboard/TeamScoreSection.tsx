@@ -53,7 +53,7 @@ export default function TeamScoreSection({
   // Determine what happens on tap
   // If possession tracking is enabled (hasPossession is defined):
   //   - If this team HAS possession: tap = score (they scored)
-  //   - If this team does NOT have possession: tap = turnover (flip possession)
+  //   - If this team does NOT have possession: tap does nothing (turnovers come from the action bar)
   // If possession tracking is disabled (hasPossession is undefined): tap = score (original behavior)
   const handleTap = () => {
     if (hasPossession === undefined) {

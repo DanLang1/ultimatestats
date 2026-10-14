@@ -24,12 +24,12 @@ export default function GameSelectorModal() {
   const selectableGames = getSelectablePlayerStatGames(playerId, games, team);
 
   const handleDismiss = () => {
-    router.dismissTo('/PlayerStats');
+    router.back();
   };
 
   const handleSelectGame = (gameId: string) => {
     setSelectedGameId(gameId);
-    router.dismissTo('/PlayerStats');
+    router.back();
   };
 
   if (selectableGames.length === 0) {

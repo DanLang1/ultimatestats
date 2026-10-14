@@ -120,6 +120,8 @@ Basic and team seed modes:
   timeout used (`setup-basic-game.yaml`).
 - `mode=basicSavedGame` lands on a saved 2-1 basic game against Rivals with known turnovers,
   goals, and point lines (`setup-basic-saved-game.yaml`).
+- `mode=basicSavedGames` adds an earlier 1-0 win over Hammers (Joe from Jon) to that saved game and
+  lands on Aggregate Stats (`setup-basic-saved-games.yaml`).
 
 Every seed except `mode=onboarding` marks onboarding as seen, so flows that relaunch the app
 (`launchApp` mid-flow) re-enter through `/` to the active game or Dashboard even if an earlier

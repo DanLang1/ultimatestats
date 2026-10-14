@@ -1,124 +1,57 @@
 # UI Patterns
 
-Reusable UI conventions for screens and modals.
+Reusable UI conventions for screens and modals. For orientation and sizing, see
+[responsive-layout.md](responsive-layout.md).
 
-## Responsive Layout
+## Headers
 
-- For any new screen, start with [responsive-layout.md](responsive-layout.md) first.
-- Use `useLayout()` for layout info.
-- Prefer `createStyles(...)` style factories for orientation-aware styles.
-- Keep orientation logic in style definitions, not ad-hoc inline conditionals.
-- Reference: [responsive-layout.md](responsive-layout.md).
+Use `components/ui/ScreenHeader.tsx` for main screens and `components/ui/ResponsiveHeaderActions.tsx`
+for right-slot actions, so every screen shares one inline-vs-overflow implementation.
 
-## Screen Header Pattern
+## Modals
 
-- Keep headers consistent:
-  `paddingTop: 8`
-  `paddingHorizontal: 16-20`
-  `paddingBottom: 10-12`
-- Prefer the shared header component for main screens: `components/ui/ScreenHeader.tsx`.
-- In portrait, keep the title visually centered using an absolute, non-interactive title layer:
-  `...StyleSheet.absoluteFill`, `justifyContent: 'center'`, `alignItems: 'center'`, `pointerEvents="none"`.
-- Keep interactive controls in left/right slots and cap right-side actions in portrait (use overflow when needed) to avoid title drift.
-- **Tablet portrait rule**: `ResponsiveHeaderActions` decides between inline icons and the overflow `...` menu with `isLandscape || sizeClass !== 'small' || visibleActions.length <= 2`. Tablets (`medium`/`large`) always get inline icons; phones (`small`) get inline icons when there are two or fewer actions and the overflow menu otherwise.
-- Prefer `components/ui/ResponsiveHeaderActions.tsx` for composed right-slot actions so screens reuse one inline-vs-overflow implementation.
-- Use explicit back/dismiss action and avoid render-time imperative navigation.
-- Reference: [navigation-map.md](navigation-map.md).
+- Exit with `router.back()`. Use `router.dismissTo(...)` only when the target may not be directly
+  underneath (the modal can be reached by `<Redirect>`, as `HalftimeModal` is) or the exit must
+  change the target's params (`AdvancedGameSelectorModal` game selection).
+- Never call `showAlert` (`components/ui/AlertProvider.tsx`) from a modal route. Its root RN
+  `<Modal>` cannot present over an Expo Router modal on iOS; it stays invisible and keeps swallowing
+  touches after the route closes. Confirm inside the sheet instead (a `confirmingDelete` state that
+  swaps the sheet body). oxlint rejects importing `useAlert` in `app/(modals)/`, but it cannot see
+  indirect calls, so keep `showAlert` out of hooks and components that modal routes render.
+- Prefer the `modalBg`, `modalText`, and `modalTextMuted` palette tokens for modal content.
 
-Example:
+## Keyboard
 
-```tsx
-<ScreenHeader
-  title="SETTINGS"
-  onBack={() => router.back()}
-  titleColor={palette.textMuted}
-  backButtonBackgroundColor={palette.overlay10}
-  rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
-/>
-```
+For screens and sheets with text input, use `KeyboardAvoidingView` from
+`react-native-keyboard-controller` with `automaticOffset`. Use `behavior="height"` when lower content
+must remain reachable above the keyboard, and `behavior="padding"` for top-aligned inputs that
+should stay anchored while their scrollable area gains keyboard space. For a long or dynamically
+changing form, use `KeyboardAwareScrollView` with a small `bottomOffset` so the focused input stays
+visible throughout the keyboard animation.
 
-## Modal Shell Pattern
+## Safe Areas
 
-For transparent modal routes:
+Rely on the root safe area for top and bottom insets. Use per-screen or per-modal insets only when
+specifically needed, commonly for left/right padding.
 
-1. Wrap with `StyleSheet.absoluteFill`.
-2. Use overlay backdrop + centered/bottom sheet content.
-3. Set modal route options in `_layout.tsx`:
-   `presentation: 'transparentModal'`
-   `contentStyle: { backgroundColor: 'transparent' }`
-4. Use `router.dismissTo(...)` for deterministic exits.
-5. Never call `showAlert` (`components/ui/AlertProvider.tsx`) from a modal route. Its root RN
-   `<Modal>` cannot present over an Expo Router modal on iOS; it stays invisible and keeps
-   swallowing touches after the route closes. Confirm inside the sheet instead (a
-   `confirmingDelete` state that swaps the sheet body), as in `EditPlayerModal.tsx`,
-   `TeamManagementModal.tsx`, and `EditEventModal.tsx`. oxlint rejects importing `useAlert` in
-   `app/(modals)/`; it cannot see indirect calls, so keep `showAlert` out of hooks and
-   components that modal routes render.
-
-For screens and bottom sheets with text input, use `KeyboardAvoidingView` from
-`react-native-keyboard-controller` with `automaticOffset`; the root `KeyboardProvider` is configured
-in `app/_layout.tsx`. Use `behavior="height"` when lower content must remain reachable above the
-keyboard. Use `behavior="padding"` for top-aligned inputs when the content should stay visually
-anchored while its scrollable area gains keyboard space, as in `CreateTournament.tsx`.
-
-For a long or dynamically changing form, use `KeyboardAwareScrollView` from the same package so the
-scroll position follows the focused input throughout the keyboard animation. Add a small
-`bottomOffset` to keep the input visually separated from the keyboard.
-
-## Safe Area Pattern
-
-- Keep one root `SafeAreaProvider` only (`app/_layout.tsx`).
-- Rely on root safe area for top/bottom.
-- Use per-screen/per-modal insets only when specifically needed (commonly left/right padding).
-
-## Error Boundary Pattern
+## Error Boundaries
 
 - Every screen already gets `ScreenErrorBoundary` through the root layout's
-  `unstable_settings.screenErrorBoundary`, including screens under nested layouts. Do not export
-  per-screen or per-layout `ErrorBoundary`s.
-- `RootErrorBoundary` (the root `ErrorBoundary` export) is the last resort for errors thrown by
-  layouts themselves. Keep layouts thin so screen errors stay screen-scoped.
-- Use the dev-only `/__dev_crash__` route (Dashboard dev tools) to exercise the screen boundary.
-  Do not add crash triggers to real screens.
+  `unstable_settings.screenErrorBoundary`. Do not export per-screen or per-layout `ErrorBoundary`s.
+- `RootErrorBoundary` is the last resort for errors thrown by layouts themselves. Keep layouts thin
+  so screen errors stay screen-scoped.
+- Use the dev-only `/__dev_crash__` route to exercise the screen boundary. Do not add crash triggers
+  to real screens.
 
-## Theming Pattern
+## Controls
 
-- Do not hardcode colors.
-- Use tokens from `theme/theme.ts` and theme palette via `useTheme()`.
-- For modal content, prefer `modalBg`, `modalText`, and `modalTextMuted`.
-
-## Outlined Secondary Actions
-
-- Use a transparent background by default for outlined secondary actions. Let the semantic border,
-  icon, and label colors carry the affordance.
-- Add a tinted fill only when it communicates meaningful state, such as selected, toggled, or
-  active—not as default decoration for an outlined button.
-
-## Required Field Attention Pattern
-
-- Default pattern for required segmented inputs:
-  - Add a `Required` chip next to the label.
-  - Use a highlighted border until the user selects a value.
-  - Trigger a one-shot confirmation pulse after first selection.
-- For side-specific choices (team/player split), use side highlight colors:
-  - `highlightLeftColor` for left option cue.
-  - `highlightRightColor` for right option cue.
-- Current implementation:
-  - `components/ui/SegmentedControl.tsx`
-  - `app/(main)/PreGameConfirm.tsx`
-
-## Orbit Attention Pattern (Optional)
-
-- Orbit runners are preserved as an optional, higher-attention variant for segmented controls.
-- Use when a temporary motion cue is preferred over static required affordances.
-- Primary implementation:
-  - Hook: `components/ui/hooks/useAttentionBorderRunner.ts`
-  - Rendering integration: `components/ui/SegmentedControl.tsx` via `attentionColor` and
-    `attentionRunKey`.
-- Recommendation: use sparingly and only for short onboarding moments to avoid persistent visual noise.
+- Outlined secondary actions use a transparent background by default; the semantic border, icon,
+  and label colors carry the affordance. Add a tinted fill only for meaningful state such as
+  selected, toggled, or active.
+- Required segmented inputs show a `Required` chip and highlighted border until a value is chosen,
+  then a one-shot confirmation pulse (`SegmentedControl`).
 
 ## Component Placement
 
-- One component per file.
-- Avoid creating local subcomponents in the same file unless there is a strong reason.
-- Prefer early returns for empty/error branches.
+- One component per file; avoid local subcomponents unless there is a strong reason.
+- Prefer early returns for empty and error branches.

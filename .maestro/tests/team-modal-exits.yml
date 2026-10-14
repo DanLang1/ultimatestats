@@ -1,0 +1,109 @@
+appId: com.langdk.ultimatestats.dev
+name: Team Modal Exits
+tags:
+  - team
+---
+# Team modals return to the screen that opened them, and that screen's own back still lands on
+# Dashboard: Edit Player cancel from the roster, and the team switcher from the basic and
+# scrimmage pregames (scrimmage must stay a scrimmage after switching).
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn: 'Manage Team'
+- extendedWaitUntil:
+    visible: 'ZOBOOMAFOO'
+    timeout: 5000
+
+# Edit Player cancel returns to the roster without changes.
+- tapOn:
+    id: 'player-chip-Joe'
+- extendedWaitUntil:
+    visible: 'Edit Player'
+    timeout: 5000
+- tapOn:
+    id: 'edit-player-name-input'
+- eraseText
+- inputText: 'Joey'
+- tapOn: 'Cancel'
+- extendedWaitUntil:
+    notVisible: 'Edit Player'
+    timeout: 5000
+- assertVisible:
+    id: 'player-chip-Joe'
+- assertNotVisible:
+    id: 'player-chip-Joey'
+
+# A second team makes the pregame team switcher available.
+- tapOn:
+    id: 'roster-actions-button'
+- tapOn:
+    id: 'team-actions-new'
+- extendedWaitUntil:
+    visible: 'New Team'
+    timeout: 5000
+- inputText: 'Maestro Exits'
+- tapOn: 'Create'
+- extendedWaitUntil:
+    visible: 'MAESTRO EXITS'
+    timeout: 5000
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+
+# Basic pregame: switching teams returns to the basic pregame, whose back leads to Dashboard.
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-basic'
+- extendedWaitUntil:
+    visible: 'BASIC SCOREBOARD'
+    timeout: 5000
+- assertVisible: 'Maestro Exits'
+- tapOn:
+    id: 'pregame-change-team'
+- extendedWaitUntil:
+    visible:
+      id: 'team-select-maestro-seed-team'
+    timeout: 5000
+- tapOn:
+    id: 'team-select-maestro-seed-team'
+- extendedWaitUntil:
+    visible: 'Zoboomafoo'
+    timeout: 5000
+- assertVisible: 'BASIC SCOREBOARD'
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+
+# Scrimmage pregame: switching teams keeps the scrimmage setup.
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-scrimmage'
+- extendedWaitUntil:
+    visible: 'SCRIMMAGE'
+    timeout: 5000
+- tapOn:
+    id: 'pregame-change-team'
+- extendedWaitUntil:
+    visible:
+      id: 'team-select-(?!maestro-seed-team).+'
+    timeout: 5000
+- tapOn:
+    id: 'team-select-(?!maestro-seed-team).+'
+- extendedWaitUntil:
+    notVisible:
+      id: 'team-select-(?!maestro-seed-team).+'
+    timeout: 5000
+- assertVisible: 'SCRIMMAGE'
+- assertNotVisible: 'ADVANCED TRACKER'
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/team-modal-exits

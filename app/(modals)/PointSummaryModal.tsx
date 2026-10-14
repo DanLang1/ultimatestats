@@ -112,11 +112,11 @@ export default function PointSummaryModal() {
 
   const handleStartNextPoint = () => {
     startPoint();
-    router.dismissTo('/Scoreboard');
+    router.back();
   };
 
   const handleDismiss = () => {
-    router.dismissTo('/Scoreboard');
+    router.back();
   };
 
   // Format duration if available

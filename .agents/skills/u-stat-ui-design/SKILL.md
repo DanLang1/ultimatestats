@@ -12,9 +12,7 @@ Build polished mobile UI that feels native to the existing U-Stat product.
 1. Read `docs/README.md` and the domain docs it routes to.
 2. For screen or modal work, read:
    - `docs/ui-patterns.md`
-   - `docs/navigation-map.md`
    - `docs/responsive-layout.md`
-   - `docs/theming.md`
 3. Inspect the target file and nearby components before designing the change.
 4. For newer implementation examples, consult
    [references/current-patterns.md](references/current-patterns.md) and the relevant

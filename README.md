@@ -68,7 +68,7 @@ already-installed development app.
 ## Documentation
 
 The [project documentation](docs/README.md) covers the app structure, game
-tracking model, responsive layout, theming, testing, and build workflows.
+tracking model, responsive layout, testing, and build workflows.
 
 ## License
 

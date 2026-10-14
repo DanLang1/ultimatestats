@@ -1,0 +1,56 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Player Game Selector
+tags:
+  - basic
+---
+# Aggregate Stats (both games combined) -> player stats -> game selector: picking a game returns to the player's stats
+# with that game in the impact chart, and the player screen's back still returns to the box score.
+- runFlow: ../flows/setup-basic-saved-games.yaml
+- extendedWaitUntil:
+    visible: '.*Zoboomafoo, 2 games.*'
+    timeout: 5000
+- tapOn: '.*Zoboomafoo, 2 games.*'
+- extendedWaitUntil:
+    visible: 'Select All'
+    timeout: 5000
+- tapOn: 'Select All'
+- tapOn: '.*View Combined \(2 games\)'
+
+# Rows are wider than the screen, so tap near the leading name cell.
+- scrollUntilVisible:
+    element: 'Joe, .*'
+    direction: DOWN
+    speed: 80
+    visibilityPercentage: 40
+- tapOn:
+    text: 'Joe, .*'
+    point: '5%,50%'
+
+# The impact chart defaults to the most recent game (Rivals), whose breakdown includes the
+# Rivals-scored point; the Hammers game has no Opp Hold. The game pill exposes only its
+# accessibility label, so the breakdown identifies the selected game.
+- scrollUntilVisible:
+    element: 'Choose game for impact chart'
+    direction: DOWN
+    speed: 80
+- assertVisible: 'Opp Hold'
+- tapOn: 'Choose game for impact chart'
+- extendedWaitUntil:
+    visible: 'SELECT GAME'
+    timeout: 5000
+- tapOn: '.*vs Hammers.*'
+- extendedWaitUntil:
+    notVisible: 'SELECT GAME'
+    timeout: 5000
+- assertVisible: 'Game shown in this chart'
+- assertVisible: 'Hold'
+- assertNotVisible: 'Opp Hold'
+
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'Joe, .*'
+    timeout: 5000
+
+- takeScreenshot:
+    path: .maestro/screenshots/basic-player-game-selector

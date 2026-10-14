@@ -15,10 +15,7 @@ import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { Fonts } from '@/theme/theme';
 
 export default function TeamManagementModal() {
-  const { pregame, gameType } = useLocalSearchParams<{
-    pregame?: 'basic' | 'advanced';
-    gameType?: 'scrimmage';
-  }>();
+  const { pregame } = useLocalSearchParams<{ pregame?: 'basic' | 'advanced' }>();
   const isPregame = pregame === 'basic' || pregame === 'advanced';
   const [isSwitching, setIsSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
@@ -35,11 +32,7 @@ export default function TeamManagementModal() {
 
   const handleDismiss = () => {
     if (isSwitching) return;
-    if (pregame === 'basic') router.dismissTo('/PreGameConfirm');
-    else if (pregame === 'advanced' && gameType === 'scrimmage') {
-      router.dismissTo({ pathname: '/advancedTracking/PreGameConfirm', params: { gameType } });
-    } else if (pregame === 'advanced') router.dismissTo('/advancedTracking/PreGameConfirm');
-    else router.dismissTo('/EditRoster');
+    router.back();
   };
 
   const handleLoadTeam = async (teamId: string) => {

@@ -1,5 +1,6 @@
 export const MAESTRO_SEED_GAME_ID = 'maestro-seed-advanced-game';
 export const MAESTRO_SEED_BASIC_GAME_ID = 'maestro-seed-basic-game';
+export const MAESTRO_SEED_BASIC_SECOND_GAME_ID = 'maestro-seed-basic-game-2';
 export const MAESTRO_SEED_TEAM_ID = 'maestro-seed-team';
 export const MAESTRO_CREATED_TEAM_PREFIX = 'Maestro ';
 export const MAESTRO_SEED_PLAYERS = ['Joe', 'Jon', 'Mike', 'Molly', 'Kelly', 'Rachel', 'Joel'];

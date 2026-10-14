@@ -53,12 +53,12 @@ export default function TimeoutModal() {
   const onClose = () => {
     // User closed modal - keep timeout state so banner shows on main screen
     // They can reopen the modal or let the timer continue in the background
-    router.dismissTo('/Scoreboard');
+    router.back();
   };
 
   const onContinue = () => {
     handleContinue();
-    router.dismissTo('/Scoreboard');
+    router.back();
   };
 
   return (
@@ -79,6 +79,7 @@ export default function TimeoutModal() {
           ]}>
           {/* Close button - top right */}
           <Pressable
+            testID="timeout-modal-close"
             onPress={onClose}
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
             hitSlop={12}>

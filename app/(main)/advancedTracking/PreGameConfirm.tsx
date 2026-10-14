@@ -412,10 +412,7 @@ export default function AdvancedPreGameConfirm() {
                 ? () =>
                     router.push({
                       pathname: '/TeamManagementModal',
-                      params: {
-                        pregame: 'advanced',
-                        ...(isScrimmage ? { gameType: 'scrimmage' } : {}),
-                      },
+                      params: { pregame: 'advanced' },
                     })
                 : undefined,
               activeColor: t1Color,

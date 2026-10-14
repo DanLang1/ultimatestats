@@ -127,6 +127,8 @@ function resetGameState(state: GameState, hardCapMinutes: number) {
   state.pointLines = [];
 }
 
+// Basic games and the shared team/roster. Advanced game state and advanced saved records never live
+// here; advanced code only reads team and roster data from this store.
 export const useGameStore = create<GameState>()(
   immer(
     persist(
@@ -735,7 +737,10 @@ export const useGameStore = create<GameState>()(
             state.pendingStatEntry = null;
           }),
 
-        // Cancel a pending goal entry - reverts the score and removes the goal event
+        // Cancel a pending goal entry - reverts the score and removes the goal event.
+        // This and undoLastAction each re-derive score, possession, point number, line history,
+        // halftime, and point-timer state; a change to goal, turnover, timeout, halftime, line, or
+        // timer semantics must update both paths.
         cancelPendingGoal: () =>
           set((state: GameState) => {
             if (!state.pendingStatEntry) return;
@@ -958,6 +963,9 @@ export const useGameStore = create<GameState>()(
             });
           }),
 
+        // A completed-point line correction on the current game also updates that game's saved
+        // record, and vice versa (replaceSavedGamePointLine). Otherwise a correction made after
+        // undoing a finished game is overwritten when the resumed game is saved again.
         replacePointLine: (pointNumber: number, playerIds: string[]) => {
           let didReplace = false;
           set((state: GameState) => {

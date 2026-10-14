@@ -21,7 +21,7 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
 - Put app-wide limits in `lib/constants.ts`.
 - Report unexpected caught errors with `reportError(area, error)` from `lib/sentry.ts` instead of a
   bare `console.error`; skip it only for expected outcomes such as validation failures or cancels.
-- Follow `docs/ui-patterns.md`, `docs/navigation-map.md`, and `docs/responsive-layout.md` for screens, modals, navigation, safe areas, and orientation.
+- Follow `docs/ui-patterns.md` and `docs/responsive-layout.md` for screens, modals, navigation, safe areas, and orientation.
 - Use `<Redirect href="..." />` for render-time navigation; never invoke router actions during render.
 
 ## State and Persistence

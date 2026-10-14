@@ -29,7 +29,7 @@ Use deferred mutation only for a reproduced native view-transition crash where:
 - delayed execution cannot save or mutate the wrong record, and
 - the workaround is documented beside the callsite.
 
-Do not add arbitrary delays or replace deterministic modal exits with `router.back()`.
+Do not add arbitrary delays.
 
 ## If the Crash Returns
 

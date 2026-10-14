@@ -51,6 +51,8 @@ function determineSizeClass(dimension: number): SizeClass {
 
 export function useLayout(): LayoutInfo {
   const { width, height } = useWindowDimensions();
+  // Size class uses the shorter screen edge so it stays constant across rotation; text and spacing
+  // scaling should not jump when the device turns (unlike Material's width-based classes).
   const smallestDimension = Math.min(width, height);
 
   const sizeClass = determineSizeClass(smallestDimension);

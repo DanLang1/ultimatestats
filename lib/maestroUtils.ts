@@ -4,6 +4,7 @@ import {
   getMaestroSeedPlayerId,
   MAESTRO_CREATED_TEAM_PREFIX,
   MAESTRO_SEED_BASIC_GAME_ID,
+  MAESTRO_SEED_BASIC_SECOND_GAME_ID,
   MAESTRO_SEED_GAME_ID,
   MAESTRO_SEED_PLAYERS,
   MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
@@ -268,11 +269,52 @@ function buildSeedBasicSavedGame(team: SavedTeam): SavedGame {
   };
 }
 
+// An earlier 1-0 win over Hammers: Joe scores from Jon on the only point.
+function buildSeedBasicSecondSavedGame(team: SavedTeam): SavedGame {
+  const playerId = getMaestroSeedPlayerId;
+  const startedAt = Date.now() - 24 * 60 * 60 * 1000;
+
+  return {
+    id: MAESTRO_SEED_BASIC_SECOND_GAME_ID,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    createdAt: startedAt,
+    team1: team,
+    team2Name: 'Hammers',
+    team1Score: 1,
+    team2Score: 0,
+    events: [
+      {
+        type: 'goal',
+        team: 'team1',
+        goalPlayerId: playerId('Joe'),
+        assistPlayerId: playerId('Jon'),
+        pointNumber: 1,
+        gameId: MAESTRO_SEED_BASIC_SECOND_GAME_ID,
+      },
+    ],
+    autoHalftimeEnabled: false,
+    gameTo: 1,
+    startingPossession: 'team1',
+    pointLines: [
+      {
+        pointNumber: 1,
+        playerIds: MAESTRO_SEED_PLAYERS.map(playerId),
+        timestamp: startedAt + 60 * 1000,
+      },
+    ],
+  };
+}
+
 export async function seedMaestroBasicSavedGame() {
   await seedMaestroTeamPrerequisites({ clearActiveGame: true });
   const team = buildSeedTeam();
   await useGameStore.getState().importGame(buildSeedBasicSavedGame(team));
   return MAESTRO_SEED_BASIC_GAME_ID;
+}
+
+export async function seedMaestroBasicSavedGames() {
+  await seedMaestroBasicSavedGame();
+  await useGameStore.getState().importGame(buildSeedBasicSecondSavedGame(buildSeedTeam()));
 }
 
 export async function seedMaestroBasicCancelPendingGoalScenario() {

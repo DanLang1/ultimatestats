@@ -125,6 +125,8 @@ export const useSavedAdvancedGamesStore = create<SavedAdvancedGamesState>()(
       return loadPromise;
     },
 
+    // Active-game recovery always reads the game and its undo history together from SQLite rather
+    // than the gamesById cache, so it cannot pair a cached game with history from another row state.
     loadActiveGameSnapshot: async (gameId) => {
       const cachedGameAtStart = get().gamesById[gameId];
       const snapshot = await loadAdvancedGameHistorySnapshot(gameId);

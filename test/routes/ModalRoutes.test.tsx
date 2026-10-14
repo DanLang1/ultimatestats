@@ -118,7 +118,7 @@ describe('modal routes', () => {
       'player-alex',
       'player-cara',
     ]);
-    expect(router.dismissTo).toHaveBeenCalledWith('/GameTimeline');
+    expect(router.back).toHaveBeenCalled();
   });
 
   it('replaces a saved point line using the saved roster snapshot', async () => {
@@ -161,10 +161,7 @@ describe('modal routes', () => {
       'player-alex',
       'player-cara',
     ]);
-    expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: '/GameTimeline',
-      params: { gameId: savedGame.id },
-    });
+    expect(router.back).toHaveBeenCalled();
   });
 
   it('redirects an invalid point-line edit instead of leaving an empty modal route', async () => {
@@ -198,7 +195,7 @@ describe('modal routes', () => {
       useGameStore.getState().currentTeam.roster.find((player) => player.id === 'player-alex')
         ?.isActive,
     ).toBe(false);
-    expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+    expect(router.back).toHaveBeenCalled();
   });
 
   it('reactivates a player from the edit-player modal', async () => {
@@ -222,7 +219,7 @@ describe('modal routes', () => {
       useGameStore.getState().currentTeam.roster.find((player) => player.id === 'player-alex')
         ?.isActive,
     ).toBe(true);
-    expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+    expect(router.back).toHaveBeenCalled();
   });
 
   it('shows an inline error when advanced-game participation blocks deactivation', async () => {
@@ -242,7 +239,7 @@ describe('modal routes', () => {
     );
     expect(screen.queryByTestId('edit-player-active-toggle')).not.toBeOnTheScreen();
     expect(useGameStore.getState().currentTeam.roster[0].isActive).toBe(true);
-    expect(router.dismissTo).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
   });
 
   it('hides deletion for a player who participated in the advanced game', async () => {
@@ -370,7 +367,7 @@ describe('modal routes', () => {
     await user.press(screen.getByText('Zoboomafoo'));
 
     expect(useGameStore.getState().currentTeam.id).toBe(otherTeam.id);
-    expect(router.dismissTo).toHaveBeenCalledWith('/EditRoster');
+    expect(router.back).toHaveBeenCalled();
   });
 
   it.each(['basic', 'advanced'] as const)(
@@ -392,24 +389,9 @@ describe('modal routes', () => {
       expect(useGameStore.getState().savedTeams).toContainEqual(testTeam);
       expect(useGameStore.getState().currentLine).toEqual([]);
       expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
-      expect(router.dismissTo).toHaveBeenCalledWith(
-        mode === 'basic' ? '/PreGameConfirm' : '/advancedTracking/PreGameConfirm',
-      );
+      expect(router.back).toHaveBeenCalled();
     },
   );
-
-  it('preserves scrimmage setup when dismissing the pregame team picker', async () => {
-    const user = userEvent.setup();
-    setMockSearchParams({ pregame: 'advanced', gameType: 'scrimmage' });
-    const otherTeam = { ...testTeam, id: 'other-team', name: 'Other Team' };
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [otherTeam] });
-    await renderScreen(<TeamManagementModal />);
-    await user.press(screen.getByTestId('team-select-other-team'));
-    expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: '/advancedTracking/PreGameConfirm',
-      params: { gameType: 'scrimmage' },
-    });
-  });
 
   it('cancels deletion inside the switcher without changing teams', async () => {
     const user = userEvent.setup();
@@ -424,7 +406,7 @@ describe('modal routes', () => {
     expect(screen.getByText('Switch Team')).toBeVisible();
     expect(useGameStore.getState().savedTeams).toContainEqual(otherTeam);
     expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
-    expect(router.dismissTo).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
   });
 
   it('opens team deletion confirmation without switching teams', async () => {
@@ -437,7 +419,7 @@ describe('modal routes', () => {
 
     expect(screen.getByText('Delete Team')).toBeVisible();
     expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
-    expect(router.dismissTo).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
 
     await user.press(screen.getByText('Delete', { exact: true }));
 
@@ -695,6 +677,6 @@ describe('continuing game breaks', () => {
       pendingTimeoutModal: false,
       pointTimerPausedElapsed: null,
     });
-    expect(router.dismissTo).toHaveBeenCalledWith('/Scoreboard');
+    expect(router.back).toHaveBeenCalled();
   });
 });

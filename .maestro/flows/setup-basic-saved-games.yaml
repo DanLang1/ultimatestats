@@ -1,0 +1,18 @@
+appId: com.langdk.ultimatestats.dev
+name: Seed Basic Saved Games
+---
+# Two saved Zoboomafoo wins where Joe scores in both: the 2-1 Rivals game from
+# setup-basic-saved-game.yaml and an earlier 1-0 Hammers game. Lands on Aggregate Stats.
+- launchApp
+- openLink: ultimatestats-dev:///__maestro_seed__?mode=basicSavedGames
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-setup-running'
+    timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000

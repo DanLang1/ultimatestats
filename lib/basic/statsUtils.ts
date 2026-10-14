@@ -147,7 +147,8 @@ export function computePlayerStats(
     } else if (event.type === 'turnover') {
       if (event.team !== team) continue;
 
-      // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop
+      // Handle fiftyfifty - player1 gets 0.5 throwaway, player2 gets 0.5 drop. Both may be the same
+      // player when one person caused both halves of the mistake.
       if (event.subtype === 'fiftyfifty') {
         const throwerId = event.playerId ?? UNKNOWN_PLAYER_ID;
         const receiverId = event.player2Id ?? UNKNOWN_PLAYER_ID;

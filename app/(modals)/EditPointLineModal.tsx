@@ -62,14 +62,6 @@ export default function EditPointLineModal() {
   const hasSubstitutionHistory =
     pointRecords.length > 1 || pointRecords.some((record) => record.isSubstitution);
 
-  const dismiss = () => {
-    if (savedGameId === null) {
-      router.dismissTo('/GameTimeline');
-      return;
-    }
-    router.dismissTo({ pathname: '/GameTimeline', params: { gameId: savedGameId } });
-  };
-
   const saveLine = (playerIds: string[]): Promise<boolean> => {
     if (savedGameId === null) {
       return Promise.resolve(replacePointLine(editablePoint.pointNumber, playerIds));
@@ -84,7 +76,7 @@ export default function EditPointLineModal() {
       pointLines={source.pointLines}
       initialLine={editablePoint.playerIds}
       hasSubstitutionHistory={hasSubstitutionHistory}
-      onDismiss={dismiss}
+      onDismiss={() => router.back()}
       onSave={saveLine}
     />
   );
