@@ -173,6 +173,14 @@ export default {
         androidSpeechServicePackages: ['com.google.android.googlequicksearchbox'],
       },
     ],
+    [
+      'expo-build-properties',
+      {
+        // iOS 27 kills apps built with the iOS 27 SDK that skip the UIKit scene lifecycle.
+        // Remove after upgrading to Expo SDK 58, whose template adopts it natively.
+        ios: { enableSceneSupport: true },
+      },
+    ],
     './plugins/withAndroidGradleMemory',
     [
       '@sentry/react-native/expo',
