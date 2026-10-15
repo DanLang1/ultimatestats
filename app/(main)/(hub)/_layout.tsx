@@ -3,13 +3,14 @@ import { Tabs } from 'expo-router';
 import HubTabBar from '@/components/navigation/HubTabBar';
 import { useTheme } from '@/context/ThemeContext';
 
+export const unstable_settings = { anchor: '(home)' };
+
 export default function HubLayout() {
   const { palette } = useTheme();
 
   return (
     <Tabs
       backBehavior="history"
-      initialRouteName="(home)"
       tabBar={(props) => <HubTabBar {...props} />}
       screenOptions={{
         headerShown: false,

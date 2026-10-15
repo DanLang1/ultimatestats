@@ -173,13 +173,6 @@ export default {
         androidSpeechServicePackages: ['com.google.android.googlequicksearchbox'],
       },
     ],
-    [
-      'expo-build-properties',
-      {
-        buildReactNativeFromSource: true,
-        useHermesV1: true,
-      },
-    ],
     './plugins/withAndroidGradleMemory',
     [
       '@sentry/react-native/expo',

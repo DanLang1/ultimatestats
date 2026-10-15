@@ -51,8 +51,8 @@ eas build --platform android --profile production --local
 ```
 
 If a local Android production build fails during `lintVitalAnalyzeRelease`, check for Gradle JVM
-metaspace errors first. This repo builds React Native from source for production/Hermes V1, so
-release builds are materially heavier than dev builds.
+metaspace errors first. Release builds run dependency lint and are materially heavier than dev
+builds.
 
 ### Source maps
 

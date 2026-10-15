@@ -8,8 +8,8 @@ const KOTLIN_DAEMON_JVM_OPTIONS = '-Xmx2g';
 
 function withAndroidGradleMemory(config) {
   return withGradleProperties(config, (gradleConfig) => {
-    // Building React Native from source triggers dependency lint in release builds.
-    // The default JVM/metaspace settings are too small for local production builds.
+    // Release builds run dependency lint, and the default JVM/metaspace settings were too small
+    // for local production builds.
     updateAndroidBuildProperty(gradleConfig.modResults, 'org.gradle.jvmargs', GRADLE_JVM_ARGS);
     updateAndroidBuildProperty(
       gradleConfig.modResults,

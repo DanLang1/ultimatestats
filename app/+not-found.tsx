@@ -1,10 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { DISCORD_URL } from '@/lib/constants';
@@ -16,9 +16,7 @@ export default function NotFoundScreen() {
   const styles = createStyles(sizeClass);
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-
+    <SafeAreaView style={[styles.container, { backgroundColor: palette.primary }]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable
@@ -90,7 +88,7 @@ export default function NotFoundScreen() {
           </Pressable>
         </View>
       </View>
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
