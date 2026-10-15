@@ -1,21 +1,41 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
+import { useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInRight, FadeOut } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { PARTNER_CONTACT_EMAIL } from '@/lib/constants';
 import { Fonts, Palette } from '@/theme/theme';
+
+const PARTNER_MAILTO_URL = `mailto:${PARTNER_CONTACT_EMAIL}?subject=${encodeURIComponent('U-Stat Partnership')}`;
+const COPIED_FEEDBACK_DURATION_MS = 1000;
 
 export default function PartnersScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
+  const [didCopy, setDidCopy] = useState(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const styles = createStyles(sizeClass, palette);
+
+  const handleContactPress = async () => {
+    try {
+      await Linking.openURL(PARTNER_MAILTO_URL);
+    } catch {
+      // No mail app configured — fall back to copying the address.
+      await Clipboard.setStringAsync(PARTNER_CONTACT_EMAIL);
+      setDidCopy(true);
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = setTimeout(() => setDidCopy(false), COPIED_FEEDBACK_DURATION_MS);
+    }
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -90,6 +110,39 @@ export default function PartnersScreen() {
             </Pressable>
           </Animated.View>
         </View>
+
+        <Animated.View
+          entering={FadeInRight.duration(400).delay(500)}
+          style={styles.contactContainer}>
+          <ThemedText style={styles.contactPrompt}>Want to show up here?</ThemedText>
+          <Pressable
+            onPress={handleContactPress}
+            accessibilityRole="link"
+            accessibilityLabel={`Email ${PARTNER_CONTACT_EMAIL}`}
+            style={({ pressed }) => [styles.contactLink, pressed && styles.buttonPressed]}>
+            <MaterialCommunityIcons
+              name="email-outline"
+              size={scaleBySizeClass(16, sizeClass)}
+              color={palette.accent}
+            />
+            <ThemedText style={styles.contactEmail}>{PARTNER_CONTACT_EMAIL}</ThemedText>
+          </Pressable>
+          <View style={styles.copiedSlot}>
+            {didCopy && (
+              <Animated.View
+                entering={FadeIn.duration(150)}
+                exiting={FadeOut.duration(300)}
+                style={styles.copiedBadge}>
+                <MaterialCommunityIcons
+                  name="check"
+                  size={scaleBySizeClass(14, sizeClass)}
+                  color={palette.textMuted}
+                />
+                <ThemedText style={styles.copiedText}>Copied</ThemedText>
+              </Animated.View>
+            )}
+          </View>
+        </Animated.View>
       </ScrollView>
     </ThemedView>
   );
@@ -191,6 +244,40 @@ function createStyles(sizeClass: SizeClass, palette: Palette) {
       fontSize: scaleBySizeClass(13, sizeClass),
       textTransform: 'uppercase',
       letterSpacing: scaleBySizeClass(0.5, sizeClass, { rounding: 'none' }),
+    },
+    contactContainer: {
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+    },
+    contactPrompt: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      color: palette.textMuted,
+      textAlign: 'center',
+    },
+    contactLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+      padding: scaleBySizeClass(8, sizeClass),
+    },
+    contactEmail: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
+      color: palette.accent,
+    },
+    copiedSlot: {
+      height: scaleBySizeClass(18, sizeClass),
+      justifyContent: 'center',
+    },
+    copiedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(4, sizeClass),
+    },
+    copiedText: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
+      color: palette.textMuted,
     },
     buttonPressed: {
       opacity: 0.8,

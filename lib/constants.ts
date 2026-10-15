@@ -68,6 +68,7 @@ export const CHEMISTRY_MAP_VISIBLE_CONNECTIONS = 4;
 export const DISCORD_URL = 'https://discord.gg/AjsmqhZ2GH';
 export const GITHUB_URL = 'https://github.com/DanLang1/ultimatestats';
 export const LATEST_VERSION_JSON_URL = 'https://u-stat.app/latest-version.json';
+export const PARTNER_CONTACT_EMAIL = 'daniel@u-stat.app';
 export const APP_STORE_URL = 'https://apps.apple.com/us/app/u-stat/id6760956387';
 export const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.langdk.ultimatestats';
