@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5.0',
+    date: 'Oct 14, 2026',
+    changes: [
+      'Added buttons for throwaway, goal, drop to advanced tracker. Gestures still work too!',
+      'Updates for different device sizes and landscape',
+    ],
+  },
+  {
     version: '2.4.1',
     date: 'Sep 23, 2026',
     changes: ['Bug fixes, UI updates'],
