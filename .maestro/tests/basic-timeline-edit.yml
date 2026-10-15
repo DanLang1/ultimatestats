@@ -44,7 +44,11 @@ tags:
     timeout: 5000
 - assertVisible: 'ASSIST, Jon'
 
-# Assist: Rachel becomes Kelly.
+# Assist: Rachel becomes Kelly. Center the row so the hub tab bar cannot cover the press target.
+- scrollUntilVisible:
+    element: 'ASSIST, Rachel'
+    direction: DOWN
+    centerElement: true
 - longPressOn: 'ASSIST, Rachel'
 - extendedWaitUntil:
     visible: 'Edit Assist'

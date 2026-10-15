@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Maestro Parallel'
+  short_description: 'Run and triage sharded Maestro suites'
+  default_prompt: 'Use $maestro-parallel to run the Maestro suite across simulators and triage the failures.'

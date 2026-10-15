@@ -61,6 +61,7 @@ tags:
       id: 'advanced-stats-row-joe'
     direction: DOWN
     speed: 80
+    centerElement: true
 
 # Tap the player row for detail
 - tapOn:

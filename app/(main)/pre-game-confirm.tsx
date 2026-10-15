@@ -498,6 +498,7 @@ export default function PreGameConfirm() {
             <Pressable
               onPress={handleStart}
               disabled={!canStart}
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.startButton,
                 { backgroundColor: canStart ? palette.success : palette.overlay10 },
