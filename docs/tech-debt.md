@@ -16,6 +16,38 @@ This document tracks intentionally deferred cleanup work discovered during the d
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
+## P2 - Advanced Throw Result Semantics Registry
+
+- Adding a `ThrowResult` (e.g. `pressure`) touched ~33 source files. Result semantics are
+  hand-coded in parallel `===` chains that silently return `false` for an unknown result:
+  `isTurnoverThrow` (a miss means the possession never ends), `TURNOVER_RESULTS` and
+  `AnalyticsTurnoverType`, `isTurnoverResult` in throw-type stats, `currentResult` in turnover
+  correction, and `getEligibleThrowTypes`.
+- The attribution `switch` in `buildAnalyticsGame` has no exhaustive default, so an unhandled
+  result compiles and gets no attribution. The timeline switches only throw at runtime.
+- Invariants are enforced per layer: "pressure requires a tracked defender" lives in the store and
+  turnover correction but not in the import validator. The validator still hand-lists pull results,
+  stoppage reasons, flip, and status.
+- Cleanup: add a `THROW_RESULT_SPECS` table (`satisfies Record<ThrowResult, ThrowResultSpec>`) with
+  outcome, credited role, tracked-defender requirement, eligible throw types, and attempt counting;
+  derive the predicates, analytics turnover type, correction roles, and validator rules from it.
+  Add `assertNever` defaults to `ThrowResult`/`kind` switches. Share one invariant check between the
+  store and validator, and derive the other validator lists from exported `as const` arrays. Add a
+  test that loops over `THROW_RESULTS` through validate, analytics, timeline, and CSV.
+- Optional: stamp exports with the minimum schema version their content needs, so a schema bump
+  does not block sharing games without the new result to older clients.
+- References:
+  `lib/advancedTracking/types.ts`
+  `lib/advancedTracking/trackingUtils.ts`
+  `lib/advancedTracking/buildAnalyticsGame.ts`
+  `lib/advancedTracking/analyticsTypes.ts`
+  `lib/advancedTracking/advancedThrowTypeStatsUtils.ts`
+  `lib/advancedTracking/advancedTurnoverCorrectionUtils.ts`
+  `lib/advancedTracking/advancedTimelineUtils.ts`
+  `store/advancedTracking/trackingStore.ts`
+  `lib/sharing/validate.ts`
+  `lib/sharing/serialize.ts`
+
 ## P3 - Advanced Tracker Tablet Landscape Polish
 
 - Tablet landscape puts the scorecard and last-action card side by side in one header row above a

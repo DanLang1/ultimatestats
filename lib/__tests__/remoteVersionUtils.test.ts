@@ -25,7 +25,7 @@ describe('remote update notifications', () => {
       );
   }
 
-  it('offers a different version, remembers dismissal, and offers a subsequent release', async () => {
+  it('offers a newer version, remembers dismissal, and offers a subsequent release', async () => {
     serveVersion('2.1.0');
     await expect(checkRemoteVersion()).resolves.toEqual({
       hasUpdate: true,
@@ -50,6 +50,25 @@ describe('remote update notifications', () => {
     await expect(checkRemoteVersion()).resolves.toEqual({
       hasUpdate: false,
       latestVersion: '2.0.0',
+    });
+  });
+
+  it.each(['1.9.9', '1.9', '1.10.0'])(
+    'does not offer an older published version (%s) to a newer build',
+    async (published) => {
+      serveVersion(published);
+      await expect(checkRemoteVersion()).resolves.toEqual({
+        hasUpdate: false,
+        latestVersion: published,
+      });
+    },
+  );
+
+  it('compares version segments numerically', async () => {
+    serveVersion('2.0.10');
+    await expect(checkRemoteVersion()).resolves.toEqual({
+      hasUpdate: true,
+      latestVersion: '2.0.10',
     });
   });
 

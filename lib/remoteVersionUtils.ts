@@ -9,6 +9,19 @@ function getCurrentVersion(): string {
   return Constants.expoConfig!.version!;
 }
 
+/** Compares dotted numeric versions such as `2.10.0` and `2.9.1`. */
+function isNewerVersion(candidate: string, current: string): boolean {
+  const candidateParts = candidate.split('.').map(Number);
+  const currentParts = current.split('.').map(Number);
+  const length = Math.max(candidateParts.length, currentParts.length);
+
+  for (let index = 0; index < length; index++) {
+    const difference = (candidateParts[index] ?? 0) - (currentParts[index] ?? 0);
+    if (difference !== 0) return difference > 0;
+  }
+  return false;
+}
+
 async function fetchLatestVersion(): Promise<string | null> {
   try {
     const response = await fetch(LATEST_VERSION_JSON_URL, {
@@ -41,6 +54,8 @@ export async function checkRemoteVersion(): Promise<{
 
   if (!latestVersion) return { hasUpdate: false, latestVersion: null };
 
-  const hasUpdate = latestVersion !== getCurrentVersion() && lastDismissed !== latestVersion;
+  // A build ahead of the published version (e.g. during App Review) must not prompt an update.
+  const hasUpdate =
+    isNewerVersion(latestVersion, getCurrentVersion()) && lastDismissed !== latestVersion;
   return { hasUpdate, latestVersion };
 }
