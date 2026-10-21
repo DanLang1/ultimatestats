@@ -26,6 +26,7 @@ import {
   type ThrowDetails,
   type ThrowResult,
   type TrackedPoint,
+  type TurnoverThrowResult,
 } from '@/lib/advancedTracking/types';
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
@@ -403,10 +404,7 @@ export class AdvancedGameScenarioBuilder {
     return this.throw('goal', { ...options, toPlayer: scorer });
   }
 
-  turnover(
-    result: Exclude<ThrowResult, 'complete' | 'goal' | 'callahan'>,
-    options: ThrowOptions = {},
-  ): this {
+  turnover(result: TurnoverThrowResult, options: ThrowOptions = {}): this {
     return this.throw(result, options);
   }
 

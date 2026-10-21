@@ -191,6 +191,44 @@ describe('TrackerLineScreen', () => {
     expect(useLinePresetsStore.getState().presets[0].playerIds).toEqual(playerIds);
   });
 
+  it('keeps an oversized preset but requires exactly seven and caps manual taps', async () => {
+    const user = userEvent.setup();
+    const participants = Array.from({ length: 10 }, (_, index) =>
+      makeParticipant(`p-${index}`, `Player ${index}`),
+    );
+    useLinePresetsStore.setState({
+      presets: [
+        {
+          id: 'large',
+          name: 'Large preset',
+          playerIds: participants.slice(0, 9).map((participant) => participant.id),
+          teamId: useGameStore.getState().currentTeam.id,
+        },
+      ],
+    });
+    await renderScreen(
+      <TrackerLineScreen participants={participants} title="Set line" onConfirm={() => {}} />,
+    );
+
+    await user.press(screen.getByTestId('line-select-quick-preset-large'));
+    expect(screen.getByText('9/7')).toBeVisible();
+    expect(screen.getByText('Deselect 2 to continue')).toBeVisible();
+    expect(screen.getByTestId('line-select-confirm')).toBeDisabled();
+
+    await user.press(screen.getByText('Player 7'));
+    await user.press(screen.getByText('Player 8'));
+    expect(screen.getByText('7/7')).toBeVisible();
+    expect(screen.getByTestId('line-select-confirm')).toBeEnabled();
+
+    await user.press(screen.getByTestId('line-select-show-all-players'));
+    await user.press(screen.getByText('Player 9'));
+    expect(screen.getByText('7/7')).toBeVisible();
+    expect(screen.getByTestId('player-chip-Player 9')).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ selected: false }),
+    );
+  });
+
   it('does not fill a short preset from the initial lineup and reports unavailable members', async () => {
     const user = userEvent.setup();
     const participants = Array.from({ length: 8 }, (_, index) =>

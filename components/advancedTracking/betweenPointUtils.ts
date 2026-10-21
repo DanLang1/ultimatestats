@@ -1,11 +1,18 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import { getCurrentPoint, getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
-import type {
-  AdvancedTrackedGame,
-  Participant,
-  PlayerRef,
-  PossessionAction,
+import {
+  getCurrentPoint,
+  getPointScoringSideId,
+  isCompletedThrow,
+  isContinuingThrow,
+  isPossessionLosingThrow,
+} from '@/lib/advancedTracking/trackingUtils';
+import {
+  THROW_RESULT_SPECS,
+  type AdvancedTrackedGame,
+  type Participant,
+  type PlayerRef,
+  type PossessionAction,
 } from '@/lib/advancedTracking/types';
 
 export interface BetweenPointMetric {
@@ -20,20 +27,10 @@ export function getPointDetails(actions: PossessionAction[], focusSideId: string
 
   for (const action of actions) {
     if (action.kind === 'throw') {
-      if (
-        action.sideId === focusSideId &&
-        (action.result === 'complete' || action.result === 'goal')
-      ) {
+      if (action.sideId === focusSideId && isCompletedThrow(action.result)) {
         passCount++;
       }
-      if (
-        action.result === 'drop' ||
-        action.result === 'throwaway' ||
-        action.result === 'stall' ||
-        action.result === 'block' ||
-        action.result === 'pressure' ||
-        action.result === 'callahan'
-      ) {
+      if (isPossessionLosingThrow(action.result)) {
         turnCount++;
       }
     } else if (action.kind === 'pull' && action.result === 'dropped') {
@@ -117,7 +114,7 @@ export function getHockeyAssistName(
 
   for (let i = scoringPossession.actions.length - 1; i >= 0; i--) {
     const action = scoringPossession.actions[i];
-    if (action.kind !== 'throw' || action.result !== 'goal') {
+    if (action.kind !== 'throw' || THROW_RESULT_SPECS[action.result].outcome !== 'scores') {
       continue;
     }
 
@@ -126,7 +123,7 @@ export function getHockeyAssistName(
       if (previousAction.kind === 'stoppage') {
         continue;
       }
-      if (previousAction.kind === 'throw' && previousAction.result === 'complete') {
+      if (previousAction.kind === 'throw' && isContinuingThrow(previousAction.result)) {
         return getPlayerRefName(previousAction.thrower, participants);
       }
       return null;

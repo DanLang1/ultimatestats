@@ -3,7 +3,8 @@
 
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type PassModifier =
+/** A tracker modifier that changes what the next player tap records. */
+export type ArmedPassModifier =
   | 'fifty-fifty'
   | 'callahan'
   | 'stall'
@@ -11,8 +12,32 @@ export type PassModifier =
   | 'pressure'
   // Button-mode alternatives to the goal and drop swipes.
   | 'goal'
-  | 'drop'
-  | null;
+  | 'drop';
+
+export type PassModifier = ArmedPassModifier | null;
+
+export interface PassModifierSpec {
+  /** The throw result the next tap records; its credited role decides which side is tapped. */
+  result: ThrowResult;
+  /** True when the grid offers an Unknown chip while armed. */
+  allowsUnknownTarget: boolean;
+}
+
+export const PASS_MODIFIER_SPECS = {
+  'fifty-fifty': { result: 'drop', allowsUnknownTarget: false },
+  callahan: { result: 'callahan', allowsUnknownTarget: false },
+  stall: { result: 'stall', allowsUnknownTarget: false },
+  block: { result: 'block', allowsUnknownTarget: false },
+  pressure: { result: 'pressure', allowsUnknownTarget: false },
+  goal: { result: 'goal', allowsUnknownTarget: true },
+  drop: { result: 'drop', allowsUnknownTarget: true },
+} as const satisfies Record<ArmedPassModifier, PassModifierSpec>;
+
+/** True when the next tap names a defender, so the grid shows the side without the disc. */
+export function isDefensivePassModifier(modifier: PassModifier): boolean {
+  if (modifier == null) return false;
+  return THROW_RESULT_SPECS[PASS_MODIFIER_SPECS[modifier].result].creditedRole === 'defender';
+}
 
 // --- Core Game ---
 
@@ -22,13 +47,19 @@ export type AdvancedGameType = 'game' | 'scrimmage';
 
 export type AdvancedGameEndReason = 'time_limit' | 'weather' | 'conceded' | 'manual';
 
-export type GameStatus = 'in_progress' | 'final' | 'terminated';
+export const GAME_STATUSES = ['in_progress', 'final', 'terminated'] as const;
+
+export type GameStatus = (typeof GAME_STATUSES)[number];
 
 export type GameClockPauseReason = 'weather' | 'field' | 'admin' | 'manual';
 
-export type FlipResult = 'won' | 'lost';
+export const FLIP_RESULTS = ['won', 'lost'] as const;
 
-export type FlipChoice = 'offense' | 'defense' | 'side';
+export type FlipResult = (typeof FLIP_RESULTS)[number];
+
+export const FLIP_CHOICES = ['offense', 'defense', 'side'] as const;
+
+export type FlipChoice = (typeof FLIP_CHOICES)[number];
 
 export interface GameFlip {
   result: FlipResult;
@@ -126,6 +157,10 @@ export interface GameFormatSettings {
 
 // --- Sides & Participants ---
 
+export const SIDE_TRACKING_MODES = ['full-roster', 'anonymous'] as const;
+
+export type SideTrackingMode = (typeof SIDE_TRACKING_MODES)[number];
+
 export interface GameSide {
   id: string;
   /** Display name, e.g. `"Home"`, `"Away"`, `"White"`, `"Dark"`. */
@@ -137,7 +172,7 @@ export interface GameSide {
    * `'full-roster'`: participants are tracked individually.
    * `'anonymous'`: opponent side where player identity is not captured.
    */
-  trackingMode: 'full-roster' | 'anonymous';
+  trackingMode: SideTrackingMode;
 }
 
 export interface Participant {
@@ -322,7 +357,9 @@ export type FieldLocation =
 
 export type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 
-export type PullResult = 'inbound' | 'ob' | 'dropped' | 'roller';
+export const PULL_RESULTS = ['inbound', 'ob', 'dropped', 'roller'] as const;
+
+export type PullResult = (typeof PULL_RESULTS)[number];
 
 export interface PullAction {
   id: string;
@@ -368,13 +405,113 @@ export const THROW_TYPES = ['huck', 'backfield_reset'] as const;
 
 export type ThrowType = (typeof THROW_TYPES)[number];
 
+/**
+ * What a throw result does to play:
+ * - `'continues'`: the throwing side keeps the disc.
+ * - `'scores'`: the throwing side scores and the point ends.
+ * - `'turnover'`: the defending side gains possession.
+ * - `'defense_scores'`: the defending side intercepts in the end zone and the point ends.
+ */
+export type ThrowOutcome = 'continues' | 'scores' | 'turnover' | 'defense_scores';
+
+/** The action field that names the player credited with the result, besides the thrower. */
+export type ThrowCreditedRole = 'receiver' | 'defender';
+
+export interface ThrowResultSpec {
+  outcome: ThrowOutcome;
+  creditedRole: ThrowCreditedRole | null;
+  /** True when the defender must be a tracked participant (never unknown or untracked). */
+  requiresTrackedDefender: boolean;
+  /** Manual classifications the result supports. */
+  eligibleThrowTypes: readonly ThrowType[];
+  /** False when no throw was released (a stall). */
+  countsAsAttempt: boolean;
+}
+
+/**
+ * Single source of throw-result semantics. Adding a `ThrowResult` fails to compile until it has a
+ * spec here; predicates, analytics, correction, and import validation derive from this table.
+ */
+export const THROW_RESULT_SPECS = {
+  complete: {
+    outcome: 'continues',
+    creditedRole: 'receiver',
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: ['huck'],
+    countsAsAttempt: true,
+  },
+  goal: {
+    outcome: 'scores',
+    creditedRole: 'receiver',
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: ['huck'],
+    countsAsAttempt: true,
+  },
+  drop: {
+    outcome: 'turnover',
+    creditedRole: 'receiver',
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: ['huck', 'backfield_reset'],
+    countsAsAttempt: true,
+  },
+  throwaway: {
+    outcome: 'turnover',
+    creditedRole: null,
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: ['huck', 'backfield_reset'],
+    countsAsAttempt: true,
+  },
+  stall: {
+    outcome: 'turnover',
+    creditedRole: 'defender',
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: [],
+    countsAsAttempt: false,
+  },
+  block: {
+    outcome: 'turnover',
+    creditedRole: 'defender',
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: ['huck', 'backfield_reset'],
+    countsAsAttempt: true,
+  },
+  pressure: {
+    outcome: 'turnover',
+    creditedRole: 'defender',
+    requiresTrackedDefender: true,
+    eligibleThrowTypes: ['huck', 'backfield_reset'],
+    countsAsAttempt: true,
+  },
+  callahan: {
+    outcome: 'defense_scores',
+    creditedRole: 'defender',
+    requiresTrackedDefender: false,
+    eligibleThrowTypes: [],
+    countsAsAttempt: true,
+  },
+} as const satisfies Record<ThrowResult, ThrowResultSpec>;
+
+type ThrowResultWithOutcome<O extends ThrowOutcome> = {
+  [R in ThrowResult]: (typeof THROW_RESULT_SPECS)[R]['outcome'] extends O ? R : never;
+}[ThrowResult];
+
+/** Results that hand possession to the defense without ending the point. */
+export type TurnoverThrowResult = ThrowResultWithOutcome<'turnover'>;
+
+/** Results that end a possession by giving the disc (or the point) to the defense. */
+export type PossessionLosingThrowResult = ThrowResultWithOutcome<'turnover' | 'defense_scores'>;
+
 /** Returns the manual classifications supported by a throw result. */
 export function getEligibleThrowTypes(result: ThrowResult): readonly ThrowType[] {
-  if (result === 'complete' || result === 'goal') return ['huck'];
-  if (result === 'drop' || result === 'throwaway' || result === 'block' || result === 'pressure') {
-    return ['huck', 'backfield_reset'];
-  }
-  return [];
+  return THROW_RESULT_SPECS[result].eligibleThrowTypes;
+}
+
+/** True when the throw's defender satisfies its result's tracked-defender requirement. */
+export function hasRequiredThrowDefender(
+  throwAction: Pick<ThrowAction, 'result' | 'defender'>,
+): boolean {
+  if (!THROW_RESULT_SPECS[throwAction.result].requiresTrackedDefender) return true;
+  return throwAction.defender?.refType === 'participant';
 }
 
 export interface ThrowDetails {
@@ -408,10 +545,14 @@ export interface ThrowAction {
   recordedAt?: number;
 }
 
+export const STOPPAGE_REASONS = ['timeout', 'injury', 'manual_pause'] as const;
+
+export type StoppageReason = (typeof STOPPAGE_REASONS)[number];
+
 export interface StoppageAction {
   id: string;
   kind: 'stoppage';
-  reason: 'timeout' | 'injury' | 'manual_pause';
+  reason: StoppageReason;
   sideId?: string;
   /** For `reason: 'timeout'`, true when this was the one-per-game floater. */
   isFloater?: boolean;

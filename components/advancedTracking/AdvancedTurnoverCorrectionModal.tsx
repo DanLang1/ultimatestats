@@ -10,11 +10,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   ADVANCED_TURNOVER_EDITOR_RESULTS,
+  getAdvancedTurnoverEditorResultSpec,
   type AdvancedTurnoverCorrectionContext,
   type AdvancedTurnoverEditorResult,
   type CorrectAdvancedTurnoverInput,
 } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
-import { getEligibleThrowTypes, THROW_TYPES } from '@/lib/advancedTracking/types';
+import { THROW_TYPES } from '@/lib/advancedTracking/types';
 import type { Participant, ThrowType } from '@/lib/advancedTracking/types';
 import { reportError } from '@/lib/sentry';
 import { Fonts } from '@/theme/theme';
@@ -63,8 +64,9 @@ function getApplicableRoleId(
   receiverId: string | null,
   defenderId: string | null,
 ): string | null {
-  if (result === 'drop' || result === 'fifty-fifty') return receiverId;
-  if (result === 'block' || result === 'pressure' || result === 'stall') return defenderId;
+  const { creditedRole } = getAdvancedTurnoverEditorResultSpec(result);
+  if (creditedRole === 'receiver') return receiverId;
+  if (creditedRole === 'defender') return defenderId;
   return null;
 }
 
@@ -72,17 +74,10 @@ function canUseUntrackedRole(
   result: AdvancedTurnoverEditorResult,
   context: AdvancedTurnoverCorrectionContext,
 ): boolean {
-  if (result === 'throwaway' || result === 'pressure') return false;
-
-  if (result === 'drop' || result === 'fifty-fifty') {
-    return context.receiver.currentRef?.refType === 'untracked' || !context.receiver.isFullRoster;
-  }
-
-  if (result === 'block' || result === 'stall') {
-    return context.defender.currentRef?.refType === 'untracked' || !context.defender.isFullRoster;
-  }
-
-  return false;
+  const { creditedRole, requiresTrackedDefender } = getAdvancedTurnoverEditorResultSpec(result);
+  if (creditedRole == null || requiresTrackedDefender) return false;
+  const role = creditedRole === 'receiver' ? context.receiver : context.defender;
+  return role.currentRef?.refType === 'untracked' || !role.isFullRoster;
 }
 
 export function AdvancedTurnoverCorrectionModal({
@@ -113,9 +108,8 @@ export function AdvancedTurnoverCorrectionModal({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
-  const selectedThrowTypes = getEligibleThrowTypes(
-    selectedResult === 'fifty-fifty' ? 'drop' : selectedResult,
-  );
+  const selectedResultSpec = getAdvancedTurnoverEditorResultSpec(selectedResult);
+  const selectedThrowTypes = selectedResultSpec.eligibleThrowTypes;
   const effectiveThrowType =
     selectedThrowType != null && selectedThrowTypes.includes(selectedThrowType)
       ? selectedThrowType
@@ -132,7 +126,9 @@ export function AdvancedTurnoverCorrectionModal({
   );
   const canUseSelectedUntrackedRole = canUseUntrackedRole(selectedResult, context);
   const hasRoleConfiguration =
-    selectedResult === 'throwaway' || selectedRoleId != null || canUseSelectedUntrackedRole;
+    selectedResultSpec.creditedRole == null ||
+    selectedRoleId != null ||
+    canUseSelectedUntrackedRole;
   const resultChanged = selectedResult !== context.currentResult;
   const throwerChanged = selectedThrowerId !== context.thrower.currentParticipantId;
   const roleChanged = selectedRoleId !== currentRoleId;
@@ -163,9 +159,8 @@ export function AdvancedTurnoverCorrectionModal({
     selectedThrowerId !== context.thrower.currentParticipantId;
   const isThrowerReadOnly =
     !context.thrower.isFullRoster && context.thrower.currentRef?.refType !== 'participant';
-  const hasReceiverRole = selectedResult === 'drop' || selectedResult === 'fifty-fifty';
-  const hasDefenderRole =
-    selectedResult === 'block' || selectedResult === 'pressure' || selectedResult === 'stall';
+  const hasReceiverRole = selectedResultSpec.creditedRole === 'receiver';
+  const hasDefenderRole = selectedResultSpec.creditedRole === 'defender';
   const roleLabel = hasReceiverRole ? 'Receiver' : 'Defender';
   const selectedRoleName = hasReceiverRole ? selectedReceiverName : selectedDefenderName;
   const isRoleReadOnly = hasReceiverRole
@@ -191,14 +186,8 @@ export function AdvancedTurnoverCorrectionModal({
       actionId: context.action.id,
       result: selectedResult,
       throwerParticipantId: selectedThrowerId ?? undefined,
-      receiverParticipantId:
-        selectedResult === 'drop' || selectedResult === 'fifty-fifty'
-          ? selectedReceiverId
-          : undefined,
-      defenderParticipantId:
-        selectedResult === 'block' || selectedResult === 'pressure' || selectedResult === 'stall'
-          ? selectedDefenderId
-          : undefined,
+      receiverParticipantId: hasReceiverRole ? selectedReceiverId : undefined,
+      defenderParticipantId: hasDefenderRole ? selectedDefenderId : undefined,
       throwType: effectiveThrowType,
     };
     try {

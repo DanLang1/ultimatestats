@@ -1,44 +1,39 @@
 import { StyleSheet } from 'react-native';
 
+import { PASS_MODIFIER_TONES } from '@/components/advancedTracking/types';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { PassModifier } from '@/lib/advancedTracking/types';
+import type { ArmedPassModifier } from '@/lib/advancedTracking/types';
 import { Fonts, Palette } from '@/theme/theme';
 
 interface ModifierPromptProps {
-  modifier: NonNullable<PassModifier>;
+  modifier: ArmedPassModifier;
 }
+
+const PROMPTS: Record<ArmedPassModifier, string> = {
+  'fifty-fifty': 'Tap other player at fault',
+  goal: 'Tap who scored',
+  drop: 'Tap who dropped it',
+  callahan: 'Tap player who got the Callahan',
+  stall: 'Tap player who got the stall',
+  block: 'Tap player who got the block',
+  pressure: 'Tap player who applied pressure',
+};
 
 export const ModifierPrompt = ({ modifier }: ModifierPromptProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  let text = 'Tap other player at fault';
-  if (modifier === 'goal') {
-    text = 'Tap who scored';
-  } else if (modifier === 'drop') {
-    text = 'Tap who dropped it';
-  } else if (modifier === 'callahan') {
-    text = 'Tap player who got the Callahan';
-  } else if (modifier === 'stall') {
-    text = 'Tap player who got the stall';
-  } else if (modifier === 'block') {
-    text = 'Tap player who got the block';
-  } else if (modifier === 'pressure') {
-    text = 'Tap player who applied pressure';
-  }
-
   const color = getModifierPromptColor(modifier, palette);
 
-  return <ThemedText style={[styles.label, { color }]}>{text}</ThemedText>;
+  return <ThemedText style={[styles.label, { color }]}>{PROMPTS[modifier]}</ThemedText>;
 };
 
-function getModifierPromptColor(modifier: NonNullable<PassModifier>, palette: Palette): string {
-  if (modifier === 'fifty-fifty' || modifier === 'drop') return palette.danger;
-  if (modifier === 'goal') return palette.success;
-  return palette.textMuted;
+function getModifierPromptColor(modifier: ArmedPassModifier, palette: Palette): string {
+  const tone = PASS_MODIFIER_TONES[modifier];
+  return tone === 'neutral' ? palette.textMuted : palette[tone];
 }
 
 function createStyles(sizeClass: SizeClass) {

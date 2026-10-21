@@ -16,6 +16,7 @@ import {
 import {
   AdvancedTrackedGame,
   GameClockPause,
+  isDefensivePassModifier,
   PassModifier,
   PlayerRef,
   PointPossession,
@@ -60,14 +61,6 @@ export interface TrackerSessionView {
   footerMode: TrackerFooterMode | null;
 }
 
-/** Modifiers whose next tap names a defender, so the grid shows the side without the disc. */
-const DEFENSIVE_MODIFIERS: ReadonlySet<PassModifier> = new Set([
-  'block',
-  'callahan',
-  'stall',
-  'pressure',
-]);
-
 export function getTrackerSessionView(
   game: AdvancedTrackedGame,
   { passModifier }: { passModifier: PassModifier },
@@ -93,7 +86,7 @@ export function getTrackerSessionView(
 
   let displaySideId = game.focusSideId;
   if (tracksBothSides) {
-    displaySideId = DEFENSIVE_MODIFIERS.has(passModifier)
+    displaySideId = isDefensivePassModifier(passModifier)
       ? getOtherSideId(game, activeSideId)
       : activeSideId;
   }

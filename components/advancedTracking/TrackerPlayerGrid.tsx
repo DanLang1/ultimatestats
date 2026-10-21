@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getTrackerChipWidth } from '@/lib/advancedTracking/trackerLayoutUtils';
-import { Participant, PlayerRef } from '@/lib/advancedTracking/types';
+import { PASS_MODIFIER_SPECS, Participant, PlayerRef } from '@/lib/advancedTracking/types';
 
 import { TrackerLineActionTile } from './TrackerLineActionTile';
 import { TrackerPlayerChip } from './TrackerPlayerChip';
@@ -87,7 +87,7 @@ export const TrackerPlayerGrid = ({
   const gap = scaleBySizeClass(isLandscape ? 10 : 12, sizeClass);
 
   const canTargetUnknown =
-    passModifier === null || passModifier === 'goal' || passModifier === 'drop';
+    passModifier === null || PASS_MODIFIER_SPECS[passModifier].allowsUnknownTarget;
   const contentItems: TrackerGridItem[] = [
     ...activeParticipants,
     ...appendIf(canTargetUnknown, 'unknown'),

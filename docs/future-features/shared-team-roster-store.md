@@ -72,8 +72,7 @@ Keep these in `store/basic`:
   opponent/game setup model?
 - Should `savedTeams` remain AsyncStorage/Zustand-backed, or move toward the same
   future SQLite direction as saved games?
-- Mid-game roster changes now flow one way into a live advanced game (see
-  [advanced-tracking data model](../features/advanced-tracking/data-model.md)):
+- Mid-game roster changes now flow one way into a live advanced game:
   additions/reactivations append participants, while deactivation and deletion are blocked after
   recorded actions. When this store is extracted, that sync subscription and the
   `registerActiveAdvancedGameGetter` guard seam move with it and can become a

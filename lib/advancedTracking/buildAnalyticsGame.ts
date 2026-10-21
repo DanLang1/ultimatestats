@@ -1,3 +1,5 @@
+import { assertNever } from '@/lib/utils';
+
 import { recordAdvancedGameDiagnostic } from './advancedGameDiagnostics';
 import type {
   AnalyticsAction,
@@ -12,26 +14,16 @@ import type {
   PointState,
 } from './analyticsTypes';
 import { getSideTrackingModes } from './trackingModeUtils';
-import type {
-  AdvancedTrackedGame,
-  GameStatus,
-  PlayerRef,
-  PointPossession,
-  PossessionAction,
-  TrackedPoint,
+import { isContinuingThrow, isPossessionLosingThrow } from './trackingUtils';
+import {
+  THROW_RESULT_SPECS,
+  type AdvancedTrackedGame,
+  type GameStatus,
+  type PlayerRef,
+  type PointPossession,
+  type PossessionAction,
+  type TrackedPoint,
 } from './types';
-
-const TURNOVER_RESULTS: readonly AnalyticsTurnoverType[] = [
-  'drop',
-  'throwaway',
-  'stall',
-  'block',
-  'pressure',
-  'callahan',
-];
-function isTurnoverResult(r: string): r is AnalyticsTurnoverType {
-  return (TURNOVER_RESULTS as readonly string[]).includes(r);
-}
 export const UNKNOWN_PARTICIPANT_ID = 'UNKNOWN_PARTICIPANT';
 
 // ── Small utilities ───────────────────────────────────────────────────────────
@@ -67,7 +59,7 @@ function compileAnalyticsAction(
     case 'stoppage':
       return { ...base, kind: 'stoppage' };
     default:
-      throw new Error('Unsupported analytics action');
+      return assertNever(action, 'Unsupported analytics action');
   }
 }
 
@@ -182,28 +174,27 @@ function emitAttributions(
   }
 
   if (action.kind === 'throw') {
+    const { result } = action;
     const split = action.splitAttribution ?? false;
+    if (THROW_RESULT_SPECS[result].countsAsAttempt) add('throw_attempt', actorId);
 
-    switch (action.result) {
+    switch (result) {
       case 'complete':
-        add('throw_attempt', actorId);
         add('completion', actorId);
         add('receiving_touch', receiverId);
         break;
 
       case 'goal':
-        add('throw_attempt', actorId);
         add('completion', actorId);
         add('assist', actorId);
         add('goal', receiverId);
         add('receiving_touch', receiverId);
-        if (previousAction?.kind === 'throw' && previousAction.result === 'complete') {
+        if (previousAction?.kind === 'throw' && isContinuingThrow(previousAction.result)) {
           add('hockey_assist', previousAction.actorId);
         }
         break;
 
       case 'drop':
-        add('throw_attempt', actorId);
         if (split) {
           add('throwaway', actorId, 0.5, true);
           add('drop', receiverId, 0.5, true);
@@ -213,7 +204,6 @@ function emitAttributions(
         break;
 
       case 'throwaway':
-        add('throw_attempt', actorId);
         // splitAttribution requires a receiver counterpart — throwaway has no toPlayer,
         // so split is ignored and full weight always goes to the thrower.
         add('throwaway', actorId);
@@ -225,24 +215,24 @@ function emitAttributions(
         break;
 
       case 'block':
-        add('throw_attempt', actorId);
         add('throwaway', actorId);
         add('block', defenderId);
         break;
 
       case 'pressure':
-        add('throw_attempt', actorId);
         add('throwaway', actorId);
         add('pressure', defenderId);
         break;
 
       case 'callahan':
-        add('throw_attempt', actorId);
         add('throwaway', actorId);
         add('callahan', defenderId ?? receiverId);
         add('block', defenderId ?? receiverId);
         add('goal', defenderId ?? receiverId);
         break;
+
+      default:
+        assertNever(result, 'Unsupported throw result');
     }
   }
 }
@@ -386,8 +376,9 @@ function deriveScoringSideId(point: TrackedPoint, ctx: GameBuildContext): string
   const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
   const lastAction = getLastNonStoppageAction(ctx.gameId, point.id, lastPoss.id, lastPoss.actions);
   if (lastAction.kind !== 'throw') return null;
-  if (lastAction.result === 'goal') return lastPoss.sideId;
-  if (lastAction.result === 'callahan') return otherSide(lastPoss.sideId, ctx.sideIds);
+  const { outcome } = THROW_RESULT_SPECS[lastAction.result];
+  if (outcome === 'scores') return lastPoss.sideId;
+  if (outcome === 'defense_scores') return otherSide(lastPoss.sideId, ctx.sideIds);
   return null;
 }
 
@@ -506,9 +497,9 @@ function compilePossessionWithActions(
   let possResult: AnalyticsPossessionResult | null = null;
   let turnoverType: AnalyticsTurnoverType | undefined;
   if (possLastAction.kind === 'throw') {
-    if (possLastAction.result === 'goal') {
+    if (THROW_RESULT_SPECS[possLastAction.result].outcome === 'scores') {
       possResult = 'scored';
-    } else if (isTurnoverResult(possLastAction.result)) {
+    } else if (isPossessionLosingThrow(possLastAction.result)) {
       possResult = 'turned_over';
       turnoverType = possLastAction.result;
     }

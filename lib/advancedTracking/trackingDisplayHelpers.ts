@@ -5,7 +5,11 @@ import {
   getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
   getOtherSideId,
   hasPointEnded,
+  isDefenseScoringThrow,
+  isPointEndingThrow,
+  isPossessionLosingThrow,
   isPossessionOver,
+  isTurnoverThrow,
 } from './trackingUtils';
 import {
   AdvancedTrackedGame,
@@ -16,7 +20,9 @@ import {
   PointPossession,
   PointSub,
   PossessionAction,
+  PossessionLosingThrowResult,
   StoppageAction,
+  THROW_RESULT_SPECS,
   ThrowDetails,
   ThrowResult,
   getEligibleThrowTypes,
@@ -68,9 +74,9 @@ export function getGoalInfo(
 
   if (!lastAction || lastAction.kind !== 'throw') return null;
   const { result, thrower, toPlayer } = lastAction;
-  if (result !== 'goal' && result !== 'callahan') return null;
+  if (!isPointEndingThrow(result)) return null;
 
-  const isCallahan = result === 'callahan';
+  const isCallahan = isDefenseScoringThrow(result);
   const isFocusGoal = (lastPossession.sideId === focusSideId) !== isCallahan;
 
   return {
@@ -508,7 +514,7 @@ export function getLastTurnoverEvent(
     if (action.kind !== 'throw') continue;
 
     const { result, thrower, toPlayer, defender, splitAttribution } = action;
-    if (result === 'complete' || result === 'goal') return null;
+    if (!isPossessionLosingThrow(result)) return null;
 
     const hasDefender = defender != null && defender.refType !== 'untracked';
 
@@ -519,7 +525,6 @@ export function getLastTurnoverEvent(
       splitAttribution === true,
       hasDefender,
     );
-    if (!label) return null;
 
     const responsibleName = getTurnoverResponsibleName({
       result,
@@ -546,42 +551,44 @@ export function getLastTurnoverEvent(
   return null;
 }
 
+/** Labels when the focus side lost the disc. */
+const FOCUS_TURNOVER_LABELS: Record<PossessionLosingThrowResult, string> = {
+  drop: 'DROP',
+  throwaway: 'THROWAWAY',
+  stall: 'STALLED',
+  block: 'OPP D',
+  pressure: 'OPP PRESSURE',
+  callahan: 'CALLAHAN',
+};
+
+/** Labels for an opponent turnover with the specific result shown. */
+const SPECIFIC_TURNOVER_LABELS: Record<PossessionLosingThrowResult, string> = {
+  drop: 'DROP',
+  throwaway: 'THROWAWAY',
+  stall: 'STALL',
+  block: 'BLOCK',
+  pressure: 'PRESSURE',
+  callahan: 'CALLAHAN',
+};
+
 function getLastTurnoverLabel(
-  result: ThrowResult,
+  result: PossessionLosingThrowResult,
   isFocusPossession: boolean,
   showSpecificResult: boolean,
   isSplitAttribution: boolean,
   hasDefender: boolean,
-): string | undefined {
-  if (isFocusPossession) {
-    if (result === 'drop') return isSplitAttribution ? '50/50' : 'DROP';
-    return (
-      {
-        throwaway: 'THROWAWAY',
-        stall: 'STALLED',
-        block: 'OPP D',
-        pressure: 'OPP PRESSURE',
-        callahan: 'CALLAHAN',
-      } as Partial<Record<ThrowResult, string>>
-    )[result];
+): string {
+  if (result === 'drop' && isSplitAttribution && (isFocusPossession || showSpecificResult)) {
+    return '50/50';
   }
+  if (isFocusPossession) return FOCUS_TURNOVER_LABELS[result];
   if (showSpecificResult) {
-    if (result === 'drop') return isSplitAttribution ? '50/50' : 'DROP';
-    if (result === 'stall') return hasDefender ? 'STALL' : 'STALLED';
-    return (
-      {
-        throwaway: 'THROWAWAY',
-        block: 'BLOCK',
-        pressure: 'PRESSURE',
-        callahan: 'CALLAHAN',
-      } as Partial<Record<ThrowResult, string>>
-    )[result];
+    if (result === 'stall' && !hasDefender) return 'STALLED';
+    return SPECIFIC_TURNOVER_LABELS[result];
   }
-  if (result === 'callahan') return 'CALLAHAN';
-  if (result === 'stall') return hasDefender ? 'STALL' : 'OPP TURN';
-  if (result === 'block') return hasDefender ? 'BLOCK' : 'OPP TURN';
-  if (result === 'pressure') return hasDefender ? 'PRESSURE' : 'OPP TURN';
-  return 'OPP TURN';
+  if (isDefenseScoringThrow(result)) return SPECIFIC_TURNOVER_LABELS[result];
+  const isDefenderCredited = THROW_RESULT_SPECS[result].creditedRole === 'defender';
+  return isDefenderCredited && hasDefender ? SPECIFIC_TURNOVER_LABELS[result] : 'OPP TURN';
 }
 
 function getTurnoverResponsibleName({
@@ -594,7 +601,7 @@ function getTurnoverResponsibleName({
   thrower,
   participants,
 }: {
-  result: ThrowResult;
+  result: PossessionLosingThrowResult;
   isFocusPossession: boolean;
   showSpecificResult: boolean;
   hasDefender: boolean;
@@ -603,12 +610,9 @@ function getTurnoverResponsibleName({
   thrower: PlayerRef | undefined;
   participants: Participant[];
 }): string | null {
-  if (result === 'drop') return getRefName(toPlayer, participants);
-  if (
-    (result === 'block' || result === 'stall' || result === 'pressure') &&
-    !isFocusPossession &&
-    hasDefender
-  ) {
+  const { creditedRole } = THROW_RESULT_SPECS[result];
+  if (creditedRole === 'receiver') return getRefName(toPlayer, participants);
+  if (isTurnoverThrow(result) && creditedRole === 'defender' && !isFocusPossession && hasDefender) {
     return getRefName(defender, participants);
   }
   if (result === 'stall' && !isFocusPossession && showSpecificResult) {

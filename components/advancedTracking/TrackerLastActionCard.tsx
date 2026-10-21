@@ -11,6 +11,7 @@ import { ModifierPrompt } from '@/components/advancedTracking/bottomCard/Modifie
 import { PassChainHeader } from '@/components/advancedTracking/bottomCard/PassChainHeader';
 import { ThrowTypePrompt } from '@/components/advancedTracking/bottomCard/ThrowTypePrompt';
 import { TurnoverHeader } from '@/components/advancedTracking/bottomCard/TurnoverHeader';
+import { PASS_MODIFIER_TONES } from '@/components/advancedTracking/types';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -256,10 +257,9 @@ function getTrackerLastActionCardModel({
   const undoRareButtonMode = getUndoRareButtonMode(canUseRareMenu, canUndo, onUndo, onMorePress);
 
   if (passModifier) {
-    const isDangerModifier = passModifier === 'fifty-fifty' || passModifier === 'drop';
-    let accentColor = palette.neutral;
-    if (isDangerModifier) accentColor = palette.danger;
-    else if (passModifier === 'goal') accentColor = palette.success;
+    const tone = PASS_MODIFIER_TONES[passModifier];
+    const isDangerModifier = tone === 'danger';
+    const accentColor = palette[tone];
     return {
       kind: 'modifier',
       accentColor,

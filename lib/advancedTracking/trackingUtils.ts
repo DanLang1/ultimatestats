@@ -16,9 +16,12 @@ import {
   PointPossession,
   PointSub,
   PossessionAction,
+  PossessionLosingThrowResult,
   PullAction,
+  THROW_RESULT_SPECS,
   ThrowResult,
   TrackedPoint,
+  TurnoverThrowResult,
 } from './types';
 
 export interface AdvancedHalftimeEarlyUndoEntry {
@@ -120,18 +123,38 @@ export function getLineReceivingSideId(
 
 // --- Classification ---
 
-export function isPointEndingThrow(result: ThrowResult): boolean {
-  return result === 'goal' || result === 'callahan';
+/** True when the throwing side keeps the disc (a completed pass that does not score). */
+export function isContinuingThrow(result: ThrowResult): boolean {
+  return THROW_RESULT_SPECS[result].outcome === 'continues';
 }
 
-export function isTurnoverThrow(result: ThrowResult): boolean {
-  return (
-    result === 'drop' ||
-    result === 'throwaway' ||
-    result === 'stall' ||
-    result === 'block' ||
-    result === 'pressure'
-  );
+/** True when the throw reached its receiver: a completion or a goal. */
+export function isCompletedThrow(result: ThrowResult): boolean {
+  const { outcome } = THROW_RESULT_SPECS[result];
+  return outcome === 'continues' || outcome === 'scores';
+}
+
+/** True when the defense intercepts and scores on the throw (a Callahan). */
+export function isDefenseScoringThrow(result: ThrowResult): boolean {
+  return THROW_RESULT_SPECS[result].outcome === 'defense_scores';
+}
+
+export function isPointEndingThrow(result: ThrowResult): boolean {
+  const { outcome } = THROW_RESULT_SPECS[result];
+  return outcome === 'scores' || outcome === 'defense_scores';
+}
+
+/** True for results that hand the disc to the defense without ending the point. */
+export function isTurnoverThrow(result: ThrowResult): result is TurnoverThrowResult {
+  return THROW_RESULT_SPECS[result].outcome === 'turnover';
+}
+
+/** True for results that end the possession in the defense's favor, including a Callahan. */
+export function isPossessionLosingThrow(
+  result: ThrowResult,
+): result is PossessionLosingThrowResult {
+  const { outcome } = THROW_RESULT_SPECS[result];
+  return outcome === 'turnover' || outcome === 'defense_scores';
 }
 
 export function didPullTurnOver(result: PullAction['result']): boolean {
@@ -177,14 +200,9 @@ export function getPointScoringSideId(
     return null;
   }
 
-  if (lastAction.result === 'goal') {
-    return possession.sideId;
-  }
-
-  if (lastAction.result === 'callahan') {
-    return getOtherSideId(game, possession.sideId);
-  }
-
+  const { outcome } = THROW_RESULT_SPECS[lastAction.result];
+  if (outcome === 'scores') return possession.sideId;
+  if (outcome === 'defense_scores') return getOtherSideId(game, possession.sideId);
   return null;
 }
 

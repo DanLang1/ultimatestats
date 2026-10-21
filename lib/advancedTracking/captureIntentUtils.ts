@@ -1,3 +1,5 @@
+import { assertNever } from '@/lib/utils';
+
 import { getSafeDiscHolderRef } from './trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import {
@@ -212,6 +214,6 @@ function buildThrowPlan(
         },
       };
     default:
-      throw new Error(`Unsupported capture intent ${(intent as { kind: string }).kind}.`);
+      return assertNever(intent, 'Unsupported capture intent');
   }
 }

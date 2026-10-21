@@ -206,7 +206,7 @@ describe('advancedTrackingStore — edge cases', () => {
           kind: 'pressure',
           defender: untracked,
         }),
-      ).toThrow('Pressure requires a tracked defender.');
+      ).toThrow('Throw result "pressure" requires a tracked defender.');
     });
 
     it('records a drop with split attribution', () => {

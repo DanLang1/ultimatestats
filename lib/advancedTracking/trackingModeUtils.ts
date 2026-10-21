@@ -1,5 +1,5 @@
 import type { AnalyticsGame } from './analyticsTypes';
-import type { AdvancedTrackedGame, GameSide } from './types';
+import type { AdvancedTrackedGame, GameSide, SideTrackingMode } from './types';
 
 export function isSideFullyTracked(
   game: Pick<AdvancedTrackedGame, 'sides'>,
@@ -29,6 +29,6 @@ export function areBothAnalyticsSidesFullyTracked(
   );
 }
 
-export function getSideTrackingModes(sides: GameSide[]): Record<string, GameSide['trackingMode']> {
+export function getSideTrackingModes(sides: GameSide[]): Record<string, SideTrackingMode> {
   return Object.fromEntries(sides.map((side) => [side.id, side.trackingMode]));
 }

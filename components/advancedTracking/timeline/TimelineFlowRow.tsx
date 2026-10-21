@@ -17,6 +17,7 @@ import {
   getActionNodeColorKey,
   getHeaderNodeColorKey,
 } from '@/lib/advancedTracking/advancedTimelineUtils';
+import { hasTerminalCorrectableTouch } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import { Fonts, Palette } from '@/theme/theme';
 
 const HEADER_NODE_CENTER_Y = 16;
@@ -148,10 +149,7 @@ function renderRowContent(item: FlowItem, context: TimelineFlowRenderContext): R
     onEditTouch != null;
   const preselectTouch =
     item.action.kind === 'disc_pickup' ||
-    (item.action.kind === 'throw' &&
-      (item.action.throwResult === 'goal' ||
-        item.action.throwResult === 'drop' ||
-        item.action.throwResult === 'callahan')) ||
+    (item.action.kind === 'throw' && hasTerminalCorrectableTouch(item.action.throwResult)) ||
     item.action.kind === 'pull';
 
   return (

@@ -1,4 +1,5 @@
 import type { AnalyticsGame } from './analyticsTypes';
+import { isCompletedThrow } from './trackingUtils';
 
 export type AdvancedChemistryMode = 'scoring' | 'passing';
 
@@ -106,7 +107,7 @@ export function computeAdvancedPassConnections(
   for (const action of game.actions) {
     if (action.kind !== 'throw') continue;
     if (sideId != null && action.sideId !== sideId) continue;
-    if (action.result !== 'complete' && action.result !== 'goal') continue;
+    if (!isCompletedThrow(action.result)) continue;
     if (!action.actorId || !action.receiverId) continue;
     if (!participantNames.has(action.actorId) || !participantNames.has(action.receiverId)) continue;
     if (action.actorId === action.receiverId) continue;

@@ -1,4 +1,5 @@
 import type { GenderRatio } from '@/lib/genderRatioUtils';
+import { assertNever } from '@/lib/utils';
 
 import type {
   AnalyticsAction,
@@ -12,7 +13,7 @@ import type {
   ThrowAnalyticsAction,
 } from './analyticsTypes';
 import { buildAnalyticsGame, UNKNOWN_PARTICIPANT_ID } from './buildAnalyticsGame';
-import { getEffectiveLineParticipantIds } from './trackingUtils';
+import { getEffectiveLineParticipantIds, isContinuingThrow } from './trackingUtils';
 import type {
   AdvancedTrackedGame,
   BetweenPointTransition,
@@ -20,6 +21,7 @@ import type {
   PointSub,
   PossessionAction,
   PullResult,
+  StoppageReason,
   ThrowResult,
   ThrowType,
   TrackedPoint,
@@ -95,7 +97,7 @@ export interface ThrowDisplayAction extends AdvancedTimelineActionBase {
 
 export interface StoppageDisplayAction extends AdvancedTimelineActionBase {
   kind: 'stoppage';
-  reason: 'timeout' | 'injury' | 'manual_pause';
+  reason: StoppageReason;
   isFloater?: boolean;
   resumed: boolean;
 }
@@ -184,7 +186,7 @@ function getThrowTone(
     case 'callahan':
       return scoringSideId === focusSideId ? 'success' : 'danger';
     default:
-      throw new Error('Unsupported throw result');
+      return assertNever(throwResult, 'Unsupported throw result');
   }
 }
 
@@ -254,12 +256,15 @@ function buildThrowLabel(
         primaryLabel: defenderName ? `${defenderName} · Pressure` : 'Pressure',
       };
 
-    default: {
+    case 'callahan': {
       const callahanScorer = defenderName ?? receiverName;
       return {
         primaryLabel: callahanScorer ? `${callahanScorer} · Callahan` : 'Callahan',
       };
     }
+
+    default:
+      return assertNever(throwResult, 'Unsupported throw result');
   }
 }
 
@@ -617,7 +622,7 @@ export function getPointStateLabel(state: PointState): string {
     case 'terminated':
       return 'Terminated';
     default:
-      throw new Error('Unsupported point state');
+      return assertNever(state, 'Unsupported point state');
   }
 }
 
@@ -638,7 +643,7 @@ export function getTransitionLabel(transition: BetweenPointTransition | GameTran
     case 'hard_cap':
       return 'Hard Cap';
     default:
-      throw new Error('Unsupported transition');
+      return assertNever(transition, 'Unsupported transition');
   }
 }
 
@@ -663,7 +668,7 @@ export type FlowItem =
     };
 
 export function isCompleteThrow(action: AdvancedTimelineAction): action is ThrowDisplayAction {
-  return action.kind === 'throw' && action.throwResult === 'complete';
+  return action.kind === 'throw' && isContinuingThrow(action.throwResult);
 }
 
 export function appendActionFlowItems(
@@ -766,6 +771,6 @@ export function getTransitionIcon(transition: BetweenPointTransition | GameTrans
     case 'administrative':
       return 'clipboard-text-outline';
     default:
-      throw new Error('Unsupported transition');
+      return assertNever(transition, 'Unsupported transition');
   }
 }

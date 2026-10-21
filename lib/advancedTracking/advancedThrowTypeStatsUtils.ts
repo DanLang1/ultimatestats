@@ -1,4 +1,5 @@
 import type { AnalyticsGame, ThrowAnalyticsAction } from './analyticsTypes';
+import { isCompletedThrow, isTurnoverThrow } from './trackingUtils';
 import { getEligibleThrowTypes, type ThrowType } from './types';
 
 export interface AdvancedThrowTypeStats {
@@ -65,10 +66,6 @@ function isClassifiedThrow(action: ThrowAnalyticsAction, type: ThrowType): boole
   return action.details?.type === type && getEligibleThrowTypes(action.result).includes(type);
 }
 
-function isTurnoverResult(result: ThrowAnalyticsAction['result']) {
-  return result === 'drop' || result === 'throwaway' || result === 'block' || result === 'pressure';
-}
-
 interface ClassifiedThrow {
   isHuck: boolean;
   isReset: boolean;
@@ -89,8 +86,8 @@ function applyClassifiedThrow(
   const { isHuck, isReset } = classification;
   if (isHuck) {
     stats.huckAttempts += 1;
-    if (action.result === 'complete' || action.result === 'goal') stats.huckCompletions += 1;
-    if (isTurnoverResult(action.result)) {
+    if (isCompletedThrow(action.result)) stats.huckCompletions += 1;
+    if (isTurnoverThrow(action.result)) {
       stats.huckIncompletions += 1;
       stats.huckTurnovers += 1;
     }
@@ -165,7 +162,7 @@ export function computeAdvancedPlayerThrowTypeStats(
       applyClassifiedThrow(get(thrower), action, classification);
     }
 
-    if (action.receiverId != null && (result === 'complete' || result === 'goal')) {
+    if (action.receiverId != null && isCompletedThrow(result)) {
       if (isHuck) get(action.receiverId).hucksCaught += 1;
     }
     if (action.receiverId != null && result === 'drop') {

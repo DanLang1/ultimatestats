@@ -10,9 +10,9 @@
 # connected to Metro.
 #
 # Usage:
-#   npm run maestro:parallel                     # 3 shards, all flows
+#   npm run maestro:parallel                     # 2 shards, all flows
 #   npm run maestro:parallel -- --include-tags basic
-#   MAESTRO_SHARDS=2 npm run maestro:parallel
+#   MAESTRO_SHARDS=3 npm run maestro:parallel
 #   bash scripts/maestro-parallel.sh --dry-run   # print the command only
 #
 set -euo pipefail
@@ -20,7 +20,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-SHARDS="${MAESTRO_SHARDS:-3}"
+SHARDS="${MAESTRO_SHARDS:-2}"
 DEVICE_MODEL="${MAESTRO_DEVICE_MODEL:-iPhone 17 Pro}"
 
 DRY_RUN=0

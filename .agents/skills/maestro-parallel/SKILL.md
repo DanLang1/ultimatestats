@@ -7,7 +7,7 @@ description: Run the U-Stat Maestro suite sharded across several iOS simulators 
 
 `npm run maestro:parallel` runs `scripts/maestro-parallel.sh`, which passes `--shard-split N` to
 Maestro across the first N booted simulators named exactly `MAESTRO_DEVICE_MODEL` (default
-`iPhone 17 Pro`, `MAESTRO_SHARDS` default 3). Extra arguments go to `maestro test`, and
+`iPhone 17 Pro`, `MAESTRO_SHARDS` default 2). Extra arguments go to `maestro test`, and
 `--dry-run` prints the resolved command. Read the **Driving Simulators Directly** section of
 `docs/testing.md` for install, dev-launcher, and port details.
 
@@ -34,8 +34,22 @@ driver port 7001. Never start a run while another Maestro process is active (`pg
 Run the suite in the background and record the wall time. Results print per shard; artifacts land
 in the newest `~/.maestro/tests/<timestamp>/` with `screenshot-shard-<n>-❌-…` failure images.
 
-Reference (2026-10-14, 70 flows): one simulator took 33m40s; three iOS 26.3 shards took 16m48s
-with 4 failures that all passed when rerun alone. Expect roughly 2x, not 3x, and some load flakes.
+### Benchmarks
+
+Full suite, iPhone 17 Pro on iOS 26.3, Maestro 2.5.1, on an Apple M5 (10 cores, 24 GB) with Metro
+running. "Flakes" failed in the run but passed when rerun alone; each rerun costs about 20–60s.
+
+| Date       | Shards | Flows | Wall time | Speedup | Flakes |
+| ---------- | ------ | ----- | --------- | ------- | ------ |
+| 2026-10-14 | 1      | 70    | 33m40s    | 1.0x    | —      |
+| 2026-10-19 | 2      | 70    | 21m14s    | 1.6x    | 2      |
+| 2026-10-14 | 3      | 70    | 16m48s    | 2.0x    | 4      |
+| 2026-10-19 | 3      | 70    | 17m28s    | 1.9x    | 5      |
+
+Each added shard returns less: 2 shards run at about 80% per-device efficiency, 3 at about 65%,
+and flakes grow with load. Three shards still finish about 4 minutes sooner, or about 2 minutes
+after rerunning flakes. Add a row whenever you run a full suite at a new shard count, hardware, or
+suite size, and keep the script's `MAESTRO_SHARDS` default on the best trade-off in this table.
 
 ## Triage
 

@@ -2,6 +2,13 @@ import { withoutAdvancedPrivateNotes } from '@/lib/advancedTracking/gameNoteUtil
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
+  FLIP_CHOICES,
+  FLIP_RESULTS,
+  GAME_STATUSES,
+  PULL_RESULTS,
+  SIDE_TRACKING_MODES,
+  STOPPAGE_REASONS,
+  THROW_RESULT_SPECS,
   THROW_RESULTS,
   THROW_TYPES,
   type AdvancedTrackedGame,
@@ -9,8 +16,8 @@ import {
   type PlayerRef,
   type PossessionAction,
   type ThrowResult,
-  type ThrowType,
   getEligibleThrowTypes,
+  hasRequiredThrowDefender,
 } from '@/lib/advancedTracking/types';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
@@ -26,8 +33,6 @@ const MAX_ADVANCED_PARTICIPANTS = 100;
 const MAX_ROSTER_SIZE = 50;
 const MAX_STRING_LENGTH = 200;
 const MAX_BULK_GAMES = 10;
-const VALID_THROW_RESULTS = new Set<string>(THROW_RESULTS);
-const VALID_THROW_TYPES = new Set<string>(THROW_TYPES);
 
 export type InvalidSharePayloadReason = 'malformed' | 'exceeds-limit' | 'newer-version';
 
@@ -46,12 +51,8 @@ function isString(val: unknown): val is string {
   return typeof val === 'string';
 }
 
-function isThrowResult(val: unknown): val is ThrowResult {
-  return isString(val) && VALID_THROW_RESULTS.has(val);
-}
-
-function isThrowType(val: unknown): val is ThrowType {
-  return isString(val) && VALID_THROW_TYPES.has(val);
+function isOneOf<T extends string>(values: readonly T[], val: unknown): val is T {
+  return (values as readonly unknown[]).includes(val);
 }
 
 function isNumber(val: unknown): val is number {
@@ -149,7 +150,7 @@ function validateFieldLocation(location: unknown): asserts location is FieldLoca
   throw new InvalidSharePayloadError('Invalid advanced game: invalid field location type');
 }
 
-function validateOptionalPlayerRef(ref: unknown) {
+function validateOptionalPlayerRef(ref: unknown): asserts ref is PlayerRef | undefined {
   if (ref !== undefined) {
     validatePlayerRef(ref);
   }
@@ -163,7 +164,7 @@ function validateOptionalFieldLocation(location: unknown) {
 
 function validateOptionalThrowDetails(details: unknown, result: ThrowResult) {
   if (details === undefined) return;
-  if (!isRecord(details) || !isThrowType(details.type)) {
+  if (!isRecord(details) || !isOneOf(THROW_TYPES, details.type)) {
     throw new InvalidSharePayloadError('Invalid advanced game: invalid throw details');
   }
   const eligibleTypes = getEligibleThrowTypes(result);
@@ -198,12 +199,7 @@ function validateAdvancedAction(
     validateOptionalPlayerRef(action.receiver);
     validateOptionalFieldLocation(action.origin);
     validateOptionalFieldLocation(action.landing);
-    if (
-      action.result !== 'inbound' &&
-      action.result !== 'ob' &&
-      action.result !== 'dropped' &&
-      action.result !== 'roller'
-    ) {
+    if (!isOneOf(PULL_RESULTS, action.result)) {
       throw new InvalidSharePayloadError('Invalid advanced game: invalid pull result');
     }
     return;
@@ -227,8 +223,13 @@ function validateAdvancedAction(
     validateOptionalPlayerRef(action.defender);
     validateOptionalFieldLocation(action.origin);
     validateOptionalFieldLocation(action.target);
-    if (!isThrowResult(action.result)) {
+    if (!isOneOf(THROW_RESULTS, action.result)) {
       throw new InvalidSharePayloadError('Invalid advanced game: invalid throw result');
+    }
+    if (!hasRequiredThrowDefender({ result: action.result, defender: action.defender })) {
+      throw new InvalidSharePayloadError(
+        'Invalid advanced game: throw result requires a tracked defender',
+      );
     }
     if (action.details !== undefined && !fullRosterSideIds.has(action.sideId)) {
       throw new InvalidSharePayloadError(
@@ -240,11 +241,7 @@ function validateAdvancedAction(
   }
 
   if (action.kind === 'stoppage') {
-    if (
-      action.reason !== 'timeout' &&
-      action.reason !== 'injury' &&
-      action.reason !== 'manual_pause'
-    ) {
+    if (!isOneOf(STOPPAGE_REASONS, action.reason)) {
       throw new InvalidSharePayloadError('Invalid advanced game: invalid stoppage reason');
     }
     if (action.sideId !== undefined && !isString(action.sideId)) {
@@ -278,22 +275,17 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   if (data.importedAt !== undefined && !isNumber(data.importedAt)) {
     throw new InvalidSharePayloadError('Invalid advanced game: invalid importedAt');
   }
-  if (data.status !== 'in_progress' && data.status !== 'final' && data.status !== 'terminated') {
+  if (!isOneOf(GAME_STATUSES, data.status)) {
     throw new InvalidSharePayloadError('Invalid advanced game: invalid status');
   }
   if (!isString(data.focusSideId) || !isString(data.initialReceivingSideId)) {
     throw new InvalidSharePayloadError('Invalid advanced game: missing side ids');
   }
   if (data.flip !== undefined) {
-    if (!isRecord(data.flip) || (data.flip.result !== 'won' && data.flip.result !== 'lost')) {
+    if (!isRecord(data.flip) || !isOneOf(FLIP_RESULTS, data.flip.result)) {
       throw new InvalidSharePayloadError('Invalid advanced game: invalid flip result');
     }
-    if (
-      data.flip.choice !== undefined &&
-      data.flip.choice !== 'offense' &&
-      data.flip.choice !== 'defense' &&
-      data.flip.choice !== 'side'
-    ) {
+    if (data.flip.choice !== undefined && !isOneOf(FLIP_CHOICES, data.flip.choice)) {
       throw new InvalidSharePayloadError('Invalid advanced game: invalid flip choice');
     }
     if (data.flip.result === 'lost' && data.flip.choice !== undefined) {
@@ -364,7 +356,7 @@ function validateAdvancedSide(side: unknown, fullRosterSideIds: Set<string>): vo
   if (!isRecord(side) || !isString(side.id) || !isString(side.label)) {
     throw new InvalidSharePayloadError('Invalid advanced game: invalid side');
   }
-  if (side.trackingMode !== 'full-roster' && side.trackingMode !== 'anonymous') {
+  if (!isOneOf(SIDE_TRACKING_MODES, side.trackingMode)) {
     throw new InvalidSharePayloadError('Invalid advanced game: invalid tracking mode');
   }
   if (side.trackingMode === 'full-roster') fullRosterSideIds.add(side.id);
@@ -442,7 +434,9 @@ function validateAdvancedPoint(
       const outcomeRecordedAt = isRecord(outcomeAction) ? outcomeAction.recordedAt : undefined;
       const outcomeIsResolved =
         isRecord(outcomeAction) &&
-        ((outcomeAction.kind === 'throw' && outcomeAction.result !== 'complete') ||
+        ((outcomeAction.kind === 'throw' &&
+          isOneOf(THROW_RESULTS, outcomeAction.result) &&
+          THROW_RESULT_SPECS[outcomeAction.result].outcome !== 'continues') ||
           (outcomeAction.kind === 'pull' && outcomeAction.result === 'dropped'));
       if (outcomeIsResolved && isFiniteNumber(outcomeRecordedAt) && enteredAt > outcomeRecordedAt) {
         throw new InvalidSharePayloadError('Invalid advanced game: invalid red-zone data');

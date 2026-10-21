@@ -4,6 +4,8 @@ import {
 } from './advancedThrowTypeStatsUtils';
 import type { AnalyticsGame } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
+import { isCompletedThrow } from './trackingUtils';
+import { THROW_RESULT_SPECS } from './types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -347,8 +349,8 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
     if (action.sideId !== sideId) continue;
     if (action.kind !== 'throw') continue;
 
-    if (action.result !== 'stall') totalThrowAttempts++;
-    if (action.result === 'complete' || action.result === 'goal') {
+    if (THROW_RESULT_SPECS[action.result].countsAsAttempt) totalThrowAttempts++;
+    if (isCompletedThrow(action.result)) {
       totalCompletedPasses++;
     }
   }

@@ -12,7 +12,7 @@ import {
 } from '@/lib/advancedTracking/trackerLayoutUtils';
 import { Fonts } from '@/theme/theme';
 
-import { PassModifier } from './types';
+import { PASS_MODIFIER_TONES, PassModifier } from './types';
 
 const CHIP_BORDER_RADIUS = 12;
 const CHIP_BODY_PADDING = 12;
@@ -84,17 +84,11 @@ export const TrackerChipBase = ({
       else scheduleOnRN(goal);
     });
 
+  // Tapping a chip while armed credits that player: errors read as danger, everything else success.
   let modifierColor: string | null = null;
-  if (
-    passModifier === 'callahan' ||
-    passModifier === 'stall' ||
-    passModifier === 'block' ||
-    passModifier === 'pressure' ||
-    passModifier === 'goal'
-  ) {
-    modifierColor = palette.success;
-  } else if (passModifier === 'fifty-fifty' || passModifier === 'drop') {
-    modifierColor = palette.danger;
+  if (passModifier != null) {
+    modifierColor =
+      PASS_MODIFIER_TONES[passModifier] === 'danger' ? palette.danger : palette.success;
   }
   // A holder can't drop their own throw, so they sit out the drop prompt.
   const isHolderExcluded = isHolder && passModifier === 'drop';

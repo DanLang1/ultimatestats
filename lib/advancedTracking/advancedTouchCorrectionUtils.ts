@@ -1,14 +1,23 @@
-import { getOtherSideId, hasPointEnded, assertValidPointLineHistory } from './trackingUtils';
-import type {
-  AdvancedTrackedGame,
-  Participant,
-  PlayerRef,
-  PointPossession,
-  PointSub,
-  PossessionAction,
-  PullAction,
-  ThrowAction,
-  TrackedPoint,
+import {
+  getOtherSideId,
+  hasPointEnded,
+  assertValidPointLineHistory,
+  isContinuingThrow,
+  isDefenseScoringThrow,
+  isTurnoverThrow,
+} from './trackingUtils';
+import {
+  THROW_RESULT_SPECS,
+  type AdvancedTrackedGame,
+  type Participant,
+  type PlayerRef,
+  type PointPossession,
+  type PointSub,
+  type PossessionAction,
+  type PullAction,
+  type ThrowAction,
+  type ThrowResult,
+  type TrackedPoint,
 } from './types';
 
 function applySubToEffectiveLines(effectiveLines: Map<string, Set<string>>, sub: PointSub) {
@@ -225,14 +234,21 @@ function nonStoppageActions(possession: PointPossession): PossessionAction[] {
   return possession.actions.filter((action) => action.kind !== 'stoppage');
 }
 
+/** Results that end the possession on a receiver touch (a goal scorer or a drop). */
+function endsOnReceiverTouch(result: ThrowResult): boolean {
+  const { outcome, creditedRole } = THROW_RESULT_SPECS[result];
+  return creditedRole === 'receiver' && outcome !== 'continues';
+}
+
+/** Throws whose correctable touch is the final one in their segment, including a Callahan scorer. */
+export function hasTerminalCorrectableTouch(result: ThrowResult): boolean {
+  return endsOnReceiverTouch(result) || isDefenseScoringThrow(result);
+}
+
 function isSupportedTerminalThrow(
   action: PossessionAction,
 ): action is ThrowAction & { toPlayer: PlayerRef } {
-  return (
-    action.kind === 'throw' &&
-    (action.result === 'goal' || action.result === 'drop') &&
-    action.toPlayer != null
-  );
+  return action.kind === 'throw' && endsOnReceiverTouch(action.result) && action.toPlayer != null;
 }
 
 function buildSegmentsForPossession(
@@ -321,7 +337,7 @@ function buildSegmentsForPossession(
       holder.mutatedActionIds,
     );
 
-    if (action.result === 'complete') {
+    if (isContinuingThrow(action.result)) {
       if (action.toPlayer == null) {
         invalid = true;
         continue;
@@ -342,10 +358,8 @@ function buildSegmentsForPossession(
         action.id,
         includeTurnoverSegments &&
           action.kind === 'throw' &&
-          (action.result === 'throwaway' ||
-            action.result === 'stall' ||
-            action.result === 'block' ||
-            action.result === 'pressure'),
+          isTurnoverThrow(action.result) &&
+          !endsOnReceiverTouch(action.result),
       );
     }
   }
@@ -428,7 +442,7 @@ export function hasValidAdvancedTouchContinuityThroughThrow(
       continue;
     }
 
-    if (action.result === 'complete' && action.toPlayer != null) {
+    if (isContinuingThrow(action.result) && action.toPlayer != null) {
       expectedThrower = action.toPlayer;
     } else {
       expectedThrower = undefined;
@@ -503,7 +517,7 @@ export function getCorrectableAdvancedStandaloneContexts(
           }
           if (
             action.kind === 'throw' &&
-            action.result === 'callahan' &&
+            isDefenseScoringThrow(action.result) &&
             isPointEndingAction(point, possession, action)
           ) {
             const context = buildCallahanContext(game, point, possession, action);
@@ -585,7 +599,7 @@ export function getAdvancedTouchCorrectionContext(
     }
     return buildPullContext(game, point, possession, action);
   }
-  if (action.kind !== 'throw' || action.result !== 'callahan') {
+  if (action.kind !== 'throw' || !isDefenseScoringThrow(action.result)) {
     throw new Error(`Action "${action.id}" is not a Callahan.`);
   }
   if (!isPointEndingAction(point, possession, action)) {

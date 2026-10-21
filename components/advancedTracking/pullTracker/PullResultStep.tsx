@@ -9,7 +9,7 @@ import {
   formatHangtime,
   getPullerName,
   getPullingSideTitle,
-  PULL_RESULTS,
+  PULL_RESULT_OPTIONS,
 } from '@/lib/advancedTracking/pullTrackingUtils';
 import { Participant, PullResult } from '@/lib/advancedTracking/types';
 import { Fonts } from '@/theme/theme';
@@ -101,7 +101,7 @@ export const PullResultStep = ({
         <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
           <ThemedText style={[styles.label, { color: palette.textMuted }]}>PULL RESULT</ThemedText>
           <View style={styles.resultList}>
-            {PULL_RESULTS.map((resultOption) => (
+            {PULL_RESULT_OPTIONS.map((resultOption) => (
               <Pressable
                 key={resultOption.value}
                 testID={`pull-result-${resultOption.value}`}

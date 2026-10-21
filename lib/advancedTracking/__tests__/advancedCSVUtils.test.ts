@@ -45,6 +45,23 @@ describe('advancedCSVUtils', () => {
     expect(combined.match(/Red Zone Stop Rate,100.0%,1\/1/g)).toHaveLength(2);
   });
 
+  it('never exports private game or point notes', () => {
+    const game = dirtyHoldGame();
+    game.metadata = { ...game.metadata, notes: 'PRIVATE-GAME-NOTE' };
+    game.points[0].note = 'PRIVATE-POINT-NOTE';
+    const analytics = buildAnalyticsGame(game);
+    const aggregate = aggregateAnalyticsGames([analytics]);
+    if (aggregate == null) throw new Error('Expected aggregate fixture');
+
+    for (const csv of [
+      generateAdvancedGameCSV(analytics),
+      generateAggregateAdvancedCSV([analytics], aggregate, 'Zoo'),
+    ]) {
+      expect(csv).not.toContain('PRIVATE-GAME-NOTE');
+      expect(csv).not.toContain('PRIVATE-POINT-NOTE');
+    }
+  });
+
   it('omits red zone rows without entries and preserves unavailable timing', () => {
     const game = dirtyHoldGame();
     expect(generateAdvancedGameCSV(buildAnalyticsGame(game))).not.toContain('Red Zone');

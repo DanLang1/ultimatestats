@@ -10,18 +10,26 @@ import {
   hasPointEnded,
   isTurnoverThrow,
 } from './trackingUtils';
-import type {
-  AdvancedTrackedGame,
-  Participant,
-  PlayerRef,
-  PossessionAction,
-  PointPossession,
-  ThrowAction,
-  ThrowType,
-  TrackedPoint,
+import {
+  THROW_RESULT_SPECS,
+  getEligibleThrowTypes,
+  hasRequiredThrowDefender,
+  type AdvancedTrackedGame,
+  type Participant,
+  type PlayerRef,
+  type PossessionAction,
+  type PointPossession,
+  type ThrowAction,
+  type ThrowResultSpec,
+  type ThrowType,
+  type TrackedPoint,
+  type TurnoverThrowResult,
 } from './types';
-import { getEligibleThrowTypes } from './types';
 
+/** Turnover results plus the editor-only 50/50 drop (a `drop` with `splitAttribution`). */
+export type AdvancedTurnoverEditorResult = TurnoverThrowResult | 'fifty-fifty';
+
+/** Editor display order; a test asserts it covers every `TurnoverThrowResult`. */
 export const ADVANCED_TURNOVER_EDITOR_RESULTS = [
   'drop',
   'fifty-fifty',
@@ -29,9 +37,17 @@ export const ADVANCED_TURNOVER_EDITOR_RESULTS = [
   'block',
   'pressure',
   'stall',
-] as const;
+] as const satisfies readonly AdvancedTurnoverEditorResult[];
 
-export type AdvancedTurnoverEditorResult = (typeof ADVANCED_TURNOVER_EDITOR_RESULTS)[number];
+function toThrowResult(result: AdvancedTurnoverEditorResult): TurnoverThrowResult {
+  return result === 'fifty-fifty' ? 'drop' : result;
+}
+
+export function getAdvancedTurnoverEditorResultSpec(
+  result: AdvancedTurnoverEditorResult,
+): ThrowResultSpec {
+  return THROW_RESULT_SPECS[toThrowResult(result)];
+}
 
 export interface AdvancedTurnoverCorrectionLocator {
   pointId: string;
@@ -142,15 +158,7 @@ function field(
 
 function currentResult(action: ThrowAction): AdvancedTurnoverEditorResult {
   if (action.result === 'drop' && action.splitAttribution === true) return 'fifty-fifty';
-  if (action.result === 'drop') return 'drop';
-  if (
-    action.result === 'throwaway' ||
-    action.result === 'stall' ||
-    action.result === 'block' ||
-    action.result === 'pressure'
-  ) {
-    return action.result;
-  }
+  if (isTurnoverThrow(action.result)) return action.result;
   throw new Error(`Throw result "${action.result}" is not an editable turnover.`);
 }
 
@@ -159,9 +167,9 @@ function hasConfigurableRole(
   result: AdvancedTurnoverEditorResult,
   isThrowingSide: boolean,
 ): boolean {
-  if (result === 'throwaway') return true;
-  const requiresTrackedDefender = result === 'pressure';
-  if (requiresTrackedDefender) return role.eligibleParticipants.length > 0;
+  const spec = getAdvancedTurnoverEditorResultSpec(result);
+  if (spec.creditedRole == null) return true;
+  if (spec.requiresTrackedDefender) return role.eligibleParticipants.length > 0;
   if (role.currentRef?.refType === 'untracked') return true;
   if (!role.isFullRoster) return !isThrowingSide;
   return role.eligibleParticipants.length > 0;
@@ -172,8 +180,9 @@ function getResultRole(
   receiver: AdvancedTurnoverParticipantField,
   defender: AdvancedTurnoverParticipantField,
 ): AdvancedTurnoverParticipantField | null {
-  if (result === 'drop' || result === 'fifty-fifty') return receiver;
-  if (result === 'block' || result === 'pressure' || result === 'stall') return defender;
+  const { creditedRole } = getAdvancedTurnoverEditorResultSpec(result);
+  if (creditedRole === 'receiver') return receiver;
+  if (creditedRole === 'defender') return defender;
   return null;
 }
 
@@ -250,7 +259,7 @@ export function getAdvancedTurnoverCorrectionContext(
     hasConfigurableRole(
       getResultRole(result, receiver, defender) ?? receiver,
       result,
-      result === 'drop' || result === 'fifty-fifty',
+      getAdvancedTurnoverEditorResultSpec(result).creditedRole === 'receiver',
     ),
   );
   const eligibleThrowTypes = getEligibleThrowTypes(action.result);
@@ -370,10 +379,11 @@ function normalizeThrowAction(
     details: _details,
     ...base
   } = context.action;
-  const result = input.result === 'fifty-fifty' ? 'drop' : input.result;
+  const result = toThrowResult(input.result);
+  const { creditedRole } = THROW_RESULT_SPECS[result];
   const eligibleTypes = getEligibleThrowTypes(result);
   let throwType = context.canClassify ? input.throwType : context.action.details?.type;
-  if (result === 'stall') {
+  if (eligibleTypes.length === 0) {
     throwType = undefined;
   }
   if (throwType != null && !eligibleTypes.includes(throwType)) {
@@ -383,11 +393,9 @@ function normalizeThrowAction(
     ...base,
     thrower,
     result,
-    ...(input.result === 'drop' || input.result === 'fifty-fifty' ? { toPlayer: receiver } : {}),
+    ...(creditedRole === 'receiver' ? { toPlayer: receiver } : {}),
     ...(input.result === 'fifty-fifty' ? { splitAttribution: true } : {}),
-    ...(input.result === 'block' || input.result === 'pressure' || input.result === 'stall'
-      ? { defender }
-      : {}),
+    ...(creditedRole === 'defender' ? { defender } : {}),
     ...(throwType != null ? { details: { type: throwType } } : {}),
   };
 }
@@ -479,21 +487,23 @@ export function correctAdvancedTurnover(
     input.throwerParticipantId != null
       ? validateParticipant(context.thrower, input.throwerParticipantId)
       : context.action.thrower;
+  const result = toThrowResult(input.result);
+  const { creditedRole, requiresTrackedDefender } = THROW_RESULT_SPECS[result];
   const receiver =
-    input.result === 'drop' || input.result === 'fifty-fifty'
+    creditedRole === 'receiver'
       ? resolveRoleRef(context.receiver, input.receiverParticipantId, true, true)
       : undefined;
   const defender =
-    input.result === 'block' || input.result === 'pressure' || input.result === 'stall'
+    creditedRole === 'defender'
       ? resolveRoleRef(
           context.defender,
           input.defenderParticipantId,
           true,
-          input.result !== 'pressure',
+          !requiresTrackedDefender,
         )
       : undefined;
-  if (input.result === 'pressure' && defender?.refType !== 'participant') {
-    throw new Error('Pressure requires a tracked defender.');
+  if (!hasRequiredThrowDefender({ result, defender })) {
+    throw new Error(`Throw result "${result}" requires a tracked defender.`);
   }
   const correctedAction = normalizeThrowAction(context, input, thrower, receiver, defender);
   return mapPossessionActions(game, context.point.id, context.possession.id, (action) =>

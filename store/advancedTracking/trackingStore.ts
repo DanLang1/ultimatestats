@@ -55,6 +55,7 @@ import {
   hasInjurySubChanges,
   hasPointEnded,
   isAdvancedGameOver,
+  isPointEndingThrow,
   isPossessionOver,
   isTurnoverThrow,
   syncCapTransitions,
@@ -68,6 +69,7 @@ import {
   StoppageAction,
   TrackedPoint,
   getEligibleThrowTypes,
+  hasRequiredThrowDefender,
 } from '@/lib/advancedTracking/types';
 import { reportHydrationError } from '@/lib/sentry';
 import { generateId, isRecord } from '@/lib/utils';
@@ -854,11 +856,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               throwInput.toPlayer,
               throwInput.defender,
             ]);
-            if (
-              throwInput.result === 'pressure' &&
-              throwInput.defender?.refType !== 'participant'
-            ) {
-              throw new Error('Pressure requires a tracked defender.');
+            if (!hasRequiredThrowDefender(throwInput)) {
+              throw new Error(`Throw result "${throwInput.result}" requires a tracked defender.`);
             }
           }
           const actionId = generateId();
@@ -906,7 +905,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               splitAttribution: throwInput.splitAttribution,
               recordedAt: now,
             });
-            if (throwInput.result === 'goal' || throwInput.result === 'callahan') {
+            if (isPointEndingThrow(throwInput.result)) {
               livePoint.elapsedMsAtEnd = now - getPointAdjustedTimestamp(livePoint, liveGame);
               livePoint.revivedAt = undefined;
             }
@@ -916,7 +915,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               possessionId: possession.id,
               actionId,
             });
-            if (throwInput.result === 'goal' || throwInput.result === 'callahan') {
+            if (isPointEndingThrow(throwInput.result)) {
               const gameStartedAt = liveGame.points[0]?.startedAt;
               if (gameStartedAt != null) {
                 const { hardCapMins, advancedSoftCapAtMins } = useSettingsStore.getState();
@@ -1219,7 +1218,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               removePossessionsAfterTurnover(undoPoint, undoPossession, undoAction);
               if (
                 undoAction?.kind === 'throw' &&
-                (undoAction.result === 'goal' || undoAction.result === 'callahan') &&
+                isPointEndingThrow(undoAction.result) &&
                 undoPoint != null
               ) {
                 const revivedAt = Date.now();

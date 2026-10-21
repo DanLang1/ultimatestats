@@ -8,12 +8,22 @@ import type {
 import type { GenderRatio } from '@/lib/genderRatioUtils';
 import type { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 
-export const PULL_RESULTS: { value: PullResult; label: string }[] = [
-  { value: 'inbound', label: 'INBOUNDS PULL' },
-  { value: 'ob', label: 'OB PULL' },
-  { value: 'roller', label: 'ROLLER PULL' },
-  { value: 'dropped', label: 'DROPPED PULL' },
-];
+export interface PullResultOption {
+  value: PullResult;
+  label: string;
+}
+
+/** Picker options in display order; a pull result without an option fails to compile. */
+const PULL_RESULT_OPTION_BY_RESULT: {
+  [Result in PullResult]: PullResultOption & { value: Result };
+} = {
+  inbound: { value: 'inbound', label: 'INBOUNDS PULL' },
+  ob: { value: 'ob', label: 'OB PULL' },
+  roller: { value: 'roller', label: 'ROLLER PULL' },
+  dropped: { value: 'dropped', label: 'DROPPED PULL' },
+};
+
+export const PULL_RESULT_OPTIONS: PullResultOption[] = Object.values(PULL_RESULT_OPTION_BY_RESULT);
 
 export function formatHangtime(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;

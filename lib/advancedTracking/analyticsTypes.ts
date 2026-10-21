@@ -5,8 +5,9 @@ import type {
   AdvancedGameType,
   GameFlip,
   GameMetadata,
-  GameSide,
+  PossessionLosingThrowResult,
   PullResult,
+  SideTrackingMode,
   ThrowDetails,
   ThrowResult,
 } from './types';
@@ -80,13 +81,8 @@ export interface AnalyticsPoint {
 
 export type AnalyticsPossessionResult = 'scored' | 'turned_over' | 'terminated' | 'in_progress';
 
-export type AnalyticsTurnoverType =
-  | 'drop'
-  | 'throwaway'
-  | 'stall'
-  | 'block'
-  | 'pressure'
-  | 'callahan';
+/** Possession-losing throw results; a dropped pull reports as `'drop'`. */
+export type AnalyticsTurnoverType = PossessionLosingThrowResult;
 
 export interface AnalyticsPossession {
   id: string;
@@ -180,7 +176,7 @@ export interface AnalyticsGame {
   /** Display label for each side, keyed by sideId. */
   sideLabels: Record<string, string>;
   /** Player identity tracking capability for each side, keyed by sideId. */
-  sideTrackingModes?: Record<string, GameSide['trackingMode']>;
+  sideTrackingModes?: Record<string, SideTrackingMode>;
   /** Display name for each participant, keyed by participantId. */
   participantNames: Map<string, string>;
   metadata?: GameMetadata;
