@@ -7,6 +7,7 @@ import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import { getPlayerStatLabel } from '@/lib/advancedTracking/playerStatLabels';
 import { getRoundedDecimalDelta, getRoundedPercentagePointDelta } from '@/lib/relativeMetricUtils';
 import { Fonts } from '@/theme/theme';
 
@@ -95,18 +96,18 @@ function buildMetrics(
   const dec1 = (v: number) => v.toFixed(1);
 
   const productionMetrics = [
-    metric('goals', 'Goals', (s) => s.goals, true, int),
-    metric('assists', 'Assists', (s) => s.assists, true, int),
-    metric('hockeyAssists', 'Hockey Assists', (s) => s.hockeyAssists, true, int),
-    metric('blocks', 'Blocks', (s) => s.blocks, true, int),
-    metric('pressures', 'Pressures', (s) => s.pressures, true, int),
+    metric('goals', getPlayerStatLabel('goals'), (s) => s.goals, true, int),
+    metric('assists', getPlayerStatLabel('assists'), (s) => s.assists, true, int),
+    metric('hockeyAssists', getPlayerStatLabel('hockeyAssists'), (s) => s.hockeyAssists, true, int),
+    metric('blocks', getPlayerStatLabel('blocks'), (s) => s.blocks, true, int),
+    metric('pressures', getPlayerStatLabel('pressures'), (s) => s.pressures, true, int),
   ]
     .filter(hasMetric)
     .filter((m) => m.raw > 0 || m.teamMax > 0);
 
   const mistakeMetrics = [
-    metric('throwaways', 'Throwaways', (s) => s.throwaways, false, int),
-    metric('drops', 'Drops', (s) => s.drops, false, int),
+    metric('throwaways', getPlayerStatLabel('throwaways'), (s) => s.throwaways, false, int),
+    metric('drops', getPlayerStatLabel('drops'), (s) => s.drops, false, int),
   ]
     .filter(hasMetric)
     .filter((m) => m.raw > 0 || m.teamMax > 0);
@@ -114,7 +115,7 @@ function buildMetrics(
   const impactMetrics = [
     metric(
       'plusMinus',
-      '+/-',
+      getPlayerStatLabel('plusMinus'),
       (s) => s.plusMinus,
       true,
       (v) => {
@@ -129,7 +130,7 @@ function buildMetrics(
       ? [
           metric(
             'completionPct',
-            'Completion %',
+            getPlayerStatLabel('completionPct'),
             (s) => s.completionPct,
             true,
             pct,
@@ -137,7 +138,7 @@ function buildMetrics(
           ),
           metric(
             'throwAttempts',
-            'Throw Attempts',
+            getPlayerStatLabel('throwAttempts'),
             (s) => s.throwAttempts,
             true,
             int,
@@ -153,7 +154,7 @@ function buildMetrics(
       ? [
           metric(
             'oEfficiency',
-            'O-Efficiency',
+            getPlayerStatLabel('oEfficiency'),
             (s) => s.oEfficiency,
             true,
             pct,
@@ -165,7 +166,7 @@ function buildMetrics(
       ? [
           metric(
             'dEfficiency',
-            'D-Efficiency',
+            getPlayerStatLabel('dEfficiency'),
             (s) => s.dEfficiency,
             true,
             pct,
@@ -173,12 +174,12 @@ function buildMetrics(
           ),
         ]
       : []),
-    metric('pointsPlayed', 'Points Played', (s) => s.pointsPlayed, true, int),
+    metric('pointsPlayed', getPlayerStatLabel('pointsPlayed'), (s) => s.pointsPlayed, true, int),
     ...(active.some((s) => s.playingTimePct != null)
       ? [
           metric(
             'playingTimePct',
-            'Playing Time',
+            getPlayerStatLabel('playingTimePct'),
             (s) => s.playingTimePct,
             true,
             pct,

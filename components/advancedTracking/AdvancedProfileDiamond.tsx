@@ -23,7 +23,7 @@ export default function AdvancedProfileDiamond({ stats }: AdvancedProfileDiamond
   const rawGoals = stats.goals;
   const rawAssists = stats.assists + stats.hockeyAssists;
   const rawDefense = stats.blocks + stats.pressures;
-  const rawTurnovers = stats.throwaways + stats.drops;
+  const rawTurnovers = stats.turnovers;
 
   const scaleMax = Math.max(rawGoals, rawAssists, rawDefense, rawTurnovers, 1);
   const goals = rawGoals / scaleMax;

@@ -1,4 +1,4 @@
-import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
+import { createAdvancedGameScenario, participantRef } from '@/test/fixtures/advancedGameBuilder';
 
 import { generateAdvancedGameCSV, generateAggregateAdvancedCSV } from '../advancedCSVUtils';
 import { aggregateAnalyticsGames } from '../aggregateAnalyticsGames';
@@ -59,6 +59,83 @@ describe('advancedCSVUtils', () => {
     ]) {
       expect(csv).not.toContain('PRIVATE-GAME-NOTE');
       expect(csv).not.toContain('PRIVATE-POINT-NOTE');
+    }
+  });
+
+  it('labels every optional player column and keeps each row aligned with the header', () => {
+    const ref = participantRef;
+    const focusIds = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+    const opponentIds = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7'];
+    const game = createAdvancedGameScenario({
+      status: 'final',
+      sides: [
+        { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+        { id: 'opponent', label: 'Opponent', trackingMode: 'full-roster' },
+      ],
+      participants: [...focusIds, ...opponentIds].map((id) => ({ id, name: id })),
+      defaultLines: [
+        { sideId: 'focus', participantIds: focusIds },
+        { sideId: 'opponent', participantIds: opponentIds },
+      ],
+    })
+      .startPoint({ puller: ref('o1'), receiver: ref('a'), hangTimeMs: 4200 })
+      .complete(ref('b'), { details: { type: 'huck' } })
+      .goal(ref('d'))
+      .startPoint({ puller: ref('a'), receiver: ref('o1') })
+      .turnover('stall', { defender: ref('e') })
+      .startPossession('focus')
+      .pickup(ref('e'))
+      .turnover('drop', { toPlayer: ref('f'), details: { type: 'backfield_reset' } })
+      .startPossession('opponent')
+      .pickup(ref('o2'))
+      .callahan(ref('g'))
+      .build();
+
+    const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));
+    const lines = csv.split('\n');
+    const headerIndex = lines.findIndex((line) => line.startsWith('Player,'));
+    const header = lines[headerIndex].split(',');
+
+    expect(header).toEqual([
+      'Player',
+      'Goals',
+      'Assists',
+      'Hockey Assists',
+      'Callahans',
+      'Completions',
+      'Throw Attempts',
+      'Completion %',
+      'Throwaways',
+      'Drops',
+      'Huck Attempts',
+      'Huck Completions',
+      'Huck Completion %',
+      'Huck Incompletions',
+      'Backfield Turnovers',
+      'Hucks Caught',
+      'Hucks Dropped',
+      'Resets Dropped',
+      'Stalls',
+      'Stalled',
+      'Pulls',
+      'Inbounds Pulls',
+      'OB Pulls',
+      'Dropped Pulls',
+      'Roller Pulls',
+      'Avg Hang Time',
+      'Max Hang Time',
+      'Min Hang Time',
+      'Pull Receptions',
+      'Blocks',
+      'Pressures',
+      'Receptions',
+      'Total Touches',
+      'Plus/Minus',
+    ]);
+    const playerRows = lines.slice(headerIndex + 1).filter((line) => line.length > 0);
+    const firstSectionEnd = playerRows.findIndex((line) => line.startsWith('#'));
+    for (const row of playerRows.slice(0, firstSectionEnd)) {
+      expect(row.split(',')).toHaveLength(header.length);
     }
   });
 
@@ -129,7 +206,7 @@ describe('advancedCSVUtils', () => {
     expect(csv).toContain('1,Throw,Alex,throwaway,Backfield Reset,,');
     expect(csv).toContain('Huck Attempts,1');
     expect(csv).toContain('Huck Completion %,100.0%');
-    expect(csv).toContain('Backfield Reset Turnovers,1');
+    expect(csv).toContain('Backfield Turnovers,1');
   });
 
   it('exports pressure team totals, player counts, and fractional plus/minus', () => {
@@ -203,7 +280,7 @@ describe('advancedCSVUtils', () => {
 
     const csv = generateAdvancedGameCSV(buildAnalyticsGame(game));
     expect(csv).not.toContain('Huck Attempts');
-    expect(csv).not.toContain('Backfield Reset Turnovers');
+    expect(csv).not.toContain('Backfield Turnovers');
     expect(csv).toContain('Total Pressures,1');
     expect(csv).toContain('Pressures per D-Point,1');
     expect(csv).toContain('Hold Rate,-,0/0');

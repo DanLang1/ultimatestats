@@ -9,10 +9,15 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { hasAnyThrowTypeStat } from '@/lib/advancedTracking/advancedThrowTypeStatsUtils';
 import { UNKNOWN_PARTICIPANT_ID } from '@/lib/advancedTracking/buildAnalyticsGame';
+import {
+  getPlayerStatLabel,
+  getPlayerStatShortLabel,
+  type AdvancedPlayerStatKey,
+} from '@/lib/advancedTracking/playerStatLabels';
 import { formatEfficiency } from '@/lib/efficiencyFormatUtils';
 import { Fonts } from '@/theme/theme';
 
-type SortKey = keyof AdvancedPlayerStats | 'name';
+type SortKey = AdvancedPlayerStatKey | 'name';
 type StatGroupKey = 'core' | 'throwing' | 'types' | 'touches' | 'pulls' | 'points';
 
 interface AdvancedStatsTableProps {
@@ -21,133 +26,98 @@ interface AdvancedStatsTableProps {
   onPlayerPress?: (participantId: string) => void;
 }
 
-type ColumnDef = { key: SortKey; label: string; width?: number };
+type ColumnDef = { key: AdvancedPlayerStatKey; label: string; width: number };
 type StatGroup = { key: StatGroupKey; label: string; columns: ColumnDef[] };
 
-const NAME_COLUMN: ColumnDef = { key: 'name', label: 'PLAYER' };
+const NAME_COLUMN_LABEL = 'PLAYER';
 const NAME_COLUMN_MIN_WIDTH = 92;
 const NAME_COLUMN_MAX_WIDTH = 140;
 const NAME_COLUMN_HORIZONTAL_PADDING = 24;
 const NAME_COLUMN_CHARACTER_WIDTH = 10;
+
+function statColumn(key: AdvancedPlayerStatKey, width: number): ColumnDef {
+  return { key, label: getPlayerStatShortLabel(key), width };
+}
 
 const STAT_GROUPS: StatGroup[] = [
   {
     key: 'core',
     label: 'Core',
     columns: [
-      { key: 'plusMinus', label: '+/-', width: 58 },
-      { key: 'goals', label: 'Goals', width: 58 },
-      { key: 'assists', label: 'Ast', width: 58 },
-      { key: 'blocks', label: 'Blk', width: 58 },
-      { key: 'pressures', label: 'Prs', width: 58 },
-      { key: 'throwaways', label: 'T/A', width: 58 },
-      { key: 'drops', label: 'Drp', width: 58 },
-      { key: 'stalls', label: 'Stl', width: 58 },
-      { key: 'stallsConceded', label: 'Stld', width: 58 },
+      statColumn('plusMinus', 58),
+      statColumn('goals', 58),
+      statColumn('assists', 58),
+      statColumn('blocks', 58),
+      statColumn('pressures', 58),
+      statColumn('throwaways', 58),
+      statColumn('drops', 58),
+      statColumn('stalls', 58),
+      statColumn('stallsConceded', 58),
     ],
   },
   {
     key: 'throwing',
     label: 'Throw',
     columns: [
-      { key: 'completions', label: 'Cmp', width: 58 },
-      { key: 'throwAttempts', label: 'Att', width: 58 },
-      { key: 'completionPct', label: 'Cmp%', width: 68 },
-      { key: 'assists', label: 'Ast', width: 58 },
-      { key: 'hockeyAssists', label: 'HA', width: 58 },
-      { key: 'throwaways', label: 'T/A', width: 58 },
+      statColumn('completions', 58),
+      statColumn('throwAttempts', 58),
+      statColumn('completionPct', 68),
+      statColumn('assists', 58),
+      statColumn('hockeyAssists', 58),
+      statColumn('throwaways', 58),
     ],
   },
   {
     key: 'types',
     label: 'Types',
     columns: [
-      { key: 'huckAttempts', label: 'Huck Att', width: 84 },
-      { key: 'huckCompletions', label: 'Huck Cmp', width: 88 },
-      { key: 'huckCompletionPct', label: 'Huck %', width: 74 },
-      { key: 'resetTurnovers', label: 'BF Turn', width: 78 },
-      { key: 'hucksCaught', label: 'Hucks Caught', width: 112 },
+      statColumn('huckAttempts', 84),
+      statColumn('huckCompletions', 88),
+      statColumn('huckCompletionPct', 74),
+      statColumn('resetTurnovers', 78),
+      statColumn('hucksCaught', 112),
     ],
   },
   {
     key: 'touches',
     label: 'Touch',
     columns: [
-      { key: 'totalTouches', label: 'Tch', width: 58 },
-      { key: 'receptions', label: 'Rec', width: 58 },
-      { key: 'completions', label: 'Cmp', width: 58 },
-      { key: 'throwAttempts', label: 'Att', width: 58 },
-      { key: 'pulls', label: 'Pls', width: 58 },
-      { key: 'blocks', label: 'Blk', width: 58 },
-      { key: 'pressures', label: 'Prs', width: 58 },
+      statColumn('totalTouches', 58),
+      statColumn('receptions', 58),
+      statColumn('completions', 58),
+      statColumn('throwAttempts', 58),
+      statColumn('pulls', 58),
+      statColumn('blocks', 58),
+      statColumn('pressures', 58),
     ],
   },
   {
     key: 'points',
     label: 'Points',
     columns: [
-      { key: 'pointPlusMinus', label: 'Pt +/-', width: 66 },
-      { key: 'oEfficiency', label: 'O-Eff', width: 72 },
-      { key: 'dEfficiency', label: 'D-Eff', width: 72 },
-      { key: 'pointsPlayed', label: 'PP', width: 58 },
-      { key: 'oPoints', label: 'O-Pts', width: 66 },
-      { key: 'dPoints', label: 'D-Pts', width: 66 },
+      statColumn('pointPlusMinus', 66),
+      statColumn('oEfficiency', 72),
+      statColumn('dEfficiency', 72),
+      statColumn('pointsPlayed', 58),
+      statColumn('oPoints', 66),
+      statColumn('dPoints', 66),
     ],
   },
   {
     key: 'pulls',
     label: 'Pull',
     columns: [
-      { key: 'pulls', label: 'Pls', width: 58 },
-      { key: 'inboundPulls', label: 'In', width: 58 },
-      { key: 'outOfBoundsPulls', label: 'OB', width: 58 },
-      { key: 'droppedPulls', label: 'Drop', width: 58 },
-      { key: 'rollerPulls', label: 'Rol', width: 58 },
-      { key: 'avgPullHangTimeMs', label: 'Avg', width: 68 },
-      { key: 'maxPullHangTimeMs', label: 'Max', width: 68 },
-      { key: 'minPullHangTimeMs', label: 'Min', width: 68 },
+      statColumn('pulls', 58),
+      statColumn('inboundPulls', 58),
+      statColumn('outOfBoundsPulls', 58),
+      statColumn('droppedPulls', 58),
+      statColumn('rollerPulls', 58),
+      statColumn('avgPullHangTimeMs', 68),
+      statColumn('maxPullHangTimeMs', 68),
+      statColumn('minPullHangTimeMs', 68),
     ],
   },
 ];
-
-// Key legend meanings by stat field, not display abbreviation. Header labels are short UI
-// text and may be reused across groups; stat keys keep repeated abbreviations unambiguous.
-const LEGEND_LABELS_BY_KEY: Partial<Record<SortKey, string>> = {
-  plusMinus: 'Plus/Minus',
-  goals: 'Goals',
-  assists: 'Assists',
-  blocks: 'Blocks',
-  pressures: 'Pressures',
-  throwaways: 'Throwaways',
-  drops: 'Drops',
-  stalls: 'Stalls Forced',
-  stallsConceded: 'Stalled Out',
-  completions: 'Completions',
-  throwAttempts: 'Throw Attempts',
-  completionPct: 'Completion %',
-  hockeyAssists: 'Hockey Assists',
-  totalTouches: 'Total Touches',
-  receptions: 'Receptions',
-  pulls: 'Pulls',
-  inboundPulls: 'Inbounds Pulls',
-  outOfBoundsPulls: 'OB Pulls',
-  droppedPulls: 'Dropped Pulls',
-  rollerPulls: 'Roller Pulls',
-  avgPullHangTimeMs: 'Average Pull Hangtime',
-  maxPullHangTimeMs: 'Longest Pull Hangtime',
-  minPullHangTimeMs: 'Shortest Pull Hangtime',
-  huckAttempts: 'Huck Attempts',
-  huckCompletions: 'Huck Completions',
-  huckCompletionPct: 'Huck Completion %',
-  resetTurnovers: 'Backfield Turnovers',
-  hucksCaught: 'Hucks Caught',
-  oEfficiency: 'Offensive Efficiency',
-  dEfficiency: 'Defensive Efficiency',
-  pointsPlayed: 'Points Played',
-  oPoints: 'O-Points',
-  dPoints: 'D-Points',
-  pointPlusMinus: 'Point Plus/Minus',
-};
 
 function getCellValue(stats: AdvancedPlayerStats, key: SortKey): number | null {
   if (key === 'name') return null;
@@ -227,7 +197,7 @@ export default function AdvancedStatsTable({
   const visibleLegendItems = visibleStatColumns.map((column) => ({
     key: column.key,
     abbr: column.label,
-    label: LEGEND_LABELS_BY_KEY[column.key] ?? column.label,
+    label: getPlayerStatLabel(column.key),
   }));
   const standardLegendItems = visibleLegendItems.filter((item) => item.key !== 'pointPlusMinus');
   const pointPlusMinusLegendItem = visibleLegendItems.find((item) => item.key === 'pointPlusMinus');
@@ -319,7 +289,7 @@ export default function AdvancedStatsTable({
   const availableStatsWidth = Math.max(0, tableWidth - nameColumnWidth);
   const extraColumnWidth = Math.max(0, availableStatsWidth - scrollableMinWidth);
   const distributedExtraWidth = extraColumnWidth / visibleStatColumns.length;
-  const getColumnWidth = (column: ColumnDef) => (column.width ?? 58) + distributedExtraWidth;
+  const getColumnWidth = (column: ColumnDef) => column.width + distributedExtraWidth;
 
   const handleTableLayout = (event: LayoutChangeEvent) => {
     setTableWidth(event.nativeEvent.layout.width);
@@ -462,7 +432,7 @@ export default function AdvancedStatsTable({
                       color: sortConfig.key === 'name' ? palette.accent : palette.textMuted,
                     },
                   ]}>
-                  {NAME_COLUMN.label}
+                  {NAME_COLUMN_LABEL}
                 </ThemedText>
                 {renderSortIcon('name')}
               </View>

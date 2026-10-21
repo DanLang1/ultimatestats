@@ -1,6 +1,11 @@
-import type { AnalyticsGame, AnalyticsPoint, AttributionType } from './analyticsTypes';
+import { ATTRIBUTION_STAT_SPECS } from './advancedPlayerStatsUtils';
+import {
+  SPLIT_ATTRIBUTION_WEIGHT,
+  type AnalyticsGame,
+  type AnalyticsPoint,
+  type AttributionType,
+} from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
-import { PRESSURE_PLUS_MINUS_VALUE } from './statConstants';
 
 export interface AdvancedImpactPoint {
   pointIndex: number;
@@ -150,27 +155,43 @@ function getImpactParts(summary?: PointImpactAttributions): ImpactPart[] {
     else if (splitTypes.has('drop')) splitDrops++;
   }
   // Split 50/50 attributions carry half weight in the throwaway/drop totals.
-  const fullThrowaways = throwaways - (splitThrowaways + splitSelf) * 0.5;
-  const fullDrops = drops - (splitDrops + splitSelf) * 0.5;
+  const fullThrowaways = throwaways - (splitThrowaways + splitSelf) * SPLIT_ATTRIBUTION_WEIGHT;
+  const fullDrops = drops - (splitDrops + splitSelf) * SPLIT_ATTRIBUTION_WEIGHT;
 
+  const weight = (type: AttributionType) => ATTRIBUTION_STAT_SPECS[type].plusMinusWeight;
   const parts: ImpactPart[] = [];
-  addPart(parts, 'C', callahans, callahans * 2);
+  addPart(parts, 'C', callahans, callahans * (weight('goal') + weight('block')));
   if (nonCallahanGoals > 0 && assists > 0) {
-    parts.push({ code: 'GA', count: 1, plusMinus: nonCallahanGoals + assists });
+    parts.push({
+      code: 'GA',
+      count: 1,
+      plusMinus: nonCallahanGoals * weight('goal') + assists * weight('assist'),
+    });
   } else {
-    addPart(parts, 'G', nonCallahanGoals, nonCallahanGoals);
-    addPart(parts, 'A', assists, assists);
+    addPart(parts, 'G', nonCallahanGoals, nonCallahanGoals * weight('goal'));
+    addPart(parts, 'A', assists, assists * weight('assist'));
   }
-  addPart(parts, 'HA', hockeyAssists, 0);
-  addPart(parts, 'B', nonCallahanBlocks, nonCallahanBlocks);
-  addPart(parts, 'P', pressures, pressures * PRESSURE_PLUS_MINUS_VALUE);
-  addPart(parts, 'Stl', stalls, stalls);
-  addPart(parts, 'StlC', stallsConceded, -stallsConceded);
-  addPart(parts, 'T', fullThrowaways, -fullThrowaways);
-  addPart(parts, 'D', fullDrops, -fullDrops);
-  addPart(parts, 'FfT', splitThrowaways, -splitThrowaways * 0.5);
-  addPart(parts, 'FfD', splitDrops, -splitDrops * 0.5);
-  addPart(parts, 'FfS', splitSelf, -splitSelf);
+  addPart(parts, 'HA', hockeyAssists, hockeyAssists * weight('hockey_assist'));
+  addPart(parts, 'B', nonCallahanBlocks, nonCallahanBlocks * weight('block'));
+  addPart(parts, 'P', pressures, pressures * weight('pressure'));
+  addPart(parts, 'Stl', stalls, stalls * weight('stall'));
+  addPart(parts, 'StlC', stallsConceded, stallsConceded * weight('stall_conceded'));
+  addPart(parts, 'T', fullThrowaways, fullThrowaways * weight('throwaway'));
+  addPart(parts, 'D', fullDrops, fullDrops * weight('drop'));
+  // Each half of a 50/50 carries half weight; a self 50/50 carries both halves.
+  addPart(
+    parts,
+    'FfT',
+    splitThrowaways,
+    splitThrowaways * SPLIT_ATTRIBUTION_WEIGHT * weight('throwaway'),
+  );
+  addPart(parts, 'FfD', splitDrops, splitDrops * SPLIT_ATTRIBUTION_WEIGHT * weight('drop'));
+  addPart(
+    parts,
+    'FfS',
+    splitSelf,
+    splitSelf * SPLIT_ATTRIBUTION_WEIGHT * (weight('throwaway') + weight('drop')),
+  );
   return parts;
 }
 

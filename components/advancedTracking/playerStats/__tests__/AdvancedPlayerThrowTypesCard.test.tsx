@@ -1,63 +1,14 @@
 import { screen } from '@testing-library/react-native';
 
 import AdvancedPlayerThrowTypesCard from '@/components/advancedTracking/playerStats/AdvancedPlayerThrowTypesCard';
-import type { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import {
+  getAdvancedPlayerStatsForParticipant,
+  type AdvancedPlayerStats,
+} from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { renderScreen } from '@/test/render';
 
 function createMockStats(overrides: Partial<AdvancedPlayerStats> = {}): AdvancedPlayerStats {
-  return {
-    participantId: 'p1',
-    goals: 0,
-    assists: 0,
-    hockeyAssists: 0,
-    callahans: 0,
-    plusMinus: 0,
-    completions: 0,
-    throwAttempts: 0,
-    completionPct: null,
-    throwaways: 0,
-    stalls: 0,
-    stallsConceded: 0,
-    receptions: 0,
-    drops: 0,
-    totalTouches: 0,
-    blocks: 0,
-    pressures: 0,
-    pulls: 0,
-    pullReceptions: 0,
-    inboundPulls: 0,
-    outOfBoundsPulls: 0,
-    droppedPulls: 0,
-    rollerPulls: 0,
-    avgPullHangTimeMs: null,
-    maxPullHangTimeMs: null,
-    minPullHangTimeMs: null,
-    huckAttempts: 0,
-    huckCompletions: 0,
-    huckCompletionPct: null,
-    huckIncompletions: 0,
-    huckThrowaways: 0,
-    huckDrops: 0,
-    huckBlocks: 0,
-    huckPressures: 0,
-    resetThrowaways: 0,
-    resetDrops: 0,
-    resetBlocks: 0,
-    resetPressures: 0,
-    resetTurnovers: 0,
-    hucksCaught: 0,
-    hucksDropped: 0,
-    resetsDropped: 0,
-    pointsPlayed: 0,
-    oPoints: 0,
-    dPoints: 0,
-    pointPlusMinus: 0,
-    oEfficiency: null,
-    dEfficiency: null,
-    pointDurationMs: null,
-    playingTimePct: null,
-    ...overrides,
-  };
+  return { ...getAdvancedPlayerStatsForParticipant([], 'p1'), ...overrides };
 }
 
 describe('AdvancedPlayerThrowTypesCard', () => {
@@ -103,7 +54,7 @@ describe('AdvancedPlayerThrowTypesCard', () => {
 
     await renderScreen(<AdvancedPlayerThrowTypesCard stats={stats} />);
 
-    expect(screen.getByText('RESET TURNOVERS')).toBeTruthy();
+    expect(screen.getByText('BACKFIELD TURNOVERS')).toBeTruthy();
     expect(screen.getByText('1 throwaway')).toBeTruthy();
     expect(screen.getByText('1 blocked')).toBeTruthy();
   });
@@ -116,7 +67,7 @@ describe('AdvancedPlayerThrowTypesCard', () => {
 
     await renderScreen(<AdvancedPlayerThrowTypesCard stats={stats} />);
 
-    expect(screen.getByText('RESET TURNOVERS')).toBeTruthy();
+    expect(screen.getByText('BACKFIELD TURNOVERS')).toBeTruthy();
     expect(screen.getByText('dropped throw')).toBeTruthy();
   });
 
@@ -136,7 +87,7 @@ describe('AdvancedPlayerThrowTypesCard', () => {
     expect(screen.getByText('Hucks caught')).toBeTruthy();
     expect(screen.getByText('2 hucks caught')).toBeTruthy();
     expect(screen.getByText('1 huck dropped')).toBeTruthy();
-    expect(screen.getByText('RESET TURNOVERS')).toBeTruthy();
+    expect(screen.getByText('BACKFIELD TURNOVERS')).toBeTruthy();
     expect(screen.getByText('1 reset dropped')).toBeTruthy();
   });
 });

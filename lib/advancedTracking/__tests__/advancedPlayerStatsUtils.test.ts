@@ -990,6 +990,8 @@ describe('advancedPlayerStatsUtils', () => {
     it('August has 1 stallsConceded (was stalled out)', () => {
       expect(findStats(stats, 'p_august').stallsConceded).toBe(1);
       expect(findStats(stats, 'p_august').stalls).toBe(0);
+      // Turnovers include the stall alongside the two throwaways.
+      expect(findStats(stats, 'p_august').turnovers).toBe(3);
     });
   });
 

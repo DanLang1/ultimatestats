@@ -9,7 +9,6 @@ import {
   POINT_PLUS_MINUS_BROKEN_VALUE,
   POINT_PLUS_MINUS_HOLD_VALUE,
   POINT_PLUS_MINUS_OPP_HOLD_VALUE,
-  PRESSURE_PLUS_MINUS_VALUE,
 } from './statConstants';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -22,7 +21,7 @@ export interface AdvancedPlayerStats {
   assists: number;
   hockeyAssists: number;
   callahans: number;
-  /** goals + assists + blocks + stalls + (0.5 × pressures) - throwaways - drops - stallsConceded */
+  /** Weighted attribution sum; weights live in `ATTRIBUTION_STAT_SPECS`. */
   plusMinus: number;
 
   // Throwing
@@ -36,6 +35,8 @@ export interface AdvancedPlayerStats {
   stalls: number;
   /** Times stalled out as the disc holder. */
   stallsConceded: number;
+  /** Weighted turnover events: throwaways + drops + stallsConceded (50/50 halves count 0.5). */
+  turnovers: number;
 
   // Receiving
   /** Catches of thrown passes (receiving_touch attributions). */
@@ -100,6 +101,63 @@ export interface AdvancedPlayerStats {
   playingTimePct: number | null;
 }
 
+/** Passes its argument through; a name that is not an `AdvancedPlayerStats` key fails to compile. */
+type AdvancedPlayerStatField<Field extends keyof AdvancedPlayerStats> = Field;
+
+/**
+ * Player counters summed straight from attributions. Derived stats (plus/minus, turnovers, touches)
+ * are computed afterwards and must not appear here.
+ */
+export type AttributionCountField = AdvancedPlayerStatField<
+  | 'goals'
+  | 'assists'
+  | 'hockeyAssists'
+  | 'callahans'
+  | 'completions'
+  | 'throwAttempts'
+  | 'throwaways'
+  | 'stalls'
+  | 'stallsConceded'
+  | 'receptions'
+  | 'drops'
+  | 'blocks'
+  | 'pressures'
+  | 'pulls'
+  | 'pullReceptions'
+>;
+
+export interface AttributionStatSpec {
+  /** Player stat that sums this attribution's weight; null when it only feeds a derived stat. */
+  field: AttributionCountField | null;
+  /** Contribution of one full-weight attribution to the player's plus/minus. */
+  plusMinusWeight: number;
+}
+
+/**
+ * Single source for how each attribution feeds player stats. Adding an `AttributionType` fails to
+ * compile until it has an entry here.
+ */
+export const ATTRIBUTION_STAT_SPECS = {
+  goal: { field: 'goals', plusMinusWeight: 1 },
+  assist: { field: 'assists', plusMinusWeight: 1 },
+  hockey_assist: { field: 'hockeyAssists', plusMinusWeight: 0 },
+  completion: { field: 'completions', plusMinusWeight: 0 },
+  throw_attempt: { field: 'throwAttempts', plusMinusWeight: 0 },
+  receiving_touch: { field: 'receptions', plusMinusWeight: 0 },
+  throwaway: { field: 'throwaways', plusMinusWeight: -1 },
+  drop: { field: 'drops', plusMinusWeight: -1 },
+  stall: { field: 'stalls', plusMinusWeight: 1 },
+  stall_conceded: { field: 'stallsConceded', plusMinusWeight: -1 },
+  block: { field: 'blocks', plusMinusWeight: 1 },
+  pressure: { field: 'pressures', plusMinusWeight: 0.5 },
+  // A Callahan also emits goal and block attributions, which carry its plus/minus.
+  callahan: { field: 'callahans', plusMinusWeight: 0 },
+  pull: { field: 'pulls', plusMinusWeight: 0 },
+  pull_reception: { field: 'pullReceptions', plusMinusWeight: 0 },
+  // Counted only within totalTouches.
+  disc_pickup: { field: null, plusMinusWeight: 0 },
+} as const satisfies Record<AttributionType, AttributionStatSpec>;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function createEmptyStats(participantId: string): AdvancedPlayerStats {
@@ -116,6 +174,7 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     throwaways: 0,
     stalls: 0,
     stallsConceded: 0,
+    turnovers: 0,
     receptions: 0,
     drops: 0,
     totalTouches: 0,
@@ -155,15 +214,6 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
     pointDurationMs: null,
     playingTimePct: null,
   };
-}
-
-/** Sum attribution weights for a participant + type. */
-function sumWeights(
-  byParticipant: Map<string, Map<AttributionType, number>>,
-  participantId: string,
-  type: AttributionType,
-): number {
-  return byParticipant.get(participantId)?.get(type) ?? 0;
 }
 
 /** Find which sideId a participant belongs to for a given point. */
@@ -243,24 +293,14 @@ export function computeAdvancedPlayerStats(
 
   for (const participantId of allParticipantIds) {
     const stats = createEmptyStats(participantId);
-    const sum = (type: AttributionType) => sumWeights(byParticipant, participantId, type);
+    const weightByType = byParticipant.get(participantId) ?? new Map<AttributionType, number>();
 
-    // Attribution-derived stats
-    stats.goals = sum('goal');
-    stats.assists = sum('assist');
-    stats.hockeyAssists = sum('hockey_assist');
-    stats.callahans = sum('callahan');
-    stats.completions = sum('completion');
-    stats.throwAttempts = sum('throw_attempt');
-    stats.throwaways = sum('throwaway');
-    stats.stalls = sum('stall');
-    stats.stallsConceded = sum('stall_conceded');
-    stats.receptions = sum('receiving_touch');
-    stats.drops = sum('drop');
-    stats.blocks = sum('block');
-    stats.pressures = sum('pressure');
-    stats.pulls = sum('pull');
-    stats.pullReceptions = sum('pull_reception');
+    // Attribution-derived stats and plus/minus
+    for (const [type, weight] of weightByType) {
+      const { field, plusMinusWeight } = ATTRIBUTION_STAT_SPECS[type];
+      if (field != null) stats[field] += weight;
+      stats.plusMinus += weight * plusMinusWeight;
+    }
 
     const throwTypes: AdvancedPlayerThrowTypeStats | undefined =
       throwTypeByPlayer.get(participantId);
@@ -285,16 +325,9 @@ export function computeAdvancedPlayerStats(
 
     // Derived calculations
     stats.completionPct = stats.throwAttempts > 0 ? stats.completions / stats.throwAttempts : null;
-    stats.totalTouches = stats.receptions + sum('disc_pickup') + stats.pullReceptions;
-    stats.plusMinus =
-      stats.goals +
-      stats.assists +
-      stats.blocks +
-      stats.pressures * PRESSURE_PLUS_MINUS_VALUE +
-      stats.stalls -
-      stats.throwaways -
-      stats.drops -
-      stats.stallsConceded;
+    stats.turnovers = stats.throwaways + stats.drops + stats.stallsConceded;
+    stats.totalTouches =
+      stats.receptions + (weightByType.get('disc_pickup') ?? 0) + stats.pullReceptions;
 
     let pullHangTimeSumMs = 0;
     let timedPullCount = 0;

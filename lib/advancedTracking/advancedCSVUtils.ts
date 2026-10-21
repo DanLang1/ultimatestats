@@ -13,6 +13,7 @@ import {
 } from './analyticsPerspectiveUtils';
 import type { AnalyticsGame } from './analyticsTypes';
 import { getFinalScores, getPointStateForSide, UNKNOWN_PARTICIPANT_ID } from './buildAnalyticsGame';
+import { getPlayerStatLabel, type AdvancedPlayerStatKey } from './playerStatLabels';
 
 function formatDuration(ms: number): string {
   const totalSeconds = Math.round(ms / 1000);
@@ -264,7 +265,7 @@ function teamStatsCSV(stats: AdvancedTeamStats, teamName: string): string {
       : [];
   const resetRows =
     stats.throwTypes.resetTurnovers > 0
-      ? [csvRow(['Backfield Reset Turnovers', stats.throwTypes.resetTurnovers, ''])]
+      ? [csvRow(['Backfield Turnovers', stats.throwTypes.resetTurnovers, ''])]
       : [];
 
   return [
@@ -364,7 +365,7 @@ function pullStatsCSV(stats: PullStats): string {
     [
       csvRow(['Stat', 'Value']),
       csvRow(['Total Pulls', stats.totalPulls]),
-      csvRow(['Inbound Pulls', getInboundPullCount(stats)]),
+      csvRow(['Inbounds Pulls', getInboundPullCount(stats)]),
       csvRow(['OB Pulls', stats.outcomes.ob ?? 0]),
       csvRow(['Dropped Pulls', stats.outcomes.dropped ?? 0]),
       csvRow(['Roller Pulls', stats.outcomes.roller ?? 0]),
@@ -376,53 +377,123 @@ function pullStatsCSV(stats: PullStats): string {
   );
 }
 
+interface PlayerCSVColumn {
+  header: string;
+  value: (stats: AdvancedPlayerStats) => CSVCell;
+}
+
+interface PlayerCSVContext {
+  players: AdvancedPlayerStats[];
+  hasTimingData: boolean;
+}
+
+interface PlayerCSVColumnGroup {
+  /** Optional groups export only when this returns true; others always export. */
+  include?: (context: PlayerCSVContext) => boolean;
+  columns: PlayerCSVColumn[];
+}
+
+function percentCell(value: number | null): CSVCell {
+  return value != null ? formatPercent(value) : '-';
+}
+
+function hangTimeCell(ms: number | null): CSVCell {
+  return ms != null ? `${(ms / 1000).toFixed(1)}s` : '-';
+}
+
+const anyPlayer =
+  (hasData: (stats: AdvancedPlayerStats) => boolean) =>
+  ({ players }: PlayerCSVContext) =>
+    players.some(hasData);
+
+/** A player stat column headed by its shared label; `format` overrides the raw value. */
+function statColumn(
+  key: AdvancedPlayerStatKey,
+  format?: (stats: AdvancedPlayerStats) => CSVCell,
+): PlayerCSVColumn {
+  return { header: getPlayerStatLabel(key), value: format ?? ((stats) => stats[key]) };
+}
+
+/** Player summary columns in export order; each header sits beside the value it labels. */
+const PLAYER_CSV_COLUMN_GROUPS: PlayerCSVColumnGroup[] = [
+  { columns: [statColumn('goals'), statColumn('assists'), statColumn('hockeyAssists')] },
+  { include: anyPlayer((p) => p.callahans > 0), columns: [statColumn('callahans')] },
+  {
+    columns: [
+      statColumn('completions'),
+      statColumn('throwAttempts'),
+      statColumn('completionPct', (p) => percentCell(p.completionPct)),
+      statColumn('throwaways'),
+      statColumn('drops'),
+    ],
+  },
+  {
+    include: anyPlayer((p) => p.huckAttempts > 0),
+    columns: [
+      statColumn('huckAttempts'),
+      statColumn('huckCompletions'),
+      statColumn('huckCompletionPct', (p) => percentCell(p.huckCompletionPct)),
+      statColumn('huckIncompletions'),
+    ],
+  },
+  { include: anyPlayer((p) => p.resetTurnovers > 0), columns: [statColumn('resetTurnovers')] },
+  {
+    include: anyPlayer((p) => p.hucksCaught + p.hucksDropped > 0),
+    columns: [statColumn('hucksCaught'), statColumn('hucksDropped')],
+  },
+  { include: anyPlayer((p) => p.resetsDropped > 0), columns: [statColumn('resetsDropped')] },
+  {
+    include: anyPlayer((p) => p.stalls > 0 || p.stallsConceded > 0),
+    columns: [statColumn('stalls'), statColumn('stallsConceded')],
+  },
+  {
+    include: anyPlayer((p) => p.pulls > 0 || p.pullReceptions > 0),
+    columns: [
+      statColumn('pulls'),
+      statColumn('inboundPulls'),
+      statColumn('outOfBoundsPulls'),
+      statColumn('droppedPulls'),
+      statColumn('rollerPulls'),
+      statColumn('avgPullHangTimeMs', (p) => hangTimeCell(p.avgPullHangTimeMs)),
+      statColumn('maxPullHangTimeMs', (p) => hangTimeCell(p.maxPullHangTimeMs)),
+      statColumn('minPullHangTimeMs', (p) => hangTimeCell(p.minPullHangTimeMs)),
+      statColumn('pullReceptions'),
+    ],
+  },
+  {
+    columns: [
+      statColumn('blocks'),
+      statColumn('pressures'),
+      statColumn('receptions'),
+      statColumn('totalTouches'),
+      statColumn('plusMinus'),
+    ],
+  },
+  {
+    include: ({ hasTimingData }) => hasTimingData,
+    columns: [
+      statColumn('pointsPlayed'),
+      statColumn('oPoints'),
+      statColumn('dPoints'),
+      statColumn('oEfficiency', (p) => percentCell(p.oEfficiency)),
+      statColumn('dEfficiency', (p) => percentCell(p.dEfficiency)),
+    ],
+  },
+];
+
 function playerSummaryCSV(
   players: AdvancedPlayerStats[],
   names: Map<string, string>,
   hasTimingData: boolean,
 ): string {
   if (players.length === 0) {
-    return csvRow(['Player', 'Goals']) + '\n(no players)';
+    return csvRow(['Player', getPlayerStatLabel('goals')]) + '\n(no players)';
   }
 
-  const hasCallahans = players.some((p) => p.callahans > 0);
-  const hasStalls = players.some((p) => p.stalls > 0 || p.stallsConceded > 0);
-  const hasPulls = players.some((p) => p.pulls > 0 || p.pullReceptions > 0);
-  const hasHuckThrowing = players.some((p) => p.huckAttempts > 0);
-  const hasResetThrowing = players.some((p) => p.resetTurnovers > 0);
-  const hasHuckReceiving = players.some((p) => p.hucksCaught + p.hucksDropped > 0);
-  const hasResetReceiving = players.some((p) => p.resetsDropped > 0);
-
-  const columns = ['Player', 'Goals', 'Assists', 'Hockey Assists'];
-  if (hasCallahans) columns.push('Callahans');
-  columns.push('Completions', 'Throw Attempts', 'Completion %', 'Throwaways', 'Drops');
-  if (hasHuckThrowing) {
-    columns.push('Huck Attempts', 'Huck Completions', 'Huck Completion %', 'Huck Incompletions');
-  }
-  if (hasResetThrowing) columns.push('Reset Turnovers');
-  if (hasHuckReceiving) columns.push('Hucks Caught', 'Hucks Dropped');
-  if (hasResetReceiving) columns.push('Resets Dropped');
-  if (hasStalls) columns.push('Stalls', 'Stalls Conceded');
-  if (hasPulls) {
-    columns.push(
-      'Pulls',
-      'Inbound Pulls',
-      'OB Pulls',
-      'Dropped Pulls',
-      'Roller Pulls',
-      'Avg Pull Hang Time',
-      'Max Pull Hang Time',
-      'Min Pull Hang Time',
-      'Pull Receptions',
-    );
-  }
-  columns.push('Blocks', 'Pressures', 'Receptions', 'Total Touches', 'Plus/Minus');
-
-  if (hasTimingData) {
-    columns.push('Points Played', 'O-Points', 'D-Points', 'O-Eff', 'D-Eff');
-  }
-
-  const header = csvRow(columns);
+  const context: PlayerCSVContext = { players, hasTimingData };
+  const columns = PLAYER_CSV_COLUMN_GROUPS.filter(
+    (group) => group.include?.(context) ?? true,
+  ).flatMap((group) => group.columns);
 
   const rows = players
     .sort((a, b) => {
@@ -430,68 +501,11 @@ function playerSummaryCSV(
       if (diff !== 0) return diff;
       return resolveName(names, a.participantId).localeCompare(resolveName(names, b.participantId));
     })
-    .map((p) => {
-      const cells: CSVCell[] = [resolveName(names, p.participantId)];
-      cells.push(p.goals);
-      cells.push(p.assists);
-      cells.push(p.hockeyAssists);
-      if (hasCallahans) cells.push(p.callahans);
-      cells.push(p.completions);
-      cells.push(p.throwAttempts);
-      cells.push(p.completionPct != null ? formatPercent(p.completionPct) : '-');
-      cells.push(p.throwaways);
-      cells.push(p.drops);
-      if (hasHuckThrowing) {
-        cells.push(p.huckAttempts);
-        cells.push(p.huckCompletions);
-        cells.push(p.huckCompletionPct != null ? formatPercent(p.huckCompletionPct) : '-');
-        cells.push(p.huckIncompletions);
-      }
-      if (hasResetThrowing) cells.push(p.resetTurnovers);
-      if (hasHuckReceiving) {
-        cells.push(p.hucksCaught);
-        cells.push(p.hucksDropped);
-      }
-      if (hasResetReceiving) cells.push(p.resetsDropped);
-      if (hasStalls) {
-        cells.push(p.stalls);
-        cells.push(p.stallsConceded);
-      }
-      if (hasPulls) {
-        cells.push(p.pulls);
-        cells.push(p.inboundPulls);
-        cells.push(p.outOfBoundsPulls);
-        cells.push(p.droppedPulls);
-        cells.push(p.rollerPulls);
-        cells.push(
-          p.avgPullHangTimeMs != null ? `${(p.avgPullHangTimeMs / 1000).toFixed(1)}s` : '-',
-        );
-        cells.push(
-          p.maxPullHangTimeMs != null ? `${(p.maxPullHangTimeMs / 1000).toFixed(1)}s` : '-',
-        );
-        cells.push(
-          p.minPullHangTimeMs != null ? `${(p.minPullHangTimeMs / 1000).toFixed(1)}s` : '-',
-        );
-        cells.push(p.pullReceptions);
-      }
-      cells.push(p.blocks);
-      cells.push(p.pressures);
-      cells.push(p.receptions);
-      cells.push(p.totalTouches);
-      cells.push(p.plusMinus);
+    .map((p) =>
+      csvRow([resolveName(names, p.participantId), ...columns.map((column) => column.value(p))]),
+    );
 
-      if (hasTimingData) {
-        cells.push(p.pointsPlayed);
-        cells.push(p.oPoints);
-        cells.push(p.dPoints);
-        cells.push(p.oEfficiency != null ? formatPercent(p.oEfficiency) : '-');
-        cells.push(p.dEfficiency != null ? formatPercent(p.dEfficiency) : '-');
-      }
-
-      return csvRow(cells);
-    });
-
-  return header + '\n' + rows.join('\n');
+  return [csvRow(['Player', ...columns.map((column) => column.header)]), ...rows].join('\n');
 }
 
 function pointByPointCSV(game: AnalyticsGame, perspectiveSideId = game.focusSideId): string {

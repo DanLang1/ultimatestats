@@ -10,15 +10,15 @@ point/possession/action model canonical and derive analytics from it.
 
 ## Orient before changing behavior
 
-1. Read `docs/README.md` and `docs/features/advanced-tracking/README.md`.
-2. Read the relevant maintained document before changing its boundary:
-   - persisted model, edits, sides, or actions: `data-model.md`;
-   - derived stats, summaries, timelines, or display: `analytics-layer.md` and `stat-utils.md`;
-   - voice behavior: `voice-input.md`.
-3. Inspect the target's closest tests and maintained siblings. Exported types and tests describe
-   current implemented behavior; `AGENTS.md` and maintained domain docs describe intended
-   contracts. If they disagree, flag the inconsistency and reconcile it instead of silently
-   choosing one source.
+Code is the source of truth: exported types, spec tables such as `THROW_RESULT_SPECS` and
+`ATTRIBUTION_STAT_SPECS`, and tests describe how the tracker behaves. Docs record intent the code
+cannot show.
+
+1. Read the target code, its spec tables, and its closest tests and siblings first.
+2. Read `docs/features/advanced-tracking/data-model.md` for the architecture rules (what must never
+   happen), and skim the other advanced-tracking docs only when the code leaves intent unclear.
+3. If a doc disagrees with the code, treat the code as current behavior and mention the stale doc;
+   ask only when the intended behavior is genuinely unclear.
 
 ## Map the change surface
 
@@ -30,8 +30,9 @@ Before editing, name the affected surfaces and inspect each applicable one:
 - SQLite persistence, schema migrations, saved-game load, import/export, and CSV;
 - unit/store tests, route tests, and device workflows.
 
-Do not add parallel counters or a second persisted representation for derived statistics. Update
-the maintained advanced-tracking docs in the same change when behavior changes.
+Do not add parallel counters or a second persisted representation for derived statistics. Edit docs
+only to fix sentences the change makes false or to record a new architecture rule; never add doc
+text that restates code (formulas, field lists, labels).
 
 ## Protect historical attribution
 
@@ -40,8 +41,8 @@ the maintained advanced-tracking docs in the same change when behavior changes.
   to the side and effective line at that action's historical point, never to a participant's current
   side or a later corrected line.
 - Trace lineup correction, substitution, and injury edits through validation and analytics. Preserve
-  the stated policy for already-recorded actions; if the policy is not explicit in types, tests, or
-  docs, ask before choosing one.
+  the stated policy for already-recorded actions; if the policy is not explicit in code or tests,
+  ask before choosing one.
 - For a new action, modifier, or stat, verify both its raw event semantics and every derived
   consumer. Do not fix a visible label while leaving the payload, analytics, impact, or export with
   the old meaning.

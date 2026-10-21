@@ -31,13 +31,30 @@ import {
 } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
 import { resolveAnalyticsSideId } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import {
+  getPlayerStatCountLabel,
+  type AdvancedPlayerStatKey,
+} from '@/lib/advancedTracking/playerStatLabels';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { hasItems, pluralize } from '@/lib/utils';
+import { hasItems } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 type AnalyticsGame = ReturnType<typeof buildAnalyticsGame>;
 const EMPTY_ADVANCED_GAMES: AdvancedTrackedGame[] = [];
 const EMPTY_GAME_IDS: string[] = [];
+
+/** Counted stats in the player header card, in display order. */
+const HEADER_STAT_KEYS = [
+  'goals',
+  'assists',
+  'hockeyAssists',
+  'blocks',
+  'pressures',
+  'stalls',
+  'throwaways',
+  'drops',
+  'stallsConceded',
+] as const satisfies readonly AdvancedPlayerStatKey[];
 
 type AdvancedPlayerStatsViewProps = {
   analyticsGame: AnalyticsGame | null;
@@ -259,32 +276,13 @@ export default function AdvancedPlayerStatsView({
           plusMinus={stats.plusMinus}
           badges={
             stats.callahans > 0
-              ? [`${stats.callahans} Callahan${stats.callahans === 1 ? '' : 's'}`]
+              ? [`${stats.callahans} ${getPlayerStatCountLabel('callahans', stats.callahans)}`]
               : []
           }
-          stats={[
-            { label: pluralize(stats.goals, 'Goal', 'Goals'), value: stats.goals },
-            { label: pluralize(stats.assists, 'Assist', 'Assists'), value: stats.assists },
-            {
-              label: pluralize(stats.hockeyAssists, 'Hockey assist', 'Hockey assists'),
-              value: stats.hockeyAssists,
-            },
-            { label: pluralize(stats.blocks, 'Block', 'Blocks'), value: stats.blocks },
-            { label: pluralize(stats.pressures, 'Pressure', 'Pressures'), value: stats.pressures },
-            {
-              label: pluralize(stats.stalls, 'Stall forced', 'Stalls forced'),
-              value: stats.stalls,
-            },
-            {
-              label: pluralize(stats.throwaways, 'Throwaway', 'Throwaways'),
-              value: stats.throwaways,
-            },
-            { label: pluralize(stats.drops, 'Drop', 'Drops'), value: stats.drops },
-            {
-              label: pluralize(stats.stallsConceded, 'Stall conceded', 'Stalls conceded'),
-              value: stats.stallsConceded,
-            },
-          ]}
+          stats={HEADER_STAT_KEYS.map((key) => ({
+            label: getPlayerStatCountLabel(key, stats[key]),
+            value: stats[key],
+          }))}
           profile={<AdvancedProfileDiamond stats={stats} />}
         />
 

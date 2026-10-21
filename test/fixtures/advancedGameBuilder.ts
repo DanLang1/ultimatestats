@@ -176,7 +176,7 @@ export interface HoldOptions extends StartPointOptions {
 }
 
 export interface BreakAfterTurnoverOptions extends StartPointOptions {
-  turnoverResult: Exclude<ThrowResult, 'complete' | 'goal' | 'callahan'>;
+  turnoverResult: TurnoverThrowResult;
   defender?: PlayerRef;
   pickupPlayer?: PlayerRef;
   caughtByDefender?: boolean;
@@ -186,7 +186,7 @@ export interface BreakAfterTurnoverOptions extends StartPointOptions {
 
 export interface DirtyHoldOptions extends Partial<StartPointOptions> {
   passes?: PlayerRef[];
-  turnoverResult?: Exclude<ThrowResult, 'complete' | 'goal' | 'callahan'>;
+  turnoverResult?: TurnoverThrowResult;
   defender?: PlayerRef;
   recoveryPickup?: PlayerRef;
   recoveryPasses?: PlayerRef[];

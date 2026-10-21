@@ -152,10 +152,13 @@ export type AnalyticsAction =
   | ThrowAnalyticsAction
   | StoppageAnalyticsAction;
 
+/** Attribution weight of each half of a 50/50 fault; a standard attribution weighs 1. */
+export const SPLIT_ATTRIBUTION_WEIGHT = 0.5;
+
 export interface AnalyticsAttribution {
   type: AttributionType;
   participantId: string;
-  /** 1.0 standard, 0.5 for split attribution. */
+  /** 1 standard, `SPLIT_ATTRIBUTION_WEIGHT` for each half of a 50/50. */
   weight: number;
   /** Present on each half of a 50/50 drop fault. */
   splitAttribution?: true;

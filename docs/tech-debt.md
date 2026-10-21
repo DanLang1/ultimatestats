@@ -29,70 +29,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `lib/sharing/serialize.ts`
   `lib/sharing/validate.ts`
 
-## P3 - Advanced Attribution Stat Registry
-
-- Adding a per-player advanced stat (e.g. `pressure` → "Pressures") touches 13 source files plus
-  `analytics-layer.md` and `stat-utils.md`. The stat's identity (field name, labels, CSV column,
-  plus/minus weight, display group) is restated at every site instead of read from one place.
-- Only three spots fail to compile. Adding an `AttributionType` alone produces no `tsc` errors.
-  Adding the `AdvancedPlayerStats` field fails only in `createEmptyStats` (and test fixtures that
-  build full stats objects); a team field fails only in the `computeAdvancedTeamStats` return
-  object; a new `ImpactPartCode` fails in `PART_TO_FULL`. Every other site silently omits the stat:
-  - `computeAdvancedPlayerStats`: the `sum(type)` assignment and the plus/minus formula.
-  - `getImpactParts`: a second, hand-kept copy of the plus/minus weights. It must agree with the
-    player-stats formula, and nothing checks that.
-  - `playerSummaryCSV`: the header list and the cell list are parallel lists, so a column added to
-    one and not the other shifts every later column. `teamStatsCSV` rows are hand-listed too.
-  - `AdvancedStatsTable` columns and `LEGEND_LABELS_BY_KEY` (`Partial`),
-    `AdvancedRelativeStatsSection` metrics, the `AdvancedPlayerStatsView` header stats,
-    `AdvancedProfileDiamond` axes, `AdvancedPlayingTimeSection` per-point rates,
-    `AdvancedEfficiencyCard`, and the `AdvancedImpactTimeline` legend text.
-- `AdvancedPlayingTimeSection` lists Blocks per point but not Pressures; see the P4 entry below.
-- Cleanup: add `ATTRIBUTION_STAT_SPECS` modeled on `THROW_RESULT_SPECS`:
-  `as const satisfies Record<AttributionType, AttributionStatSpec>`, so a new `AttributionType`
-  fails to compile until it has an entry. Candidate spec fields: `field` (the `AdvancedPlayerStats`
-  key, or `null` for `disc_pickup`, which only feeds `totalTouches`), `label`/`singularLabel`,
-  `shortLabel` (table header), `legendLabel`, `csvColumn`, `plusMinusWeight`, and `display`
-  (table groups, relative-stats section, header card, or `null`). Name the derived types, e.g.
-  `AttributionCountField`, and build the count part of `AdvancedPlayerStats` as
-  `Record<AttributionCountField, number>`. Then `createEmptyStats`, the `sum` assignments, both
-  plus/minus calculations, the legend, relative metrics, and header stats iterate the registry.
-  Use `assertNever` defaults in any `switch` that stays over `AttributionType` or
-  `AttributionStatDisplay`.
-- Ordered lists need their own guard. Table group columns and CSV columns interleave registry stats
-  with derived ones (`completionPct`, pull breakdown, throw types, timing). Keep them as explicit
-  ordered lists typed by key, and add a test that every spec with a `csvColumn` / table group
-  appears exactly once, or encode order as `Record<Key, { order }>` so a missing key fails to
-  compile. Generate CSV header and cells from one column list (`{ header, value(p) }`) so they cannot
-  drift.
-- Stays bespoke: attribution emission in `buildAnalyticsGame` (already compile-guided by the
-  `ThrowResult` switch), Callahan and 50/50 handling in `getImpactParts`, the `GA` merge,
-  derived stats (`completionPct`, `totalTouches`, pull and throw-type stats, point stats), team
-  totals counted from possession `turnoverType` (`totalBlocks`, `totalPressures`; could move to a
-  `THROW_RESULT_SPECS` field instead), and the profile diamond's axis grouping.
-- Risks: CSV column names and order and every existing UI label must stay byte-identical (CSV is a
-  user-facing export). Pin them with snapshot assertions in `advancedCSVUtils.test.ts` and the
-  table/view tests before refactoring. Plus/minus must still match per point and per game, including
-  Callahans (credited through `goal` + `block`, not `callahan`) and 50/50 half weights.
-- References:
-  `lib/advancedTracking/analyticsTypes.ts` - `AttributionType`
-  `lib/advancedTracking/types.ts` - `THROW_RESULT_SPECS` (pattern to follow)
-  `lib/advancedTracking/statConstants.ts`
-  `lib/advancedTracking/buildAnalyticsGame.ts` - `emitAttributions`
-  `lib/advancedTracking/advancedPlayerStatsUtils.ts`
-  `lib/advancedTracking/advancedImpactUtils.ts`
-  `lib/advancedTracking/advancedTeamStatsUtils.ts`
-  `lib/advancedTracking/advancedCSVUtils.ts` - `playerSummaryCSV`, `teamStatsCSV`
-  `components/advancedTracking/AdvancedStatsTable.tsx`
-  `components/advancedTracking/AdvancedRelativeStatsSection.tsx`
-  `components/advancedTracking/AdvancedImpactTimeline.tsx`
-  `components/advancedTracking/AdvancedProfileDiamond.tsx`
-  `components/advancedTracking/AdvancedPlayingTimeSection.tsx`
-  `components/advancedTracking/AdvancedEfficiencyCard.tsx`
-  `components/advancedTracking/playerStats/AdvancedPlayerStatsView.tsx`
-  `docs/features/advanced-tracking/analytics-layer.md`
-  `docs/features/advanced-tracking/stat-utils.md`
-
 ## P3 - Advanced Tracker Tablet Landscape Polish
 
 - Tablet landscape puts the scorecard and last-action card side by side in one header row above a
@@ -169,12 +105,3 @@ rewrite it to describe only the remaining problem as it exists now.
   `app/(main)/pre-game-confirm.tsx` + `app/(main)/advanced-tracking/pre-game-confirm.tsx` — identical card layouts
   `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
   `store/basic/gameStore.types.ts` + `store/basic/gameStore.ts` — `addTurnoverEvent` parameter type defined inline in both
-
-## P4 - Pressures per Point in Playing Time
-
-- Quality-of-life: the player Playing Time section shows Blocks per point but not Pressures.
-  Pressures are rare, so the gap is minor.
-- Cleanup: add a Pressures row to `perPointStats`. The grid is three columns and currently six
-  items, so a seventh leaves an uneven last row; decide the order and layout with it.
-- References:
-  `components/advancedTracking/AdvancedPlayingTimeSection.tsx` - `perPointStats`

@@ -1,17 +1,18 @@
 import { assertNever } from '@/lib/utils';
 
 import { recordAdvancedGameDiagnostic } from './advancedGameDiagnostics';
-import type {
-  AnalyticsAction,
-  AnalyticsActionBase,
-  AnalyticsAttribution,
-  AnalyticsGame,
-  AnalyticsPoint,
-  AnalyticsPossession,
-  AnalyticsPossessionResult,
-  AnalyticsTurnoverType,
-  AttributionType,
-  PointState,
+import {
+  SPLIT_ATTRIBUTION_WEIGHT,
+  type AnalyticsAction,
+  type AnalyticsActionBase,
+  type AnalyticsAttribution,
+  type AnalyticsGame,
+  type AnalyticsPoint,
+  type AnalyticsPossession,
+  type AnalyticsPossessionResult,
+  type AnalyticsTurnoverType,
+  type AttributionType,
+  type PointState,
 } from './analyticsTypes';
 import { getSideTrackingModes } from './trackingModeUtils';
 import { isContinuingThrow, isPossessionLosingThrow } from './trackingUtils';
@@ -196,8 +197,8 @@ function emitAttributions(
 
       case 'drop':
         if (split) {
-          add('throwaway', actorId, 0.5, true);
-          add('drop', receiverId, 0.5, true);
+          add('throwaway', actorId, SPLIT_ATTRIBUTION_WEIGHT, true);
+          add('drop', receiverId, SPLIT_ATTRIBUTION_WEIGHT, true);
         } else {
           add('drop', receiverId);
         }

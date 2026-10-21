@@ -8,7 +8,21 @@ import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AdvancedPlayerStats } from '@/lib/advancedTracking/advancedPlayerStatsUtils';
+import {
+  getPlayerStatLabel,
+  type AdvancedPlayerStatKey,
+} from '@/lib/advancedTracking/playerStatLabels';
 import { Fonts } from '@/theme/theme';
+
+/** Stats shown as per-point rates, in display order. */
+const PER_POINT_STAT_KEYS = [
+  'goals',
+  'assists',
+  'blocks',
+  'turnovers',
+  'throwaways',
+  'drops',
+] as const satisfies readonly AdvancedPlayerStatKey[];
 
 interface AdvancedPlayingTimeSectionProps {
   stats: AdvancedPlayerStats;
@@ -28,16 +42,9 @@ export default function AdvancedPlayingTimeSection({ stats }: AdvancedPlayingTim
     timeSeconds == null
       ? '—'
       : `${Math.floor(timeSeconds / 60)}:${String(timeSeconds % 60).padStart(2, '0')}`;
-  const perPointStats = [
-    { label: 'Goals', count: stats.goals },
-    { label: 'Assists', count: stats.assists },
-    { label: 'Blocks', count: stats.blocks },
-    { label: 'Turnovers', count: stats.throwaways + stats.drops + stats.stallsConceded },
-    { label: 'Throwaways', count: stats.throwaways },
-    { label: 'Drops', count: stats.drops },
-  ].map(({ label, count }) => ({
-    label,
-    value: stats.pointsPlayed > 0 ? (count / stats.pointsPlayed).toFixed(2) : '—',
+  const perPointStats = PER_POINT_STAT_KEYS.map((key) => ({
+    label: getPlayerStatLabel(key),
+    value: stats.pointsPlayed > 0 ? (stats[key] / stats.pointsPlayed).toFixed(2) : '—',
   }));
 
   return (

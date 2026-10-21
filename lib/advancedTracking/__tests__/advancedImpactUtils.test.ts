@@ -1,4 +1,8 @@
-import { defineAdvancedGameTestContext } from '@/test/fixtures/advancedGameBuilder';
+import {
+  createAdvancedGameScenario,
+  defineAdvancedGameTestContext,
+  participantRef,
+} from '@/test/fixtures/advancedGameBuilder';
 
 import {
   type AdvancedImpactPoint,
@@ -7,6 +11,7 @@ import {
   type ImpactPart,
   type ImpactPartCode,
 } from '../advancedImpactUtils';
+import { ATTRIBUTION_STAT_SPECS, computeAdvancedPlayerStats } from '../advancedPlayerStatsUtils';
 import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import type { AdvancedTrackedGame } from '../types';
 
@@ -804,5 +809,72 @@ describe('getImpactDrivingPart', () => {
   it('picks the first part on a net-neutral point', () => {
     expect(driverCode([part('G', 1), part('T', -1)], 0)).toBe('G');
     expect(driverCode([part('B', 1), part('D', -1)], 0)).toBe('B');
+  });
+});
+
+describe('impact and player stats agreement', () => {
+  const FOCUS = 'focus';
+  const OPPONENT = 'opponent';
+  const focusIds = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const opponentIds = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7'];
+  const ref = (id: string) => participantRef(id);
+
+  /** Two fully tracked sides and a sequence that emits every attribution type. */
+  function buildEveryAttributionGame(): AdvancedTrackedGame {
+    return (
+      createAdvancedGameScenario({
+        status: 'final',
+        sides: [
+          { id: FOCUS, label: 'Focus', trackingMode: 'full-roster' },
+          { id: OPPONENT, label: 'Opponent', trackingMode: 'full-roster' },
+        ],
+        participants: [...focusIds, ...opponentIds].map((id) => ({ id, name: id })),
+        defaultLines: [
+          { sideId: FOCUS, participantIds: focusIds },
+          { sideId: OPPONENT, participantIds: opponentIds },
+        ],
+      })
+        // Hold with a hockey assist: pull, pull reception, completions, assist, goal.
+        .startPoint({ puller: ref('o1'), receiver: ref('a') })
+        .complete(ref('b'))
+        .complete(ref('c'))
+        .goal(ref('d'))
+        // A point with every kind of turnover, ending in a Callahan.
+        .startPoint({ puller: ref('a'), receiver: ref('o1') })
+        .turnover('block', { defender: ref('e') })
+        .startPossession(FOCUS)
+        .pickup(ref('e'))
+        .turnover('drop', { toPlayer: ref('f'), splitAttribution: true })
+        .startPossession(OPPONENT)
+        .pickup(ref('o2'))
+        .turnover('pressure', { defender: ref('a') })
+        .startPossession(FOCUS)
+        .pickup(ref('b'))
+        .turnover('stall', { defender: ref('o3') })
+        .startPossession(OPPONENT)
+        .pickup(ref('o3'))
+        .turnover('throwaway')
+        .startPossession(FOCUS)
+        .pickup(ref('c'))
+        .turnover('drop', { toPlayer: ref('d') })
+        .startPossession(OPPONENT)
+        .pickup(ref('o4'))
+        .callahan(ref('g'))
+        .build()
+    );
+  }
+
+  it('ends every player impact timeline at their game plus/minus', () => {
+    const analytics = buildAnalyticsGame(buildEveryAttributionGame());
+    const emittedTypes = new Set(analytics.attributions.map((attribution) => attribution.type));
+    expect([...emittedTypes].sort()).toEqual(Object.keys(ATTRIBUTION_STAT_SPECS).sort());
+
+    for (const stats of computeAdvancedPlayerStats(analytics)) {
+      const impact = computeAdvancedImpact(analytics, stats.participantId, FOCUS);
+      expect({
+        participantId: stats.participantId,
+        plusMinus: impact.at(-1)?.cumulativePlusMinus,
+      }).toEqual({ participantId: stats.participantId, plusMinus: stats.plusMinus });
+    }
   });
 });

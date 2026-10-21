@@ -274,17 +274,17 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
         {/* Section 2: Huck Receiving */}
         {renderHuckReceiving()}
 
-        {/* Divider before Reset Turnovers if previous sections exist */}
+        {/* Divider before Backfield Turnovers if previous sections exist */}
         {(hasHuckThrowing || hasHuckReceiving) && hasResetTurnovers && (
           <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
         )}
 
-        {/* Section 3: Reset Turnovers */}
+        {/* Section 3: Backfield Turnovers */}
         {hasResetTurnovers && (
           <View style={styles.section}>
             <View style={styles.resetHeaderRow}>
               <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-                RESET TURNOVERS
+                BACKFIELD TURNOVERS
               </ThemedText>
 
               {renderOutcomes(resetOutcomeItems)}
