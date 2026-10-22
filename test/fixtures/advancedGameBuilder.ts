@@ -463,7 +463,7 @@ export class AdvancedGameScenarioBuilder {
     transition:
       | { id?: string; transitionType: 'halftime'; triggeredEarly?: boolean }
       | { id?: string; transitionType: 'soft_cap' }
-      | { id?: string; transitionType: 'hard_cap'; afterPointId?: string },
+      | { id?: string; transitionType: 'hard_cap' },
   ): this {
     const point = this.currentPoint();
     const pointEnded = pointHasScore(point);
@@ -487,10 +487,11 @@ export class AdvancedGameScenarioBuilder {
         afterPointId: point.id,
       });
     } else {
+      if (!pointEnded) throw new Error('Hard cap requires a completed point.');
       this.game.gameTransitions.push({
         id,
         transitionType: 'hard_cap',
-        afterPointId: transition.afterPointId ?? (pointEnded ? point.id : undefined),
+        afterPointId: point.id,
       });
     }
     return this;

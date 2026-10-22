@@ -330,8 +330,8 @@ export type GameTransition =
   | {
       id: string;
       transitionType: 'hard_cap';
-      /** Timer-driven event. May be absent if hard cap ends the game mid-point. */
-      afterPointId?: string;
+      /** Timer-driven event. Recorded at the point-end that crosses the hard cap. */
+      afterPointId: string;
     };
 
 // --- Player References ---

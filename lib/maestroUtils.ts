@@ -312,6 +312,57 @@ export async function seedMaestroBasicSavedGame() {
   return MAESTRO_SEED_BASIC_GAME_ID;
 }
 
+// A 1-0 win over Rivals on one point: the opponent blocks us, Kelly blocks back and scores the
+// Callahan. Lets flows edit a saved Callahan whose block sits behind an opponent block.
+function buildSeedBasicCallahanSavedGame(team: SavedTeam): SavedGame {
+  const playerId = getMaestroSeedPlayerId;
+  const startedAt = Date.now() - 60 * 60 * 1000;
+  const events: GameEvent[] = [
+    { type: 'turnover', team: 'team2', subtype: 'block', playerId: null, pointNumber: 1 },
+    {
+      type: 'turnover',
+      team: 'team1',
+      subtype: 'block',
+      playerId: playerId('Kelly'),
+      pointNumber: 1,
+    },
+    {
+      type: 'goal',
+      team: 'team1',
+      goalPlayerId: playerId('Kelly'),
+      assistPlayerId: 'OTHER_TEAM',
+      pointNumber: 1,
+    },
+  ];
+
+  return {
+    id: MAESTRO_SEED_BASIC_GAME_ID,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    createdAt: startedAt,
+    team1: team,
+    team2Name: 'Rivals',
+    team1Score: 1,
+    team2Score: 0,
+    events: events.map((event) => ({ ...event, gameId: MAESTRO_SEED_BASIC_GAME_ID })),
+    autoHalftimeEnabled: false,
+    gameTo: 1,
+    startingPossession: 'team1',
+    pointLines: [
+      {
+        pointNumber: 1,
+        playerIds: MAESTRO_SEED_PLAYERS.map(playerId),
+        timestamp: startedAt + 60 * 1000,
+      },
+    ],
+  };
+}
+
+export async function seedMaestroBasicSavedCallahanGame() {
+  await seedMaestroTeamPrerequisites({ clearActiveGame: true });
+  await useGameStore.getState().importGame(buildSeedBasicCallahanSavedGame(buildSeedTeam()));
+  return MAESTRO_SEED_BASIC_GAME_ID;
+}
+
 export async function seedMaestroBasicSavedGames() {
   await seedMaestroBasicSavedGame();
   await useGameStore.getState().importGame(buildSeedBasicSecondSavedGame(buildSeedTeam()));

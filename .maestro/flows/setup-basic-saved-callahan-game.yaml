@@ -1,0 +1,26 @@
+appId: com.langdk.ultimatestats.dev
+name: Seed Basic Saved Callahan Game
+---
+# Saved 1-0 win over Rivals for Zoboomafoo, game to 1 with halftime off. The only point is an
+# opponent block, Kelly's block, and Kelly's Callahan. Lands on the saved game detail.
+- launchApp
+# Retry once: a deep link sent during app cold start can be dropped.
+# maxRetries counts total attempts in maestro-runner but retries in Maestro; 2 retries in both.
+- retry:
+    maxRetries: 2
+    commands:
+      - openLink: ultimatestats-dev:///__maestro_seed__?mode=basicSavedCallahanGame
+      - extendedWaitUntil:
+          visible:
+            id: 'maestro-setup-running'
+          timeout: 5000
+- retry:
+    maxRetries: 1
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            id: 'maestro-setup-running'
+          timeout: 15000
+- extendedWaitUntil:
+    visible: 'SAVED GAME'
+    timeout: 15000

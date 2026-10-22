@@ -459,9 +459,7 @@ function groupBy<T, K>(items: T[], keyFn: (item: T) => K): Map<K, T[]> {
 export function buildAdvancedTimeline(game: AdvancedTrackedGame): AdvancedTimelinePoint[] {
   const ctx = buildTimelineContext(game);
 
-  return ctx.analytics.points.map((point, index) =>
-    buildTimelinePoint(point, index === ctx.analytics.points.length - 1, ctx),
-  );
+  return ctx.analytics.points.map((point) => buildTimelinePoint(point, ctx));
 }
 
 // ── Timeline context ─────────────────────────────────────────────────────────
@@ -473,7 +471,6 @@ interface TimelineBuildContext {
   possessionsByPointId: Map<string, AnalyticsPossession[]>;
   actionsByPossessionId: Map<string, AnalyticsAction[]>;
   gameTransitionsByPointId: Map<string, GameTransition[]>;
-  endTransitions: GameTransition[];
 }
 
 function buildTimelineContext(game: AdvancedTrackedGame): TimelineBuildContext {
@@ -493,18 +490,7 @@ function buildTimelineContext(game: AdvancedTrackedGame): TimelineBuildContext {
   const possessionsByPointId = groupBy(analytics.possessions, (p) => p.pointId);
   const actionsByPossessionId = groupBy(analytics.actions, (a) => a.possessionId);
 
-  const gameTransitionsByPointId = new Map<string, GameTransition[]>();
-  const endTransitions: GameTransition[] = [];
-
-  for (const gt of game.gameTransitions ?? []) {
-    if (gt.afterPointId) {
-      const list = gameTransitionsByPointId.get(gt.afterPointId) ?? [];
-      list.push(gt);
-      gameTransitionsByPointId.set(gt.afterPointId, list);
-    } else {
-      endTransitions.push(gt);
-    }
-  }
+  const gameTransitionsByPointId = groupBy(game.gameTransitions ?? [], (gt) => gt.afterPointId);
 
   return {
     analytics,
@@ -513,7 +499,6 @@ function buildTimelineContext(game: AdvancedTrackedGame): TimelineBuildContext {
     possessionsByPointId,
     actionsByPossessionId,
     gameTransitionsByPointId,
-    endTransitions,
   };
 }
 
@@ -574,15 +559,11 @@ function buildTimelinePossessions(
 
 function buildTimelinePoint(
   point: AnalyticsPoint,
-  isLastPoint: boolean,
   ctx: TimelineBuildContext,
 ): AdvancedTimelinePoint {
   const rawPoint = getRequiredRawPoint(ctx, point);
 
-  const gameTransitionsAfter = [
-    ...(ctx.gameTransitionsByPointId.get(point.id) ?? []),
-    ...(isLastPoint ? ctx.endTransitions : []),
-  ];
+  const gameTransitionsAfter = ctx.gameTransitionsByPointId.get(point.id) ?? [];
 
   return {
     pointId: point.id,

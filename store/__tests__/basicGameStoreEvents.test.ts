@@ -29,6 +29,13 @@ const timeout: GameEvent = {
   isFloater: false,
   elapsedMs: 800,
 };
+const opponentBlock: GameEvent = {
+  type: 'turnover',
+  team: 'team2',
+  subtype: 'block',
+  playerId: null,
+  elapsedMs: 700,
+};
 const savedGameId = 'saved-basic-game-1';
 
 const eventOwners = [
@@ -111,16 +118,14 @@ describe.each(eventOwners)('$name event corrections', (owner) => {
     ]);
   });
 
-  it.each([turnover, timeout])(
+  // Reachable by setting a Callahan scorer to Unknown (unhiding its block) and deleting that block.
+  it.each([turnover, timeout, opponentBlock])(
     'does not change an unrelated event before a Callahan (%j)',
     async (previous) => {
       const callahan: GameEvent = { ...goal, assistPlayerId: 'OTHER_TEAM' };
       await owner.arrange([previous, callahan]);
-      await owner.update(1, { goalPlayerId: null, assistPlayerId: null });
-      expect(owner.read()).toEqual([
-        previous,
-        { ...callahan, goalPlayerId: null, assistPlayerId: null },
-      ]);
+      await owner.update(1, { goalPlayerId: 'new-scorer' });
+      expect(owner.read()).toEqual([previous, { ...callahan, goalPlayerId: 'new-scorer' }]);
     },
   );
 

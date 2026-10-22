@@ -2168,94 +2168,6 @@ describe('advancedTrackingStore', () => {
     });
   });
 
-  it('recordGameTransition adds a soft_cap transition after the last completed point', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-    useAdvancedTrackingStore
-      .getState()
-      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
-
-    const pointId = getCurrentGame()!.points[0].id;
-    useAdvancedTrackingStore.getState().recordGameTransition('soft_cap');
-
-    const game = getCurrentGame() as AdvancedTrackedGame;
-    expect(game.gameTransitions).toHaveLength(1);
-    expect(game.gameTransitions![0].transitionType).toBe('soft_cap');
-    expect((game.gameTransitions![0] as { afterPointId: string }).afterPointId).toBe(pointId);
-  });
-
-  it('recordGameTransition throws if soft_cap is recorded during an active point', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-
-    expect(() => useAdvancedTrackingStore.getState().recordGameTransition('soft_cap')).toThrow(
-      'Cannot record soft_cap while a point is in progress.',
-    );
-  });
-
-  it('recordGameTransition throws if soft_cap is recorded before any completed point', () => {
-    createGame();
-
-    expect(() => useAdvancedTrackingStore.getState().recordGameTransition('soft_cap')).toThrow(
-      'Cannot record soft_cap before the first point is completed.',
-    );
-  });
-
-  it('recordGameTransition adds a hard_cap transition between points', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-    useAdvancedTrackingStore
-      .getState()
-      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
-
-    const pointId = getCurrentGame()!.points[0].id;
-    useAdvancedTrackingStore.getState().recordGameTransition('hard_cap');
-
-    const game = getCurrentGame() as AdvancedTrackedGame;
-    expect(game.gameTransitions).toHaveLength(1);
-    expect(game.gameTransitions![0].transitionType).toBe('hard_cap');
-    expect((game.gameTransitions![0] as { afterPointId?: string }).afterPointId).toBe(pointId);
-  });
-
-  it('recordGameTransition allows hard_cap mid-point and records the in-progress point id', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-    // Point is in progress — hard_cap is still allowed mid-point
-    const inProgressPointId = getCurrentGame()!.points[0].id;
-    useAdvancedTrackingStore.getState().recordGameTransition('hard_cap');
-
-    const game = getCurrentGame() as AdvancedTrackedGame;
-    expect(game.gameTransitions).toHaveLength(1);
-    expect(game.gameTransitions![0].transitionType).toBe('hard_cap');
-    expect((game.gameTransitions![0] as { afterPointId?: string }).afterPointId).toBe(
-      inProgressPointId,
-    );
-  });
-
   it('recordBetweenPointTimeout writes to transitionsAfter on the completed point', () => {
     createGame();
 
@@ -2303,27 +2215,6 @@ describe('advancedTrackingStore', () => {
 
     expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
     expect(getCurrentGame()!.points[0].transitionsAfter).toBeUndefined();
-  });
-
-  it('undoLastOperation skips cap transitions and undoes the latest undoable operation', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-    useAdvancedTrackingStore
-      .getState()
-      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
-    useAdvancedTrackingStore.getState().recordGameTransition('soft_cap');
-
-    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
-    expect(getCurrentGame()?.gameTransitions?.some((t) => t.transitionType === 'soft_cap')).toBe(
-      true,
-    );
-    expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
   });
 
   it('recordPull throws if a point is already in progress', () => {
@@ -3066,7 +2957,8 @@ describe('advancedTrackingStore', () => {
 
       // Undo removes the goal but does not re-evaluate cap transitions
       // (syncCapTransitions is additive-only).
-      useAdvancedTrackingStore.getState().undoLastOperation();
+      expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+      expect(getCurrentGame()?.points[0].possessions[0].actions.at(-1)?.kind).toBe('disc_pickup');
       expect(getCurrentGameTransitions()).toHaveLength(1);
       expect(getCurrentGameTransitions()[0]).toMatchObject({
         transitionType: 'soft_cap',

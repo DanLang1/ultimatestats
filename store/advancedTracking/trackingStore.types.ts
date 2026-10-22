@@ -127,7 +127,6 @@ export interface AdvancedTrackingState {
   correctCurrentGamePointActiveLines: (
     input: CorrectAdvancedPointActiveLinesInput,
   ) => Promise<void>;
-  recordGameTransition: (transitionType: 'soft_cap' | 'hard_cap') => void;
   triggerHalftimeEarly: () => boolean;
   startGameClockPause: (reason: GameClockPauseReason) => string;
   resumeGameClockPause: (pauseId: string) => void;

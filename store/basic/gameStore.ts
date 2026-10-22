@@ -1102,10 +1102,14 @@ export const useGameStore = create<GameState>()(
               if (updates.assistPlayerId !== undefined)
                 event.assistPlayerId = updates.assistPlayerId;
 
-              // For Callahans: also update the associated block event (always immediately before)
+              // For Callahans: also update our block immediately before (edits can leave another event there)
               if (isCallahan && updates.goalPlayerId !== undefined && eventIndex > 0) {
                 const prevEvent = state.events[eventIndex - 1];
-                if (prevEvent.type === 'turnover' && prevEvent.subtype === 'block') {
+                if (
+                  prevEvent.type === 'turnover' &&
+                  prevEvent.subtype === 'block' &&
+                  prevEvent.team === 'team1'
+                ) {
                   prevEvent.playerId = updates.goalPlayerId;
                 }
               }
@@ -1174,10 +1178,14 @@ export const useGameStore = create<GameState>()(
             if (updates.assistPlayerId !== undefined)
               updatedEvent.assistPlayerId = updates.assistPlayerId;
 
-            // For Callahans: also update the associated block event (always immediately before)
+            // For Callahans: also update our block immediately before (edits can leave another event there)
             if (isCallahan && updates.goalPlayerId !== undefined && eventIndex > 0) {
               const prevEvent = game.events[eventIndex - 1];
-              if (prevEvent.type === 'turnover' && prevEvent.subtype === 'block') {
+              if (
+                prevEvent.type === 'turnover' &&
+                prevEvent.subtype === 'block' &&
+                prevEvent.team === 'team1'
+              ) {
                 updatedEvents[eventIndex - 1] = { ...prevEvent, playerId: updates.goalPlayerId };
               }
             }

@@ -422,9 +422,8 @@ export function syncDerivedHalftimeTransition(game: AdvancedTrackedGame): boolea
  * only recorded once. Meant to be called from within a mutative store setter
  * (operates on the passed game reference).
  *
- * - `soft_cap` is only recorded when a point has just ended (between-points).
- * - `hard_cap` may be recorded mid-point; `afterPointId` is set if the current
- *   point has ended, otherwise left undefined.
+ * Only called after a point-ending throw, so both caps record the just-completed point as
+ * `afterPointId`.
  *
  * Returns true if any transition was added.
  */
@@ -445,12 +444,14 @@ export function syncCapTransitions(
   const hasHardCap = transitions.some((t) => t.transitionType === 'hard_cap');
 
   const currentPoint = getCurrentPoint(game);
-  const pointEnded = currentPoint != null && hasPointEnded(currentPoint);
+  if (currentPoint == null || !hasPointEnded(currentPoint)) {
+    throw new Error('Cap transitions can only be synced after a completed point.');
+  }
 
   const next: GameTransition[] = [...transitions];
   let didChange = false;
 
-  if (softCapMs != null && !hasSoftCap && pointEnded && gameElapsedMs >= softCapMs) {
+  if (softCapMs != null && !hasSoftCap && gameElapsedMs >= softCapMs) {
     next.push({
       id: `soft_cap_${game.id}`,
       transitionType: 'soft_cap',
@@ -463,7 +464,7 @@ export function syncCapTransitions(
     next.push({
       id: `hard_cap_${game.id}`,
       transitionType: 'hard_cap',
-      afterPointId: pointEnded ? currentPoint.id : undefined,
+      afterPointId: currentPoint.id,
     });
     didChange = true;
   }

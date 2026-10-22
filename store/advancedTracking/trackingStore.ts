@@ -591,60 +591,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           });
         },
 
-        recordGameTransition: (transitionType) => {
-          const game = getCurrentGame(get());
-          const currentPoint = getCurrentPoint(game);
-
-          if (transitionType === 'soft_cap' && game.settings.format?.softCapEnabled === false) {
-            throw new Error('Cannot record soft_cap when soft cap tracking is disabled.');
-          }
-          if (transitionType === 'hard_cap' && game.settings.format?.hardCapEnabled === false) {
-            throw new Error('Cannot record hard_cap when hard cap tracking is disabled.');
-          }
-          if (transitionType === 'soft_cap' && currentPoint == null) {
-            throw new Error('Cannot record soft_cap before the first point is completed.');
-          }
-          if (transitionType === 'soft_cap' && !hasPointEnded(currentPoint)) {
-            throw new Error('Cannot record soft_cap while a point is in progress.');
-          }
-          if (
-            transitionType === 'soft_cap' &&
-            game.gameTransitions?.some((t) => t.transitionType === 'soft_cap')
-          ) {
-            throw new Error('soft_cap has already been recorded.');
-          }
-          if (
-            transitionType === 'hard_cap' &&
-            game.gameTransitions?.some((t) => t.transitionType === 'hard_cap')
-          ) {
-            throw new Error('hard_cap has already been recorded.');
-          }
-
-          const transitionId = generateId();
-          const afterPointId = currentPoint?.id;
-
-          set((state) => {
-            const liveGame = getCurrentGame(state);
-            if (liveGame.gameTransitions == null) {
-              liveGame.gameTransitions = [];
-            }
-            if (transitionType === 'soft_cap') {
-              liveGame.gameTransitions.push({
-                id: transitionId,
-                transitionType: 'soft_cap',
-                afterPointId: afterPointId!,
-              });
-            } else {
-              liveGame.gameTransitions.push({
-                id: transitionId,
-                transitionType: 'hard_cap',
-                afterPointId,
-              });
-            }
-            liveGame.updatedAt = Date.now();
-          });
-        },
-
         triggerHalftimeEarly: () => {
           if (get().currentGameId == null) {
             return false;

@@ -636,7 +636,7 @@ describe('buildAdvancedTimeline', () => {
       gameTransitions: [
         { id: 'gt1', transitionType: 'halftime', afterPointId: 'pt1' },
         { id: 'gt2', transitionType: 'soft_cap', afterPointId: 'pt2' },
-        { id: 'gt3', transitionType: 'hard_cap' },
+        { id: 'gt3', transitionType: 'hard_cap', afterPointId: 'pt2' },
       ],
       points: [
         {
@@ -1136,7 +1136,9 @@ describe('getTransitionLabel', () => {
     expect(getTransitionLabel({ id: 'gt1', transitionType: 'soft_cap', afterPointId: 'pt1' })).toBe(
       'Soft Cap',
     );
-    expect(getTransitionLabel({ id: 'gt1', transitionType: 'hard_cap' })).toBe('Hard Cap');
+    expect(getTransitionLabel({ id: 'gt1', transitionType: 'hard_cap', afterPointId: 'pt1' })).toBe(
+      'Hard Cap',
+    );
   });
 });
 
@@ -1362,7 +1364,9 @@ describe('getTransitionIcon', () => {
     expect(getTransitionIcon({ id: 'gt1', transitionType: 'soft_cap', afterPointId: 'pt1' })).toBe(
       'flag-outline',
     );
-    expect(getTransitionIcon({ id: 'gt1', transitionType: 'hard_cap' })).toBe('flag-outline');
+    expect(getTransitionIcon({ id: 'gt1', transitionType: 'hard_cap', afterPointId: 'pt1' })).toBe(
+      'flag-outline',
+    );
   });
 
   it('returns timer-pause-outline for timeout variants', () => {

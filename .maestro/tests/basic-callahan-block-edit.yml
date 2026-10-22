@@ -1,0 +1,59 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Callahan Scorer Edit Keeps Opponent Block
+tags:
+  - basic
+---
+# A Callahan scorer edit must only sync our own block. Setting the scorer to Unknown unhides the
+# Callahan block; deleting it leaves the opponent's block directly before the Callahan. Editing the
+# scorer back must not write that player onto the opponent block (which would also hide its row).
+- runFlow: ../flows/setup-basic-saved-callahan-game.yaml
+- assertVisible: '1 - 0'
+- tapOn:
+    id: 'header-actions-menu'
+- tapOn: '.*Timeline'
+- extendedWaitUntil:
+    visible: 'GAME TIMELINE'
+    timeout: 5000
+- assertVisible: 'CALLAHAN, Kelly'
+- assertVisible: 'OPP BLOCK.*'
+- assertNotVisible: 'BLOCK, Kelly'
+
+# Unknown scorer: the Callahan block syncs to Unknown and becomes visible.
+- longPressOn: 'CALLAHAN, Kelly'
+- extendedWaitUntil:
+    visible: 'Edit Goal'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Unknown'
+- tapOn: 'Save event changes'
+- extendedWaitUntil:
+    visible: 'BLOCK, Unknown'
+    timeout: 5000
+
+# Delete that block, leaving the opponent block directly before the Callahan.
+- longPressOn: 'BLOCK, Unknown'
+- extendedWaitUntil:
+    visible: 'Edit Event'
+    timeout: 5000
+- tapOn: 'Delete event'
+- tapOn:
+    id: 'edit-event-delete-confirm'
+- extendedWaitUntil:
+    notVisible: 'BLOCK, Unknown'
+    timeout: 5000
+- assertVisible: 'OPP BLOCK.*'
+
+# Restoring Kelly as scorer must leave the opponent block untouched and visible.
+- longPressOn: 'CALLAHAN.*'
+- extendedWaitUntil:
+    visible: 'Edit Goal'
+    timeout: 5000
+- tapOn:
+    id: 'player-chip-Kelly'
+- tapOn: 'Save event changes'
+- extendedWaitUntil:
+    visible: 'CALLAHAN, Kelly'
+    timeout: 5000
+- assertVisible: 'OPP BLOCK.*'
+- takeScreenshot:
+    path: .maestro/screenshots/basic-callahan-block-edit

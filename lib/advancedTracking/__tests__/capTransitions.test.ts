@@ -120,11 +120,12 @@ describe('syncCapTransitions', () => {
     expect(game.gameTransitions).toBeUndefined();
   });
 
-  it('does not record soft_cap when current point is still in progress', () => {
+  it('throws when the current point is still in progress', () => {
     const game = baseGame([revivedPoint('pt1')]);
-    const changed = syncDefaultCapTransitions(game, 75 * MIN_MS);
 
-    expect(changed).toBe(false);
+    expect(() => syncDefaultCapTransitions(game, 95 * MIN_MS)).toThrow(
+      'Cap transitions can only be synced after a completed point.',
+    );
   });
 
   it('is idempotent — re-running does not re-add soft_cap', () => {
@@ -159,15 +160,6 @@ describe('syncCapTransitions', () => {
         afterPointId: 'pt1',
       }),
     ]);
-  });
-
-  it('records hard_cap with afterPointId undefined when point is mid-play', () => {
-    const game = baseGame([revivedPoint('pt1')]);
-    syncDefaultCapTransitions(game, 95 * MIN_MS);
-
-    const hardCap = game.gameTransitions?.find((t) => t.transitionType === 'hard_cap');
-    expect(hardCap).toMatchObject({ transitionType: 'hard_cap' });
-    expect((hardCap as { afterPointId?: string }).afterPointId).toBeUndefined();
   });
 
   it('records both caps in one pass if both thresholds are crossed at point end', () => {

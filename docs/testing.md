@@ -119,6 +119,8 @@ Basic and team seed modes:
   timeout used (`setup-basic-game.yaml`).
 - `mode=basicSavedGame` lands on a saved 2-1 basic game against Rivals with known turnovers,
   goals, and point lines (`setup-basic-saved-game.yaml`).
+- `mode=basicSavedCallahanGame` lands on a saved 1-0 basic game against Rivals whose only point is
+  an opponent block, Kelly's block, and Kelly's Callahan (`setup-basic-saved-callahan-game.yaml`).
 - `mode=basicSavedGames` adds an earlier 1-0 win over Hammers (Joe from Jon) to that saved game and
   lands on Aggregate Stats (`setup-basic-saved-games.yaml`).
 

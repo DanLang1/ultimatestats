@@ -28,7 +28,7 @@ type AdvancedGameDiagnostic = {
   pointSummaryTruncated: boolean;
   transitions?: {
     type: string;
-    afterPointId?: string;
+    afterPointId: string;
     triggeredEarly?: boolean;
   }[];
 };
