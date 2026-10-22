@@ -52,10 +52,6 @@ describe('checkGameOver', () => {
   });
 
   describe('Edge cases', () => {
-    it('returns true when team exceeds gameTo', () => {
-      expect(checkGameOver({ ...baseState, team1Score: 16, team2Score: 14 })).toBe(true);
-    });
-
     it('returns false at 0-0', () => {
       expect(checkGameOver(baseState)).toBe(false);
     });

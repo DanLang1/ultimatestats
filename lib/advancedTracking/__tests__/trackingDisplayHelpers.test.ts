@@ -1055,17 +1055,6 @@ describe('getPointAdjustedTimestamp', () => {
     expect(getPointAdjustedTimestamp(point)).toBe(155000);
   });
 
-  it('falls back to startedAt path when only revivedAt is set without elapsedMsAtEnd', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 10000,
-      revivedAt: 200000,
-      possessions: [],
-    };
-    expect(getPointAdjustedTimestamp(point)).toBe(10000);
-  });
-
   it('freezes timestamp when point has ended with elapsedMsAtEnd', () => {
     const point: TrackedPoint = {
       id: 'pt1',

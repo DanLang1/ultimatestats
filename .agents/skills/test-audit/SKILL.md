@@ -57,8 +57,12 @@ it.
   produce.**
 - **Tests for data shapes no write path can produce** — e.g. a stoppage after a goal in analytics
   (live capture rejects it; post-goal timeouts are between-point transitions). They read as
-  documentation that the shape is valid and mislead reviewers. Check the store guards that write
-  the shape before keeping one; if the rule matters, test the guard that enforces it instead.
+  documentation that the shape is valid and mislead reviewers. Before calling a shape impossible,
+  check every path that can write it: capture guards, edit/delete/correction flows (edit modals,
+  `updateEvent`, `deleteEvent`, correction utils), undo, migrations, and import. A shape capture
+  blocks can still arise from a later edit — e.g. a basic Callahan's block becomes visible and
+  deletable once its scorer is set to Unknown. If the rule matters, test the guard that enforces it
+  instead.
 
 ## Layer ownership
 

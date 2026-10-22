@@ -20,6 +20,18 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
+## P2 - Basic Callahan Edit Can Overwrite an Opponent Block
+
+- Editing a basic Callahan's scorer copies the new scorer onto the event immediately before it when
+  that event is a block, without checking the block's team. Setting the scorer to Unknown unhides
+  the Callahan block in the timeline; deleting it then leaves an earlier block next to the Callahan.
+  If that block is the opponent's (`team2`), the next scorer edit writes our player's ID onto it.
+- Cleanup: also require `prevEvent.team === 'team1'` in both Callahan block syncs, with a store
+  test for the opponent-block case.
+- References:
+  `store/basic/gameStore.ts` (`updateEvent`, `updateSavedGameEvent` Callahan block sync)
+  `lib/basic/timelineUtils.ts` (Callahan block hiding requires a non-null scorer)
+
 ## P3 - Share Schema Version Stamping
 
 - Any advanced schema bump (e.g. a new `ThrowResult`) blocks sharing every advanced game to older

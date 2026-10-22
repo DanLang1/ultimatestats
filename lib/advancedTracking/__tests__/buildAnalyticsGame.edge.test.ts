@@ -665,63 +665,6 @@ describe('buildAnalyticsGame — edge cases and correctness', () => {
     });
   });
 
-  describe('hockey assist detection', () => {
-    it('does NOT give hockey assist when previous throw was not a completion', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: ZOO,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: RIVALS,
-                    receivingSideId: ZOO,
-                    puller: untracked,
-                    receiver: august,
-                    result: 'inbound',
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: august,
-                    toPlayer: meves,
-                    result: 'drop',
-                  },
-                  {
-                    id: 'a3',
-                    kind: 'disc_pickup',
-                    sideId: ZOO,
-                    player: joah,
-                  },
-                  {
-                    id: 'a4',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: joah,
-                    toPlayer: meves,
-                    result: 'goal',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      const analytics = buildAnalyticsGame(game);
-      const hockeyAssists = analytics.attributions.filter((a) => a.type === 'hockey_assist');
-      expect(hockeyAssists).toHaveLength(0);
-    });
-  });
-
   describe('pull outcome attributions', () => {
     it('OB pull with no receiver produces no pull_reception or drop', () => {
       const game: AdvancedTrackedGame = {

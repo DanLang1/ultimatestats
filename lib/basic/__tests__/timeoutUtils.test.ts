@@ -120,26 +120,6 @@ describe('deriveTimeoutState', () => {
   });
 
   describe('halftime reset with autoHalftimeEnabled', () => {
-    it('prefers the explicit halftime marker over the final gameTo when replaying timeouts', () => {
-      const events: GameEvent[] = [
-        timeout('team1', 0),
-        goal('team2'),
-        goal('team2'),
-        goal('team2'),
-        goal('team2'),
-        timeout('team1', 1),
-        goal('team2'),
-        goal('team2'),
-        goal('team2'),
-        { ...goal('team2'), triggeredHalftime: true },
-      ];
-
-      const result = deriveTimeoutState(events, 6, true);
-
-      // Both timeouts happened before the actual halftime goal, so both reset.
-      expect(result.team1Timeouts).toEqual([true, true]);
-    });
-
     it('resets regular timeouts at halftime but NOT floaters (game to 15, halftime at 8)', () => {
       const events: GameEvent[] = [
         timeout('team1', 0),

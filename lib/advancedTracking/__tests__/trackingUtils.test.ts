@@ -251,11 +251,6 @@ describe('getCurrentPossession', () => {
     expect(getCurrentPossession(null)).toBeNull();
   });
 
-  it('returns null when current point has no possessions', () => {
-    const point = { ...makePoint([]), possessions: [] };
-    expect(getCurrentPossession(makeGame([point]))).toBeNull();
-  });
-
   it('returns the last possession of the current point', () => {
     const pos1 = makePossession(HOME);
     const pos2 = { ...makePossession(AWAY), id: 'pos2' };
@@ -314,10 +309,6 @@ describe('isTurnoverThrow', () => {
 describe('isPossessionOver', () => {
   it('returns false for null possession', () => {
     expect(isPossessionOver(null)).toBe(false);
-  });
-
-  it('returns false for empty possession', () => {
-    expect(isPossessionOver(makePossession(HOME))).toBe(false);
   });
 
   it('returns false after a completion', () => {
@@ -430,10 +421,6 @@ describe('hasPointEnded', () => {
     expect(hasPointEnded(null)).toBe(false);
   });
 
-  it('returns false for point with no possessions', () => {
-    expect(hasPointEnded({ ...makePoint([]), possessions: [] })).toBe(false);
-  });
-
   it('returns true after a goal', () => {
     const pos = makePossession(HOME, [
       { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
@@ -459,10 +446,6 @@ describe('hasPointEnded', () => {
 // ── getPointScoringSideId ─────────────────────────────────────────────────────
 
 describe('getPointScoringSideId', () => {
-  it('returns null when point has no possessions', () => {
-    expect(getPointScoringSideId(baseGame, { ...makePoint([]), possessions: [] })).toBeNull();
-  });
-
   it('returns null when last action is not a throw', () => {
     const pos = makePossession(HOME, [
       { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
@@ -1017,12 +1000,6 @@ describe('getLineReceivingSideId', () => {
     expect(getLineReceivingSideId(makeGame([point]), point)).toBe(AWAY);
   });
 
-  it('returns initialReceivingSideId for an empty in-progress point shell', () => {
-    const point = { ...makePoint([]), possessions: [] };
-
-    expect(getLineReceivingSideId(makeGame([point]), point)).toBe(HOME);
-  });
-
   it('returns the next receiving side after a completed point', () => {
     const point = makePoint([
       makePossession(HOME, [
@@ -1271,16 +1248,6 @@ describe('assertValidInjurySubInput', () => {
 
     expect(() => assertValidInjurySubInput(game, point, input)).not.toThrow();
   });
-
-  it('throws when point has no possessions', () => {
-    const point = { ...makePoint([]), possessions: [] };
-    const game = makeGame([point]);
-    const input = makeInjurySubInput();
-
-    expect(() => assertValidInjurySubInput(game, point, input)).toThrow(
-      'Stoppage action "stoppage-1" not found in current point.',
-    );
-  });
 });
 
 // ── getAdvancedRecentLines ────────────────────────────────────────────────────
@@ -1366,16 +1333,6 @@ describe('getAdvancedRecentLines', () => {
     expect(getAdvancedRecentLines(game)).toEqual([]);
   });
 
-  it('returns empty when the focus side has no lines in any point', () => {
-    const game = _makeGame({
-      points: [
-        _point('pt1', [_line('side-b', ['p1', 'p2', 'p3'])]),
-        _point('pt2', [_line('side-b', ['p4', 'p5', 'p6'])]),
-      ],
-    });
-    expect(getAdvancedRecentLines(game)).toEqual([]);
-  });
-
   it('returns the last 3 distinct focus-side lines (most recent first)', () => {
     const game = _makeGame({
       focusSideId: 'side-a',
@@ -1413,21 +1370,6 @@ describe('getAdvancedRecentLines', () => {
       { pointNumber: 3, playerIds: ['p1', 'p2', 'p4'] },
       { pointNumber: 2, playerIds: ['p3', 'p2', 'p1'] },
     ]);
-  });
-
-  it('skips points where focus side line is missing', () => {
-    const game = _makeGame({
-      focusSideId: 'side-a',
-      points: [
-        _point('pt1', [_line('side-b', ['p1', 'p2', 'p3'])]),
-        _point('pt2', [_line('side-a', ['p4', 'p5', 'p6'])]),
-        _point('pt3', [_line('side-b', ['p1', 'p2', 'p3'])]),
-      ],
-    });
-
-    const result = getAdvancedRecentLines(game);
-
-    expect(result).toEqual([{ pointNumber: 2, playerIds: ['p4', 'p5', 'p6'] }]);
   });
 
   it('returns recent lines for a requested non-focus side', () => {

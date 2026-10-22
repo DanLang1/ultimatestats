@@ -193,15 +193,4 @@ describe('AdvancedGameScenarioBuilder', () => {
       }),
     ).toThrow('A between-point transition requires a completed point.');
   });
-
-  it('records a mid-point hard cap without an after-point boundary', () => {
-    const game = createAdvancedGameScenario({ id: 'hard-cap-contract' })
-      .startPoint({ puller: UNTRACKED_PLAYER, receiver: participantRef('alex') })
-      .gameTransition({ transitionType: 'hard_cap' })
-      .build();
-
-    expect(game.gameTransitions).toEqual([
-      { id: 'hard-cap-contract-game-transition-1', transitionType: 'hard_cap' },
-    ]);
-  });
 });

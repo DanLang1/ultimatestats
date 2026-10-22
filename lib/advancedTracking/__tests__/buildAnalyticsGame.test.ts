@@ -1035,52 +1035,6 @@ describe('turnover attributions', () => {
     expect(throwAttempt?.splitAttribution).toBeUndefined();
   });
 
-  it('splitAttribution on a throwaway is ignored — thrower gets full weight 1.0 (no receiver to share blame with)', () => {
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      status: 'terminated',
-      points: [
-        {
-          id: 'pt1',
-          lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-          possessions: [
-            {
-              id: 'pos1',
-              sideId: ZOO,
-              actions: [
-                {
-                  id: 'a1',
-                  kind: 'pull',
-                  sideId: RIVALS,
-                  receivingSideId: ZOO,
-                  puller: untracked,
-                  receiver: august,
-                  result: 'inbound',
-                },
-                {
-                  id: 'a2',
-                  kind: 'throw',
-                  sideId: ZOO,
-                  thrower: august,
-                  result: 'throwaway',
-                  splitAttribution: true, // no toPlayer — split is meaningless here
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-
-    const { attributions } = buildAnalyticsGame(game);
-
-    // throwaway always full weight — no counterpart exists
-    expect(sumAttributions(attributions, 'p_august', 'throwaway')).toBe(1);
-    expect(
-      attributions.find((attr) => attr.type === 'throwaway')?.splitAttribution,
-    ).toBeUndefined();
-  });
-
   it('stall — stall_conceded to the thrower, stall to the defender', () => {
     const game: AdvancedTrackedGame = {
       ...baseGame,

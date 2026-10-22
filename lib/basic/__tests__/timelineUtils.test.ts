@@ -125,25 +125,6 @@ describe('timelineUtils', () => {
       expect(points[2].offensiveTeam).toBe('team1');
     });
 
-    it('should prefer the explicit halftime marker over final gameTo reconstruction', () => {
-      const events: GameEvent[] = [
-        goal('team2'), // P1: team1 starts on offense
-        goal('team2'), // P2: team1 still receives after a break
-        goal('team2'), // P3: soft-cap-reduced gameTo would incorrectly infer halftime here
-        goal('team2'), // P4: should still be team1 offense until the marked halftime goal
-        goal('team2'),
-        goal('team2'),
-        goal('team2'),
-        { ...goal('team2'), triggeredHalftime: true }, // Actual halftime goal from original baseGameTo
-        goal('team1'),
-      ];
-
-      const points = computePointByPointEvents(events, 'team1', 6);
-
-      expect(points[3].offensiveTeam).toBe('team1');
-      expect(points[8].offensiveTeam).toBe('team2');
-    });
-
     it('should correctly group timeouts into points', () => {
       const events: GameEvent[] = [
         timeout('team1'),

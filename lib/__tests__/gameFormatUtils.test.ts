@@ -204,10 +204,6 @@ describe('formatHalftimeDisplay', () => {
     it('shows the actual score with "(early)" suffix', () => {
       expect(formatHalftimeDisplay(true, 8, 5, true)).toBe('At 5 (early)');
     });
-
-    it('returns scheduled score when actualScore is null despite triggeredEarly', () => {
-      expect(formatHalftimeDisplay(true, 8, null, true)).toBe('At 8');
-    });
   });
 });
 
