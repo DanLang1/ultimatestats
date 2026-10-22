@@ -13,7 +13,6 @@ import {
   getCurrentPossession,
   getEffectiveGameTo,
   getGameScore,
-  getLastAction,
   getLineReceivingSideId,
   getLiveInProgressGame,
   getOtherSideId,
@@ -261,24 +260,6 @@ describe('getCurrentPossession', () => {
     const pos1 = makePossession(HOME);
     const pos2 = { ...makePossession(AWAY), id: 'pos2' };
     expect(getCurrentPossession(makeGame([makePoint([pos1, pos2])]))).toBe(pos2);
-  });
-});
-
-// ── getLastAction ─────────────────────────────────────────────────────────────
-
-describe('getLastAction', () => {
-  it('returns null for null possession', () => {
-    expect(getLastAction(null)).toBeNull();
-  });
-
-  it('returns null for possession with no actions', () => {
-    expect(getLastAction(makePossession(HOME))).toBeNull();
-  });
-
-  it('returns the last action', () => {
-    const action1 = { id: 'a1', kind: 'disc_pickup' as const, sideId: HOME, player: august };
-    const action2 = { id: 'a2', kind: 'disc_pickup' as const, sideId: HOME, player: meves };
-    expect(getLastAction(makePossession(HOME, [action1, action2]))).toBe(action2);
   });
 });
 

@@ -24,6 +24,7 @@ import {
   ThrowDetailsTarget,
   TurnoverEventInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { getLastPlayAction } from '@/lib/advancedTracking/trackingUtils';
 import {
   getEligibleThrowTypes,
   Participant,
@@ -138,9 +139,7 @@ export const TrackerLastActionCard = ({
     return getLatestThrowDetailsTarget(point, candidate);
   };
   const lastPossession = point?.possessions.at(-1) ?? null;
-  const pointEndingAction = lastPossession?.actions.findLast(
-    (candidate) => candidate.kind !== 'stoppage',
-  );
+  const pointEndingAction = lastPossession && getLastPlayAction(lastPossession.actions);
   const lastUndoEntry = undoStack.at(-1);
   const canUndoPointEndingAction =
     lastUndoEntry?.kind === 'action' &&

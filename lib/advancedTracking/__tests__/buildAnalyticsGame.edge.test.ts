@@ -135,57 +135,6 @@ describe('buildAnalyticsGame — edge cases and correctness', () => {
       });
       expect(analytics.possessions[1]).toMatchObject({ result: 'scored' });
     });
-
-    it('derives the scorer when a goal is followed by a stoppage', () => {
-      const game: AdvancedTrackedGame = {
-        ...baseGame,
-        points: [
-          {
-            id: 'pt1',
-            lines: [{ sideId: ZOO, participantIds: ['p_august'] }],
-            possessions: [
-              {
-                id: 'pos1',
-                sideId: ZOO,
-                actions: [
-                  {
-                    id: 'a1',
-                    kind: 'pull',
-                    sideId: RIVALS,
-                    receivingSideId: ZOO,
-                    puller: untracked,
-                    result: 'inbound',
-                  },
-                  {
-                    id: 'a2',
-                    kind: 'throw',
-                    sideId: ZOO,
-                    thrower: august,
-                    toPlayer: meves,
-                    result: 'goal',
-                  },
-                  {
-                    id: 'a3',
-                    kind: 'stoppage',
-                    reason: 'injury',
-                    sideId: ZOO,
-                    recordedAt: 100,
-                    pausedAt: 100,
-                    resumedAt: 200,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      const analytics = buildAnalyticsGame(game);
-
-      expect(analytics.points[0].state).toBe('hold');
-      expect(analytics.points[0].scoringSideId).toBe(ZOO);
-      expect(analytics.possessions[0].result).toBe('scored');
-    });
   });
 
   describe('callahan break points', () => {

@@ -4,6 +4,7 @@ import { areBothSidesFullyTracked } from './trackingModeUtils';
 import {
   isDroppedPull,
   getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
+  getLastPlayAction,
   getOtherSideId,
   hasPointEnded,
   isDefenseScoringThrow,
@@ -71,7 +72,7 @@ export function getGoalInfo(
   if (!point || point.possessions.length === 0) return null;
 
   const lastPossession = point.possessions[point.possessions.length - 1];
-  const lastAction = lastPossession.actions.findLast((action) => action.kind !== 'stoppage');
+  const lastAction = getLastPlayAction(lastPossession.actions);
 
   if (!lastAction || lastAction.kind !== 'throw') return null;
   const { result, thrower, toPlayer } = lastAction;
@@ -121,7 +122,7 @@ export function getLatestThrowDetailsTarget(
 ): ThrowDetailsTarget | null {
   if (point == null || possession == null) return null;
   if (point.possessions.at(-1)?.id !== possession.id) return null;
-  const action = possession.actions.findLast((candidate) => candidate.kind !== 'stoppage');
+  const action = getLastPlayAction(possession.actions);
   if (action?.kind !== 'throw' || getEligibleThrowTypes(action.result).length === 0) return null;
 
   return {

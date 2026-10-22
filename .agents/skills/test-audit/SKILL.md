@@ -55,6 +55,10 @@ it.
   fixture never creates a self pair.
 - **Fixtures or mocks that supply the result, receipt, or ordering the production path should
   produce.**
+- **Tests for data shapes no write path can produce** — e.g. a stoppage after a goal in analytics
+  (live capture rejects it; post-goal timeouts are between-point transitions). They read as
+  documentation that the shape is valid and mislead reviewers. Check the store guards that write
+  the shape before keeping one; if the rule matters, test the guard that enforces it instead.
 
 ## Layer ownership
 

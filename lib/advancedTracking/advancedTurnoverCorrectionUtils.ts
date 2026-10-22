@@ -6,6 +6,7 @@ import {
 } from './advancedTouchCorrectionUtils';
 import {
   assertValidPointLineHistory,
+  getLastPlayAction,
   getOtherSideId,
   hasPointEnded,
   isTurnoverThrow,
@@ -117,9 +118,7 @@ function assertCanonicalTurnoverAction(
   possession: PointPossession,
   action: ThrowAction,
 ): void {
-  const lastNonStoppageAction = possession.actions.findLast(
-    (candidate) => candidate.kind !== 'stoppage',
-  );
+  const lastNonStoppageAction = getLastPlayAction(possession.actions);
   if (lastNonStoppageAction?.id !== action.id) {
     throw new Error(`Action "${action.id}" is not the terminal action of its possession.`);
   }

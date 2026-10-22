@@ -1,5 +1,5 @@
 ---
-name: u-stat-code-review
+name: pr-review
 description: Review staged and unstaged U-Stat changes for correctness, data integrity, security, and repository-contract violations. Use for broad diff review or a pre-handoff check. For a focused readability or behavior-preserving refactor review, use code-simplification instead.
 ---
 

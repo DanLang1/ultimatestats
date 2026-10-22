@@ -3,6 +3,7 @@ import type {
   AnalyticsGame,
   AnalyticsPossession,
 } from '@/lib/advancedTracking/analyticsTypes';
+import { getLastPlayAction } from '@/lib/advancedTracking/trackingUtils';
 import type { TimeOfPossessionStats } from '@/lib/timeOfPossessionTypes';
 
 function getPossessionEndingAction(
@@ -11,7 +12,7 @@ function getPossessionEndingAction(
 ): AnalyticsAction | undefined {
   const actions = actionsByPossessionId.get(possession.id);
   if (!actions) return undefined;
-  return actions.findLast((action) => action.kind !== 'stoppage');
+  return getLastPlayAction(actions);
 }
 
 export function computeAdvancedTimeOfPossessionStats(

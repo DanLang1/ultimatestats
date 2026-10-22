@@ -3,6 +3,7 @@ import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
 
+import type { AnalyticsAction } from './analyticsTypes';
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
 import { getParticipantName } from './participantUtils';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
@@ -65,14 +66,6 @@ export function getCurrentPossession(game: AdvancedTrackedGame | null): PointPos
   }
 
   return point.possessions[point.possessions.length - 1];
-}
-
-export function getLastAction(possession: PointPossession | null) {
-  if (possession == null || !hasItems(possession.actions)) {
-    return null;
-  }
-
-  return possession.actions[possession.actions.length - 1];
 }
 
 export function getOtherSideId(game: AdvancedTrackedGame, sideId: string): string {
@@ -161,8 +154,21 @@ export function isDroppedPull(result: PullResult): boolean {
   return result === 'dropped';
 }
 
+/** A possession action that is part of play rather than a stoppage. */
+export type PlayAction<T extends PossessionAction | AnalyticsAction> = Exclude<
+  T,
+  { kind: 'stoppage' }
+>;
+
+/** The last non-stoppage action in a possession: the play that decides its current state. */
+export function getLastPlayAction<T extends PossessionAction | AnalyticsAction>(
+  actions: readonly T[],
+): PlayAction<T> | undefined {
+  return actions.findLast((action): action is PlayAction<T> => action.kind !== 'stoppage');
+}
+
 export function isPossessionOver(possession: PointPossession | null): boolean {
-  const lastAction = possession?.actions.findLast((action) => action.kind !== 'stoppage') ?? null;
+  const lastAction = possession && getLastPlayAction(possession.actions);
   if (lastAction == null) {
     return false;
   }
@@ -184,7 +190,7 @@ export function hasPointEnded(point: TrackedPoint | null): boolean {
   }
 
   const possession = point.possessions[point.possessions.length - 1];
-  const lastAction = possession?.actions[possession.actions.length - 1];
+  const lastAction = getLastPlayAction(possession.actions);
 
   return lastAction?.kind === 'throw' && isPointEndingThrow(lastAction.result);
 }
@@ -194,7 +200,7 @@ export function getPointScoringSideId(
   point: TrackedPoint,
 ): string | null {
   const possession = point.possessions[point.possessions.length - 1];
-  const lastAction = possession?.actions[possession.actions.length - 1];
+  const lastAction = possession && getLastPlayAction(possession.actions);
 
   if (lastAction == null || lastAction.kind !== 'throw') {
     return null;

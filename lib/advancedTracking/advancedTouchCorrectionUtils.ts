@@ -1,4 +1,5 @@
 import {
+  getLastPlayAction,
   getOtherSideId,
   hasPointEnded,
   assertValidPointLineHistory,
@@ -386,9 +387,7 @@ function isPointEndingAction(
   action: PossessionAction,
 ): boolean {
   const endingPossession = point.possessions.at(-1);
-  const endingAction = endingPossession?.actions.findLast(
-    (candidate) => candidate.kind !== 'stoppage',
-  );
+  const endingAction = endingPossession && getLastPlayAction(endingPossession.actions);
   return endingPossession?.id === possession.id && endingAction?.id === action.id;
 }
 

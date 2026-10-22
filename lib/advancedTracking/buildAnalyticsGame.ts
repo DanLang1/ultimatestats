@@ -15,7 +15,12 @@ import {
   type PointState,
 } from './analyticsTypes';
 import { getSideTrackingModes } from './trackingModeUtils';
-import { isDroppedPull, isContinuingThrow, isPossessionLosingThrow } from './trackingUtils';
+import {
+  getLastPlayAction,
+  isDroppedPull,
+  isContinuingThrow,
+  isPossessionLosingThrow,
+} from './trackingUtils';
 import {
   THROW_RESULT_SPECS,
   type AdvancedTrackedGame,
@@ -108,7 +113,7 @@ function getLastNonStoppageAction(
   actions: PossessionAction[],
 ): PossessionAction {
   getLastAction(gameId, pointId, possessionId, actions);
-  const last = actions.findLast((action) => action.kind !== 'stoppage');
+  const last = getLastPlayAction(actions);
   if (last == null) {
     throw new Error(
       `buildAnalyticsGame requires possession "${possessionId}" in point "${pointId}" for game "${gameId}" to have at least one non-stoppage action`,
