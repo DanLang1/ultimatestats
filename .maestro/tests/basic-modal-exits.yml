@@ -78,6 +78,12 @@ tags:
     text: '1'
 
 # Timeout: closing the modal keeps the timeout pending; the action bar then ends it.
+# Pause for the previous sheet's dismissal; presenting a modal mid-dismissal hides later modals from accessibility.
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-pause'
+    timeout: 1000
+    optional: true
 - tapOn: 'Use timeout 1 for Zoboomafoo'
 - extendedWaitUntil:
     visible:

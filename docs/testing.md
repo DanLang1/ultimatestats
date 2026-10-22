@@ -62,12 +62,11 @@ the pattern to Jest. Use `npx jest <pattern>` (or `npm run test:routes`) for a f
 Maestro flows live in `.maestro/`: scenario flows in `.maestro/tests/` and reusable setup and
 reader sub-flows in `.maestro/flows/`. They target the installed iOS simulator development build
 (dev app id `com.langdk.ultimatestats.dev` and URI scheme `ultimatestats-dev`, both defined in
-`app.config.js` for the `development` variant). Install Maestro with Homebrew, then
-build the app and run the advanced tracker smoke check:
+`app.config.js` for the `development` variant). The npm scripts run them with
+[maestro-runner](https://github.com/devicelab-dev/maestro-runner), a devDependency, so build the app
+and run the advanced tracker smoke check:
 
 ```bash
-brew tap mobile-dev-inc/tap
-brew install maestro
 npm run ios
 npm run maestro:smoke
 ```
@@ -176,16 +175,34 @@ npm run maestro:all
 npm run maestro:ci
 ```
 
-The Maestro npm scripts disable Maestro CLI analytics for predictable agent runs.
+Reports (HTML, JSON, JUnit) and failure screenshots land in a timestamped folder under
+`.maestro/test-output/reports/`; `maestro:ci` writes to `.maestro/test-output/ci/` instead.
+`npm run maestro:parallel` spreads flows across several booted simulators
+(`.agents/skills/maestro-parallel/SKILL.md`). `npm run maestro:classic` runs the core suite with
+Homebrew Maestro (`brew install mobile-dev-inc/tap/maestro`) as a fallback, with its CLI analytics
+disabled. `npm run check` runs `lint:maestro`, which syntax-checks the flows offline.
+
+maestro-runner differs from Maestro in ways flows must account for:
+
+- Selector regexes use Go's RE2, which has no lookaround or backreferences, and a pattern RE2 cannot
+  compile matches as literal text, so a `notVisible` assertion with one passes falsely. Do not use
+  them in flows.
+- `retry.maxRetries` counts total attempts, where Maestro counts retries; use `maxRetries: 2` to get
+  at least one retry under both.
+- It taps as soon as an element appears. Opening a React Native `<Modal>` while the previous one is
+  still dismissing can swallow the tap, or leave later modals with an empty accessibility tree. Before
+  such a tap, pause with an optional `extendedWaitUntil` for `id: 'maestro-pause'`, which never
+  appears. An optional `notVisible` wait on an element is not a pause while a modal covers it.
+- `takeScreenshot` paths resolve relative to the flow file, not the working directory.
 
 ### Driving Simulators Directly
 
 For visual checks across devices (iPhone SE, a large iPhone, iPad mini, a large iPad), run ad hoc
-flows with `MAESTRO_CLI_NO_ANALYTICS=1 maestro --device <udid> test -e OUT=<dir> <flow>` and
+flows with `npx maestro-runner --platform ios --device <udid> -e OUT=<dir> test <flow>` and
 `takeScreenshot: ${OUT}/<name>`. Things that are not obvious:
 
-- Maestro's iOS driver always binds host port 7001, so run one Maestro command at a time against
-  one simulator. Concurrent runs on two simulators send commands to the wrong device.
+- Classic Maestro's iOS driver always binds host port 7001, so run one `maestro` command at a time
+  against one simulator. Concurrent runs on two simulators send commands to the wrong device.
 - Every seed resets Settings → Orientation to Portrait (`resetMaestroSetupState`), which blocks
   `setOrientation`. To test landscape after seeding, set Orientation to System first (for example
   `openLink: ultimatestats-dev:///settings` then `tapOn: 'System'`).

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# Run the Maestro suite sharded across several booted iOS simulators.
+# Run the Maestro suite with maestro-runner across several booted iOS simulators.
 #
-# Flows are split evenly (--shard-split) across the first N booted simulators
-# whose name matches MAESTRO_DEVICE_MODEL exactly, so every shard sees the same
-# screen size. Other booted simulators (e.g. an iPad) are ignored.
+# Flows are pulled from a shared queue (--parallel) by the first N booted
+# simulators whose name matches MAESTRO_DEVICE_MODEL exactly, so every device
+# sees the same screen size. Other booted simulators (e.g. an iPad) are ignored.
 #
 # Each simulator must already be booted with the dev client installed and
 # connected to Metro.
 #
 # Usage:
-#   npm run maestro:parallel                     # 2 shards, all flows
+#   npm run maestro:parallel                     # 2 devices, all flows
 #   npm run maestro:parallel -- --include-tags basic
 #   MAESTRO_SHARDS=3 npm run maestro:parallel
 #   bash scripts/maestro-parallel.sh --dry-run   # print the command only
@@ -50,16 +50,20 @@ fi
 
 DEVICES="$(IFS=,; echo "${BOOTED_UDIDS[*]:0:SHARDS}")"
 
-CMD=(maestro test --shard-split "$SHARDS" --device "$DEVICES")
+CMD=(
+  "$ROOT_DIR/node_modules/.bin/maestro-runner" --platform ios --device "$DEVICES" --parallel "$SHARDS"
+  --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports
+  test
+)
 if ((${#MAESTRO_ARGS[@]})); then
   CMD+=("${MAESTRO_ARGS[@]}")
 fi
 CMD+=(.maestro/tests/)
 
 if ((DRY_RUN)); then
-  printf '%q ' MAESTRO_CLI_NO_ANALYTICS=1 "${CMD[@]}"
+  printf '%q ' "${CMD[@]}"
   echo
   exit 0
 fi
 
-MAESTRO_CLI_NO_ANALYTICS=1 "${CMD[@]}"
+"${CMD[@]}"

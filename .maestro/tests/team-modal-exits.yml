@@ -89,13 +89,16 @@ tags:
     id: 'pregame-change-team'
 - extendedWaitUntil:
     visible:
-      id: 'team-select-(?!maestro-seed-team).+'
+      id: 'team-select-.+'
+      text: '.*Maestro Exits'
     timeout: 5000
 - tapOn:
-    id: 'team-select-(?!maestro-seed-team).+'
+    id: 'team-select-.+'
+    text: '.*Maestro Exits'
 - extendedWaitUntil:
     notVisible:
-      id: 'team-select-(?!maestro-seed-team).+'
+      id: 'team-select-.+'
+      text: '.*Maestro Exits'
     timeout: 5000
 - assertVisible: 'SCRIMMAGE'
 - assertNotVisible: 'ADVANCED TRACKER'

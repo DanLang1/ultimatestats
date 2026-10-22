@@ -11,7 +11,7 @@ Inspect neighboring files under `.maestro/tests/` and `.maestro/flows/` for curr
 setup conventions.
 
 Build and install with `npm run ios` when native dependencies or configuration changed. While
-iterating, run the edited file directly with `maestro test <path>`; before finishing, run the
+iterating, run the edited file directly with `npx maestro-runner --platform ios test <path>`; before finishing, run the
 smallest applicable npm Maestro suite documented in `docs/testing.md`.
 
 ## Author flows from current conventions

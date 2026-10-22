@@ -67,6 +67,12 @@ tags:
 - extendedWaitUntil:
     visible: '.*T/A'
     timeout: 5000
+# Pause for the previous sheet's dismissal; presenting a modal mid-dismissal hides later modals from accessibility.
+- extendedWaitUntil:
+    visible:
+      id: 'maestro-pause'
+    timeout: 500
+    optional: true
 - tapOn: '.*T/A'
 - extendedWaitUntil:
     visible: 'Who threw it away?'

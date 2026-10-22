@@ -54,6 +54,8 @@ app-example
 # Maestro generated screenshots
 .maestro/screenshots/
 .maestro/test-output/
+# maestro-runner resolves takeScreenshot paths relative to the flow file
+.maestro/*/.maestro/
 
 # Pre-release check logs
 /.pre-release-logs/

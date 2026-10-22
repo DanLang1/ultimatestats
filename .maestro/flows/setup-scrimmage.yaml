@@ -2,11 +2,16 @@ appId: com.langdk.ultimatestats.dev
 name: Seed Scrimmage Tracker Game
 ---
 - launchApp
-- openLink: ultimatestats-dev:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
-- extendedWaitUntil:
-    visible:
-      id: 'maestro-setup-running'
-    timeout: 5000
+# Retry once: a deep link sent during app cold start can be dropped.
+# maxRetries counts total attempts in maestro-runner but retries in Maestro; 2 retries in both.
+- retry:
+    maxRetries: 2
+    commands:
+      - openLink: ultimatestats-dev:///__maestro_seed__?gameType=scrimmage&trackerState=${TRACKER_STATE}
+      - extendedWaitUntil:
+          visible:
+            id: 'maestro-setup-running'
+          timeout: 5000
 - retry:
     maxRetries: 1
     commands:
