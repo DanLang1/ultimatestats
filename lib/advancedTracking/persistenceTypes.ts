@@ -1,4 +1,9 @@
-import type { AdvancedTrackedGame, PlayerRef, PullResult } from '@/lib/advancedTracking/types';
+import {
+  PULL_RESULTS,
+  type AdvancedTrackedGame,
+  type PlayerRef,
+  type PullResult,
+} from '@/lib/advancedTracking/types';
 
 export const ADVANCED_UNDO_PAYLOAD_VERSION = 1;
 
@@ -62,7 +67,7 @@ function isPlayerRef(value: unknown): value is PlayerRef {
 }
 
 function isPullResult(value: unknown): value is PullResult {
-  return value === 'inbound' || value === 'ob' || value === 'dropped' || value === 'roller';
+  return PULL_RESULTS.some((result) => result === value);
 }
 
 function isAdvancedTrackingUndoEntry(value: unknown): value is AdvancedTrackingUndoEntry {

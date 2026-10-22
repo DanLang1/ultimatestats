@@ -6,7 +6,6 @@ import {
   assertValidParticipantRefs,
   assertValidSideIds,
   canStartSecondHalfEarly,
-  didPullTurnOver,
   didLastOperationEndCurrentPoint,
   getActiveAdvancedGame,
   getAdvancedRecentLines,
@@ -326,20 +325,6 @@ describe('isTurnoverThrow', () => {
     expect(isTurnoverThrow('complete')).toBe(false);
     expect(isTurnoverThrow('goal')).toBe(false);
     expect(isTurnoverThrow('callahan')).toBe(false);
-  });
-});
-
-// ── didPullTurnOver ───────────────────────────────────────────────────────────
-
-describe('didPullTurnOver', () => {
-  it('returns true only for dropped', () => {
-    expect(didPullTurnOver('dropped')).toBe(true);
-  });
-
-  it('returns false for all other pull results', () => {
-    for (const result of ['inbound', 'ob'] as const) {
-      expect(didPullTurnOver(result)).toBe(false);
-    }
   });
 });
 

@@ -15,7 +15,7 @@ import {
   type PointState,
 } from './analyticsTypes';
 import { getSideTrackingModes } from './trackingModeUtils';
-import { isContinuingThrow, isPossessionLosingThrow } from './trackingUtils';
+import { isDroppedPull, isContinuingThrow, isPossessionLosingThrow } from './trackingUtils';
 import {
   THROW_RESULT_SPECS,
   type AdvancedTrackedGame,
@@ -504,7 +504,7 @@ function compilePossessionWithActions(
       possResult = 'turned_over';
       turnoverType = possLastAction.result;
     }
-  } else if (possLastAction.kind === 'pull' && possLastAction.result === 'dropped') {
+  } else if (possLastAction.kind === 'pull' && isDroppedPull(possLastAction.result)) {
     possResult = 'turned_over';
     turnoverType = 'drop';
   }

@@ -43,7 +43,7 @@ import {
   assertValidSideIds,
   canStartSecondHalfEarly,
   deriveHalftimeTransition,
-  didPullTurnOver,
+  isDroppedPull,
   getActiveAdvancedGame,
   getCurrentPoint,
   getCurrentPossession,
@@ -219,7 +219,7 @@ function removePossessionsAfterTurnover(
 ): void {
   const isTurnover =
     (action?.kind === 'throw' && isTurnoverThrow(action.result)) ||
-    (action?.kind === 'pull' && didPullTurnOver(action.result));
+    (action?.kind === 'pull' && isDroppedPull(action.result));
   if (point == null || possession == null || !isTurnover) return;
 
   const possessionIndex = point.possessions.findIndex(
@@ -814,7 +814,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (currentPossession.actions.length !== 1 || hasPointEnded(currentPoint)) {
             throw new Error('Cannot mark a dropped pull after the point has advanced.');
           }
-          if (openingAction.result === 'dropped') {
+          if (isDroppedPull(openingAction.result)) {
             throw new Error('Cannot mark a pull as dropped when it was already dropped.');
           }
 

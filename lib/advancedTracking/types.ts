@@ -361,6 +361,24 @@ export const PULL_RESULTS = ['inbound', 'ob', 'dropped', 'roller'] as const;
 
 export type PullResult = (typeof PULL_RESULTS)[number];
 
+export interface PullResultSpec {
+  /** True when the pull counts as landing in bounds for pull stats. */
+  countsAsInbound: boolean;
+  /** True when hang time is meaningful for pull hang-time stats. */
+  countsHangTime: boolean;
+}
+
+/**
+ * Single source of pull-result semantics. Adding a `PullResult` fails to compile until it has a
+ * spec here; pull stats derive from this table.
+ */
+export const PULL_RESULT_SPECS = {
+  inbound: { countsAsInbound: true, countsHangTime: true },
+  ob: { countsAsInbound: false, countsHangTime: false },
+  dropped: { countsAsInbound: false, countsHangTime: true },
+  roller: { countsAsInbound: true, countsHangTime: false },
+} as const satisfies Record<PullResult, PullResultSpec>;
+
 export interface PullAction {
   id: string;
   kind: 'pull';

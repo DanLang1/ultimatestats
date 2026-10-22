@@ -17,7 +17,7 @@ import {
   PointSub,
   PossessionAction,
   PossessionLosingThrowResult,
-  PullAction,
+  PullResult,
   THROW_RESULT_SPECS,
   ThrowResult,
   TrackedPoint,
@@ -157,7 +157,7 @@ export function isPossessionLosingThrow(
   return outcome === 'turnover' || outcome === 'defense_scores';
 }
 
-export function didPullTurnOver(result: PullAction['result']): boolean {
+export function isDroppedPull(result: PullResult): boolean {
   return result === 'dropped';
 }
 
@@ -172,7 +172,7 @@ export function isPossessionOver(possession: PointPossession | null): boolean {
   }
 
   if (lastAction.kind === 'pull') {
-    return didPullTurnOver(lastAction.result);
+    return isDroppedPull(lastAction.result);
   }
 
   return false;

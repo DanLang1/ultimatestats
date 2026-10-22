@@ -1,9 +1,7 @@
 import type { AnalyticsGame } from './analyticsTypes';
-import type { PullAction } from './types';
+import { PULL_RESULT_SPECS, PULL_RESULTS, type PullResult } from './types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-type PullResult = PullAction['result'];
 
 export interface PullStats {
   totalPulls: number;
@@ -14,7 +12,11 @@ export interface PullStats {
 }
 
 export function getInboundPullCount(stats: Pick<PullStats, 'outcomes'>): number {
-  return (stats.outcomes.inbound ?? 0) + (stats.outcomes.roller ?? 0);
+  let count = 0;
+  for (const result of PULL_RESULTS) {
+    if (PULL_RESULT_SPECS[result].countsAsInbound) count += stats.outcomes[result] ?? 0;
+  }
+  return count;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -35,11 +37,9 @@ export function computePullStats(game: AnalyticsGame, sideId?: string): PullStat
 
     totalPulls++;
 
-    if (action.result != null) {
-      outcomes[action.result] = (outcomes[action.result] ?? 0) + 1;
-    }
+    outcomes[action.result] = (outcomes[action.result] ?? 0) + 1;
 
-    if (action.result !== 'ob' && action.result !== 'roller' && action.hangTimeMs != null) {
+    if (PULL_RESULT_SPECS[action.result].countsHangTime && action.hangTimeMs != null) {
       hangTimeSum += action.hangTimeMs;
       hangTimeCount++;
     }

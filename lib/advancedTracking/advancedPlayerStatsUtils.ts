@@ -10,6 +10,7 @@ import {
   POINT_PLUS_MINUS_HOLD_VALUE,
   POINT_PLUS_MINUS_OPP_HOLD_VALUE,
 } from './statConstants';
+import { PULL_RESULT_SPECS } from './types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -336,12 +337,12 @@ export function computeAdvancedPlayerStats(
       // Only count pulls thrown by our side (sideId is the pulling side for pull actions).
       if (sideId != null && action.sideId !== sideId) continue;
 
-      if (action.result === 'inbound' || action.result === 'roller') stats.inboundPulls++;
+      if (PULL_RESULT_SPECS[action.result].countsAsInbound) stats.inboundPulls++;
       if (action.result === 'ob') stats.outOfBoundsPulls++;
       if (action.result === 'dropped') stats.droppedPulls++;
       if (action.result === 'roller') stats.rollerPulls++;
 
-      if (action.result === 'ob' || action.result === 'roller' || action.hangTimeMs == null) {
+      if (!PULL_RESULT_SPECS[action.result].countsHangTime || action.hangTimeMs == null) {
         continue;
       }
       pullHangTimeSumMs += action.hangTimeMs;

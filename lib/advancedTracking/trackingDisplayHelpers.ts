@@ -2,6 +2,7 @@ import { hasItems } from '@/lib/utils';
 
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import {
+  isDroppedPull,
   getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
   getOtherSideId,
   hasPointEnded,
@@ -499,7 +500,7 @@ export function getLastTurnoverEvent(
 
   // A dropped pull is always the first action and the only action in the possession.
   const openingAction = possession.actions[0];
-  if (openingAction?.kind === 'pull' && openingAction.result === 'dropped') {
+  if (openingAction?.kind === 'pull' && isDroppedPull(openingAction.result)) {
     return {
       label: 'DROPPED PULL',
       isFocusTurnover: isFocusPossession,
@@ -708,7 +709,7 @@ export function getTrackerPickupState(params: {
   // After a dropped pull the disc belongs to the pulling team, whose pickup is not a drop.
   const openingAction = possession?.actions[0];
   const canDropOpeningPull =
-    isAwaitingPullPickup && openingAction?.kind === 'pull' && openingAction.result !== 'dropped';
+    isAwaitingPullPickup && openingAction?.kind === 'pull' && !isDroppedPull(openingAction.result);
   // Before the first pull there is no possession (the last-action card prompts instead), and a
   // received pull keeps the footer actions so Drop can record a dropped pull.
   const isAwaitingMidPointPickup =

@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import {
+  isDroppedPull,
   getCurrentPoint,
   getPointScoringSideId,
   isCompletedThrow,
@@ -33,7 +34,7 @@ export function getPointDetails(actions: PossessionAction[], focusSideId: string
       if (isPossessionLosingThrow(action.result)) {
         turnCount++;
       }
-    } else if (action.kind === 'pull' && action.result === 'dropped') {
+    } else if (action.kind === 'pull' && isDroppedPull(action.result)) {
       turnCount++;
     }
   }
