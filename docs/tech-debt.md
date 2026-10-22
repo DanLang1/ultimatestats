@@ -98,6 +98,32 @@ rewrite it to describe only the remaining problem as it exists now.
   `store/basic/gameStore.ts`
   `store/basic/gameStore.types.ts`
 
+## P3 - Advanced Tracker Undo Module
+
+- Undo inverses live in one `undoLastOperation` switch in the tracking store, away from the actions
+  that record each entry. A new undoable operation touches the entry type, the recording action,
+  and the switch.
+- `undoStack = []` is repeated in each active-game lifecycle action (create, reset, finalize,
+  finish, import, delete).
+- UI and utils read `undoStack.at(-1)` to answer gameplay questions (`canStartSecondHalfEarly`,
+  point-ending undo in `TrackerLastActionCard`, standalone undo in the between-point displays).
+- Live corrections (`correctCurrentTouch`, `correctCurrentTurnover`, line corrections) rewrite the
+  game without touching the stack, whose entries reference actions by ID. Confirm whether a
+  correction can leave an entry pointing at a removed or reshaped action.
+- Cleanup: move inverses into a pure `lib/advancedTracking` module with one exhaustive handler per
+  entry kind; route active-game changes through one helper that resets the stack; replace raw
+  stack peeks with named queries. Keep the stack in the tracking store: game and stack must update
+  and persist together as one snapshot. Keep semantic entries rather than snapshots or Immer
+  patches, since undo applies domain rules (revival pauses, possession cleanup, halftime
+  rederivation) rather than a pure revert.
+- References:
+  `store/advancedTracking/trackingStore.ts`
+  `lib/advancedTracking/persistenceTypes.ts`
+  `lib/advancedTracking/trackingUtils.ts`
+  `components/advancedTracking/TrackerLastActionCard.tsx`
+  `components/advancedTracking/BetweenPointDisplay.tsx`
+  `components/advancedTracking/HalftimeBetweenPointDisplay.tsx`
+
 ## P3 - Duplicated Logic
 
 - Extract shared hooks/components to eliminate duplication.

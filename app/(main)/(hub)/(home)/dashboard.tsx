@@ -10,7 +10,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { useActiveGameSession } from '@/hooks/useActiveGameSession';
+import { resumeGameSession, useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
@@ -150,7 +150,7 @@ export default function DashboardScreen() {
                 description: hasActiveAdvancedGame
                   ? 'Return to the advanced tracker'
                   : 'Return to the live scoreboard',
-                onPress: () => router.navigate(activeSession.route),
+                onPress: () => resumeGameSession(activeSession),
                 testID: 'dashboard-resume-game-button',
               },
               ...(hasActiveAdvancedGame

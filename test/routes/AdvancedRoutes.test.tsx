@@ -285,7 +285,29 @@ describe('advanced tracking routes', () => {
     await AsyncStorage.clear();
   });
 
-  it('redirects before rendering protected tracker content without a current game', async () => {
+  it.each([
+    ['without a current game', () => {}],
+    [
+      'for a finished game whose active pointer was cleared',
+      () => {
+        arrangeAdvancedGame();
+        useAdvancedTrackingStore.setState((state) => ({
+          currentGame: { ...state.currentGame!, status: 'terminated', endReason: 'manual' },
+          currentGameId: null,
+        }));
+      },
+    ],
+    [
+      'for a finished game that still holds the active pointer',
+      () => {
+        arrangeAdvancedGame();
+        useAdvancedTrackingStore.setState((state) => ({
+          currentGame: { ...state.currentGame!, status: 'terminated', endReason: 'manual' },
+        }));
+      },
+    ],
+  ])('redirects before rendering protected tracker content %s', async (_label, arrange) => {
+    arrange();
     await renderScreen(<TrackerScreen />);
 
     expect(router.replace).toHaveBeenCalledWith('/dashboard', {

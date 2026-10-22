@@ -72,15 +72,19 @@ it('honors a prevented tab press', async () => {
   expect(router.navigate).not.toHaveBeenCalled();
 });
 
-it.each([
-  ['basic', '/scoreboard'],
-  ['advanced', '/advanced-tracking/tracker-line-select'],
-] as const)('resumes the active %s game when pressing Game', async (mode, destination) => {
-  if (mode === 'basic') arrangeBasicGame();
-  else arrangeAdvancedGame();
+it('resumes the active basic game when pressing Game', async () => {
+  arrangeBasicGame();
   await renderScreen(<HubTabBar {...tabProps()} />);
   await userEvent.setup().press(screen.getByRole('button', { name: 'Game' }));
-  expect(router.navigate).toHaveBeenCalledWith(destination);
+  expect(router.navigate).toHaveBeenCalledWith('/scoreboard');
+});
+
+it('returns to the mounted advanced tracker instead of stacking another', async () => {
+  arrangeAdvancedGame();
+  await renderScreen(<HubTabBar {...tabProps()} />);
+  await userEvent.setup().press(screen.getByRole('button', { name: 'Game' }));
+  expect(router.dismissTo).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
+  expect(router.navigate).not.toHaveBeenCalled();
 });
 
 it('offers a new game when no session is active', async () => {

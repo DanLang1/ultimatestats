@@ -1,4 +1,4 @@
-import type { Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 
 import { getLiveInProgressGame, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -6,10 +6,24 @@ import { useGameSessionStore } from '@/store/gameSessionStore';
 
 type ActiveGameKind = 'advanced' | 'basic' | 'none';
 
-type ActiveGameSession = {
+export type ActiveGameSession = {
   kind: ActiveGameKind;
   route: Href;
 };
+
+/**
+ * Returns to the live game. Stats can open from the tracker menu on top of a still-mounted
+ * tracker, so advanced games pop back to it rather than stacking a second tracker that would
+ * outlive the game.
+ */
+export function resumeGameSession(session: ActiveGameSession) {
+  if (session.kind === 'none') throw new Error('No active game session to resume.');
+  if (session.kind === 'advanced') {
+    router.dismissTo(session.route);
+    return;
+  }
+  router.navigate(session.route);
+}
 
 export function useActiveGameSession(): ActiveGameSession {
   const activeGameType = useGameSessionStore((state) => state.activeGameType);

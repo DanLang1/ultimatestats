@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
-import { useActiveGameSession } from '@/hooks/useActiveGameSession';
+import { resumeGameSession, useActiveGameSession } from '@/hooks/useActiveGameSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import { Fonts } from '@/theme/theme';
@@ -139,7 +139,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
           return;
         }
 
-        router.navigate(activeSession.route);
+        resumeGameSession(activeSession);
         return;
       }
 

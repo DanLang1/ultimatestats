@@ -1,0 +1,77 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker View Stats Then End Game
+tags:
+  - advanced
+---
+# Regression for Sentry REACT-NATIVE-13: opening stats from the tracker menu and returning
+# through Home → Resume Game or the Game tab used to stack a second tracker. After ending the
+# game, swiping back revealed the stale tracker, and ending that finished game again failed to save.
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: opponentPossession
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-view-stats'
+- extendedWaitUntil:
+    visible:
+      id: 'hub-tab-home'
+    timeout: 5000
+- tapOn:
+    id: 'hub-tab-home'
+- tapOn:
+    id: 'dashboard-resume-game-button'
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-start-next'
+    timeout: 5000
+
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-view-stats'
+- extendedWaitUntil:
+    visible:
+      id: 'hub-tab-game'
+    timeout: 5000
+- tapOn:
+    id: 'hub-tab-game'
+- extendedWaitUntil:
+    visible:
+      id: 'between-point-start-next'
+    timeout: 5000
+
+- tapOn:
+    id: 'tracker-menu-button'
+- tapOn:
+    id: 'tracker-menu-end-game'
+- extendedWaitUntil:
+    visible:
+      id: 'game-complete-finish'
+    timeout: 5000
+- tapOn:
+    id: 'game-complete-finish'
+- extendedWaitUntil:
+    visible:
+      id: 'advanced-stats-summary-card'
+    timeout: 10000
+
+# Nothing may remain under the finished game's stats. A stale tracker would show here, or
+# redirect to the dashboard now that finished games are never tracked.
+- repeat:
+    times: 3
+    commands:
+      - swipe:
+          start: 0%, 50%
+          end: 90%, 50%
+          duration: 400
+      - waitForAnimationToEnd
+- assertVisible:
+    id: 'advanced-stats-summary-card'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-view-stats-end-game

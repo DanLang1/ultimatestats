@@ -9,6 +9,7 @@ export function initializeSentry() {
     dsn: isDevelopment ? undefined : process.env.EXPO_PUBLIC_SENTRY_DSN,
     environment,
     enabled: !isDevelopment,
+    integrations: [Sentry.expoRouterIntegration()],
   });
 }
 

@@ -66,14 +66,14 @@ should not shape its decisions.
   wrongly. Joins appear in the activity log.
 - There are two roles, owner and member:
 
-| Action                                   | Member | Owner |
-| ---------------------------------------- | ------ | ----- |
-| Track and upload games                   | Yes    | Yes   |
-| Edit the roster                          | Yes    | Yes   |
-| Invite coaches                           | Yes    | Yes   |
-| Delete own uploaded games                | Yes    | Yes   |
-| Delete other members' games              | No     | Yes   |
-| Remove members, delete the team          | No     | Yes   |
+| Action                          | Member | Owner |
+| ------------------------------- | ------ | ----- |
+| Track and upload games          | Yes    | Yes   |
+| Edit the roster                 | Yes    | Yes   |
+| Invite coaches                  | Yes    | Yes   |
+| Delete own uploaded games       | Yes    | Yes   |
+| Delete other members' games     | No     | Yes   |
+| Remove members, delete the team | No     | Yes   |
 
 - No viewer role for now. The team activity log is the safety net for bad edits.
 
@@ -109,13 +109,13 @@ every coach's games reference the same player IDs.
 Sync individual player changes, not whole rosters. Today's `importTeam` replaces the entire roster;
 cloud teams must not do that.
 
-| Change                                | Behavior                                                  |
-| ------------------------------------- | --------------------------------------------------------- |
-| Add player                            | Never conflicts; IDs are generated on the device          |
-| Edit different fields of one player   | Both changes kept                                         |
-| Edit the same field of one player     | Last write wins, ordered by server receipt, not phone clocks |
-| Remove player                         | Deactivate only; players referenced by games are never deleted |
-| Two coaches add the same person       | Duplicate players; needs a manual merge (later)           |
+| Change                              | Behavior                                                       |
+| ----------------------------------- | -------------------------------------------------------------- |
+| Add player                          | Never conflicts; IDs are generated on the device               |
+| Edit different fields of one player | Both changes kept                                              |
+| Edit the same field of one player   | Last write wins, ordered by server receipt, not phone clocks   |
+| Remove player                       | Deactivate only; players referenced by games are never deleted |
+| Two coaches add the same person     | Duplicate players; needs a manual merge (later)                |
 
 ### Collisions
 
@@ -212,12 +212,12 @@ the lineup never shifts during tracking.
 Defined in `lib/constants.ts` and enforced on the server. Raising them later is safe; lowering is
 not.
 
-| Limit                | Value                                                         |
-| -------------------- | ------------------------------------------------------------- |
-| Members per team     | 50                                                            |
-| Teams per user       | 10                                                            |
-| Team games per team  | 500                                                           |
-| Size per team game   | Existing advanced-game validation limits in `validate.ts`     |
+| Limit               | Value                                                     |
+| ------------------- | --------------------------------------------------------- |
+| Members per team    | 50                                                        |
+| Teams per user      | 10                                                        |
+| Team games per team | 500                                                       |
+| Size per team game  | Existing advanced-game validation limits in `validate.ts` |
 
 ## Offline Edits and Sync Architecture
 

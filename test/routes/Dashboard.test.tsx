@@ -143,7 +143,7 @@ it('resumes advanced line setup and starts a scrimmage after warning about the a
   await renderScreen(<DashboardScreen />, { queryClient });
   expect(screen.queryByText('Game Timeline')).not.toBeOnTheScreen();
   await user.press(screen.getByText('Resume Game'));
-  expect(router.navigate).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
+  expect(router.dismissTo).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
   await user.press(screen.getByText('New Game'));
   expect(screen.getByText('This will clear the current in-progress game')).toBeVisible();
   await user.press(screen.getByText('Scrimmage'));
