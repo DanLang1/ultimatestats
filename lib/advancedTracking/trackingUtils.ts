@@ -1,7 +1,7 @@
 import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { PointLineRecord } from '@/lib/storage/types';
-import { hasItems } from '@/lib/utils';
+import { assertNever, hasItems } from '@/lib/utils';
 
 import type { AnalyticsAction } from './analyticsTypes';
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
@@ -20,6 +20,7 @@ import {
   PossessionLosingThrowResult,
   PullResult,
   THROW_RESULT_SPECS,
+  ThrowOutcome,
   ThrowResult,
   TrackedPoint,
   TurnoverThrowResult,
@@ -167,21 +168,39 @@ export function getLastPlayAction<T extends PossessionAction | AnalyticsAction>(
   return actions.findLast((action): action is PlayAction<T> => action.kind !== 'stoppage');
 }
 
+/** How a play action leaves its possession. Pulls and pickups only continue or turn over. */
+export function getPlayOutcome(action: PlayAction<PossessionAction>): ThrowOutcome {
+  switch (action.kind) {
+    case 'throw':
+      return THROW_RESULT_SPECS[action.result].outcome;
+    case 'pull':
+      return isDroppedPull(action.result) ? 'turnover' : 'continues';
+    case 'disc_pickup':
+      return 'continues';
+    default:
+      return assertNever(action);
+  }
+}
+
+/** How a finished possession ended, and the play action that ended it. */
+export interface PossessionEnd {
+  outcome: Exclude<ThrowOutcome, 'continues'>;
+  action: PlayAction<PossessionAction>;
+}
+
+/** Null while the possession is still open: no play action yet, or the last play continues. */
+export function getPossessionEnd(possession: PointPossession): PossessionEnd | null {
+  const action = getLastPlayAction(possession.actions);
+  if (action == null) return null;
+
+  const outcome = getPlayOutcome(action);
+  if (outcome === 'continues') return null;
+
+  return { outcome, action };
+}
+
 export function isPossessionOver(possession: PointPossession | null): boolean {
-  const lastAction = possession && getLastPlayAction(possession.actions);
-  if (lastAction == null) {
-    return false;
-  }
-
-  if (lastAction.kind === 'throw') {
-    return isPointEndingThrow(lastAction.result) || isTurnoverThrow(lastAction.result);
-  }
-
-  if (lastAction.kind === 'pull') {
-    return isDroppedPull(lastAction.result);
-  }
-
-  return false;
+  return possession != null && getPossessionEnd(possession) != null;
 }
 
 export function hasPointEnded(point: TrackedPoint | null): boolean {
@@ -190,9 +209,9 @@ export function hasPointEnded(point: TrackedPoint | null): boolean {
   }
 
   const possession = point.possessions[point.possessions.length - 1];
-  const lastAction = getLastPlayAction(possession.actions);
+  const outcome = getPossessionEnd(possession)?.outcome;
 
-  return lastAction?.kind === 'throw' && isPointEndingThrow(lastAction.result);
+  return outcome === 'scores' || outcome === 'defense_scores';
 }
 
 export function getPointScoringSideId(
@@ -200,13 +219,8 @@ export function getPointScoringSideId(
   point: TrackedPoint,
 ): string | null {
   const possession = point.possessions[point.possessions.length - 1];
-  const lastAction = possession && getLastPlayAction(possession.actions);
+  const outcome = possession && getPossessionEnd(possession)?.outcome;
 
-  if (lastAction == null || lastAction.kind !== 'throw') {
-    return null;
-  }
-
-  const { outcome } = THROW_RESULT_SPECS[lastAction.result];
   if (outcome === 'scores') return possession.sideId;
   if (outcome === 'defense_scores') return getOtherSideId(game, possession.sideId);
   return null;

@@ -3,13 +3,13 @@ import type {
   AnalyticsGame,
   AnalyticsPossession,
 } from '@/lib/advancedTracking/analyticsTypes';
-import { getLastPlayAction } from '@/lib/advancedTracking/trackingUtils';
+import { getLastPlayAction, type PlayAction } from '@/lib/advancedTracking/trackingUtils';
 import type { TimeOfPossessionStats } from '@/lib/timeOfPossessionTypes';
 
 function getPossessionEndingAction(
   possession: AnalyticsPossession,
   actionsByPossessionId: Map<string, AnalyticsAction[]>,
-): AnalyticsAction | undefined {
+): PlayAction<AnalyticsAction> | undefined {
   const actions = actionsByPossessionId.get(possession.id);
   if (!actions) return undefined;
   return getLastPlayAction(actions);

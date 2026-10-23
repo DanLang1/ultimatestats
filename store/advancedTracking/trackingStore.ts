@@ -51,13 +51,13 @@ import {
   getGameScore,
   getLiveInProgressGame,
   getOtherSideId,
+  getPlayOutcome,
   getReceivingSideForNextPoint,
   hasInjurySubChanges,
   hasPointEnded,
   isAdvancedGameOver,
   isPointEndingThrow,
   isPossessionOver,
-  isTurnoverThrow,
   syncCapTransitions,
   syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
@@ -218,8 +218,7 @@ function removePossessionsAfterTurnover(
   action: PossessionAction | undefined,
 ): void {
   const isTurnover =
-    (action?.kind === 'throw' && isTurnoverThrow(action.result)) ||
-    (action?.kind === 'pull' && isDroppedPull(action.result));
+    action != null && action.kind !== 'stoppage' && getPlayOutcome(action) === 'turnover';
   if (point == null || possession == null || !isTurnover) return;
 
   const possessionIndex = point.possessions.findIndex(

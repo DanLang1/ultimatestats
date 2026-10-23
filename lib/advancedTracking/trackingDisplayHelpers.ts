@@ -6,9 +6,9 @@ import {
   getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
   getLastPlayAction,
   getOtherSideId,
+  getPossessionEnd,
   hasPointEnded,
   isDefenseScoringThrow,
-  isPointEndingThrow,
   isPossessionLosingThrow,
   isPossessionOver,
   isTurnoverThrow,
@@ -72,13 +72,14 @@ export function getGoalInfo(
   if (!point || point.possessions.length === 0) return null;
 
   const lastPossession = point.possessions[point.possessions.length - 1];
-  const lastAction = getLastPlayAction(lastPossession.actions);
+  const possessionEnd = getPossessionEnd(lastPossession);
 
-  if (!lastAction || lastAction.kind !== 'throw') return null;
-  const { result, thrower, toPlayer } = lastAction;
-  if (!isPointEndingThrow(result)) return null;
+  if (possessionEnd == null || possessionEnd.outcome === 'turnover') return null;
+  const { outcome, action } = possessionEnd;
+  if (action.kind !== 'throw') throw new Error('Only a throw can end a point.');
+  const { thrower, toPlayer } = action;
 
-  const isCallahan = isDefenseScoringThrow(result);
+  const isCallahan = outcome === 'defense_scores';
   const isFocusGoal = (lastPossession.sideId === focusSideId) !== isCallahan;
 
   return {

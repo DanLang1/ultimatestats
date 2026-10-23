@@ -17,9 +17,11 @@ import {
 import { getSideTrackingModes } from './trackingModeUtils';
 import {
   getLastPlayAction,
+  getPlayOutcome,
   isDroppedPull,
   isContinuingThrow,
   isPossessionLosingThrow,
+  type PlayAction,
 } from './trackingUtils';
 import {
   THROW_RESULT_SPECS,
@@ -111,7 +113,7 @@ function getLastNonStoppageAction(
   pointId: string,
   possessionId: string,
   actions: PossessionAction[],
-): PossessionAction {
+): PlayAction<PossessionAction> {
   getLastAction(gameId, pointId, possessionId, actions);
   const last = getLastPlayAction(actions);
   if (last == null) {
@@ -381,8 +383,7 @@ function getActivePlayElapsedMsAt(
 function deriveScoringSideId(point: TrackedPoint, ctx: GameBuildContext): string | null {
   const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
   const lastAction = getLastNonStoppageAction(ctx.gameId, point.id, lastPoss.id, lastPoss.actions);
-  if (lastAction.kind !== 'throw') return null;
-  const { outcome } = THROW_RESULT_SPECS[lastAction.result];
+  const outcome = getPlayOutcome(lastAction);
   if (outcome === 'scores') return lastPoss.sideId;
   if (outcome === 'defense_scores') return otherSide(lastPoss.sideId, ctx.sideIds);
   return null;
