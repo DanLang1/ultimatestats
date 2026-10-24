@@ -114,18 +114,38 @@ rewrite it to describe only the remaining problem as it exists now.
 
 ## P3 - Shared Tracker Command Preconditions
 
-- The UI's enablement checks and the store's guards for the same command are written separately
-  and differ: Red Zone toggle, dropped pull (`canDropOpeningPull` vs `amendOpeningPullAsDropped`),
-  and `recordGameTransition`, which has no UI-side predicate.
-- `useScoreBarData` re-derives point-over, active stoppage, active side, and disc holder instead of
-  reading `TrackerSessionView`, and its holder uses a different side argument.
-- Cleanup: one pure `canX`/`planX` per command that returns a reason, asserted by the store and read
-  by `TrackerSessionView` (as `canStartSecondHalfEarly` and `planCaptureIntent` already work). Land
-  before the location capture UI, which must share these rules.
+- Timeout, stoppage, and paused-play rules exist only in UI code (`TimeoutButton`,
+  `useScoreBarData`, `tracker.tsx`, `useTrackerHandlers`). The store accepts captures during a
+  stoppage or game-clock pause, stacked or over-quota timeouts, and a game-clock pause during a
+  stoppage. Voice capture can bypass the UI gates (a late result after Timeout appends a pass after
+  the stoppage, after which Resume throws). Store throws from button handlers are uncaught.
+- `getLivePlayState` (`livePlayState.ts`) now serves the session view, score bar, and
+  `planCaptureIntent`, but live-play state is still re-derived in the store's Red Zone guard,
+  `tracker-edit-line.tsx`, `tracker-injury-sub.tsx`, `StoppageOverlay.tsx`, `TrackerCapBar.tsx`,
+  and `pointClock.ts`. Its callers pass three different sides to `holderFor`, deliberately
+  unreconciled until the commands module.
+- Decided rules to enforce in the store: block a second between-point timeout while one is active;
+  no timeouts during the halftime break; reject captures while play is paused; block undo during a
+  stoppage; keep End Early allowed with an open stoppage or pause; make Resume and Cancel idempotent
+  on a double-tap.
+- Cleanup: `lib/advancedTracking/trackerCommands.ts` built on `getLivePlayState`, with one
+  pure `canX`/`planX` per command returning `{ ok }` or `{ ok: false, reason }`, asserted by the
+  store and read through `TrackerSessionView` (as `canStartSecondHalfEarly` and
+  `planCaptureIntent` already work). Land before the location capture UI.
 - References:
   `store/advancedTracking/trackingStore.ts`
+  `lib/advancedTracking/livePlayState.ts`
   `lib/advancedTracking/trackerSessionView.ts`
-  `lib/advancedTracking/trackingDisplayHelpers.ts`
+  `lib/advancedTracking/captureIntentUtils.ts`
+  `components/advancedTracking/scoreBar/useScoreBarData.ts`
+
+## P3 - Red Zone Cannot Be Cleared Without a Holder
+
+- After an injury resume where the disc holder was subbed out, the Red Zone toggle is hidden and the
+  store refuses to clear Red Zone until a pickup, so the red border stays on. Decided: allow clearing
+  Red Zone without a holder (setting it still requires one).
+- References:
+  `store/advancedTracking/trackingStore.ts`
   `components/advancedTracking/scoreBar/useScoreBarData.ts`
 
 ## P3 - Split trackingDisplayHelpers by Concept
@@ -134,8 +154,9 @@ rewrite it to describe only the remaining problem as it exists now.
   display code. Lineup rules are duplicated: "apply a sub" (remove `outIds`, add `inIds`) in 4
   places and "base line plus sub-ins" in 3 (`trackingUtils.ts`, `advancedTouchCorrectionUtils.ts`,
   `advancedPointLineCorrectionUtils.ts`, `buildAnalyticsGame.ts`).
-- Cleanup: extract `lineup.ts` (effective line at an action, before a sub, by side) and a possession
-  state module (active side, holder); leave labels and formatting behind.
+- Cleanup: extract `lineup.ts` (effective line at an action, before a sub, by side) and move the
+  live-play queries (`getActiveSideId`, `getActiveStoppage`, `getActiveGameClockPause`,
+  `getSafeDiscHolderRef`) into `livePlayState.ts`; leave labels and formatting behind.
 - References:
   `lib/advancedTracking/trackingDisplayHelpers.ts`
   `lib/advancedTracking/trackingUtils.ts`

@@ -1,16 +1,8 @@
+import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
+import { getSideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
-  getActiveSideId,
-  getActiveStoppage,
-  getActiveGameClockPause,
-  getSafeDiscHolderRef,
-  getSideTimeoutState,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
   getEffectiveGameTo,
   getSideScore,
-  hasPointEnded,
   isPossessionOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
@@ -45,21 +37,15 @@ export function useScoreBarData() {
   const focusTimeouts = getSideTimeoutState(game, focusSideId);
   const oppTimeouts = getSideTimeoutState(game, oppSideId);
 
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const pointIsOver = hasPointEnded(point);
-  const activeStoppage = getActiveStoppage(possession);
-  const activeGameClockPause = getActiveGameClockPause(game);
-  const stoppageActive = activeStoppage !== null || activeGameClockPause !== null;
-  const isPointTimerPaused = stoppageActive;
-  const showPointTimer = point?.startedAt != null && !hasPointEnded(point);
-  const activeSideId = getActiveSideId(possession, game);
+  const { point, possession, pointIsOver, activeSideId, isPlayPaused, holderFor } =
+    getLivePlayState(game);
+  const showPointTimer = point?.startedAt != null && !pointIsOver;
   const activeSide = game.sides.find((side) => side.id === activeSideId);
   const activePossession = isPossessionOver(possession) ? null : possession;
-  const activeHolderRef = getSafeDiscHolderRef(possession, activeSideId, point);
+  const activeHolderRef = holderFor(activeSideId);
   const canToggleRedZone =
     !pointIsOver &&
-    !stoppageActive &&
+    !isPlayPaused &&
     activeSide != null &&
     (activeSide.trackingMode === 'anonymous' || activeHolderRef != null);
   const redZoneSelected = activePossession?.redZone != null;
@@ -74,7 +60,7 @@ export function useScoreBarData() {
       : null;
 
   const handleTimeout = (sideId: string) => {
-    if (stoppageActive) return;
+    if (isPlayPaused) return;
     const state = sideId === focusSideId ? focusTimeouts : oppTimeouts;
     const isFloater = state.regularUsedInHalf >= state.regularPerHalf;
     if (pointIsOver) {
@@ -85,7 +71,7 @@ export function useScoreBarData() {
   };
 
   const handlePause = () => {
-    if (stoppageActive) return;
+    if (isPlayPaused) return;
     recordStoppage({ reason: 'manual_pause' });
   };
 
@@ -110,11 +96,11 @@ export function useScoreBarData() {
     activeSideName: activeSide?.label ?? '',
     canToggleRedZone,
     redZoneSelected,
-    isPointTimerPaused,
+    isPointTimerPaused: isPlayPaused,
     showPointTimer,
     currentPointNumber,
     ratioLabel,
-    stoppageActive,
+    stoppageActive: isPlayPaused,
     handleTimeout,
     handlePause,
     handleRedZoneToggle,

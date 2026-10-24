@@ -1,18 +1,7 @@
-import {
-  getActiveGameClockPause,
-  getActiveSideId,
-  getActiveStoppage,
-  getSafeDiscHolderRef,
-  getTrackerDisplaySideId,
-  getTrackerPickupState,
-} from './trackingDisplayHelpers';
+import { getLivePlayState } from './livePlayState';
+import { getTrackerDisplaySideId, getTrackerPickupState } from './trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  getOtherSideId,
-  hasPointEnded,
-} from './trackingUtils';
+import { getOtherSideId } from './trackingUtils';
 import {
   AdvancedTrackedGame,
   GameClockPause,
@@ -65,23 +54,27 @@ export function getTrackerSessionView(
   game: AdvancedTrackedGame,
   { passModifier }: { passModifier: PassModifier },
 ): TrackerSessionView {
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const pointIsOver = hasPointEnded(point);
+  const {
+    point,
+    possession,
+    pointIsOver,
+    activeSideId,
+    activeStoppage,
+    activeGameClockPause,
+    isPlayPaused,
+    holderFor,
+  } = getLivePlayState(game);
   const tracksBothSides = areBothSidesFullyTracked(game);
-  const activeSideId = getActiveSideId(possession, game);
   const perspectiveSideId = getTrackerDisplaySideId(game, possession, point);
   const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
-  const discHolderRef = getSafeDiscHolderRef(possession, perspectiveSideId, point);
+  const discHolderRef = holderFor(perspectiveSideId);
   const { canDropOpeningPull, isAwaitingMidPointPickup } = getTrackerPickupState({
     possession,
     pointIsOver,
     oppHasDisc,
     discHolderRef,
   });
-  const activeStoppage = getActiveStoppage(possession);
-  const activeGameClockPause = getActiveGameClockPause(game);
-  const isPlayLive = !pointIsOver && activeStoppage === null && activeGameClockPause === null;
+  const isPlayLive = !pointIsOver && !isPlayPaused;
   const isModifierArmed = passModifier !== null;
 
   let displaySideId = game.focusSideId;
@@ -93,12 +86,7 @@ export function getTrackerSessionView(
 
   // An armed modifier owns the next tap; disabling voice also stops any active listening.
   const canUseVoice =
-    !isModifierArmed &&
-    !pointIsOver &&
-    activeStoppage === null &&
-    activeGameClockPause === null &&
-    !oppHasDisc &&
-    discHolderRef != null;
+    !isModifierArmed && !pointIsOver && !isPlayPaused && !oppHasDisc && discHolderRef != null;
 
   return {
     game,

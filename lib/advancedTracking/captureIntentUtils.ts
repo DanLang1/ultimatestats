@@ -1,14 +1,8 @@
 import { assertNever } from '@/lib/utils';
 
-import { getSafeDiscHolderRef } from './trackingDisplayHelpers';
+import { getLivePlayState } from './livePlayState';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  getOtherSideId,
-  hasPointEnded,
-  isPossessionOver,
-} from './trackingUtils';
+import { getOtherSideId, isPossessionOver } from './trackingUtils';
 import type { AdvancedTrackedGame, PlayerRef, PointPossession, ThrowResult } from './types';
 
 /** A coach-facing description of an advanced-tracker capture, independent of stored actions. */
@@ -59,23 +53,12 @@ export function planCaptureIntent(
   game: AdvancedTrackedGame,
   intent: CaptureIntent,
 ): CapturePlanResult {
-  const point = getCurrentPoint(game);
+  const { point, possession, pointIsOver, activeSideId, holderFor } = getLivePlayState(game);
   if (point == null) return { ok: false, reason: 'point-not-started' };
-  if (hasPointEnded(point)) return { ok: false, reason: 'point-over' };
+  if (pointIsOver) return { ok: false, reason: 'point-over' };
 
-  const possession = getCurrentPossession(game);
   const bothSidesTracked = areBothSidesFullyTracked(game);
-  let activeSideId = game.focusSideId;
-  if (possession != null) {
-    activeSideId = isPossessionOver(possession)
-      ? getOtherSideId(game, possession.sideId)
-      : possession.sideId;
-  }
-  const holder = getSafeDiscHolderRef(
-    possession,
-    bothSidesTracked ? activeSideId : game.focusSideId,
-    point,
-  );
+  const holder = holderFor(bothSidesTracked ? activeSideId : game.focusSideId);
   const opponentSideId = getOtherSideId(game, game.focusSideId);
   const needsOpponentPickup =
     !bothSidesTracked &&
