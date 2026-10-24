@@ -100,29 +100,136 @@ rewrite it to describe only the remaining problem as it exists now.
 
 ## P3 - Advanced Tracker Undo Module
 
-- Undo inverses live in one `undoLastOperation` switch in the tracking store, away from the actions
-  that record each entry. A new undoable operation touches the entry type, the recording action,
-  and the switch.
-- `undoStack = []` is repeated in each active-game lifecycle action (create, reset, finalize,
-  finish, import, delete).
+- The undo stack is reset by hand in 9 places: the active-game lifecycle actions (create, reset,
+  finalize, finish, import, delete), `loadCurrentGame`, the persist `merge`, and
+  `lib/maestroUtils.ts`.
 - UI and utils read `undoStack.at(-1)` to answer gameplay questions (`canStartSecondHalfEarly`,
   point-ending undo in `TrackerLastActionCard`, standalone undo in the between-point displays).
-- Live corrections (`correctCurrentTouch`, `correctCurrentTurnover`, line corrections) rewrite the
-  game without touching the stack, whose entries reference actions by ID. Confirm whether a
-  correction can leave an entry pointing at a removed or reshaped action.
-- Cleanup: move inverses into a pure `lib/advancedTracking` module with one exhaustive handler per
-  entry kind; route active-game changes through one helper that resets the stack; replace raw
-  stack peeks with named queries. Keep the stack in the tracking store: game and stack must update
-  and persist together as one snapshot. Keep semantic entries rather than snapshots or Immer
-  patches, since undo applies domain rules (revival pauses, possession cleanup, halftime
-  rederivation) rather than a pure revert.
+  `AdvancedHalftimeEarlyUndoEntry` (`kind: string`) in `trackingUtils.ts` loosely duplicates the
+  entry type.
+- `undoOperations.ts` derives per-kind entry types with `Extract`; the entry variants are domain
+  concepts and should be named, exported types in `persistenceTypes.ts`.
+- Cleanup: route active-game changes through one helper that resets the stack; replace raw stack
+  peeks with named queries in `undoOperations.ts`. Keep the stack in the tracking store (game and
+  stack persist together) and keep semantic entries rather than snapshots or Immer patches.
 - References:
   `store/advancedTracking/trackingStore.ts`
+  `lib/advancedTracking/undoOperations.ts`
   `lib/advancedTracking/persistenceTypes.ts`
   `lib/advancedTracking/trackingUtils.ts`
   `components/advancedTracking/TrackerLastActionCard.tsx`
   `components/advancedTracking/BetweenPointDisplay.tsx`
   `components/advancedTracking/HalftimeBetweenPointDisplay.tsx`
+
+## P3 - Advanced Tracking Store Pure Mutations
+
+- The record and correction actions in `trackingStore.ts` still edit the game inline: pushing
+  points, possessions, and actions, lazily creating optional arrays (`gameTransitions`,
+  `transitionsAfter`, `revivalPauses`, `subs`), and collapsing emptied arrays back to `undefined`.
+  `updatedAt` is stamped at about 20 sites, and actions read the game with `getCurrentGame(get())`
+  to validate, then again with `getCurrentGame(state)` to mutate.
+- Cleanup: move the edits into pure mutators in `gameMutations.ts` (which already holds
+  `removeActionById` and `removeSubsForStoppages`) and add one live-game mutation helper that stamps
+  `updatedAt`. The store keeps IDs, time, the undo stack, and persistence.
+- References:
+  `store/advancedTracking/trackingStore.ts`
+  `lib/advancedTracking/gameMutations.ts`
+
+## P3 - Shared Tracker Command Preconditions
+
+- The UI's enablement checks and the store's guards for the same command are written separately
+  and differ: Red Zone toggle, dropped pull (`canDropOpeningPull` vs `amendOpeningPullAsDropped`),
+  and `recordGameTransition`, which has no UI-side predicate.
+- `useScoreBarData` re-derives point-over, active stoppage, active side, and disc holder instead of
+  reading `TrackerSessionView`, and its holder uses a different side argument.
+- Cleanup: one pure `canX`/`planX` per command that returns a reason, asserted by the store and read
+  by `TrackerSessionView` (as `canStartSecondHalfEarly` and `planCaptureIntent` already work). Land
+  before the location capture UI, which must share these rules.
+- References:
+  `store/advancedTracking/trackingStore.ts`
+  `lib/advancedTracking/trackerSessionView.ts`
+  `lib/advancedTracking/trackingDisplayHelpers.ts`
+  `components/advancedTracking/scoreBar/useScoreBarData.ts`
+
+## P3 - Split trackingDisplayHelpers by Concept
+
+- `trackingDisplayHelpers.ts` (~670 lines) is mostly domain queries the store depends on, not
+  display code. Lineup rules are duplicated: "apply a sub" (remove `outIds`, add `inIds`) in 4
+  places and "base line plus sub-ins" in 3 (`trackingUtils.ts`, `advancedTouchCorrectionUtils.ts`,
+  `advancedPointLineCorrectionUtils.ts`, `buildAnalyticsGame.ts`).
+- Cleanup: extract `lineup.ts` (effective line at an action, before a sub, by side) and a possession
+  state module (active side, holder); leave labels and formatting behind.
+- References:
+  `lib/advancedTracking/trackingDisplayHelpers.ts`
+  `lib/advancedTracking/trackingUtils.ts`
+
+## P3 - Between-Point Stats Duplicate Team Stats
+
+- `components/advancedTracking/betweenPointUtils.ts` is domain code in `components/`.
+  `getLiveTeamStats` recomputes holds, breaks, and clean holds instead of using
+  `computeAdvancedTeamStats`, which the halftime display already uses.
+- On a D point without pull hang time, the second metric repeats "D efficiency" as "breaks"
+  (`breaks/dPoints` twice). Left as-is for now.
+- Cleanup: a `lib/advancedTracking` between-point summary built on `buildAnalyticsGame` +
+  `computeAdvancedTeamStats`.
+- References:
+  `components/advancedTracking/betweenPointUtils.ts`
+  `components/advancedTracking/BetweenPointDisplay.tsx`
+
+## P3 - Advanced Display Label Tables
+
+- Throw-result labels live in 4–6 tables with inconsistent opponent wording ("OPP D", "Opp Block",
+  "Opponent Block"); throw-type labels are hard-coded 3 times; pass-modifier display (label, icon,
+  prompt, tone) is split across 4 files and not `Record`-enforced; the neutral tone maps to three
+  different colors.
+- Cleanup: `satisfies Record<…>` display tables in `lib/advancedTracking` keyed by the domain unions,
+  kept out of the semantic `*_SPECS` tables.
+- References:
+  `lib/advancedTracking/trackingDisplayHelpers.ts`
+  `lib/advancedTracking/advancedTimelineUtils.ts`
+  `components/advancedTracking/AdvancedTurnoverCorrectionModal.tsx`
+  `components/advancedTracking/TrackerRareMenu.tsx`
+  `components/advancedTracking/bottomCard/ModifierPrompt.tsx`
+
+## P3 - Advanced Screen Duplication and Prop Drilling
+
+- The timeline route computes touch/turnover/line edit permissions inline and drills them with side
+  context through `AdvancedEventTimeline` → `AdvancedTimelinePointCard` → `TimelineFlowRow`.
+- The two-sided line-draft flow (side index, drafts, continuation menu, confirm/back) is copied in
+  `tracker-injury-sub.tsx`, `AdvancedActiveLineCorrectionScreen.tsx`, and a variant in
+  `tracker-line-select.tsx`.
+- Cleanup: a lib query for timeline edit capabilities and a `useTwoSideLineDraft` hook.
+- References:
+  `app/(main)/(hub)/(analytics)/advanced-tracking/analytics/timeline/[gameId].tsx`
+  `app/(main)/advanced-tracking/tracker-injury-sub.tsx`
+  `components/advancedTracking/AdvancedActiveLineCorrectionScreen.tsx`
+
+## P3 - Point Duration Display Rounding
+
+- The live point timer floors seconds (`formatPointTime`) while the timeline and CSV round
+  (`formatClockDuration`), so the same point can read 0:05 live and 0:06 in the timeline.
+- Shared payloads include a few 1–3 point games whose points span 10 hours to 26 days (games left
+  open and resumed later); they dominate those games' average point time. Consider flagging or
+  capping implausible point durations if this appears in real games.
+- References:
+  `lib/advancedTracking/trackingDisplayHelpers.ts`
+  `lib/durationFormatUtils.ts`
+
+## P3 - Advanced Persistence Boundary
+
+- The saved-game summary row is spelled out 5 times (`AdvancedGameSummary`, `SummaryRow`, DDL,
+  `rowToSummary`, the positional INSERT), and stored summaries are never re-derived when
+  `deriveAdvancedGameSummary` changes.
+- `migrateAdvancedTrackedGame` is called at 7 sites; basic and advanced imports migrate in
+  different layers.
+- 8 persisted Zustand stores repeat the `persist` wiring with four migration styles.
+- Boundary errors are inconsistent: corrupt `undo_json` silently becomes `[]`, fetch failures throw
+  untyped errors while uploads have a typed taxonomy.
+- References:
+  `lib/advancedTracking/storage.ts`
+  `lib/advancedTracking/summary.ts`
+  `lib/sharing/serialize.ts`
+  `lib/sharing/validate.ts`
 
 ## P3 - Duplicated Logic
 
@@ -131,3 +238,20 @@ rewrite it to describe only the remaining problem as it exists now.
   `app/(main)/pre-game-confirm.tsx` + `app/(main)/advanced-tracking/pre-game-confirm.tsx` — identical card layouts
   `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
   `store/basic/gameStore.types.ts` + `store/basic/gameStore.ts` — `addTurnoverEvent` parameter type defined inline in both
+
+## P4 - Basic Mode Known Design Debt
+
+- Not planned while basic mode is stable; revisit if basic work resumes.
+- `TurnoverType` has no spec table (labels, icons, toasts, stats re-derived across ~10 files); the
+  basic impact chain uses display strings as data.
+- Live and saved games have separate edit paths (`updateEvent` vs `updateSavedGameEvent`) with
+  inconsistent mirroring; editing an event on a finished current game may not update its saved
+  record (unconfirmed).
+- `cancelPendingGoal` duplicates the goal branch of `undoLastAction` and has diverged (point timer
+  and post-game flags; unconfirmed impact).
+- Halftime, game-over, and soft-cap rules are implemented separately from advanced; share import
+  does not validate basic events individually.
+- References:
+  `store/basic/gameStore.ts`
+  `lib/basic/statsUtils.ts`
+  `lib/sharing/validate.ts`

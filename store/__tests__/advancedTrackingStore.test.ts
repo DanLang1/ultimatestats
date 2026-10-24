@@ -781,6 +781,36 @@ describe('advancedTrackingStore', () => {
     loadGameSpy.mockRestore();
   });
 
+  it('drops and reports a loaded undo history that references a missing action', async () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const game = getCurrentGame()!;
+    const undoStack = [
+      ...useAdvancedTrackingStore.getState().undoStack,
+      { ...undoEntryForTest(game), actionId: 'missing-action' },
+    ];
+    useAdvancedTrackingStore.setState({ currentGame: null });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const loadGameSpy = jest
+      .spyOn(useSavedAdvancedGamesStore.getState(), 'loadActiveGameSnapshot')
+      .mockResolvedValue({ game, undoStack });
+
+    await useAdvancedTrackingStore.getState().loadCurrentGame();
+
+    expect(useAdvancedTrackingStore.getState().currentGame).toEqual(game);
+    expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
+    expect(captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { area: 'advanced-undo-stack-load' },
+      extra: undefined,
+    });
+    loadGameSpy.mockRestore();
+  });
+
   it('clears in-memory undo history when an import replaces the active game', async () => {
     createGame();
     useAdvancedTrackingStore.getState().recordPull({
@@ -2238,6 +2268,31 @@ describe('advancedTrackingStore', () => {
 
     expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
     expect(getCurrentGame()!.points[0].transitionsAfter).toBeUndefined();
+  });
+
+  it('drops and reports an undo entry whose action is missing without changing the game', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    const validEntry = useAdvancedTrackingStore.getState().undoStack[0];
+    useAdvancedTrackingStore.setState((state) => {
+      state.undoStack.push({ ...undoEntryForTest(getCurrentGame()!), actionId: 'missing-action' });
+    });
+    const gameBefore = structuredClone(getCurrentGame());
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(false);
+
+    expect(getCurrentGame()).toEqual(gameBefore);
+    expect(useAdvancedTrackingStore.getState().undoStack).toEqual([validEntry]);
+    expect(captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { area: 'advanced-undo' },
+      extra: undefined,
+    });
   });
 
   it('recordPull throws if a point is already in progress', () => {

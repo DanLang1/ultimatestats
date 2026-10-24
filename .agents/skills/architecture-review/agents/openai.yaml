@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Architecture Review'
+  short_description: 'Find and plan U-Stat design improvements'
+  default_prompt: 'Use $architecture-review to find the highest-value design improvements in this area.'

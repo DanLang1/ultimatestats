@@ -14,6 +14,7 @@ import {
   type CorrectAdvancedTurnoverInput,
 } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
+import { removeActionById } from '@/lib/advancedTracking/gameMutations';
 import { withAdvancedGameNote, withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
   getAdjustedHalftimeTimerDuration,
@@ -50,7 +51,6 @@ import {
   getGameScore,
   getLiveInProgressGame,
   getOtherSideId,
-  getPlayOutcome,
   getReceivingSideForNextPoint,
   hasInjurySubChanges,
   hasPointEnded,
@@ -64,13 +64,16 @@ import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   AdvancedTrackedGame,
   PointPossession,
-  PossessionAction,
   StoppageAction,
-  TrackedPoint,
   getEligibleThrowTypes,
   hasRequiredThrowDefender,
 } from '@/lib/advancedTracking/types';
-import { reportHydrationError } from '@/lib/sentry';
+import {
+  applyUndo,
+  assertUndoTargets,
+  assertValidUndoStack,
+} from '@/lib/advancedTracking/undoOperations';
+import { reportError, reportHydrationError } from '@/lib/sentry';
 import { generateId, isRecord } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { registerActiveAdvancedGameGetter, useGameStore } from '@/store/basic/gameStore';
@@ -164,77 +167,22 @@ function reconcileDerivedHalftimeBreak(state: Draft<AdvancedTrackingState>) {
   }
 }
 
-function removeActionById(
-  game: AdvancedTrackedGame,
-  pointId: string,
-  possessionId: string,
-  actionId: string,
-) {
-  const point = game.points.find((candidate) => candidate.id === pointId);
-  if (point == null) return;
-
-  const possession = point.possessions.find((candidate) => candidate.id === possessionId);
-  if (possession == null) return;
-
-  const actionIndex = possession.actions.findIndex((candidate) => candidate.id === actionId);
-  if (actionIndex === -1) return;
-
-  const [removedAction] = possession.actions.splice(actionIndex, 1);
-
-  if (removedAction?.kind === 'stoppage' && point.subs != null) {
-    point.subs = point.subs.filter((sub) => sub.stoppageActionId !== removedAction.id);
-    if (point.subs.length === 0) {
-      point.subs = undefined;
-    }
-  }
-
-  if (possession.actions.length === 0) {
-    if (point.possessions.length > 1) {
-      point.possessions = point.possessions.filter((candidate) => candidate.id !== possessionId);
-    } else {
-      game.points = game.points.filter((candidate) => candidate.id !== pointId);
-    }
-    return;
-  }
-
-  const possessionSide = game.sides.find((side) => side.id === possession.sideId);
-  if (
-    possession.redZone != null &&
-    possessionSide?.trackingMode === 'full-roster' &&
-    getSafeDiscHolderRef(possession, possession.sideId, point) == null
-  ) {
-    delete possession.redZone;
+/** Drops a loaded undo stack whose entries reference targets missing from the loaded game. */
+function getRestorableUndoStack(
+  snapshot: AdvancedGameHistorySnapshot | null,
+): AdvancedTrackingUndoEntry[] {
+  if (snapshot == null) return [];
+  try {
+    assertValidUndoStack(snapshot.game, snapshot.undoStack);
+    return snapshot.undoStack;
+  } catch (error) {
+    reportError('advanced-undo-stack-load', error);
+    return [];
   }
 }
 
 function isRedZoneOnlyAnonymousScaffold(possession: PointPossession): boolean {
   return possession.redZone?.anonymousScaffold === true && possession.actions.length === 1;
-}
-
-function removePossessionsAfterTurnover(
-  point: TrackedPoint | undefined,
-  possession: PointPossession | undefined,
-  action: PossessionAction | undefined,
-): void {
-  const isTurnover =
-    action != null && action.kind !== 'stoppage' && getPlayOutcome(action) === 'turnover';
-  if (point == null || possession == null || !isTurnover) return;
-
-  const possessionIndex = point.possessions.findIndex(
-    (candidate) => candidate.id === possession.id,
-  );
-  const removedPossessions = point.possessions.splice(possessionIndex + 1);
-  const removedStoppageIds = new Set(
-    removedPossessions.flatMap((removedPossession) =>
-      removedPossession.actions.flatMap((removedAction) =>
-        removedAction.kind === 'stoppage' ? [removedAction.id] : [],
-      ),
-    ),
-  );
-  if (point.subs != null && removedStoppageIds.size > 0) {
-    point.subs = point.subs.filter((sub) => !removedStoppageIds.has(sub.stoppageActionId));
-    if (point.subs.length === 0) point.subs = undefined;
-  }
 }
 
 export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
@@ -258,10 +206,11 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (get().currentGameId !== currentGameId || get().currentGame !== currentGameAtStart) {
             return snapshot?.game ?? null;
           }
+          const undoStack = getRestorableUndoStack(snapshot);
           set((state) => {
             if (state.currentGameId !== currentGameId) return;
             state.currentGame = snapshot?.game ?? null;
-            state.undoStack = snapshot?.undoStack ?? [];
+            state.undoStack = undoStack;
             reconcilePendingNextPointLineSelection(state);
             reconcileDerivedHalftimeBreak(state);
           });
@@ -1135,88 +1084,29 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         undoLastOperation: () => {
-          if (get().currentGameId == null) {
-            return false;
-          }
+          const entry = get().undoStack.at(-1);
+          if (get().currentGameId == null || entry == null) return false;
 
-          const lastUndoEntry = get().undoStack.at(-1);
-          if (lastUndoEntry == null) {
+          const game = getCurrentGame(get());
+          try {
+            assertUndoTargets(game, entry);
+          } catch (error) {
+            // An entry whose targets are gone can never apply; drop only it and leave the game.
+            reportError('advanced-undo', error);
+            set((state) => {
+              state.undoStack.pop();
+            });
             return false;
           }
 
           set((state) => {
             const liveGame = getCurrentGame(state);
-
-            if (lastUndoEntry.kind === 'action') {
-              const undoPoint = liveGame.points.find((p) => p.id === lastUndoEntry.pointId);
-              const undoPossession = undoPoint?.possessions.find(
-                (p) => p.id === lastUndoEntry.possessionId,
-              );
-              const undoAction = undoPossession?.actions.find(
-                (a) => a.id === lastUndoEntry.actionId,
-              );
-              removePossessionsAfterTurnover(undoPoint, undoPossession, undoAction);
-              if (
-                undoAction?.kind === 'throw' &&
-                isPointEndingThrow(undoAction.result) &&
-                undoPoint != null
-              ) {
-                if (undoAction.recordedAt != null) {
-                  if (undoPoint.revivalPauses == null) undoPoint.revivalPauses = [];
-                  undoPoint.revivalPauses.push({
-                    pausedAt: undoAction.recordedAt,
-                    resumedAt: Date.now(),
-                  });
-                }
-              }
-              removeActionById(
-                liveGame,
-                lastUndoEntry.pointId,
-                lastUndoEntry.possessionId,
-                lastUndoEntry.actionId,
-              );
-            } else if (lastUndoEntry.kind === 'between_point_timeout') {
-              const point = liveGame.points.find(
-                (candidate) => candidate.id === lastUndoEntry.pointId,
-              );
-              if (point?.transitionsAfter != null) {
-                point.transitionsAfter = point.transitionsAfter.filter(
-                  (transition) => transition.id !== lastUndoEntry.transitionId,
-                );
-                if (point.transitionsAfter.length === 0) {
-                  point.transitionsAfter = undefined;
-                }
-              }
-            } else if (lastUndoEntry.kind === 'halftime_early') {
-              liveGame.gameTransitions = liveGame.gameTransitions?.filter(
-                (transition) => transition.id !== lastUndoEntry.transitionId,
-              );
-              if (liveGame.gameTransitions?.length === 0) {
-                liveGame.gameTransitions = undefined;
-              }
-            } else if (lastUndoEntry.kind === 'amend_pull_result') {
-              const point = liveGame.points.find(
-                (candidate) => candidate.id === lastUndoEntry.pointId,
-              );
-              const possession = point?.possessions.find(
-                (candidate) => candidate.id === lastUndoEntry.possessionId,
-              );
-              const action = possession?.actions.find(
-                (candidate) => candidate.id === lastUndoEntry.actionId,
-              );
-              if (action?.kind === 'pull') {
-                removePossessionsAfterTurnover(point, possession, action);
-                action.result = lastUndoEntry.previousResult;
-                action.receiver = lastUndoEntry.previousReceiver;
-              }
-            }
-
+            const { isHalftimeBreakActive } = applyUndo(liveGame, entry, Date.now());
             state.undoStack.pop();
-            setHalftimeBreakActive(state, syncDerivedHalftimeTransition(liveGame));
+            setHalftimeBreakActive(state, isHalftimeBreakActive);
             reconcilePendingNextPointLineSelection(state);
             liveGame.updatedAt = Date.now();
           });
-
           return true;
         },
 
