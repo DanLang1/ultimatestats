@@ -5,7 +5,7 @@ import { useNow } from '@/hooks/useTimer';
 import { formatPointTime } from '@/lib/advancedTracking/trackingDisplayHelpers';
 
 interface PointTimerTextProps {
-  pointTimerAdjustedTimestamp: number | null;
+  pointTimerBase: number | null;
   pointTimerPausedAt: number | null;
   showPointTimer: boolean;
   pointIsOver: boolean;
@@ -14,7 +14,7 @@ interface PointTimerTextProps {
 }
 
 export function PointTimerText({
-  pointTimerAdjustedTimestamp,
+  pointTimerBase,
   pointTimerPausedAt,
   showPointTimer,
   pointIsOver,
@@ -22,11 +22,11 @@ export function PointTimerText({
   style,
 }: PointTimerTextProps) {
   const now = useNow(showPointTimer && !isPointTimerPaused);
-  const pointElapsedMs =
-    pointTimerAdjustedTimestamp === null
-      ? 0
-      : Math.max(0, (pointTimerPausedAt ?? now) - pointTimerAdjustedTimestamp);
-  const label = showPointTimer || pointIsOver ? formatPointTime(pointElapsedMs) : '-:--';
+  // A point without a recorded start has no timing to show.
+  const showsElapsed = pointTimerBase !== null && (showPointTimer || pointIsOver);
+  const label = showsElapsed
+    ? formatPointTime(Math.max(0, (pointTimerPausedAt ?? now) - pointTimerBase))
+    : '-:--';
 
   return (
     <ThemedText testID="scorebar-point-timer" style={style}>

@@ -16,5 +16,7 @@ export function migrateAdvancedTrackedGame(game: AdvancedTrackedGame): AdvancedT
 
   // Throw details, private notes, Red Zone data, and point revival pauses are optional, so older
   // records only need their version stamped. Missing optional fields intentionally remain absent.
+  // Points saved by earlier versions may also carry `elapsedMsAtEnd` and `revivedAt`; both are
+  // ignored, since timing is derived from timestamps and `revivalPauses`.
   return { ...game, schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION };
 }

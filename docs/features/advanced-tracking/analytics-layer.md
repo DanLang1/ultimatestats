@@ -39,8 +39,10 @@ goals, turnovers) moves automatically without stored counters.
   attributions, so turnover and plus/minus math ignore them.
 - **Possession conversion** denominators include the side's current `in_progress` or `terminated`
   possession; only `scored` counts as a conversion.
-- **Red Zone timing** subtracts completed stoppages, game-clock pauses, and goal-to-undo dead time.
-  Active and terminated possessions can contribute entry timing; only scored or turned-over
+- **Active-play timing** (point duration, action elapsed time, Red Zone) subtracts completed
+  stoppages, game-clock pauses, and goal-to-undo dead time. Points revived before schema v4 have
+  no recorded goal-to-undo gap, so their timing includes it.
+  Active and terminated possessions can contribute Red Zone entry timing; only scored or turned-over
   possessions have outcome timing.
 - **Missing timing is `null`, never zero.**
 

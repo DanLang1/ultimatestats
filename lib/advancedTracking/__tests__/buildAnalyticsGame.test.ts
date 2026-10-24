@@ -129,8 +129,6 @@ describe('red-zone possession timing', () => {
       .goal(meves, { id: 'goal', recordedAt: 26_000 })
       .build();
     const point = game.points[0];
-    point.elapsedMsAtEnd = 4_000;
-    point.revivedAt = 20_000;
     point.revivalPauses = [{ pausedAt: 5_000, resumedAt: 20_000 }];
     point.possessions[0].redZone = { enteredAt: 22_000 };
 
@@ -140,6 +138,68 @@ describe('red-zone possession timing', () => {
       redZoneEntryElapsedMs: 5_000,
       redZoneOutcomeDurationMs: 3_000,
     });
+  });
+});
+
+describe('active play timing', () => {
+  const lines = [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }];
+
+  // Goal at 11s undone at 21s, then a pass, a 25-30s timeout, and the goal again at 41s.
+  function buildRescoredPoint() {
+    return createAdvancedGameScenario({ ...baseGame, status: 'final', defaultLines: lines })
+      .startPoint({ id: 'pt1', puller: untracked, startedAt: 1_000, recordedAt: 1_000 })
+      .pickup(august, { recordedAt: 2_000 })
+      .complete(meves, { recordedAt: 23_000 })
+      .stoppage('timeout', { sideId: ZOO, recordedAt: 25_000, pausedAt: 25_000, resumedAt: 30_000 })
+      .goal(joah, { recordedAt: 41_000 })
+      .build();
+  }
+
+  it('excludes the goal-to-undo gap from point duration and action elapsed time', () => {
+    const game = buildRescoredPoint();
+    game.points[0].revivalPauses = [{ pausedAt: 11_000, resumedAt: 21_000 }];
+
+    const analytics = buildAnalyticsGame(game);
+
+    expect(analytics.points[0].durationMs).toBe(25_000);
+    expect(analytics.actions.map((action) => action.elapsedMs)).toEqual([
+      0, 1_000, 12_000, 14_000, 25_000,
+    ]);
+  });
+
+  it('counts a game-clock pause inside the goal-to-undo gap once for Red Zone timing', () => {
+    const game = createAdvancedGameScenario({
+      ...baseGame,
+      status: 'final',
+      defaultLines: lines,
+      gameClockPauses: [{ id: 'cap', reason: 'weather', pausedAt: 13_000, resumedAt: 17_000 }],
+    })
+      .startPoint({ id: 'pt1', puller: untracked, startedAt: 1_000, recordedAt: 1_000 })
+      .pickup(august, { recordedAt: 2_000 })
+      .goal(meves, { recordedAt: 31_000 })
+      .build();
+    const point = game.points[0];
+    point.revivalPauses = [{ pausedAt: 11_000, resumedAt: 21_000 }];
+    point.possessions[0].redZone = { enteredAt: 5_000 };
+
+    const analytics = buildAnalyticsGame(game);
+
+    expect(analytics.points[0].durationMs).toBe(20_000);
+    expect(analytics.possessions[0]).toMatchObject({
+      redZoneEntryElapsedMs: 4_000,
+      redZoneOutcomeDurationMs: 16_000,
+    });
+  });
+
+  it('ends an unfinished point duration at its last play, before a later stoppage', () => {
+    const game = createAdvancedGameScenario({ ...baseGame, defaultLines: lines })
+      .startPoint({ id: 'pt1', puller: untracked, startedAt: 1_000, recordedAt: 1_000 })
+      .pickup(august, { recordedAt: 2_000 })
+      .complete(meves, { recordedAt: 5_000 })
+      .stoppage('timeout', { sideId: ZOO, recordedAt: 6_000, pausedAt: 6_000, resumedAt: 16_000 })
+      .build();
+
+    expect(buildAnalyticsGame(game).points[0].durationMs).toBe(4_000);
   });
 });
 

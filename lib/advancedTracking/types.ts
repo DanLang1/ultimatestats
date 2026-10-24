@@ -258,17 +258,6 @@ export interface TrackedPoint {
    * Mirrors `pointStartTimestamps` from basic stat tracking.
    */
   startedAt?: number;
-  /**
-   * Timer value (ms elapsed) at the moment the goal/callahan was recorded.
-   * Accounts for all previous revivals and pauses, so it chains correctly across
-   * multiple undo cycles. Used with revivedAt to resume the timer accurately.
-   */
-  elapsedMsAtEnd?: number;
-  /**
-   * Absolute timestamp (ms epoch) when this point was last revived by undoing its goal.
-   * Combined with elapsedMsAtEnd: adjustedTimestamp = revivedAt - elapsedMsAtEnd.
-   */
-  revivedAt?: number;
   /** Completed dead-time intervals caused by undoing a scoring action. */
   revivalPauses?: PointRevivalPause[];
 }

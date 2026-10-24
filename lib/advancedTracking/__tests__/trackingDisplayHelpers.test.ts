@@ -2,8 +2,6 @@ import {
   canCallTimeout,
   getActiveSideId,
   getCompletedGameClockPauseMs,
-  getCompletedGameClockPauseMsDuringPoint,
-  getCompletedPauseMs,
   getDiscHolderId,
   getDiscHolderRef,
   getEffectiveLineParticipantIds,
@@ -12,7 +10,6 @@ import {
   getLastTurnoverEvent,
   getGoalInfo,
   getPassChainEvents,
-  getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
   getSideTimeoutState,
   getSubsForStoppage,
@@ -917,171 +914,6 @@ describe('getSideTimeoutState', () => {
   });
 });
 
-describe('getCompletedPauseMs', () => {
-  it('returns 0 for null point', () => {
-    expect(getCompletedPauseMs(null)).toBe(0);
-  });
-
-  it('returns 0 when no stoppages', () => {
-    const point: TrackedPoint = { id: 'pt1', lines: [], possessions: [] };
-    expect(getCompletedPauseMs(point)).toBe(0);
-  });
-
-  it('sums completed stoppages across possessions', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      possessions: [
-        {
-          id: 'pos1',
-          sideId: HOME,
-          actions: [
-            {
-              id: 'a1',
-              kind: 'stoppage',
-              reason: 'timeout',
-              sideId: HOME,
-              recordedAt: 1000,
-              pausedAt: 1000,
-              resumedAt: 71000,
-            },
-          ],
-        },
-        {
-          id: 'pos2',
-          sideId: HOME,
-          actions: [
-            {
-              id: 'a2',
-              kind: 'stoppage',
-              reason: 'injury',
-              recordedAt: 80000,
-              pausedAt: 80000,
-              resumedAt: 95000,
-            },
-          ],
-        },
-      ],
-    };
-    expect(getCompletedPauseMs(point)).toBe(70000 + 15000);
-  });
-
-  it('ignores stoppages without resumedAt', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      possessions: [
-        {
-          id: 'pos1',
-          sideId: HOME,
-          actions: [
-            {
-              id: 'a1',
-              kind: 'stoppage',
-              reason: 'timeout',
-              sideId: HOME,
-              recordedAt: 1000,
-              pausedAt: 1000,
-            },
-          ],
-        },
-      ],
-    };
-    expect(getCompletedPauseMs(point)).toBe(0);
-  });
-});
-
-describe('getPointAdjustedTimestamp', () => {
-  it('returns startedAt plus completed pause ms', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 10000,
-      possessions: [
-        {
-          id: 'pos1',
-          sideId: HOME,
-          actions: [
-            {
-              id: 'a1',
-              kind: 'stoppage',
-              reason: 'timeout',
-              sideId: HOME,
-              recordedAt: 15000,
-              pausedAt: 15000,
-              resumedAt: 85000,
-            },
-          ],
-        },
-      ],
-    };
-    expect(getPointAdjustedTimestamp(point)).toBe(10000 + 70000);
-  });
-
-  it('adds completed game-clock pause ms when a game is provided', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 10000,
-      possessions: [],
-    };
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [point],
-      gameClockPauses: [
-        {
-          id: 'pause1',
-          reason: 'manual',
-          pausedAt: 20000,
-          resumedAt: 50000,
-          pointId: point.id,
-        },
-      ],
-    };
-
-    expect(getPointAdjustedTimestamp(point, game)).toBe(40000);
-  });
-
-  it('uses revivedAt branch when elapsedMsAtEnd is set', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 10000,
-      elapsedMsAtEnd: 45000,
-      revivedAt: 200000,
-      possessions: [],
-    };
-    // adjustedTimestamp = revivedAt - elapsedMsAtEnd  =>  200000 - 45000 = 155000
-    expect(getPointAdjustedTimestamp(point)).toBe(155000);
-  });
-
-  it('freezes timestamp when point has ended with elapsedMsAtEnd', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 10000,
-      elapsedMsAtEnd: 45000,
-      possessions: [
-        makePossession(HOME, [
-          {
-            id: 'a1',
-            kind: 'throw',
-            sideId: HOME,
-            thrower: untracked,
-            result: 'goal',
-            recordedAt: 55000,
-          },
-        ]),
-      ],
-    };
-    // When point has ended, adjustedTimestamp should be Date.now() - elapsedMsAtEnd,
-    // so that Date.now() - adjustedTimestamp = elapsedMsAtEnd (frozen point duration).
-    const adjusted = getPointAdjustedTimestamp(point);
-    const elapsed = Date.now() - adjusted;
-    expect(elapsed).toBeCloseTo(45000, -1);
-  });
-});
-
 describe('game clock pause helpers', () => {
   it('sums only completed game-clock pauses', () => {
     const game: AdvancedTrackedGame = {
@@ -1120,49 +952,6 @@ describe('game clock pause helpers', () => {
     };
 
     expect(getGameClockElapsedMs(game, 90000)).toBe(50000);
-  });
-
-  it('bounds point pause overlap by pointEndMs', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 10000,
-      possessions: [],
-    };
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [point],
-      gameClockPauses: [
-        {
-          id: 'pause1',
-          reason: 'manual',
-          pausedAt: 20000,
-          resumedAt: 90000,
-          pointId: point.id,
-        },
-      ],
-    };
-
-    expect(getCompletedGameClockPauseMsDuringPoint(game, point, 50000)).toBe(30000);
-  });
-
-  it('ignores game-clock pauses outside the point window', () => {
-    const point: TrackedPoint = {
-      id: 'pt1',
-      lines: [],
-      startedAt: 50000,
-      possessions: [],
-    };
-    const game: AdvancedTrackedGame = {
-      ...baseGame,
-      points: [point],
-      gameClockPauses: [
-        { id: 'pause1', reason: 'manual', pausedAt: 10000, resumedAt: 30000 },
-        { id: 'pause2', reason: 'manual', pausedAt: 80000, resumedAt: 90000 },
-      ],
-    };
-
-    expect(getCompletedGameClockPauseMsDuringPoint(game, point, 70000)).toBe(0);
   });
 });
 

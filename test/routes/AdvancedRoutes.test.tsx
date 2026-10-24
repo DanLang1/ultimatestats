@@ -64,6 +64,7 @@ function arrangeDualTrackedPoint() {
       pullId: 'pull-1',
       puller: participantRef(darkIds[0]),
       receiver: participantRef(lightIds[0]),
+      startedAt: Date.now(),
     })
     .build();
   useAdvancedTrackingStore.setState({
@@ -164,6 +165,7 @@ function arrangeSingleSideTrackedPoint() {
       pullId: 'pull-1',
       puller: { refType: 'untracked' },
       receiver: participantRef(lineIds[0]),
+      startedAt: Date.now(),
     })
     .build();
   useAdvancedTrackingStore.setState({

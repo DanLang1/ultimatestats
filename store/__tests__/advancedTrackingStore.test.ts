@@ -957,7 +957,6 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
     const revivedPoint = getCurrentPoint(getCurrentGame());
     expect(revivedPoint?.possessions[0].actions.at(-1)).toMatchObject({ kind: 'disc_pickup' });
-    expect(revivedPoint?.revivedAt).toBeDefined();
     expect(getGameScore(getCurrentGame()!)).toEqual({ [homeSideId]: 0, [awaySideId]: 0 });
   });
 
@@ -1429,11 +1428,35 @@ describe('advancedTrackingStore', () => {
     const game = getCurrentGame()!;
     const point = getCurrentPoint(game)!;
     expect(point.revivalPauses).toEqual([{ pausedAt: 11_000, resumedAt: 21_000 }]);
-    expect(point.revivedAt).toBeUndefined();
     expect(buildAnalyticsGame(game).possessions[0]).toMatchObject({
       redZoneEntryElapsedMs: 15_000,
       redZoneOutcomeDurationMs: 5_000,
     });
+  });
+
+  it('excludes the undo gap and a later stoppage from the point duration', () => {
+    const nowSpy = jest.spyOn(Date, 'now');
+    createGame();
+    const store = useAdvancedTrackingStore.getState();
+    nowSpy.mockReturnValue(1_000);
+    store.recordPull({ lines: homeLines, puller: untracked, result: 'inbound' });
+    nowSpy.mockReturnValue(2_000);
+    store.recordPickup({ sideId: homeSideId, player: august });
+    nowSpy.mockReturnValue(11_000);
+    store.recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    nowSpy.mockReturnValue(21_000);
+    store.undoLastOperation();
+    nowSpy.mockReturnValue(23_000);
+    store.recordThrow({ thrower: august, result: 'complete', toPlayer: meves });
+    nowSpy.mockReturnValue(25_000);
+    const timeoutId = store.recordStoppage({ reason: 'timeout', sideId: homeSideId });
+    nowSpy.mockReturnValue(30_000);
+    store.resumeStoppage(timeoutId);
+    nowSpy.mockReturnValue(41_000);
+    store.recordThrow({ thrower: meves, result: 'goal', toPlayer: august });
+    nowSpy.mockRestore();
+
+    expect(buildAnalyticsGame(getCurrentGame()!).points[0].durationMs).toBe(25_000);
   });
 
   it('resetCurrentGame removes the in-progress game from savedGames', () => {

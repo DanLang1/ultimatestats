@@ -195,8 +195,8 @@ that opening sequence and must not supply an inferred location for the next poss
   gray-strip-to-throwaway shortcuts belong to live capture, not persistence validation.
 - Extend the existing semantic capture boundary to accept an optional location and the initial
   observation time. Map the location to the appropriate canonical action field and the time to
-  `recordedAt`. Use that observation time for gameplay timing, including goal/Callahan
-  `elapsedMsAtEnd` and pull point-start timing, so later player selection adds no event duration.
+  `recordedAt`. Use that observation time for gameplay timing, including point duration
+  and pull point-start timing, so later player selection adds no event duration.
   Keep commit time for record bookkeeping such as `updatedAt`.
 - Synthetic anonymous-opponent scaffolding receives no location. It must not be timestamped later
   than the outcome it precedes; use the same observation time for the atomic operation without

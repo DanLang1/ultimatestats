@@ -66,8 +66,8 @@ export interface AnalyticsPoint {
   scoresBySide: Record<string, number>;
   genderRatio?: 'more-women' | 'more-men';
   /**
-   * Total point duration in ms, excluding paused time from stoppages.
-   * Derived from the last action's elapsedMs. Null if timestamps are absent.
+   * Active-play point duration in ms up to the last play action, excluding dead time
+   * (see `pointClock.ts`). Null if timestamps are absent.
    */
   durationMs: number | null;
   /**
@@ -118,7 +118,7 @@ export interface AnalyticsActionBase {
    */
   previousActionId: string | null;
   /**
-   * Ms elapsed since the point started. Derived from action.recordedAt - point.startedAt.
+   * Active-play ms since the point started, excluding dead time (see `pointClock.ts`).
    * Null if either timestamp is absent.
    */
   elapsedMs: number | null;

@@ -12,7 +12,7 @@ import { setWindow } from '@/test/window';
 beforeEach(() => {
   resetAllStores();
   resetMockRouter();
-  arrangeAdvancedPickupGame();
+  arrangeAdvancedPickupGame({ startedAt: Date.now() });
 });
 
 describe('tracker tablet landscape layout', () => {

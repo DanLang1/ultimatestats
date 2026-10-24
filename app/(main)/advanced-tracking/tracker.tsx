@@ -32,10 +32,10 @@ import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers'
 import { useTrackerSession } from '@/hooks/advancedTracking/useTrackerSession';
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getPointTimer } from '@/lib/advancedTracking/pointClock';
 import {
   getActiveBetweenPointTimeout,
   getEffectiveLineParticipantIds,
-  getPointAdjustedTimestamp,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { canStartSecondHalfEarly, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
@@ -125,8 +125,7 @@ export default function AdvancedTrackerScreen() {
     activeGameClockPause,
     isPlayLive,
   } = session;
-  const pointTimerAdjustedTimestamp = point ? getPointAdjustedTimestamp(point, game) : null;
-  const pointTimerPausedAt = activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
+  const pointTimer = point ? getPointTimer(game, point) : null;
   const activeBetweenPointTimeout = getActiveBetweenPointTimeout(game);
   const gameStartedAt = game.points[0]?.startedAt ?? null;
   const showStartSecondHalfEarly = canStartSecondHalfEarly(game, undoStack.at(-1));
@@ -241,8 +240,8 @@ export default function AdvancedTrackerScreen() {
   const scoreBar = (
     <TrackerScoreBar
       isHalfWidth={hasLandscapeHeaderRow}
-      pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
-      pointTimerPausedAt={pointTimerPausedAt}
+      pointTimerBase={pointTimer?.base ?? null}
+      pointTimerPausedAt={pointTimer?.frozenAt ?? null}
       hideRedZoneControl={passModifier != null}
     />
   );

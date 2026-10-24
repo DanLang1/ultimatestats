@@ -14,6 +14,7 @@ import {
   type AttributionType,
   type PointState,
 } from './analyticsTypes';
+import { getActivePlayElapsedMsAt } from './pointClock';
 import { getSideTrackingModes } from './trackingModeUtils';
 import {
   getLastPlayAction,
@@ -290,95 +291,6 @@ function buildGameContext(game: AdvancedTrackedGame): GameBuildContext {
 
 // ── Per-point builders ────────────────────────────────────────────────────────
 
-type PauseOffset = { afterActionIndex: number; durationMs: number };
-
-/**
- * Collects completed stoppage durations in global-action-index order.
- * Used to subtract dead time from elapsedMs for actions logged after each resumption.
- */
-function buildPauseOffsets(point: TrackedPoint): PauseOffset[] {
-  return point.possessions
-    .flatMap((poss) => poss.actions)
-    .flatMap((action, globalActionIndex) =>
-      action.kind === 'stoppage' && action.pausedAt != null && action.resumedAt != null
-        ? [{ afterActionIndex: globalActionIndex, durationMs: action.resumedAt - action.pausedAt }]
-        : [],
-    );
-}
-
-function getCompletedGameClockPauseMsBefore(
-  game: AdvancedTrackedGame,
-  point: TrackedPoint,
-  timestamp: number,
-): number {
-  if (point.startedAt == null) return 0;
-  return (game.gameClockPauses ?? []).reduce((total, pause) => {
-    if (pause.resumedAt == null || pause.pausedAt >= timestamp) return total;
-    const overlapStart = Math.max(point.startedAt!, pause.pausedAt);
-    const overlapEnd = Math.min(timestamp, pause.resumedAt);
-    return total + Math.max(0, overlapEnd - overlapStart);
-  }, 0);
-}
-
-function getCompletedStoppagePauseMsBefore(point: TrackedPoint, timestamp: number): number {
-  return point.possessions
-    .flatMap((possession) => possession.actions)
-    .reduce((total, action) => {
-      if (
-        action.kind !== 'stoppage' ||
-        action.pausedAt == null ||
-        action.resumedAt == null ||
-        action.pausedAt >= timestamp
-      ) {
-        return total;
-      }
-
-      return total + Math.max(0, Math.min(timestamp, action.resumedAt) - action.pausedAt);
-    }, 0);
-}
-
-function getCompletedRevivalPauseMsBefore(point: TrackedPoint, timestamp: number): number {
-  return (point.revivalPauses ?? []).reduce((total, pause) => {
-    if (pause.pausedAt >= timestamp) return total;
-    return total + Math.max(0, Math.min(timestamp, pause.resumedAt) - pause.pausedAt);
-  }, 0);
-}
-
-function getActivePlayElapsedMsAt(
-  game: AdvancedTrackedGame,
-  point: TrackedPoint,
-  timestamp: number,
-): number | null {
-  if (point.startedAt == null) return null;
-  if (
-    point.revivalPauses == null &&
-    point.revivedAt != null &&
-    point.elapsedMsAtEnd != null &&
-    timestamp >= point.revivedAt
-  ) {
-    const stoppagePauseMsAfterRevival =
-      getCompletedStoppagePauseMsBefore(point, timestamp) -
-      getCompletedStoppagePauseMsBefore(point, point.revivedAt);
-    const gameClockPauseMsAfterRevival =
-      getCompletedGameClockPauseMsBefore(game, point, timestamp) -
-      getCompletedGameClockPauseMsBefore(game, point, point.revivedAt);
-    return (
-      point.elapsedMsAtEnd +
-      timestamp -
-      point.revivedAt -
-      stoppagePauseMsAfterRevival -
-      gameClockPauseMsAfterRevival
-    );
-  }
-  return (
-    timestamp -
-    point.startedAt -
-    getCompletedStoppagePauseMsBefore(point, timestamp) -
-    getCompletedGameClockPauseMsBefore(game, point, timestamp) -
-    getCompletedRevivalPauseMsBefore(point, timestamp)
-  );
-}
-
 /** Derives which side scored from the last action of the last possession. */
 function deriveScoringSideId(point: TrackedPoint, ctx: GameBuildContext): string | null {
   const lastPoss = getLastPossession(ctx.gameId, point.id, point.possessions);
@@ -472,12 +384,7 @@ type CompiledPossession = {
   attributions: AnalyticsAttribution[];
 };
 
-/**
- * Compiles a single possession and all its actions into analytics output.
- *
- * `actionStartIndex` is the global action index (across all possessions in the point)
- * of the first action in this possession — used for pause offset calculations.
- */
+/** Compiles a single possession and all its actions into analytics output. */
 function compilePossessionWithActions(
   poss: PointPossession,
   possIndex: number,
@@ -486,9 +393,6 @@ function compilePossessionWithActions(
   point: TrackedPoint,
   pointIndex: number,
   isLastPoint: boolean,
-  actionStartIndex: number,
-  pauseOffsets: PauseOffset[],
-  startedAt: number | undefined,
   ctx: GameBuildContext,
 ): CompiledPossession {
   assertSideId(
@@ -621,20 +525,10 @@ function compilePossessionWithActions(
       defenderId = action.defender ? resolveRef(action.defender) : null;
     }
 
-    const globalIndex = actionStartIndex + actionIndex;
-    const totalPausedMs = pauseOffsets.reduce(
-      (sum, p) => (p.afterActionIndex < globalIndex ? sum + p.durationMs : sum),
-      0,
-    );
-
+    // A stoppage marks when play stopped, so its own pause is not yet subtracted.
     const elapsedMs =
-      action.recordedAt != null && startedAt != null
-        ? // A stoppage marks when play stopped — its own elapsedMs reflects game time up to
-          // that moment. Pause subtraction only applies to actions logged after resumption.
-          action.recordedAt -
-          startedAt -
-          totalPausedMs -
-          getCompletedGameClockPauseMsBefore(ctx.game, point, action.recordedAt)
+      action.recordedAt != null
+        ? getActivePlayElapsedMsAt(ctx.game, point, action.recordedAt)
         : null;
 
     const base: AnalyticsActionBase = {
@@ -697,7 +591,6 @@ function buildAnalyticsGameInternal(game: AdvancedTrackedGame): AnalyticsGame {
     // this point was played. Useful for contextual stats (e.g. break rate when trailing).
     const scoresBySide = { ...runningScores };
 
-    const pauseOffsets = buildPauseOffsets(point);
     const pullingSideId = otherSide(receivingSideId, ctx.sideIds);
     const scoringSideId = deriveScoringSideId(point, ctx);
     const linesBySide = buildLinesBySide(point, ctx);
@@ -716,11 +609,8 @@ function buildAnalyticsGameInternal(game: AdvancedTrackedGame): AnalyticsGame {
       lastPoss.actions,
     );
     const durationMs =
-      lastAction.recordedAt != null && point.startedAt != null
-        ? lastAction.recordedAt -
-          point.startedAt -
-          pauseOffsets.reduce((sum, p) => sum + p.durationMs, 0) -
-          getCompletedGameClockPauseMsBefore(game, point, lastAction.recordedAt)
+      lastAction.recordedAt != null
+        ? getActivePlayElapsedMsAt(game, point, lastAction.recordedAt)
         : null;
 
     points.push({
@@ -748,7 +638,6 @@ function buildAnalyticsGameInternal(game: AdvancedTrackedGame): AnalyticsGame {
       runningScores[scoringSideId] = (runningScores[scoringSideId] ?? 0) + 1;
     }
 
-    let actionStartIndex = 0;
     for (let possIndex = 0; possIndex < point.possessions.length; possIndex++) {
       const poss = point.possessions[possIndex];
       const isLastPossession = possIndex === point.possessions.length - 1;
@@ -761,17 +650,12 @@ function buildAnalyticsGameInternal(game: AdvancedTrackedGame): AnalyticsGame {
         point,
         pointIndex,
         isLastPoint,
-        actionStartIndex,
-        pauseOffsets,
-        point.startedAt,
         ctx,
       );
 
       possessions.push(compiled.possession);
       actions.push(...compiled.actions);
       attributions.push(...compiled.attributions);
-
-      actionStartIndex += poss.actions.length;
     }
 
     // Advance receiving side: scoring team pulls next, other side receives

@@ -48,7 +48,6 @@ tags:
 - assertVisible:
     id: 'between-point-start-next'
 - runFlow: ../flows/read-tracker-debug-game.yaml
-- assertTrue: ${output.game.points[0].revivedAt === undefined}
 - assertTrue: ${output.game.points[0].revivalPauses.length === 1}
 - assertTrue: ${output.game.points[0].revivalPauses[0].pausedAt === output.firstGoalAt}
 - assertTrue: ${output.game.points[0].possessions[0].redZone.enteredAt > output.game.points[0].revivalPauses[0].resumedAt}

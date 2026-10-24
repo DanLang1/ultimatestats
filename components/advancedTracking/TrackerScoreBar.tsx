@@ -25,14 +25,14 @@ export function getScoreBarCardInsets(sizeClass: SizeClass): { top: number; bott
 interface TrackerScoreBarProps {
   /** Shares the tablet landscape header row with the last-action card. */
   isHalfWidth: boolean;
-  pointTimerAdjustedTimestamp: number | null;
+  pointTimerBase: number | null;
   pointTimerPausedAt: number | null;
   hideRedZoneControl: boolean;
 }
 
 export const TrackerScoreBar = ({
   isHalfWidth,
-  pointTimerAdjustedTimestamp,
+  pointTimerBase,
   pointTimerPausedAt,
   hideRedZoneControl,
 }: TrackerScoreBarProps) => {
@@ -82,7 +82,7 @@ export const TrackerScoreBar = ({
           <ScoreBarMainRow
             width={cardWidth}
             onToggleExpanded={toggleExpanded}
-            pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+            pointTimerBase={pointTimerBase}
             pointTimerPausedAt={pointTimerPausedAt}
             hideRedZoneControl={hideRedZoneControl}
           />

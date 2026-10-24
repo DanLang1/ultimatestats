@@ -13,7 +13,7 @@ import { Fonts } from '@/theme/theme';
 interface ScoreBarMainRowProps {
   width: number;
   onToggleExpanded: () => void;
-  pointTimerAdjustedTimestamp: number | null;
+  pointTimerBase: number | null;
   pointTimerPausedAt: number | null;
   hideRedZoneControl: boolean;
 }
@@ -21,7 +21,7 @@ interface ScoreBarMainRowProps {
 export const ScoreBarMainRow = ({
   width,
   onToggleExpanded,
-  pointTimerAdjustedTimestamp,
+  pointTimerBase,
   pointTimerPausedAt,
   hideRedZoneControl,
 }: ScoreBarMainRowProps) => {
@@ -74,7 +74,7 @@ export const ScoreBarMainRow = ({
             </Pressable>
           )}
           <PointTimerText
-            pointTimerAdjustedTimestamp={pointTimerAdjustedTimestamp}
+            pointTimerBase={pointTimerBase}
             pointTimerPausedAt={pointTimerPausedAt}
             showPointTimer={showPointTimer}
             pointIsOver={pointIsOver}

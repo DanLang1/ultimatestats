@@ -7,10 +7,10 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useCountdownSeconds } from '@/hooks/useTimer';
+import { getActivePlayElapsedMsAt } from '@/lib/advancedTracking/pointClock';
 import {
   formatPointTime,
   getActiveStoppage,
-  getPointAdjustedTimestamp,
   getSubsForStoppage,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
@@ -75,9 +75,13 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
       ? (game.sides.find((s) => s.id === activeStoppage.sideId)?.label ?? null)
       : null;
 
-  const pointTimerBase = point ? getPointAdjustedTimestamp(point, game) : null;
   const frozenPointElapsedMs =
-    stoppageTimestamp != null && pointTimerBase != null ? stoppageTimestamp - pointTimerBase : 0;
+    point != null && stoppageTimestamp != null
+      ? getActivePlayElapsedMsAt(game, point, stoppageTimestamp)
+      : null;
+  // A point without a recorded start has no timing to show.
+  const frozenPointTimeLabel =
+    frozenPointElapsedMs == null ? '-:--' : formatPointTime(frozenPointElapsedMs);
 
   let timerColor: string;
   if (timeoutSecondsLeft <= 10) {
@@ -168,7 +172,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
       <View style={styles.centerBlock}>
         <ThemedText style={[styles.bannerLabel, { color: palette.textMuted }]}>PAUSED</ThemedText>
         <ThemedText style={[styles.frozenTimer, { color: palette.textInverse }]}>
-          {formatPointTime(frozenPointElapsedMs)}
+          {frozenPointTimeLabel}
         </ThemedText>
       </View>
     );
@@ -193,7 +197,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
       <View style={styles.centerBlock}>
         <ThemedText style={[styles.bannerLabel, { color: palette.warning }]}>INJURY</ThemedText>
         <ThemedText style={[styles.frozenTimer, { color: palette.textInverse }]}>
-          {formatPointTime(frozenPointElapsedMs)}
+          {frozenPointTimeLabel}
         </ThemedText>
         {hasItems(injurySubs) && (
           <View style={styles.subSummary}>

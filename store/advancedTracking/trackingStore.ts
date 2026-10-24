@@ -30,7 +30,6 @@ import {
   getActiveSideId,
   getActiveStoppage,
   getGameClockElapsedMs,
-  getPointAdjustedTimestamp,
   getSafeDiscHolderRef,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
@@ -850,10 +849,6 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               splitAttribution: throwInput.splitAttribution,
               recordedAt: now,
             });
-            if (isPointEndingThrow(throwInput.result)) {
-              livePoint.elapsedMsAtEnd = now - getPointAdjustedTimestamp(livePoint, liveGame);
-              livePoint.revivedAt = undefined;
-            }
             pushUndoEntry(state, {
               kind: 'action',
               pointId: livePoint.id,
@@ -1166,15 +1161,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
                 isPointEndingThrow(undoAction.result) &&
                 undoPoint != null
               ) {
-                const revivedAt = Date.now();
                 if (undoAction.recordedAt != null) {
                   if (undoPoint.revivalPauses == null) undoPoint.revivalPauses = [];
                   undoPoint.revivalPauses.push({
                     pausedAt: undoAction.recordedAt,
-                    resumedAt: revivedAt,
+                    resumedAt: Date.now(),
                   });
                 }
-                undoPoint.revivedAt = revivedAt;
               }
               removeActionById(
                 liveGame,

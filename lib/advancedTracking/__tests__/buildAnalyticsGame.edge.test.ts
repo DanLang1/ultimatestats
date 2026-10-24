@@ -47,7 +47,6 @@ describe('buildAnalyticsGame — edge cases and correctness', () => {
             id: 'pt1',
             lines: [{ sideId: ZOO, participantIds: ['p_august', 'p_meves', 'p_joah'] }],
             startedAt: 1_000,
-            elapsedMsAtEnd: 20_533,
             possessions: [
               {
                 id: 'pos1',

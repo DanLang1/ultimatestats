@@ -22,7 +22,7 @@ afterEach(() => {
 
 describe('between-point breaks', () => {
   beforeEach(() => {
-    arrangeAdvancedPickupGame();
+    arrangeAdvancedPickupGame({ startedAt: gameStartedAt - 45_000 });
     const result = useAdvancedTrackingStore
       .getState()
       .recordCaptureIntent({ kind: 'goal', scorer: participantRef('blair') });
@@ -85,6 +85,18 @@ describe('between-point breaks', () => {
     expect(timeout.endedAt! - startedAt).toBeGreaterThanOrEqual(10000);
     expect(screen.queryByTestId('between-point-end-timeout')).not.toBeOnTheScreen();
     expect(screen.getByTestId('between-point-start-next')).toBeVisible();
+  });
+
+  it('keeps the point timer at the point duration while the game clock is paused', async () => {
+    await act(() => {
+      jest.advanceTimersByTime(10_000);
+    });
+    useAdvancedTrackingStore.getState().startGameClockPause('manual');
+    await act(() => {
+      jest.advanceTimersByTime(20_000);
+    });
+    await renderScreen(<TrackerScreen />);
+    expect(screen.getByTestId('scorebar-point-timer')).toHaveTextContent('0:45');
   });
 
   it('adjusts halftime by minutes and prevents decreasing below its minimum', async () => {
