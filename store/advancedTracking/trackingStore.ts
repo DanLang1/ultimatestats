@@ -27,11 +27,15 @@ import {
 import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/participantSync';
 import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persistenceTypes';
 import {
+  assertCommandAllowed,
+  canClearRedZone,
+  canSetRedZone,
+} from '@/lib/advancedTracking/trackerCommands';
+import {
   getActiveGameClockPause,
   getActiveSideId,
   getActiveStoppage,
   getGameClockElapsedMs,
-  getSafeDiscHolderRef,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
@@ -829,35 +833,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
         setCurrentPossessionRedZone: (isRedZone) => {
           const game = getCurrentGame(get());
-          const point = getCurrentPoint(game);
-          if (point == null) {
-            throw new Error('Cannot update Red Zone before a point has started.');
+          if (isRedZone) {
+            assertCommandAllowed(canSetRedZone(game), 'enter Red Zone');
+          } else {
+            assertCommandAllowed(canClearRedZone(game), 'clear Red Zone');
           }
-          if (hasPointEnded(point)) {
-            throw new Error('Cannot update Red Zone after the point has ended.');
-          }
-          if (getActiveStoppage(getCurrentPossession(game)) != null) {
-            throw new Error('Cannot update Red Zone during an active stoppage.');
-          }
-          if (getActiveGameClockPause(game) != null) {
-            throw new Error('Cannot update Red Zone during a game-clock pause.');
-          }
-
           const currentPossession = getCurrentPossession(game);
-          const activeSideId = getActiveSideId(currentPossession, game);
-          const activeSide = game.sides.find((side) => side.id === activeSideId);
-          if (activeSide == null) {
-            throw new Error(`Cannot resolve active Red Zone side "${activeSideId}".`);
-          }
           const activePossession = isPossessionOver(currentPossession) ? null : currentPossession;
-
-          if (!isRedZone && activePossession == null) return;
-          if (
-            activeSide.trackingMode === 'full-roster' &&
-            getSafeDiscHolderRef(currentPossession, activeSideId, point) == null
-          ) {
-            throw new Error('Cannot enter Red Zone before the current holder is captured.');
-          }
           if ((activePossession?.redZone != null) === isRedZone) return;
 
           const now = Date.now();

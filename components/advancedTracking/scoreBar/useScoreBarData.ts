@@ -1,4 +1,5 @@
 import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
+import { canClearRedZone, canSetRedZone } from '@/lib/advancedTracking/trackerCommands';
 import { getSideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getEffectiveGameTo,
@@ -37,18 +38,13 @@ export function useScoreBarData() {
   const focusTimeouts = getSideTimeoutState(game, focusSideId);
   const oppTimeouts = getSideTimeoutState(game, oppSideId);
 
-  const { point, possession, pointIsOver, activeSideId, isPlayPaused, holderFor } =
-    getLivePlayState(game);
+  const { point, possession, pointIsOver, activeSideId, isPlayPaused } = getLivePlayState(game);
   const showPointTimer = point?.startedAt != null && !pointIsOver;
   const activeSide = game.sides.find((side) => side.id === activeSideId);
   const activePossession = isPossessionOver(possession) ? null : possession;
-  const activeHolderRef = holderFor(activeSideId);
-  const canToggleRedZone =
-    !pointIsOver &&
-    !isPlayPaused &&
-    activeSide != null &&
-    (activeSide.trackingMode === 'anonymous' || activeHolderRef != null);
   const redZoneSelected = activePossession?.redZone != null;
+  const redZoneToggle = redZoneSelected ? canClearRedZone(game) : canSetRedZone(game);
+  const isRedZoneToggleAvailable = redZoneToggle.ok;
 
   const currentPointNumber = game.points.length;
   const ratioLabel =
@@ -76,7 +72,7 @@ export function useScoreBarData() {
   };
 
   const handleRedZoneToggle = () => {
-    if (!canToggleRedZone) return;
+    if (!isRedZoneToggleAvailable) return;
     setCurrentPossessionRedZone(!redZoneSelected);
   };
 
@@ -94,7 +90,7 @@ export function useScoreBarData() {
     pointIsOver,
     activeSideId,
     activeSideName: activeSide?.label ?? '',
-    canToggleRedZone,
+    canToggleRedZone: isRedZoneToggleAvailable,
     redZoneSelected,
     isPointTimerPaused: isPlayPaused,
     showPointTimer,

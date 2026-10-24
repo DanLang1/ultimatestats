@@ -1207,6 +1207,31 @@ describe('advancedTrackingStore', () => {
     );
   });
 
+  it('clears Red Zone after an injury sub takes the holder off the field', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLinesAugust,
+      puller: untracked,
+      result: 'ob',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+    const stoppageId = useAdvancedTrackingStore.getState().recordInjurySubs({
+      sideId: homeSideId,
+      changes: [
+        { sideId: homeSideId, inIds: [meves.participantId], outIds: [august.participantId] },
+      ],
+    });
+    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+
+    expect(() => useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true)).toThrow(
+      'current holder',
+    );
+    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(false);
+
+    expect(getCurrentPoint(getCurrentGame())?.possessions.at(-1)?.redZone).toBeUndefined();
+  });
+
   it('clears Red Zone when undoing the pickup that established a tracked holder', () => {
     createGame();
     useAdvancedTrackingStore.getState().recordPull({
