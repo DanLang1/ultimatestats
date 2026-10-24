@@ -6,6 +6,7 @@ import { assertNever, hasItems } from '@/lib/utils';
 import type { AnalyticsAction } from './analyticsTypes';
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
 import { getParticipantName } from './participantUtils';
+import type { AdvancedTrackingUndoEntry } from './persistenceTypes';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import {
   AdvancedTrackedGame,
@@ -25,11 +26,6 @@ import {
   TrackedPoint,
   TurnoverThrowResult,
 } from './types';
-
-export interface AdvancedHalftimeEarlyUndoEntry {
-  kind: string;
-  pointId: string;
-}
 
 export interface AdvancedGameLookupState {
   currentGameId: string | null;
@@ -327,7 +323,7 @@ export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {
 
 export function didLastOperationEndCurrentPoint(
   game: AdvancedTrackedGame,
-  lastUndoEntry: AdvancedHalftimeEarlyUndoEntry | undefined,
+  lastUndoEntry: AdvancedTrackingUndoEntry | undefined,
 ): boolean {
   const currentPoint = getCurrentPoint(game);
   return (
@@ -339,7 +335,7 @@ export function didLastOperationEndCurrentPoint(
 
 export function canStartSecondHalfEarly(
   game: AdvancedTrackedGame | undefined,
-  lastUndoEntry: AdvancedHalftimeEarlyUndoEntry | undefined,
+  lastUndoEntry: AdvancedTrackingUndoEntry | undefined,
 ): boolean {
   if (game === undefined) {
     return false;

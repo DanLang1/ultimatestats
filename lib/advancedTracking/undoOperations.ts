@@ -5,8 +5,19 @@
 import { assertNever } from '@/lib/utils';
 
 import { removeActionById, removeSubsForStoppages } from './gameMutations';
-import type { AdvancedTrackingUndoEntry } from './persistenceTypes';
-import { getPlayOutcome, isPointEndingThrow, syncDerivedHalftimeTransition } from './trackingUtils';
+import type {
+  ActionUndoEntry,
+  AdvancedTrackingUndoEntry,
+  BetweenPointTimeoutUndoEntry,
+  EarlyHalftimeUndoEntry,
+  PullAmendmentUndoEntry,
+} from './persistenceTypes';
+import {
+  getPlayOutcome,
+  getPossessionEnd,
+  isPointEndingThrow,
+  syncDerivedHalftimeTransition,
+} from './trackingUtils';
 import type {
   AdvancedTrackedGame,
   BetweenPointTransition,
@@ -22,11 +33,6 @@ export interface UndoResult {
   /** Whether the rederived halftime transition puts the game in the halftime break. */
   isHalftimeBreakActive: boolean;
 }
-
-type UndoEntryOf<K extends AdvancedTrackingUndoEntry['kind']> = Extract<
-  AdvancedTrackingUndoEntry,
-  { kind: K }
->;
 
 interface ActionRef {
   pointId: string;
@@ -54,7 +60,7 @@ function resolveActionTarget(game: AdvancedTrackedGame, ref: ActionRef): ActionT
 
 function resolvePullTarget(
   game: AdvancedTrackedGame,
-  entry: UndoEntryOf<'amend_pull_result'>,
+  entry: PullAmendmentUndoEntry,
 ): ActionTarget & { action: PullAction } {
   const target = resolveActionTarget(game, entry);
   const { action } = target;
@@ -67,7 +73,7 @@ function resolvePullTarget(
 /** The point and its between-point transitions, which contain the entry's timeout. */
 function resolveBetweenPointTimeout(
   game: AdvancedTrackedGame,
-  entry: UndoEntryOf<'between_point_timeout'>,
+  entry: BetweenPointTimeoutUndoEntry,
 ): { point: TrackedPoint; transitions: BetweenPointTransition[] } {
   const point = game.points.find((candidate) => candidate.id === entry.pointId);
   const transitions = point?.transitionsAfter;
@@ -82,7 +88,7 @@ function resolveBetweenPointTimeout(
 /** The game transitions, which contain the entry's early halftime. */
 function resolveEarlyHalftime(
   game: AdvancedTrackedGame,
-  entry: UndoEntryOf<'halftime_early'>,
+  entry: EarlyHalftimeUndoEntry,
 ): GameTransition[] {
   const transitions = game.gameTransitions;
   if (!transitions?.some((candidate) => candidate.id === entry.transitionId)) {
@@ -150,7 +156,7 @@ function removePossessionsAfterTurnover(
   removeSubsForStoppages(point, removedStoppageIds);
 }
 
-function undoAction(game: AdvancedTrackedGame, entry: UndoEntryOf<'action'>, now: number): void {
+function undoAction(game: AdvancedTrackedGame, entry: ActionUndoEntry, now: number): void {
   const { point, possession, action } = resolveActionTarget(game, entry);
 
   // Possession cleanup and the revival pause read the action, so they run before removing it.
@@ -166,7 +172,7 @@ function undoAction(game: AdvancedTrackedGame, entry: UndoEntryOf<'action'>, now
 
 function undoBetweenPointTimeout(
   game: AdvancedTrackedGame,
-  entry: UndoEntryOf<'between_point_timeout'>,
+  entry: BetweenPointTimeoutUndoEntry,
 ): void {
   const { point, transitions } = resolveBetweenPointTimeout(game, entry);
   const remainingTransitions = transitions.filter(
@@ -175,17 +181,14 @@ function undoBetweenPointTimeout(
   point.transitionsAfter = remainingTransitions.length > 0 ? remainingTransitions : undefined;
 }
 
-function undoEarlyHalftime(game: AdvancedTrackedGame, entry: UndoEntryOf<'halftime_early'>): void {
+function undoEarlyHalftime(game: AdvancedTrackedGame, entry: EarlyHalftimeUndoEntry): void {
   const remainingTransitions = resolveEarlyHalftime(game, entry).filter(
     (candidate) => candidate.id !== entry.transitionId,
   );
   game.gameTransitions = remainingTransitions.length > 0 ? remainingTransitions : undefined;
 }
 
-function undoPullAmendment(
-  game: AdvancedTrackedGame,
-  entry: UndoEntryOf<'amend_pull_result'>,
-): void {
+function undoPullAmendment(game: AdvancedTrackedGame, entry: PullAmendmentUndoEntry): void {
   const { point, possession, action } = resolvePullTarget(game, entry);
 
   // Runs before reverting the result: getPlayOutcome treats a 'dropped' pull as a turnover.
@@ -221,4 +224,28 @@ export function applyUndo(
   }
 
   return { isHalftimeBreakActive: syncDerivedHalftimeTransition(game) };
+}
+
+/** Whether undoing `entry` removes the action that ended `point`'s last possession. */
+export function isUndoOfPointEndingAction(
+  entry: AdvancedTrackingUndoEntry | undefined,
+  point: TrackedPoint | null,
+): boolean {
+  if (entry?.kind !== 'action' || point == null) return false;
+  const lastPossession = point.possessions.at(-1);
+  if (lastPossession == null) return false;
+  return (
+    entry.pointId === point.id &&
+    entry.possessionId === lastPossession.id &&
+    entry.actionId === getPossessionEnd(lastPossession)?.action.id
+  );
+}
+
+/**
+ * Whether `entry` undoes an operation other than a possession action (between-point timeout,
+ * early halftime, pull amendment). Action undo is offered on the last-action card, so the
+ * between-point screens show their own Undo button only for these standalone entries.
+ */
+export function isStandaloneUndo(entry: AdvancedTrackingUndoEntry | undefined): boolean {
+  return entry != null && entry.kind !== 'action';
 }

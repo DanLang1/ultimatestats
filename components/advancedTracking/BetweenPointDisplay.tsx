@@ -13,6 +13,7 @@ import {
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { getCurrentPoint, getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, Participant, TrackedPoint } from '@/lib/advancedTracking/types';
+import { isStandaloneUndo } from '@/lib/advancedTracking/undoOperations';
 import { DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds, hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -119,8 +120,7 @@ export const BetweenPointDisplay = ({
     focusSideId: summarySideId,
   });
   const lastPointPlayers = getLastPointPlayers(point, summarySideId, participants);
-  const lastUndoEntry = undoStack.at(-1);
-  const showStandaloneUndo = lastUndoEntry != null && lastUndoEntry.kind !== 'action';
+  const showStandaloneUndo = isStandaloneUndo(undoStack.at(-1));
   const handleEndTimeout = () => {
     if (activeTimeout == null) return;
     endBetweenPointTimeout(activeTimeout.transition.id);

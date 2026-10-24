@@ -1,3 +1,8 @@
+import type {
+  ActionUndoEntry,
+  BetweenPointTimeoutUndoEntry,
+  EarlyHalftimeUndoEntry,
+} from '../persistenceTypes';
 import {
   assertPointActionParticipantsPreserved,
   assertTwoSides,
@@ -708,6 +713,23 @@ describe('getEffectiveGameTo — soft cap edge cases', () => {
   });
 });
 
+const pt1ActionUndo: ActionUndoEntry = {
+  kind: 'action',
+  pointId: 'pt1',
+  possessionId: 'pos1',
+  actionId: 'a1',
+};
+const pt1TimeoutUndo: BetweenPointTimeoutUndoEntry = {
+  kind: 'between_point_timeout',
+  pointId: 'pt1',
+  transitionId: 'to1',
+};
+const pt1EarlyHalftimeUndo: EarlyHalftimeUndoEntry = {
+  kind: 'halftime_early',
+  pointId: 'pt1',
+  transitionId: 'ht1',
+};
+
 describe('didLastOperationEndCurrentPoint', () => {
   const endedPoint = makePoint([
     makePossession(HOME, [
@@ -718,23 +740,19 @@ describe('didLastOperationEndCurrentPoint', () => {
   it('returns true when the last undoable action belongs to the current point', () => {
     const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
 
-    expect(didLastOperationEndCurrentPoint(game, { kind: 'action', pointId: 'pt1' })).toBe(true);
+    expect(didLastOperationEndCurrentPoint(game, pt1ActionUndo)).toBe(true);
   });
 
   it('returns false for between-point operations', () => {
     const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
 
-    expect(
-      didLastOperationEndCurrentPoint(game, { kind: 'between_point_timeout', pointId: 'pt1' }),
-    ).toBe(false);
+    expect(didLastOperationEndCurrentPoint(game, pt1TimeoutUndo)).toBe(false);
   });
 
   it('returns false for the early-halftime undo marker', () => {
     const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
 
-    expect(didLastOperationEndCurrentPoint(game, { kind: 'halftime_early', pointId: 'pt1' })).toBe(
-      false,
-    );
+    expect(didLastOperationEndCurrentPoint(game, pt1EarlyHalftimeUndo)).toBe(false);
   });
 
   it('returns false when the undo entry belongs to an earlier point', () => {
@@ -743,7 +761,7 @@ describe('didLastOperationEndCurrentPoint', () => {
       { ...endedPoint, id: 'pt2' },
     ]);
 
-    expect(didLastOperationEndCurrentPoint(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+    expect(didLastOperationEndCurrentPoint(game, pt1ActionUndo)).toBe(false);
   });
 });
 
@@ -768,7 +786,7 @@ describe('canStartSecondHalfEarly', () => {
   it('returns true after the latest point-ending operation', () => {
     const game = makeHalftimeGame({ ...endedPoint, id: 'pt1' });
 
-    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(true);
+    expect(canStartSecondHalfEarly(game, pt1ActionUndo)).toBe(true);
   });
 
   it('returns false when halftime is disabled', () => {
@@ -777,7 +795,7 @@ describe('canStartSecondHalfEarly', () => {
       settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
     };
 
-    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+    expect(canStartSecondHalfEarly(game, pt1ActionUndo)).toBe(false);
   });
 
   it('returns false while the current point is still active', () => {
@@ -786,7 +804,7 @@ describe('canStartSecondHalfEarly', () => {
       id: 'pt1',
     });
 
-    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+    expect(canStartSecondHalfEarly(game, pt1ActionUndo)).toBe(false);
   });
 
   it('returns false when a halftime transition already exists', () => {
@@ -795,15 +813,13 @@ describe('canStartSecondHalfEarly', () => {
       gameTransitions: [{ id: 'ht1', transitionType: 'halftime', afterPointId: 'pt1' }],
     };
 
-    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+    expect(canStartSecondHalfEarly(game, pt1ActionUndo)).toBe(false);
   });
 
   it('returns false after a non-point-ending undoable operation', () => {
     const game = makeHalftimeGame({ ...endedPoint, id: 'pt1' });
 
-    expect(canStartSecondHalfEarly(game, { kind: 'between_point_timeout', pointId: 'pt1' })).toBe(
-      false,
-    );
+    expect(canStartSecondHalfEarly(game, pt1TimeoutUndo)).toBe(false);
   });
 
   it('returns false when the game is already over', () => {
@@ -815,7 +831,7 @@ describe('canStartSecondHalfEarly', () => {
       },
     };
 
-    expect(canStartSecondHalfEarly(game, { kind: 'action', pointId: 'pt1' })).toBe(false);
+    expect(canStartSecondHalfEarly(game, pt1ActionUndo)).toBe(false);
   });
 });
 

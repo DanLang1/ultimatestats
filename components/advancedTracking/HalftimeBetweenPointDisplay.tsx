@@ -9,6 +9,7 @@ import { computeAdvancedGameStats } from '@/lib/advancedTracking/advancedGameSta
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import type { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
+import { isStandaloneUndo } from '@/lib/advancedTracking/undoOperations';
 import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import {
   getCurrentPendingNextPointLineSelection,
@@ -42,8 +43,7 @@ export const HalftimeBetweenPointDisplay = ({
   const styles = createStyles(sizeClass, isLandscape);
   const { pendingNextPointLineSelection, undoLastOperation, undoStack } =
     useAdvancedTrackingStore();
-  const lastUndoEntry = undoStack.at(-1);
-  const showStandaloneUndo = lastUndoEntry != null && lastUndoEntry.kind !== 'action';
+  const showStandaloneUndo = isStandaloneUndo(undoStack.at(-1));
 
   const analyticsGame = buildAnalyticsGame(game);
   const { teamStats, playerStats } = computeAdvancedGameStats(analyticsGame, game.focusSideId);

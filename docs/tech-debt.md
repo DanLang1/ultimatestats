@@ -103,23 +103,13 @@ rewrite it to describe only the remaining problem as it exists now.
 - The undo stack is reset by hand in 9 places: the active-game lifecycle actions (create, reset,
   finalize, finish, import, delete), `loadCurrentGame`, the persist `merge`, and
   `lib/maestroUtils.ts`.
-- UI and utils read `undoStack.at(-1)` to answer gameplay questions (`canStartSecondHalfEarly`,
-  point-ending undo in `TrackerLastActionCard`, standalone undo in the between-point displays).
-  `AdvancedHalftimeEarlyUndoEntry` (`kind: string`) in `trackingUtils.ts` loosely duplicates the
-  entry type.
-- `undoOperations.ts` derives per-kind entry types with `Extract`; the entry variants are domain
-  concepts and should be named, exported types in `persistenceTypes.ts`.
-- Cleanup: route active-game changes through one helper that resets the stack; replace raw stack
-  peeks with named queries in `undoOperations.ts`. Keep the stack in the tracking store (game and
-  stack persist together) and keep semantic entries rather than snapshots or Immer patches.
+- Cleanup: route active-game changes through one helper that resets the stack. Keep the stack in
+  the tracking store (game and stack persist together) and keep semantic entries rather than
+  snapshots or Immer patches.
 - References:
   `store/advancedTracking/trackingStore.ts`
   `lib/advancedTracking/undoOperations.ts`
-  `lib/advancedTracking/persistenceTypes.ts`
-  `lib/advancedTracking/trackingUtils.ts`
-  `components/advancedTracking/TrackerLastActionCard.tsx`
-  `components/advancedTracking/BetweenPointDisplay.tsx`
-  `components/advancedTracking/HalftimeBetweenPointDisplay.tsx`
+  `lib/maestroUtils.ts`
 
 ## P3 - Advanced Tracking Store Pure Mutations
 
@@ -190,6 +180,21 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/AdvancedTurnoverCorrectionModal.tsx`
   `components/advancedTracking/TrackerRareMenu.tsx`
   `components/advancedTracking/bottomCard/ModifierPrompt.tsx`
+
+## P3 - Timeout Cancel and Undo Consistency
+
+- Mid-point stoppages and between-point timeouts reverse in opposite ways. A running stoppage has a
+  Cancel button (`cancelStoppage`) but is never on the undo stack, so once resumed it cannot be
+  removed and Undo skips past it. A running between-point timeout has no Cancel (only End Timeout);
+  after it ends, the between-point Undo removes it via its `between_point_timeout` entry.
+- Investigate: whether the running between-point timeout should offer Cancel (likely
+  `undoLastOperation`, since the timeout is the newest entry while it runs), and whether a resumed
+  mid-point stoppage needs a removal path (e.g. from the timeline) given its attached injury subs
+  and point-clock effects.
+- References:
+  `components/advancedTracking/BetweenPointDisplay.tsx`
+  `components/advancedTracking/StoppageOverlay.tsx`
+  `store/advancedTracking/trackingStore.ts`
 
 ## P3 - Advanced Screen Duplication and Prop Drilling
 

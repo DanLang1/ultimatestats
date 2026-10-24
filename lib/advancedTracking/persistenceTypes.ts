@@ -7,31 +7,43 @@ import {
 
 export const ADVANCED_UNDO_PAYLOAD_VERSION = 1;
 
+/** Undo of a recorded possession action, removing it from its possession. */
+export interface ActionUndoEntry {
+  kind: 'action';
+  pointId: string;
+  possessionId: string;
+  actionId: string;
+}
+
+/** Undo of a timeout called between points, removing it from the point's `transitionsAfter`. */
+export interface BetweenPointTimeoutUndoEntry {
+  kind: 'between_point_timeout';
+  pointId: string;
+  transitionId: string;
+}
+
+/** Undo of starting the second half early, removing the halftime game transition. */
+export interface EarlyHalftimeUndoEntry {
+  kind: 'halftime_early';
+  pointId: string;
+  transitionId: string;
+}
+
+/** Undo of a pull result amendment, restoring the pull's previous result and receiver. */
+export interface PullAmendmentUndoEntry {
+  kind: 'amend_pull_result';
+  pointId: string;
+  possessionId: string;
+  actionId: string;
+  previousResult: PullResult;
+  previousReceiver?: PlayerRef;
+}
+
 export type AdvancedTrackingUndoEntry =
-  | {
-      kind: 'action';
-      pointId: string;
-      possessionId: string;
-      actionId: string;
-    }
-  | {
-      kind: 'between_point_timeout';
-      pointId: string;
-      transitionId: string;
-    }
-  | {
-      kind: 'halftime_early';
-      pointId: string;
-      transitionId: string;
-    }
-  | {
-      kind: 'amend_pull_result';
-      pointId: string;
-      possessionId: string;
-      actionId: string;
-      previousResult: PullResult;
-      previousReceiver?: PlayerRef;
-    };
+  | ActionUndoEntry
+  | BetweenPointTimeoutUndoEntry
+  | EarlyHalftimeUndoEntry
+  | PullAmendmentUndoEntry;
 
 export interface PersistedAdvancedUndoPayload {
   version: typeof ADVANCED_UNDO_PAYLOAD_VERSION;

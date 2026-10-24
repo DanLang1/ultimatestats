@@ -24,7 +24,6 @@ import {
   ThrowDetailsTarget,
   TurnoverEventInfo,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { getPossessionEnd } from '@/lib/advancedTracking/trackingUtils';
 import {
   getEligibleThrowTypes,
   Participant,
@@ -33,6 +32,7 @@ import {
   ThrowType,
   TrackedPoint,
 } from '@/lib/advancedTracking/types';
+import { isUndoOfPointEndingAction } from '@/lib/advancedTracking/undoOperations';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts, Palette } from '@/theme/theme';
 
@@ -138,14 +138,7 @@ export const TrackerLastActionCard = ({
     if (side?.trackingMode !== 'full-roster') return null;
     return getLatestThrowDetailsTarget(point, candidate);
   };
-  const lastPossession = point?.possessions.at(-1) ?? null;
-  const pointEndingAction = lastPossession && getPossessionEnd(lastPossession)?.action;
-  const lastUndoEntry = undoStack.at(-1);
-  const canUndoPointEndingAction =
-    lastUndoEntry?.kind === 'action' &&
-    lastUndoEntry.pointId === point?.id &&
-    lastUndoEntry.possessionId === lastPossession?.id &&
-    lastUndoEntry.actionId === pointEndingAction?.id;
+  const canUndoPointEndingAction = isUndoOfPointEndingAction(undoStack.at(-1), point);
 
   const eyebrow = (color: string) => (
     <ThemedText
