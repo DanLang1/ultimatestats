@@ -98,19 +98,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `store/basic/gameStore.ts`
   `store/basic/gameStore.types.ts`
 
-## P3 - Advanced Tracker Undo Module
-
-- The undo stack is reset by hand in 9 places: the active-game lifecycle actions (create, reset,
-  finalize, finish, import, delete), `loadCurrentGame`, the persist `merge`, and
-  `lib/maestroUtils.ts`.
-- Cleanup: route active-game changes through one helper that resets the stack. Keep the stack in
-  the tracking store (game and stack persist together) and keep semantic entries rather than
-  snapshots or Immer patches.
-- References:
-  `store/advancedTracking/trackingStore.ts`
-  `lib/advancedTracking/undoOperations.ts`
-  `lib/maestroUtils.ts`
-
 ## P3 - Advanced Tracking Store Pure Mutations
 
 - The record and correction actions in `trackingStore.ts` still edit the game inline: pushing

@@ -151,6 +151,23 @@ function setHalftimeBreakActive(state: Draft<AdvancedTrackingState>, isActive: b
   resetHalftimeTimerState(state);
 }
 
+/**
+ * Replaces `currentGame` / `currentGameId`. A null id leaves the game shown but inactive (a finished
+ * game); null for both clears it. Every change starts with no undo history, no drafted next line,
+ * and no halftime break.
+ */
+function setActiveGame(
+  state: Draft<AdvancedTrackingState>,
+  game: AdvancedTrackedGame | null,
+  gameId: string | null,
+) {
+  state.currentGame = game;
+  state.currentGameId = gameId;
+  state.undoStack = [];
+  clearPendingNextPointLineSelection(state);
+  setHalftimeBreakActive(state, false);
+}
+
 function reconcileDerivedHalftimeBreak(state: Draft<AdvancedTrackingState>) {
   const game = state.currentGame;
   if (game == null) {
@@ -353,11 +370,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           };
 
           set((state) => {
-            state.currentGame = game;
-            state.currentGameId = gameId;
-            state.undoStack = [];
-            clearPendingNextPointLineSelection(state);
-            setHalftimeBreakActive(state, false);
+            setActiveGame(state, game, gameId);
           });
 
           return gameId;
@@ -366,11 +379,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         resetCurrentGame: () => {
           const gameId = get().currentGameId;
           set((state) => {
-            state.currentGame = null;
-            state.currentGameId = null;
-            state.undoStack = [];
-            clearPendingNextPointLineSelection(state);
-            setHalftimeBreakActive(state, false);
+            setActiveGame(state, null, null);
           });
           if (gameId != null) {
             void useSavedAdvancedGamesStore.getState().deleteGame(gameId);
@@ -390,11 +399,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const gameToPersist: AdvancedTrackedGame = { ...game, status: 'final', updatedAt: now };
           await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
           set((state) => {
-            state.currentGame = gameToPersist;
-            state.currentGameId = null;
-            state.undoStack = [];
-            clearPendingNextPointLineSelection(state);
-            setHalftimeBreakActive(state, false);
+            setActiveGame(state, gameToPersist, null);
           });
         },
 
@@ -409,11 +414,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               : { ...game, status: 'terminated', endReason, updatedAt: Date.now() };
           await useSavedAdvancedGamesStore.getState().saveGame(gameToPersist);
           set((state) => {
-            state.currentGame = gameToPersist;
-            state.currentGameId = null;
-            state.undoStack = [];
-            clearPendingNextPointLineSelection(state);
-            setHalftimeBreakActive(state, false);
+            setActiveGame(state, gameToPersist, null);
           });
         },
 
@@ -1126,11 +1127,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           await useSavedAdvancedGamesStore.getState().deleteGame(gameId);
           set((state) => {
             if (state.currentGameId === gameId) {
-              state.currentGameId = null;
-              state.currentGame = null;
-              state.undoStack = [];
-              clearPendingNextPointLineSelection(state);
-              setHalftimeBreakActive(state, false);
+              setActiveGame(state, null, null);
             }
           });
         },

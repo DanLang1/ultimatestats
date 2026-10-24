@@ -1,6 +1,10 @@
 /**
  * Inverse operations for the live tracker's undo stack. Operations that are never pushed to the
  * stack (stoppages, cap transitions, Red Zone scaffold pickups) intentionally survive undo.
+ *
+ * Entries are semantic ("remove action X"), not snapshots or Immer patches: undo applies domain
+ * rules (possession cleanup, revival pauses, halftime rederivation) rather than a pure revert. The
+ * stack itself lives in the tracking store so the game and its stack update and persist together.
  */
 import { assertNever } from '@/lib/utils';
 
