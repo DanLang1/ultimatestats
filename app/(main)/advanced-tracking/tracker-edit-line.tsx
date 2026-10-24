@@ -2,13 +2,10 @@ import { Redirect, router, Stack } from 'expo-router';
 
 import { AdvancedActiveLineCorrectionScreen } from '@/components/advancedTracking/AdvancedActiveLineCorrectionScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
-import { getActiveSideId, getActiveStoppage } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { canChangeLine } from '@/lib/advancedTracking/trackerCommands';
+import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import {
-  getCurrentPoint,
-  getCurrentPossession,
-  hasPointEnded,
-} from '@/lib/advancedTracking/trackingUtils';
+import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 
 export default function TrackerEditLineScreen() {
@@ -24,7 +21,7 @@ export default function TrackerEditLineScreen() {
   if (!currentGameId || !game || !point) {
     return <Redirect href="/dashboard" />;
   }
-  if (hasPointEnded(point) || getActiveStoppage(possession) != null) {
+  if (!canChangeLine(game).ok) {
     return <Redirect href="/advanced-tracking/tracker" />;
   }
 

@@ -122,6 +122,7 @@ export const TrackerLastActionCard = ({
     perspectiveSideId,
     oppHasDisc,
     canUseRareMenu,
+    commands,
   } = session;
   const lastOppPossession =
     point?.possessions.findLast(
@@ -175,7 +176,7 @@ export const TrackerLastActionCard = ({
     lastFocusThrowTarget: getTrackedThrowTarget(lastFocusPossession),
     lastOppThrowTarget: getTrackedThrowTarget(lastOppPossession),
     lastGoalThrowTarget: getTrackedThrowTarget(point?.possessions.at(-1) ?? null),
-    canUndo: undoStack.length > 0,
+    canUndo: commands.undo,
     canUndoPointEndingAction,
   };
   const model = getTrackerLastActionCardModel({

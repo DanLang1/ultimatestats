@@ -37,7 +37,7 @@ import {
   getActiveBetweenPointTimeout,
   getEffectiveLineParticipantIds,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { canStartSecondHalfEarly, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
+import { isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -51,7 +51,6 @@ export default function AdvancedTrackerScreen() {
   const styles = createStyles(palette, sizeClass);
   const insets = useSafeAreaInsets();
 
-  const undoStack = useAdvancedTrackingStore((state) => state.undoStack);
   const isHalftimeBreakActive = useAdvancedTrackingStore((state) => state.isHalftimeBreakActive);
   const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
   const amendOpeningPullAsDropped = useAdvancedTrackingStore(
@@ -124,14 +123,12 @@ export default function AdvancedTrackerScreen() {
     activeStoppage,
     activeGameClockPause,
     isPlayLive,
+    commands,
   } = session;
   const pointTimer = point ? getPointTimer(game, point) : null;
   const activeBetweenPointTimeout = getActiveBetweenPointTimeout(game);
-  const gameStartedAt = game.points[0]?.startedAt ?? null;
-  const showStartSecondHalfEarly = canStartSecondHalfEarly(game, undoStack.at(-1));
   const showPostPointLastActionCard = pointIsOver && activeBetweenPointTimeout == null;
   const showLastActionCard = isPlayLive || showPostPointLastActionCard;
-  const canChangeLine = !pointIsOver && passModifier == null;
 
   if (isAdvancedGameOver(game)) {
     return <Redirect href="/advanced-tracking/tracker-game-complete" />;
@@ -227,7 +224,7 @@ export default function AdvancedTrackerScreen() {
         onLineChangePress={() => setShowLineChangeMenu(true)}
         onPrepareNextLine={handlePrepareNextLine}
         onStartNextPoint={handleStartNextPoint}
-        canChangeLine={canChangeLine}
+        canChangeLine={commands.changeLine}
         availableHeight={trackingSurfaceHeight}
         onPointNote={() => setShowPointNote(true)}
       />
@@ -307,10 +304,8 @@ export default function AdvancedTrackerScreen() {
       <TrackerHomeMenu
         visible={showHomeMenu}
         onClose={() => setShowHomeMenu(false)}
-        canPauseGameClock={
-          gameStartedAt !== null && activeStoppage === null && activeGameClockPause === null
-        }
-        canStartSecondHalfEarly={showStartSecondHalfEarly}
+        canPauseGameClock={commands.pauseGameClock}
+        canStartSecondHalfEarly={commands.startSecondHalfEarly}
         hasGameNote={Boolean(game.metadata?.notes)}
         onGameClockPause={handleGamePause}
         onGameNote={() => setShowGameNote(true)}
@@ -334,7 +329,7 @@ export default function AdvancedTrackerScreen() {
         />
       )}
 
-      {isPlayLive && canChangeLine && (
+      {commands.changeLine && (
         <TrackerLineChangeMenu
           visible={showLineChangeMenu}
           onClose={() => setShowLineChangeMenu(false)}

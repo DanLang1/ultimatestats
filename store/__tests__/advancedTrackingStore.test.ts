@@ -1249,7 +1249,7 @@ describe('advancedTrackingStore', () => {
     expect(possession?.redZone).toBeUndefined();
   });
 
-  it('requires clearing Red Zone before amending an inbound pull as dropped', () => {
+  it('refuses to mark a pull received by the untracked opponent as dropped', () => {
     createGame(15, awaySideId);
     useAdvancedTrackingStore.getState().recordPull({
       lines: homeLinesAugust,
@@ -1257,15 +1257,14 @@ describe('advancedTrackingStore', () => {
       receiver: untracked,
       result: 'inbound',
     });
-    useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
 
     expect(() => useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(untracked)).toThrow(
-      'Clear Red Zone first',
+      'Cannot mark the pull as dropped: the untracked opponent has the disc.',
     );
-
-    const possession = getCurrentPoint(getCurrentGame())?.possessions[0];
-    expect(possession?.redZone).toEqual({ enteredAt: expect.any(Number) });
-    expect(possession?.actions[0]).toMatchObject({ kind: 'pull', result: 'inbound' });
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions[0]).toMatchObject({
+      kind: 'pull',
+      result: 'inbound',
+    });
   });
 
   it('removes a Red Zone-only anonymous scaffold when the tag is cleared', () => {
@@ -1386,7 +1385,7 @@ describe('advancedTrackingStore', () => {
     useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(august);
 
     expect(() => useAdvancedTrackingStore.getState().amendOpeningPullAsDropped(meves)).toThrow(
-      'Cannot mark a pull as dropped when it was already dropped.',
+      'Cannot mark the pull as dropped: the pull was already marked dropped.',
     );
     expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions[0]).toMatchObject({
       result: 'dropped',
@@ -2048,10 +2047,7 @@ describe('advancedTrackingStore', () => {
     useAdvancedTrackingStore
       .getState()
       .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
-    useAdvancedTrackingStore.getState().recordBetweenPointTimeout({
-      sideId: homeSideId,
-      isFloater: false,
-    });
+    useAdvancedTrackingStore.getState().recordBetweenPointTimeout({ sideId: homeSideId });
 
     const didTrigger = useAdvancedTrackingStore.getState().triggerHalftimeEarly();
 
@@ -2433,6 +2429,177 @@ describe('advancedTrackingStore', () => {
     nowSpy.mockRestore();
   });
 
+  describe('paused-play and timeout preconditions', () => {
+    const startPoint = () =>
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+    const scoreHomePoint = () => {
+      startPoint();
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+    };
+
+    it('blocks a second between-point timeout while one is running', () => {
+      createGame();
+      scoreHomePoint();
+      useAdvancedTrackingStore.getState().recordBetweenPointTimeout({ sideId: homeSideId });
+
+      expect(() =>
+        useAdvancedTrackingStore.getState().recordBetweenPointTimeout({ sideId: awaySideId }),
+      ).toThrow('Cannot call a timeout: a timeout is already running.');
+      expect(getCurrentGame()!.points[0].transitionsAfter).toHaveLength(1);
+    });
+
+    it('blocks a between-point timeout during the halftime break', () => {
+      createGame(2);
+      scoreHomePoint();
+      expect(useAdvancedTrackingStore.getState().isHalftimeBreakActive).toBe(true);
+
+      expect(() =>
+        useAdvancedTrackingStore.getState().recordBetweenPointTimeout({ sideId: homeSideId }),
+      ).toThrow('Cannot call a timeout: it is the halftime break.');
+      expect(getCurrentGame()!.points[0].transitionsAfter).toBeUndefined();
+    });
+
+    it('blocks a timeout once the side has used its timeouts for the half', () => {
+      createGame();
+      startPoint();
+      for (let index = 0; index < 2; index++) {
+        const stoppageId = useAdvancedTrackingStore
+          .getState()
+          .recordStoppage({ reason: 'timeout', sideId: homeSideId });
+        useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+      }
+
+      expect(() =>
+        useAdvancedTrackingStore
+          .getState()
+          .recordStoppage({ reason: 'timeout', sideId: homeSideId }),
+      ).toThrow('Cannot call a timeout: the side has no timeouts left.');
+    });
+
+    const useOneTimeoutPlusFloater = () => {
+      useAdvancedTrackingStore.setState((state) => {
+        Object.assign(state.currentGame!.settings.format!, {
+          timeoutsPerHalf: 1,
+          floaterEnabled: true,
+        });
+      });
+    };
+
+    it('records the timeout after the regular ones as the floater mid-point', () => {
+      createGame();
+      useOneTimeoutPlusFloater();
+      startPoint();
+      for (let index = 0; index < 2; index++) {
+        const stoppageId = useAdvancedTrackingStore
+          .getState()
+          .recordStoppage({ reason: 'timeout', sideId: homeSideId });
+        useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+      }
+
+      const timeouts = getCurrentGame()!
+        .points[0].possessions.flatMap((possession) => possession.actions)
+        .filter((action) => action.kind === 'stoppage');
+      expect(timeouts.map((action) => action.isFloater === true)).toEqual([false, true]);
+    });
+
+    it('records the timeout after the regular ones as the floater between points', () => {
+      createGame();
+      useOneTimeoutPlusFloater();
+      scoreHomePoint();
+      const firstId = useAdvancedTrackingStore
+        .getState()
+        .recordBetweenPointTimeout({ sideId: homeSideId });
+      useAdvancedTrackingStore.getState().endBetweenPointTimeout(firstId);
+      useAdvancedTrackingStore.getState().recordBetweenPointTimeout({ sideId: homeSideId });
+
+      const timeouts = getCurrentGame()!.points[0].transitionsAfter ?? [];
+      expect(
+        timeouts.map(
+          (transition) => transition.transitionType === 'timeout' && transition.isFloater === true,
+        ),
+      ).toEqual([false, true]);
+    });
+
+    it('blocks a game-clock pause during a stoppage', () => {
+      createGame();
+      startPoint();
+      useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
+
+      expect(() => useAdvancedTrackingStore.getState().startGameClockPause('manual')).toThrow(
+        'Cannot pause the game clock: play is paused.',
+      );
+      expect(getCurrentGame()?.gameClockPauses).toBeUndefined();
+    });
+
+    it('rejects a voice pass after a timeout and still resumes the timeout', () => {
+      createGame();
+      startPoint();
+      useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+      const timeoutId = useAdvancedTrackingStore
+        .getState()
+        .recordStoppage({ reason: 'timeout', sideId: awaySideId });
+      const gameBefore = getCurrentGame();
+
+      expect(
+        useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pass', receiver: meves }),
+      ).toEqual({ ok: false, reason: 'play-paused' });
+      expect(getCurrentGame()).toBe(gameBefore);
+
+      useAdvancedTrackingStore.getState().resumeStoppage(timeoutId);
+      expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1)).toMatchObject({
+        id: timeoutId,
+        resumedAt: expect.any(Number),
+      });
+    });
+
+    it('rejects a capture during a game-clock pause', () => {
+      createGame();
+      startPoint();
+      useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+      useAdvancedTrackingStore.getState().startGameClockPause('manual');
+
+      expect(
+        useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'throwaway' }),
+      ).toEqual({ ok: false, reason: 'play-paused' });
+    });
+
+    it('blocks undo until an open stoppage is resumed', () => {
+      createGame();
+      startPoint();
+      useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+      const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
+      const gameBefore = getCurrentGame();
+
+      expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(false);
+      expect(getCurrentGame()).toBe(gameBefore);
+
+      useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+      expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+      expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions).not.toContainEqual(
+        expect.objectContaining({ kind: 'disc_pickup' }),
+      );
+    });
+
+    it('ignores a repeated Resume tap on a game-clock pause', () => {
+      createGame();
+      startPoint();
+      const pauseId = useAdvancedTrackingStore.getState().startGameClockPause('manual');
+      useAdvancedTrackingStore.getState().resumeGameClockPause(pauseId);
+      const gameBefore = getCurrentGame();
+
+      useAdvancedTrackingStore.getState().resumeGameClockPause(pauseId);
+
+      expect(getCurrentGame()).toBe(gameBefore);
+    });
+  });
+
   it('resumeGameClockPause completes the active delay without adding to stat undo', () => {
     const nowSpy = jest.spyOn(Date, 'now');
     nowSpy.mockReturnValue(1_000);
@@ -2812,9 +2979,8 @@ describe('advancedTrackingStore', () => {
     expect(pointAfter?.possessions[0].actions.at(-1)?.kind).toBe('pull');
   });
 
-  it('cancelStoppage throws after the stoppage has been resumed', () => {
+  it('ignores Cancel taps on a stoppage that was already resumed or cancelled', () => {
     createGame();
-
     useAdvancedTrackingStore.getState().recordPull({
       lines: homeLinesAugust,
       puller: untracked,
@@ -2822,49 +2988,24 @@ describe('advancedTrackingStore', () => {
       result: 'inbound',
     });
 
-    const stoppageId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
-    useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
-
-    expect(() => useAdvancedTrackingStore.getState().cancelStoppage(stoppageId)).toThrow(
-      'Cannot cancel a stoppage after it has resumed.',
-    );
-  });
-
-  it('cancelStoppage throws when the action is not the last action', () => {
-    createGame();
-
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
-    });
-
-    const firstStoppageId = useAdvancedTrackingStore
+    const resumedId = useAdvancedTrackingStore.getState().recordStoppage({ reason: 'injury' });
+    useAdvancedTrackingStore.getState().resumeStoppage(resumedId);
+    const cancelledId = useAdvancedTrackingStore
       .getState()
       .recordStoppage({ reason: 'manual_pause' });
-    useAdvancedTrackingStore.getState().resumeStoppage(firstStoppageId);
+    useAdvancedTrackingStore.getState().cancelStoppage(cancelledId);
+    const gameBefore = getCurrentGame();
 
-    useAdvancedTrackingStore.getState().recordThrow({
-      thrower: august,
-      result: 'complete',
-    });
+    useAdvancedTrackingStore.getState().cancelStoppage(resumedId);
+    useAdvancedTrackingStore.getState().cancelStoppage(cancelledId);
+    useAdvancedTrackingStore.getState().resumeStoppage(cancelledId);
 
-    expect(() => useAdvancedTrackingStore.getState().cancelStoppage(firstStoppageId)).toThrow(
-      `Stoppage action "${firstStoppageId}" not found as last action.`,
-    );
+    expect(getCurrentGame()).toBe(gameBefore);
   });
 
   it('cancelStoppage throws when there is no active game', () => {
     expect(() => useAdvancedTrackingStore.getState().cancelStoppage('nonexistent')).toThrow(
       'No active game.',
-    );
-  });
-
-  it('cancelStoppage throws when there are no points yet', () => {
-    createGame();
-    expect(() => useAdvancedTrackingStore.getState().cancelStoppage('nonexistent')).toThrow(
-      'No active point.',
     );
   });
 
@@ -3199,7 +3340,7 @@ describe('advancedTrackingStore', () => {
         receiver: august,
         result: 'inbound',
       });
-      useAdvancedTrackingStore.getState().recordStoppage({ reason: 'timeout' });
+      useAdvancedTrackingStore.getState().recordStoppage({ reason: 'timeout', sideId: homeSideId });
 
       expect(() =>
         useAdvancedTrackingStore.getState().correctCurrentGamePointActiveLines({
@@ -3211,7 +3352,7 @@ describe('advancedTrackingStore', () => {
             },
           ],
         }),
-      ).toThrow('Finish or cancel the active stoppage before correcting the lineup.');
+      ).toThrow('Cannot correct the current line: play is paused.');
     });
 
     it('preserves injury subs when correcting both point lines', () => {

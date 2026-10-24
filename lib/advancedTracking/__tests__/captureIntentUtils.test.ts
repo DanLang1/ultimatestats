@@ -42,6 +42,28 @@ const game: AdvancedTrackedGame = {
 };
 
 describe('planCaptureIntent', () => {
+  const pass: CaptureIntent = { kind: 'pass', receiver: participantRef('receiver') };
+
+  it('rejects a capture during a stoppage', () => {
+    const duringStoppage = structuredClone(game);
+    duringStoppage.points[0].possessions[0].actions.push({
+      id: 'stoppage',
+      kind: 'stoppage',
+      reason: 'timeout',
+      sideId: 'home',
+      pausedAt: 2,
+    });
+    expect(planCaptureIntent(duringStoppage, pass)).toEqual({ ok: false, reason: 'play-paused' });
+  });
+
+  it('rejects a capture during a game-clock pause', () => {
+    const duringPause = {
+      ...game,
+      gameClockPauses: [{ id: 'pause', reason: 'manual' as const, pausedAt: 2 }],
+    };
+    expect(planCaptureIntent(duringPause, pass)).toEqual({ ok: false, reason: 'play-paused' });
+  });
+
   it('plans a direct goal without a complete-then-amend action', () => {
     expect(
       planCaptureIntent(game, {

@@ -28,8 +28,16 @@ import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/particip
 import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persistenceTypes';
 import {
   assertCommandAllowed,
+  canAmendOpeningPull,
+  canChangeLine,
   canClearRedZone,
+  canPauseGameClock,
+  canRecordStoppage,
   canSetRedZone,
+  canUndo,
+  getGameClockPauseTapTarget,
+  getStoppageTapTarget,
+  planTimeout,
 } from '@/lib/advancedTracking/trackerCommands';
 import {
   getActiveGameClockPause,
@@ -47,7 +55,6 @@ import {
   assertValidSideIds,
   canStartSecondHalfEarly,
   deriveHalftimeTransition,
-  isDroppedPull,
   getActiveAdvancedGame,
   getCurrentPoint,
   getCurrentPossession,
@@ -485,8 +492,8 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (isUnfinishedPoint && !isCurrentUnfinishedPoint) {
             throw new Error('Only the current or a completed point can have its lineup corrected.');
           }
-          if (isCurrentUnfinishedPoint && getActiveStoppage(getCurrentPossession(game)) != null) {
-            throw new Error('Finish or cancel the active stoppage before correcting the lineup.');
+          if (isCurrentUnfinishedPoint) {
+            assertCommandAllowed(canChangeLine(game), 'correct the current line');
           }
 
           const correctedGame = correctAdvancedPointActiveLines(game, input);
@@ -498,12 +505,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
         startGameClockPause: (reason) => {
           const game = getCurrentGame(get());
-          if (game.points[0]?.startedAt == null) {
-            throw new Error('Cannot pause the game clock before the game has started.');
-          }
-          if (getActiveGameClockPause(game) != null) {
-            throw new Error('Game clock is already paused.');
-          }
+          assertCommandAllowed(canPauseGameClock(game), 'pause the game clock');
 
           const pauseId = generateId();
           const point = getCurrentPoint(game);
@@ -527,17 +529,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         resumeGameClockPause: (pauseId) => {
-          const game = getCurrentGame(get());
-          const activePause = getActiveGameClockPause(game);
-          if (activePause?.id !== pauseId) {
-            throw new Error(`Game clock pause "${pauseId}" is not active.`);
-          }
+          // A repeated Resume tap finds the pause already resumed.
+          if (getGameClockPauseTapTarget(getCurrentGame(get()), pauseId) === 'settled') return;
 
           const now = Date.now();
           set((state) => {
             const liveGame = getCurrentGame(state);
-            const pause = liveGame.gameClockPauses?.find((candidate) => candidate.id === pauseId);
-            if (pause == null || pause.resumedAt != null) return;
+            const pause = getActiveGameClockPause(liveGame)!;
             pause.resumedAt = now;
             liveGame.updatedAt = now;
           });
@@ -585,14 +583,15 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
         recordBetweenPointTimeout: (input) => {
           const game = getCurrentGame(get());
-          const currentPoint = getCurrentPoint(game);
-          if (currentPoint == null || !hasPointEnded(currentPoint)) {
+          assertValidSideIds(game, [input.sideId]);
+          const timeout = planTimeout(game, input.sideId);
+          assertCommandAllowed(timeout, 'call a timeout');
+          if (timeout.plan.kind !== 'between-point') {
             throw new Error('Cannot record a between-point timeout before a point has ended.');
           }
 
-          assertValidSideIds(game, [input.sideId]);
           const transitionId = generateId();
-          const pointId = currentPoint.id;
+          const pointId = getCurrentPoint(game)!.id;
           const now = Date.now();
 
           set((state) => {
@@ -605,7 +604,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               id: transitionId,
               transitionType: 'timeout',
               sideId: input.sideId,
-              ...(input.isFloater === true ? { isFloater: true } : {}),
+              ...(timeout.plan.isFloater ? { isFloater: true } : {}),
               startedAt: now,
             });
             liveGame.updatedAt = now;
@@ -697,24 +696,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         amendOpeningPullAsDropped: (receiver) => {
           const game = getCurrentGame(get());
           assertValidParticipantRefs(game, [receiver]);
-
-          const currentPoint = getCurrentPoint(game);
-          const currentPossession = getCurrentPossession(game);
-          const openingAction = currentPossession?.actions[0];
-          if (currentPoint == null || currentPossession == null || openingAction?.kind !== 'pull') {
-            throw new Error('Cannot mark a dropped pull before a pull has been recorded.');
-          }
-          if (currentPossession.redZone != null) {
-            throw new Error(
-              'Cannot mark a dropped pull after Red Zone has been recorded. Clear Red Zone first.',
-            );
-          }
-          if (currentPossession.actions.length !== 1 || hasPointEnded(currentPoint)) {
-            throw new Error('Cannot mark a dropped pull after the point has advanced.');
-          }
-          if (isDroppedPull(openingAction.result)) {
-            throw new Error('Cannot mark a pull as dropped when it was already dropped.');
-          }
+          assertCommandAllowed(canAmendOpeningPull(game), 'mark the pull as dropped');
 
           set((state) => {
             const liveGame = getCurrentGame(state);
@@ -916,15 +898,19 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
         recordStoppage: (input: RecordStoppageInput) => {
           const game = getCurrentGame(get());
-          const currentPoint = getCurrentPoint(game);
-          if (currentPoint == null) {
-            throw new Error('Cannot record a stoppage before a point has started.');
-          }
-          if (hasPointEnded(currentPoint)) {
-            throw new Error('Cannot record a stoppage after the point has ended.');
-          }
           if (input.sideId != null) {
             assertValidSideIds(game, [input.sideId]);
+          }
+          let isFloater: boolean | undefined;
+          if (input.reason === 'timeout') {
+            const timeout = planTimeout(game, input.sideId);
+            assertCommandAllowed(timeout, 'call a timeout');
+            if (timeout.plan.kind !== 'in-point') {
+              throw new Error('Cannot record a stoppage after the point has ended.');
+            }
+            isFloater = timeout.plan.isFloater;
+          } else {
+            assertCommandAllowed(canRecordStoppage(game), 'stop play');
           }
 
           const actionId = generateId();
@@ -938,7 +924,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
               kind: 'stoppage',
               reason: input.reason,
               sideId: input.sideId,
-              isFloater: input.reason === 'timeout' ? input.isFloater : undefined,
+              isFloater,
               recordedAt: now,
               pausedAt: now,
             });
@@ -949,44 +935,20 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         resumeStoppage: (actionId: string) => {
-          const game = getCurrentGame(get());
-          const point = getCurrentPoint(game);
-          if (point == null) throw new Error('No active point.');
-
-          const possession = getCurrentPossession(game);
-          const last = possession?.actions[possession.actions.length - 1];
-          if (!last || last.kind !== 'stoppage' || last.id !== actionId) {
-            throw new Error(`Stoppage action "${actionId}" not found as last action.`);
-          }
-          if (last.resumedAt != null) {
-            throw new Error('Stoppage has already been resumed.');
-          }
+          // A repeated Resume or Cancel tap finds the stoppage already resumed or removed.
+          if (getStoppageTapTarget(getCurrentGame(get()), actionId) === 'settled') return;
 
           const now = Date.now();
           set((state) => {
             const liveGame = getCurrentGame(state);
-            const livePossession = getCurrentPossession(liveGame)!;
-            const action = livePossession.actions[livePossession.actions.length - 1];
-            if (action?.kind === 'stoppage') {
-              action.resumedAt = now;
-            }
+            getActiveStoppage(getCurrentPossession(liveGame))!.resumedAt = now;
             liveGame.updatedAt = now;
           });
         },
 
         cancelStoppage: (actionId: string) => {
-          const game = getCurrentGame(get());
-          const point = getCurrentPoint(game);
-          if (point == null) throw new Error('No active point.');
-
-          const possession = getCurrentPossession(game);
-          const last = possession?.actions[possession.actions.length - 1];
-          if (!last || last.kind !== 'stoppage' || last.id !== actionId) {
-            throw new Error(`Stoppage action "${actionId}" not found as last action.`);
-          }
-          if (last.resumedAt != null) {
-            throw new Error('Cannot cancel a stoppage after it has resumed.');
-          }
+          // A repeated Resume or Cancel tap finds the stoppage already resumed or removed.
+          if (getStoppageTapTarget(getCurrentGame(get()), actionId) === 'settled') return;
 
           set((state) => {
             const liveGame = getCurrentGame(state);
@@ -999,14 +961,9 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
         recordInjurySubs: (input: RecordInjurySubsInput) => {
           const game = getCurrentGame(get());
-          const point = getCurrentPoint(game);
-          const possession = getCurrentPossession(game);
-          if (point == null || possession == null) {
-            throw new Error('Cannot record an injury substitution before a point has started.');
-          }
-          if (hasPointEnded(point)) {
-            throw new Error('Cannot record an injury substitution after the point has ended.');
-          }
+          assertCommandAllowed(canChangeLine(game), 'record an injury substitution');
+          const point = getCurrentPoint(game)!;
+          const possession = getCurrentPossession(game)!;
           if (input.sideId != null) {
             assertValidSideIds(game, [input.sideId]);
           }
@@ -1071,6 +1028,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (get().currentGameId == null || entry == null) return false;
 
           const game = getCurrentGame(get());
+          if (!canUndo(game, entry).ok) return false;
           try {
             assertUndoTargets(game, entry);
           } catch (error) {

@@ -140,9 +140,7 @@ describe('stoppages', () => {
   });
 
   it('cancels a timeout and removes its pending stoppage record', async () => {
-    useAdvancedTrackingStore
-      .getState()
-      .recordStoppage({ reason: 'timeout', sideId: 'opponent', isFloater: true });
+    useAdvancedTrackingStore.getState().recordStoppage({ reason: 'timeout', sideId: 'opponent' });
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await renderScreen(<TrackerScreen />);
     expect(screen.getByText('TIMEOUT')).toBeVisible();

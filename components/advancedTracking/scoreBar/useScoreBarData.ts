@@ -1,5 +1,10 @@
 import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
-import { canClearRedZone, canSetRedZone } from '@/lib/advancedTracking/trackerCommands';
+import {
+  canClearRedZone,
+  canRecordStoppage,
+  canSetRedZone,
+  planTimeout,
+} from '@/lib/advancedTracking/trackerCommands';
 import { getSideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getEffectiveGameTo,
@@ -37,6 +42,9 @@ export function useScoreBarData() {
 
   const focusTimeouts = getSideTimeoutState(game, focusSideId);
   const oppTimeouts = getSideTimeoutState(game, oppSideId);
+  const focusTimeout = planTimeout(game, focusSideId);
+  const oppTimeout = planTimeout(game, oppSideId);
+  const canPause = canRecordStoppage(game).ok;
 
   const { point, possession, pointIsOver, activeSideId, isPlayPaused } = getLivePlayState(game);
   const showPointTimer = point?.startedAt != null && !pointIsOver;
@@ -56,18 +64,17 @@ export function useScoreBarData() {
       : null;
 
   const handleTimeout = (sideId: string) => {
-    if (isPlayPaused) return;
-    const state = sideId === focusSideId ? focusTimeouts : oppTimeouts;
-    const isFloater = state.regularUsedInHalf >= state.regularPerHalf;
-    if (pointIsOver) {
-      recordBetweenPointTimeout({ sideId, isFloater });
+    const timeout = sideId === focusSideId ? focusTimeout : oppTimeout;
+    if (!timeout.ok) return;
+    if (timeout.plan.kind === 'between-point') {
+      recordBetweenPointTimeout({ sideId });
     } else {
-      recordStoppage({ reason: 'timeout', sideId, isFloater });
+      recordStoppage({ reason: 'timeout', sideId });
     }
   };
 
   const handlePause = () => {
-    if (isPlayPaused) return;
+    if (!canPause) return;
     recordStoppage({ reason: 'manual_pause' });
   };
 
@@ -87,6 +94,8 @@ export function useScoreBarData() {
     gameTo,
     focusTimeouts,
     oppTimeouts,
+    canFocusCallTimeout: focusTimeout.ok,
+    canOppCallTimeout: oppTimeout.ok,
     pointIsOver,
     activeSideId,
     activeSideName: activeSide?.label ?? '',
@@ -94,9 +103,9 @@ export function useScoreBarData() {
     redZoneSelected,
     isPointTimerPaused: isPlayPaused,
     showPointTimer,
+    canPause,
     currentPointNumber,
     ratioLabel,
-    stoppageActive: isPlayPaused,
     handleTimeout,
     handlePause,
     handleRedZoneToggle,

@@ -42,6 +42,7 @@ export const ScoreBarMainRow = ({
     oppTimeouts,
     showPointTimer,
     isPointTimerPaused,
+    canPause,
     pointIsOver,
     handlePause,
     activeSideName,
@@ -64,7 +65,7 @@ export const ScoreBarMainRow = ({
 
       <View style={[styles.centerCard, { backgroundColor: palette.primary }]}>
         <View style={styles.centerTimerRow}>
-          {showPointTimer && !isPointTimerPaused && (
+          {showPointTimer && canPause && (
             <Pressable testID="scorebar-pause" onPress={handlePause} hitSlop={8}>
               <MaterialCommunityIcons
                 name="pause"

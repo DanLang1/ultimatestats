@@ -88,7 +88,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
       setPassModifier(null);
     },
     onPullDrop: (receiver) => {
-      if (pointIsOver || discHolderRef != null || oppHasDisc) return;
+      if (!canDropOpeningPull) return;
       amendOpeningPullAsDropped(receiver);
       setPassModifier(null);
     },

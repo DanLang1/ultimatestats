@@ -12,5 +12,6 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
  */
 export function useTrackerSession(passModifier: PassModifier): TrackerSessionView | null {
   const game = useAdvancedTrackingStore(getLiveInProgressGame);
-  return game ? getTrackerSessionView(game, { passModifier }) : null;
+  const lastUndoEntry = useAdvancedTrackingStore((state) => state.undoStack.at(-1));
+  return game ? getTrackerSessionView(game, { passModifier, lastUndoEntry }) : null;
 }

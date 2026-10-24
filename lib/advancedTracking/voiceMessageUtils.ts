@@ -37,6 +37,7 @@ export function getSpeechErrorMessage(
 const CAPTURE_REJECTION_MESSAGES: Record<CaptureIntentRejection, string> = {
   'point-over': 'Point is over',
   'point-not-started': 'Tap who has the disc first',
+  'play-paused': 'Play is paused',
   'holder-required': 'Tap who has the disc first',
   'possession-over': 'Tap who has the disc first',
 };

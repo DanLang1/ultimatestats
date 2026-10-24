@@ -43,19 +43,17 @@ export const TrackerRareMenu = ({
   const recordCaptureIntent = useAdvancedTrackingStore((state) => state.recordCaptureIntent);
   const { pointIsOver, oppHasDisc, tracksBothSides, discHolderRef } = session;
 
+  // The capture planner rejects these without a holder, so they need no guard of their own.
   const handleOppBlock = () => {
-    if (!discHolderRef || pointIsOver) return;
     recordCaptureIntent({ kind: 'block' });
   };
 
   const handleStall = () => {
-    if (!discHolderRef || pointIsOver) return;
     recordCaptureIntent({ kind: 'stall' });
     setPassModifier(null);
   };
 
   const handleThrownCallahan = () => {
-    if (!discHolderRef || pointIsOver) return;
     recordCaptureIntent({ kind: 'callahan', scorer: { refType: 'untracked' } });
     setPassModifier(null);
   };

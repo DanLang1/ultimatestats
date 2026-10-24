@@ -1,6 +1,7 @@
 import { assertNever } from '@/lib/utils';
 
 import { getLivePlayState } from './livePlayState';
+import { canCapture, type TrackerCommandBlock } from './trackerCommands';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import { getOtherSideId, isPossessionOver } from './trackingUtils';
 import type { AdvancedTrackedGame, PlayerRef, PointPossession, ThrowResult } from './types';
@@ -20,11 +21,11 @@ export type CaptureIntent =
   | { kind: 'anonymous-opponent-goal' }
   | { kind: 'anonymous-opponent-turnover' };
 
-export type CaptureIntentRejection =
-  | 'point-not-started'
-  | 'point-over'
-  | 'possession-over'
-  | 'holder-required';
+/** The tracker command blocks a capture can be rejected for. */
+export type CaptureIntentRejection = Extract<
+  TrackerCommandBlock,
+  'point-not-started' | 'point-over' | 'play-paused' | 'possession-over' | 'holder-required'
+>;
 
 export type CaptureIntentResult =
   | { ok: true; actionId: string }
@@ -53,9 +54,10 @@ export function planCaptureIntent(
   game: AdvancedTrackedGame,
   intent: CaptureIntent,
 ): CapturePlanResult {
-  const { point, possession, pointIsOver, activeSideId, holderFor } = getLivePlayState(game);
-  if (point == null) return { ok: false, reason: 'point-not-started' };
-  if (pointIsOver) return { ok: false, reason: 'point-over' };
+  const captureBlock = canCapture(game);
+  if (!captureBlock.ok) return captureBlock;
+
+  const { possession, activeSideId, holderFor } = getLivePlayState(game);
 
   const bothSidesTracked = areBothSidesFullyTracked(game);
   const holder = holderFor(bothSidesTracked ? activeSideId : game.focusSideId);

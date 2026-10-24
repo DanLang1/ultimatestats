@@ -38,9 +38,10 @@ export const ScoreBarActionRow = ({ width, isHalfWidth }: ScoreBarActionRowProps
     focusTimeouts,
     oppSideName,
     oppTimeouts,
+    canFocusCallTimeout,
+    canOppCallTimeout,
     ratioLabel,
     gameTo,
-    stoppageActive,
     handleTimeout,
   } = data;
 
@@ -61,7 +62,7 @@ export const ScoreBarActionRow = ({ width, isHalfWidth }: ScoreBarActionRowProps
         state={focusTimeouts}
         color={palette.accent}
         onPress={() => handleTimeout(focusSideId)}
-        stoppageActive={stoppageActive}
+        canCallTimeout={canFocusCallTimeout}
         isHalfWidth={isHalfWidth}
       />
 
@@ -86,7 +87,7 @@ export const ScoreBarActionRow = ({ width, isHalfWidth }: ScoreBarActionRowProps
         state={oppTimeouts}
         color={palette.success}
         onPress={() => handleTimeout(oppSideId)}
-        stoppageActive={stoppageActive}
+        canCallTimeout={canOppCallTimeout}
         isHalfWidth={isHalfWidth}
       />
     </View>

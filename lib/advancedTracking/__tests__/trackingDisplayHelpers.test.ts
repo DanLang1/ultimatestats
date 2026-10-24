@@ -1,5 +1,4 @@
 import {
-  canCallTimeout,
   getActiveSideId,
   getCompletedGameClockPauseMs,
   getDiscHolderId,
@@ -14,8 +13,6 @@ import {
   getSideTimeoutState,
   getSubsForStoppage,
   getTrackerDisplaySideId,
-  getTrackerPickupState,
-  isPullAwaitingPickup,
 } from '../trackingDisplayHelpers';
 import type { AdvancedTrackedGame, PointPossession, PointSub, TrackedPoint } from '../types';
 
@@ -861,7 +858,7 @@ describe('getSideTimeoutState', () => {
     });
   });
 
-  it('resets regulars after halftime and tracks floater usage across the game', () => {
+  it('resets regulars after halftime, counting a legacy halftime-break timeout in the second half', () => {
     const gameWithHalftime: AdvancedTrackedGame = {
       ...baseGame,
       settings: {
@@ -890,6 +887,7 @@ describe('getSideTimeoutState', () => {
               ],
             },
           ],
+          // Legacy data: games saved before timeouts were blocked during the halftime break.
           transitionsAfter: [{ id: 't1', transitionType: 'timeout', sideId: HOME }],
         },
         {
@@ -952,143 +950,6 @@ describe('game clock pause helpers', () => {
     };
 
     expect(getGameClockElapsedMs(game, 90000)).toBe(50000);
-  });
-});
-
-describe('canCallTimeout', () => {
-  it('returns true if regular timeouts are left', () => {
-    const state = {
-      regularUsedInHalf: 1,
-      regularPerHalf: 2,
-      floaterUsed: false,
-      floaterEnabled: true,
-      isSecondHalf: false,
-    };
-    expect(canCallTimeout(state)).toBe(true);
-  });
-
-  it('returns true if regular timeouts are used but floater is available', () => {
-    const state = {
-      regularUsedInHalf: 2,
-      regularPerHalf: 2,
-      floaterUsed: false,
-      floaterEnabled: true,
-      isSecondHalf: false,
-    };
-    expect(canCallTimeout(state)).toBe(true);
-  });
-
-  it('returns false if regular used and no floater enabled', () => {
-    const state = {
-      regularUsedInHalf: 2,
-      regularPerHalf: 2,
-      floaterUsed: false,
-      floaterEnabled: false,
-      isSecondHalf: false,
-    };
-    expect(canCallTimeout(state)).toBe(false);
-  });
-
-  it('returns false if all timeouts used', () => {
-    const state = {
-      regularUsedInHalf: 2,
-      regularPerHalf: 2,
-      floaterUsed: true,
-      floaterEnabled: true,
-      isSecondHalf: false,
-    };
-    expect(canCallTimeout(state)).toBe(false);
-  });
-});
-
-describe('getTrackerPickupState', () => {
-  const pullTo = (result: 'inbound' | 'dropped') =>
-    makePossession(AWAY, [
-      { id: 'pull', kind: 'pull', sideId: HOME, receivingSideId: AWAY, puller: august, result },
-    ]);
-  const base = { pointIsOver: false, oppHasDisc: false, discHolderRef: null };
-
-  it('lets the receiving team mark a caught pull as dropped', () => {
-    expect(getTrackerPickupState({ ...base, possession: pullTo('inbound') })).toEqual({
-      canDropOpeningPull: true,
-      isAwaitingMidPointPickup: false,
-    });
-  });
-
-  it('treats a dropped pull as a pickup for the pulling team, not another drop', () => {
-    expect(getTrackerPickupState({ ...base, possession: pullTo('dropped') })).toEqual({
-      canDropOpeningPull: false,
-      isAwaitingMidPointPickup: true,
-    });
-  });
-
-  it('prompts for a pickup on a mid-point possession with no holder', () => {
-    expect(getTrackerPickupState({ ...base, possession: makePossession(HOME) })).toEqual({
-      canDropOpeningPull: false,
-      isAwaitingMidPointPickup: true,
-    });
-  });
-
-  it('leaves the pre-pull state to the last-action card', () => {
-    expect(getTrackerPickupState({ ...base, possession: null })).toEqual({
-      canDropOpeningPull: false,
-      isAwaitingMidPointPickup: false,
-    });
-  });
-});
-
-describe('isPullAwaitingPickup', () => {
-  it('returns false if point is over', () => {
-    expect(
-      isPullAwaitingPickup({
-        possession: null,
-        pointIsOver: true,
-        oppHasDisc: false,
-        discHolderId: null,
-      }),
-    ).toBe(false);
-  });
-
-  it('returns true if last action was a pull and no holder yet', () => {
-    const pos = makePossession(HOME, [
-      {
-        id: 'a1',
-        kind: 'pull',
-        sideId: HOME,
-        receivingSideId: AWAY,
-        puller: august,
-        result: 'inbound',
-      },
-    ]);
-    expect(
-      isPullAwaitingPickup({
-        possession: pos,
-        pointIsOver: false,
-        oppHasDisc: false,
-        discHolderId: null,
-      }),
-    ).toBe(true);
-  });
-
-  it('returns false if disc is already picked up', () => {
-    const pos = makePossession(HOME, [
-      {
-        id: 'a1',
-        kind: 'pull',
-        sideId: HOME,
-        receivingSideId: AWAY,
-        puller: august,
-        result: 'inbound',
-      },
-    ]);
-    expect(
-      isPullAwaitingPickup({
-        possession: pos,
-        pointIsOver: false,
-        oppHasDisc: false,
-        discHolderId: 'p1',
-      }),
-    ).toBe(false);
   });
 });
 

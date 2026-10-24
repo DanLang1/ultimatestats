@@ -372,8 +372,9 @@ export function getSideTimeoutState(game: AdvancedTrackedGame, sideId: string): 
       }
     }
 
-    // The halftime transition fires on the goal that ends this point, so
-    // between-point timeouts on the halftime-ending point belong to H2.
+    // The halftime transition fires on the goal that ends this point. Timeouts can no longer be
+    // called during the halftime break, but games saved before that rule may have one on this
+    // point; resetting first counts it toward the second half.
     if (halftimeAfterPointId != null && point.id === halftimeAfterPointId) {
       isSecondHalf = true;
       regularUsedInHalf = 0;
@@ -615,60 +616,4 @@ export function getLineParticipantIdsBeforeSub(
 export function getSubsForStoppage(point: TrackedPoint | null, actionId: string): PointSub[] {
   if (!point?.subs) return [];
   return point.subs.filter((sub) => sub.stoppageActionId === actionId);
-}
-
-/**
- * Returns true if the side is allowed to call a timeout based on their remaining timeouts/floater.
- */
-export function canCallTimeout(state: SideTimeoutState): boolean {
-  const regularsLeft = state.regularUsedInHalf < state.regularPerHalf;
-  const floaterAvailable = state.floaterEnabled && !state.floaterUsed;
-  return regularsLeft || floaterAvailable;
-}
-
-export function isPullAwaitingPickup(params: {
-  possession: PointPossession | null;
-  pointIsOver: boolean;
-  oppHasDisc: boolean;
-  discHolderId: string | null;
-}): boolean {
-  const { possession, pointIsOver, oppHasDisc, discHolderId } = params;
-  if (pointIsOver || oppHasDisc || discHolderId !== null || !possession) return false;
-  const lastAction = possession.actions.at(-1);
-  return lastAction?.kind === 'pull';
-}
-
-export interface TrackerPickupState {
-  /** A received pull can still be marked dropped by the receiving team. */
-  canDropOpeningPull: boolean;
-  /** The tracked team must pick up a grounded disc mid-point, with nothing else to act on. */
-  isAwaitingMidPointPickup: boolean;
-}
-
-export function getTrackerPickupState(params: {
-  possession: PointPossession | null;
-  pointIsOver: boolean;
-  oppHasDisc: boolean;
-  discHolderRef: PlayerRef | null;
-}): TrackerPickupState {
-  const { possession, pointIsOver, oppHasDisc, discHolderRef } = params;
-  const isAwaitingPullPickup = isPullAwaitingPickup({
-    possession,
-    pointIsOver,
-    oppHasDisc,
-    discHolderId: discHolderRef?.refType === 'participant' ? discHolderRef.participantId : null,
-  });
-  // After a dropped pull the disc belongs to the pulling team, whose pickup is not a drop.
-  const openingAction = possession?.actions[0];
-  const canDropOpeningPull =
-    isAwaitingPullPickup && openingAction?.kind === 'pull' && !isDroppedPull(openingAction.result);
-  // Before the first pull there is no possession (the last-action card prompts instead), and a
-  // received pull keeps the footer actions so Drop can record a dropped pull.
-  const isAwaitingMidPointPickup =
-    possession != null &&
-    !pointIsOver &&
-    !oppHasDisc &&
-    discHolderRef == null &&
-    !canDropOpeningPull;
-  return { canDropOpeningPull, isAwaitingMidPointPickup };
 }

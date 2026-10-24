@@ -29,6 +29,7 @@ describe('getCaptureRejectionMessage', () => {
   it.each([
     ['point-over', 'Point is over'],
     ['point-not-started', 'Tap who has the disc first'],
+    ['play-paused', 'Play is paused'],
     ['holder-required', 'Tap who has the disc first'],
     ['possession-over', 'Tap who has the disc first'],
   ] as const)('%s -> %s', (reason, message) => {

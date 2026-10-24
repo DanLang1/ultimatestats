@@ -380,7 +380,7 @@ describe('advancedTrackingStore — edge cases', () => {
   });
 
   describe('stoppage and resume', () => {
-    it('cannot resume a stoppage that is already resumed', () => {
+    it('ignores a repeated Resume tap on a resumed stoppage', () => {
       createGame();
       useAdvancedTrackingStore.getState().recordPull({
         lines: [{ sideId: homeSideId, participantIds: [august.participantId] }],
@@ -393,10 +393,11 @@ describe('advancedTrackingStore — edge cases', () => {
         sideId: homeSideId,
       });
       useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+      const gameBefore = useAdvancedTrackingStore.getState().currentGame;
 
-      expect(() => useAdvancedTrackingStore.getState().resumeStoppage(stoppageId)).toThrow(
-        'Stoppage has already been resumed.',
-      );
+      useAdvancedTrackingStore.getState().resumeStoppage(stoppageId);
+
+      expect(useAdvancedTrackingStore.getState().currentGame).toBe(gameBefore);
     });
 
     it('cannot record stoppage after point has ended', () => {
@@ -414,7 +415,9 @@ describe('advancedTrackingStore — edge cases', () => {
       });
 
       expect(() =>
-        useAdvancedTrackingStore.getState().recordStoppage({ reason: 'timeout' }),
+        useAdvancedTrackingStore
+          .getState()
+          .recordStoppage({ reason: 'timeout', sideId: homeSideId }),
       ).toThrow('Cannot record a stoppage after the point has ended.');
     });
   });

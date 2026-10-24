@@ -404,7 +404,7 @@ const scrimmageScenarios: Scenario[] = [
 ];
 
 function viewOf({ game, passModifier = null }: Scenario) {
-  return getTrackerSessionView(game, { passModifier });
+  return getTrackerSessionView(game, { passModifier, lastUndoEntry: undefined });
 }
 
 describe('getTrackerSessionView', () => {
@@ -450,5 +450,18 @@ describe('getTrackerSessionView', () => {
       : game.focusSideId;
 
     expect(discHolderRef).toEqual(getSafeDiscHolderRef(currentPossession, possessionSideId, point));
+  });
+});
+
+describe('session commands', () => {
+  const offense = withPossessions(singleTeamGame, [
+    possession(HOME, [pull(HOME, 'inbound'), pickup(HOME, august)]),
+  ]);
+  const changeLineWith = (passModifier: PassModifier) =>
+    getTrackerSessionView(offense, { passModifier, lastUndoEntry: undefined }).commands.changeLine;
+
+  it('hides line changes while a modifier owns the next tap', () => {
+    expect(changeLineWith(null)).toBe(true);
+    expect(changeLineWith('goal')).toBe(false);
   });
 });

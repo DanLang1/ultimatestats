@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { canCallTimeout, SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { SideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { Fonts } from '@/theme/theme';
 
 import { getScoreBarSize } from './scoreBarSizing';
@@ -14,7 +14,7 @@ interface TimeoutButtonProps {
   color: string;
   onPress: () => void;
   testID?: string;
-  stoppageActive?: boolean;
+  canCallTimeout: boolean;
   isHalfWidth: boolean;
 }
 
@@ -30,40 +30,42 @@ export function TimeoutButton({
   color,
   onPress,
   testID,
-  stoppageActive,
+  canCallTimeout,
   isHalfWidth,
 }: TimeoutButtonProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const canUse = canCallTimeout(state) && !stoppageActive;
   const styles = createStyles(sizeClass, isHalfWidth);
   const remainingLabel = getTimeoutSummary(state);
 
   return (
     <View style={styles.action}>
       <ThemedText
-        style={[styles.teamName, { color: canUse ? palette.textInverse : palette.textMuted }]}
+        style={[
+          styles.teamName,
+          { color: canCallTimeout ? palette.textInverse : palette.textMuted },
+        ]}
         numberOfLines={1}>
         {teamName}
       </ThemedText>
       <Pressable
         testID={testID}
         onPress={onPress}
-        disabled={!canUse}
+        disabled={!canCallTimeout}
         hitSlop={4}
         style={({ pressed }) => [
           styles.pillButton,
           {
-            backgroundColor: canUse ? color + '18' : palette.overlay05,
-            borderColor: canUse ? color : palette.border,
+            backgroundColor: canCallTimeout ? color + '18' : palette.overlay05,
+            borderColor: canCallTimeout ? color : palette.border,
           },
-          pressed && canUse && { opacity: 0.5 },
+          pressed && canCallTimeout && { opacity: 0.5 },
         ]}>
         <ThemedText
           style={[
             styles.pillText,
             {
-              color: canUse ? color : palette.textMuted,
+              color: canCallTimeout ? color : palette.textMuted,
             },
           ]}>
           Take T/O

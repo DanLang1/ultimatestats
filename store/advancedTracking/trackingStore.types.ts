@@ -60,12 +60,10 @@ export interface UpdateThrowTypeInput {
   type?: ThrowType;
 }
 
-export interface RecordStoppageInput {
-  reason: 'timeout' | 'injury' | 'manual_pause';
-  sideId?: string;
-  /** For `reason: 'timeout'`, true when this consumes the one-per-game floater. */
-  isFloater?: boolean;
-}
+/** A timeout is always called by a side; the store derives whether it spends the floater. */
+export type RecordStoppageInput =
+  | { reason: 'timeout'; sideId: string }
+  | { reason: 'injury' | 'manual_pause'; sideId?: string };
 
 export interface RecordInjurySubsInput {
   sideId?: string;
@@ -87,10 +85,9 @@ export interface PendingNextPointLineSelection {
   participantIdsBySide: Record<string, string[]>;
 }
 
+/** The store derives whether the timeout spends the floater. */
 export interface RecordBetweenPointTimeoutInput {
   sideId: string;
-  /** True when this consumes the one-per-game floater. */
-  isFloater?: boolean;
 }
 
 export interface UpdatePointNoteInput {

@@ -114,30 +114,25 @@ rewrite it to describe only the remaining problem as it exists now.
 
 ## P3 - Shared Tracker Command Preconditions
 
-- Timeout, stoppage, and paused-play rules exist only in UI code (`TimeoutButton`,
-  `useScoreBarData`, `tracker.tsx`, `useTrackerHandlers`). The store accepts captures during a
-  stoppage or game-clock pause, stacked or over-quota timeouts, and a game-clock pause during a
-  stoppage. Voice capture can bypass the UI gates (a late result after Timeout appends a pass after
-  the stoppage, after which Resume throws). Store throws from button handlers are uncaught.
-- `getLivePlayState` (`livePlayState.ts`) now serves the session view, score bar,
-  `planCaptureIntent`, and `trackerCommands.ts` (Red Zone so far), but live-play state is still
-  re-derived in `tracker-edit-line.tsx`, `tracker-injury-sub.tsx`, `StoppageOverlay.tsx`,
-  `TrackerCapBar.tsx`, and `pointClock.ts`. Its callers pass three different sides to `holderFor`,
-  deliberately unreconciled until the commands module.
-- Decided rules to enforce in the store: block a second between-point timeout while one is active;
-  no timeouts during the halftime break; reject captures while play is paused; block undo during a
-  stoppage; keep End Early allowed with an open stoppage or pause; make Resume and Cancel idempotent
-  on a double-tap.
-- Cleanup: `lib/advancedTracking/trackerCommands.ts` built on `getLivePlayState`, with one
-  pure `canX`/`planX` per command returning `{ ok }` or `{ ok: false, reason }`, asserted by the
-  store and read through `TrackerSessionView` (as `canStartSecondHalfEarly` and
-  `planCaptureIntent` already work). Land before the location capture UI.
+- `lib/advancedTracking/trackerCommands.ts` owns the command rules, but some consumers still
+  restate them. `useTrackerHandlers` guards captures on holder and point state itself, and
+  `recordVoicePass` in `useVoiceStatCommands` repeats the point-over and possession checks before
+  calling the store.
+- `TrackerSessionView` exposes newer availability through `commands`, while `canDropOpeningPull`,
+  `canUseVoice`, and `canUseRareMenu` remain top-level fields with their own consumers.
+- Live-play state is still re-derived in `tracker-injury-sub.tsx`, `tracker-edit-line.tsx`,
+  `StoppageOverlay.tsx`, `TrackerCapBar.tsx`, and `pointClock.ts`. `getLivePlayState` callers pass three different sides
+  to `holderFor` (session perspective side, `planCaptureIntent`, `canSetRedZone`), still
+  unreconciled.
+- Cleanup: route the remaining guards through the command functions, move the remaining session
+  flags under `commands`, and read live-play state
+  from `getLivePlayState`.
 - References:
-  `store/advancedTracking/trackingStore.ts`
-  `lib/advancedTracking/livePlayState.ts`
+  `lib/advancedTracking/trackerCommands.ts`
   `lib/advancedTracking/trackerSessionView.ts`
-  `lib/advancedTracking/captureIntentUtils.ts`
-  `components/advancedTracking/scoreBar/useScoreBarData.ts`
+  `lib/advancedTracking/livePlayState.ts`
+  `hooks/advancedTracking/useTrackerHandlers.ts`
+  `hooks/advancedTracking/useVoiceStatCommands.ts`
 
 ## P3 - Split trackingDisplayHelpers by Concept
 

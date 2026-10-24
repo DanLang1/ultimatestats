@@ -1,7 +1,15 @@
 import { getLivePlayState } from './livePlayState';
-import { getTrackerDisplaySideId, getTrackerPickupState } from './trackingDisplayHelpers';
+import type { AdvancedTrackingUndoEntry } from './persistenceTypes';
+import {
+  canAmendOpeningPull,
+  canCapture,
+  canChangeLine,
+  canPauseGameClock,
+  canUndo,
+} from './trackerCommands';
+import { getTrackerDisplaySideId } from './trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
-import { getOtherSideId } from './trackingUtils';
+import { canStartSecondHalfEarly, getOtherSideId } from './trackingUtils';
 import {
   AdvancedTrackedGame,
   GameClockPause,
@@ -21,6 +29,15 @@ export type TrackerFooterMode =
   | { kind: 'defense'; hidden: boolean }
   | { kind: 'pickup'; hidden: boolean }
   | { kind: 'offense'; hidden: boolean };
+
+/** Whether each tracker control is available now: the store's command rules plus UI-only gates. */
+export interface TrackerCommands {
+  /** Correct the line or record an injury sub; an armed modifier owns the next tap instead. */
+  changeLine: boolean;
+  pauseGameClock: boolean;
+  startSecondHalfEarly: boolean;
+  undo: boolean;
+}
 
 /** Live tracker state derived once from the current game and the screen's armed modifier. */
 export interface TrackerSessionView {
@@ -48,11 +65,15 @@ export interface TrackerSessionView {
   canUseRareMenu: boolean;
   /** Null while play is not live, when no in-point footer shows. */
   footerMode: TrackerFooterMode | null;
+  commands: TrackerCommands;
 }
 
 export function getTrackerSessionView(
   game: AdvancedTrackedGame,
-  { passModifier }: { passModifier: PassModifier },
+  {
+    passModifier,
+    lastUndoEntry,
+  }: { passModifier: PassModifier; lastUndoEntry: AdvancedTrackingUndoEntry | undefined },
 ): TrackerSessionView {
   const {
     point,
@@ -68,12 +89,15 @@ export function getTrackerSessionView(
   const perspectiveSideId = getTrackerDisplaySideId(game, possession, point);
   const oppHasDisc = !tracksBothSides && !pointIsOver && activeSideId !== game.focusSideId;
   const discHolderRef = holderFor(perspectiveSideId);
-  const { canDropOpeningPull, isAwaitingMidPointPickup } = getTrackerPickupState({
-    possession,
-    pointIsOver,
-    oppHasDisc,
-    discHolderRef,
-  });
+  const canDropOpeningPull = canAmendOpeningPull(game).ok;
+  // Before the first pull there is no possession (the last-action card prompts instead), and a
+  // received pull keeps the footer actions so Drop can record a dropped pull.
+  const isAwaitingMidPointPickup =
+    possession != null &&
+    !pointIsOver &&
+    !oppHasDisc &&
+    discHolderRef == null &&
+    !canDropOpeningPull;
   const isPlayLive = !pointIsOver && !isPlayPaused;
   const isModifierArmed = passModifier !== null;
 
@@ -86,7 +110,7 @@ export function getTrackerSessionView(
 
   // An armed modifier owns the next tap; disabling voice also stops any active listening.
   const canUseVoice =
-    !isModifierArmed && !pointIsOver && !isPlayPaused && !oppHasDisc && discHolderRef != null;
+    !isModifierArmed && canCapture(game).ok && !oppHasDisc && discHolderRef != null;
 
   return {
     game,
@@ -112,6 +136,12 @@ export function getTrackerSessionView(
       isAwaitingMidPointPickup,
       hidden: isModifierArmed,
     }),
+    commands: {
+      changeLine: !isModifierArmed && canChangeLine(game).ok,
+      pauseGameClock: canPauseGameClock(game).ok,
+      startSecondHalfEarly: canStartSecondHalfEarly(game, lastUndoEntry),
+      undo: canUndo(game, lastUndoEntry).ok,
+    },
   };
 }
 
