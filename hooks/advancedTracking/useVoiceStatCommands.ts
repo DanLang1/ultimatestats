@@ -9,8 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
-import { isPossessionOver } from '@/lib/advancedTracking/trackingUtils';
-import { PlayerRef, PointPossession } from '@/lib/advancedTracking/types';
+import { PlayerRef } from '@/lib/advancedTracking/types';
 import { planVoicePassIntent } from '@/lib/advancedTracking/voiceCaptureIntentUtils';
 import {
   buildVoiceContextualStrings,
@@ -52,7 +51,6 @@ interface UseVoiceStatCommandsInput {
   activeParticipants: VoiceParticipantContext[];
   pointIsOver: boolean;
   oppHasDisc: boolean;
-  possession: PointPossession | null;
   discHolderRef: PlayerRef | null;
   recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
 }
@@ -569,16 +567,8 @@ function recordVoicePass(
   throwerParticipantId: string,
   input: UseVoiceStatCommandsInput,
 ): { ok: true; message: string } | { ok: false; message: string } {
-  if (input.pointIsOver) {
-    return { ok: false, message: 'Point is over' };
-  }
-
   if (input.oppHasDisc) {
     return { ok: false, message: 'Voice offense paused' };
-  }
-
-  if (!input.possession || isPossessionOver(input.possession)) {
-    return { ok: false, message: 'Tap who has the disc first' };
   }
 
   const voicePlan = planVoicePassIntent(throwerParticipantId, command.toParticipantId);

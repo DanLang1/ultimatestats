@@ -5,7 +5,6 @@ import { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 import { assertNever } from '@/lib/utils';
 
 interface UseTrackerHandlersInput {
-  pointIsOver: boolean;
   oppHasDisc: boolean;
   discHolderRef: PlayerRef | null;
   canDropOpeningPull: boolean;
@@ -18,7 +17,6 @@ interface UseTrackerHandlersInput {
 /** Maps tracker gestures to semantic captures; the store resolves the live possession and holder. */
 export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlayerGridHandlers {
   const {
-    pointIsOver,
     oppHasDisc,
     discHolderRef,
     canDropOpeningPull,
@@ -29,7 +27,6 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
   } = input;
 
   const onPlayerTap = (ref: PlayerRef) => {
-    if (pointIsOver) return;
     const hasDiscInPlay = discHolderRef != null || oppHasDisc;
     switch (passModifier) {
       case 'goal':
@@ -83,7 +80,7 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
   return {
     onPlayerTap,
     onDrop: (receiver) => {
-      if (discHolderRef == null || pointIsOver) return;
+      if (discHolderRef == null) return;
       recordCaptureIntent({ kind: 'drop', receiver });
       setPassModifier(null);
     },
@@ -93,12 +90,12 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
       setPassModifier(null);
     },
     onGoal: (scorer) => {
-      if (discHolderRef == null || pointIsOver) return;
+      if (discHolderRef == null) return;
       recordCaptureIntent({ kind: 'goal', scorer });
       setPassModifier(null);
     },
     onThrowaway: () => {
-      if (discHolderRef == null || pointIsOver) return;
+      if (discHolderRef == null) return;
       recordCaptureIntent({ kind: 'throwaway' });
       setPassModifier(null);
     },

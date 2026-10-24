@@ -32,8 +32,10 @@ export interface LivePlayState {
   isPlayPaused: boolean;
   /**
    * The disc holder when `sideId` has the disc; null when it doesn't or a post-injury pickup is
-   * pending. Callers pass different sides on purpose until the tracker commands module reconciles
-   * them.
+   * pending. Callers pass different sides on purpose: the session view passes the perspective side
+   * (what the screen shows), `planCaptureIntent` the active side when both sides are tracked and
+   * the focus side otherwise (who the capture is attributed to), and `canSetRedZone` the active
+   * side (whose possession enters Red Zone).
    */
   holderFor: (sideId: string) => PlayerRef | null;
 }

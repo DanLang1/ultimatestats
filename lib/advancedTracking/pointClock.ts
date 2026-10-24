@@ -1,4 +1,4 @@
-import { getActiveGameClockPause, getActiveStoppage } from './trackingDisplayHelpers';
+import { getLivePlayState } from './livePlayState';
 import { getPossessionEnd, hasPointEnded } from './trackingUtils';
 import type { AdvancedTrackedGame, TrackedPoint } from './types';
 
@@ -78,17 +78,16 @@ export interface PointTimer {
 }
 
 /**
- * The live point timer. It freezes at the point's end first, since a cap pause can open after a
- * goal; otherwise at an open cap pause or stoppage, which never overlap. Dead time after the freeze,
- * such as a goal-to-undo gap closed during a cap pause, must not shift the frozen value.
+ * The live point timer for the current point; null before the first point. It freezes at the
+ * point's end first, since a cap pause can open after a goal; otherwise at an open cap pause or
+ * stoppage, which never overlap. Dead time after the freeze, such as a goal-to-undo gap closed
+ * during a cap pause, must not shift the frozen value.
  */
-export function getPointTimer(game: AdvancedTrackedGame, point: TrackedPoint): PointTimer {
+export function getPointTimer(game: AdvancedTrackedGame): PointTimer | null {
+  const { point, activeGameClockPause, activeStoppage } = getLivePlayState(game);
+  if (point == null) return null;
   const endedAt = getPointEndedAt(point);
-  const frozenAt =
-    endedAt ??
-    getActiveGameClockPause(game)?.pausedAt ??
-    getActiveStoppage(point.possessions.at(-1) ?? null)?.pausedAt ??
-    null;
+  const frozenAt = endedAt ?? activeGameClockPause?.pausedAt ?? activeStoppage?.pausedAt ?? null;
 
   if (point.startedAt == null || (endedAt == null && hasPointEnded(point))) {
     return { base: null, frozenAt };

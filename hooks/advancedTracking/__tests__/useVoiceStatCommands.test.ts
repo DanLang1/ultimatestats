@@ -73,7 +73,6 @@ function arrangeInput(overrides: Partial<VoiceInput> = {}): VoiceInput {
     ],
     pointIsOver: false,
     oppHasDisc: false,
-    possession: game.points[0].possessions[0],
     discHolderRef: participantRef('alex'),
     recordCaptureIntent: jest.fn((intent: CaptureIntent) =>
       useAdvancedTrackingStore.getState().recordCaptureIntent(intent),
@@ -346,9 +345,7 @@ describe('voice command recognition', () => {
   );
 
   it.each([
-    [{ pointIsOver: true }, 'Point is over'],
     [{ oppHasDisc: true }, 'Voice offense paused'],
-    [{ possession: null }, 'Tap who has the disc first'],
     [{ discHolderRef: null }, 'Tap who has the disc first'],
   ])('rechecks game state before recording a final command: %j', async (change, message) => {
     const input = arrangeInput();

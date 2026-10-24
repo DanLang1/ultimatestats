@@ -121,7 +121,6 @@ export const TrackerLastActionCard = ({
     tracksBothSides,
     perspectiveSideId,
     oppHasDisc,
-    canUseRareMenu,
     commands,
   } = session;
   const lastOppPossession =
@@ -168,7 +167,7 @@ export const TrackerLastActionCard = ({
     tracksBothSides,
     participants: game.participants,
     oppHasDisc,
-    canUseRareMenu,
+    canUseRareMenu: commands.openRareMenu,
     lastFocusPossession,
     lastOppPossession,
     focusHasStarted,

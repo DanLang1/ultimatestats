@@ -1,4 +1,4 @@
-import { getTrackerSessionView, TrackerSessionView } from '../trackerSessionView';
+import { getTrackerSessionView, TrackerCommands, TrackerSessionView } from '../trackerSessionView';
 import { getSafeDiscHolderRef } from '../trackingDisplayHelpers';
 import type {
   AdvancedTrackedGame,
@@ -100,7 +100,9 @@ function withPossessions(
 
 // ── Scenarios ────────────────────────────────────────────────────────────────
 
-type Expected = Partial<Omit<TrackerSessionView, 'game' | 'point' | 'possession'>>;
+type Expected = Partial<Omit<TrackerSessionView, 'game' | 'point' | 'possession' | 'commands'>> & {
+  commands?: Partial<TrackerCommands>;
+};
 
 interface Scenario {
   name: string;
@@ -120,10 +122,8 @@ const singleTeamScenarios: Scenario[] = [
       perspectiveSideId: HOME,
       displaySideId: HOME,
       discHolderRef: null,
-      canDropOpeningPull: false,
+      commands: { amendOpeningPull: false, recordVoicePass: false, openRareMenu: false },
       isPlayLive: true,
-      canUseVoice: false,
-      canUseRareMenu: false,
       footerMode: { kind: 'offense', hidden: false },
     },
   },
@@ -133,9 +133,7 @@ const singleTeamScenarios: Scenario[] = [
     expected: {
       oppHasDisc: false,
       discHolderRef: null,
-      canDropOpeningPull: true,
-      canUseVoice: false,
-      canUseRareMenu: false,
+      commands: { amendOpeningPull: true, recordVoicePass: false, openRareMenu: false },
       footerMode: { kind: 'offense', hidden: false },
     },
   },
@@ -147,8 +145,7 @@ const singleTeamScenarios: Scenario[] = [
       perspectiveSideId: HOME,
       oppHasDisc: true,
       discHolderRef: null,
-      canDropOpeningPull: false,
-      canUseRareMenu: true,
+      commands: { amendOpeningPull: false, openRareMenu: true },
       footerMode: { kind: 'defense', hidden: false },
     },
   },
@@ -159,9 +156,7 @@ const singleTeamScenarios: Scenario[] = [
       activeSideId: HOME,
       oppHasDisc: false,
       discHolderRef: null,
-      canDropOpeningPull: false,
-      canUseVoice: false,
-      canUseRareMenu: false,
+      commands: { amendOpeningPull: false, recordVoicePass: false, openRareMenu: false },
       footerMode: { kind: 'pickup', hidden: false },
     },
   },
@@ -175,7 +170,7 @@ const singleTeamScenarios: Scenario[] = [
       activeSideId: HOME,
       oppHasDisc: false,
       discHolderRef: null,
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       footerMode: { kind: 'pickup', hidden: false },
     },
   },
@@ -187,9 +182,7 @@ const singleTeamScenarios: Scenario[] = [
     expected: {
       oppHasDisc: false,
       discHolderRef: august,
-      canDropOpeningPull: false,
-      canUseVoice: true,
-      canUseRareMenu: true,
+      commands: { amendOpeningPull: false, recordVoicePass: true, openRareMenu: true },
       footerMode: { kind: 'offense', hidden: false },
     },
   },
@@ -202,8 +195,7 @@ const singleTeamScenarios: Scenario[] = [
     expected: {
       displaySideId: HOME,
       discHolderRef: august,
-      canUseVoice: false,
-      canUseRareMenu: false,
+      commands: { recordVoicePass: false, openRareMenu: false },
       footerMode: { kind: 'offense', hidden: true },
     },
   },
@@ -214,7 +206,7 @@ const singleTeamScenarios: Scenario[] = [
     ]),
     passModifier: 'drop',
     expected: {
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       footerMode: { kind: 'offense', hidden: true },
     },
   },
@@ -225,7 +217,7 @@ const singleTeamScenarios: Scenario[] = [
     ]),
     passModifier: 'fifty-fifty',
     expected: {
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       footerMode: { kind: 'offense', hidden: true },
     },
   },
@@ -240,8 +232,7 @@ const singleTeamScenarios: Scenario[] = [
       displaySideId: HOME,
       oppHasDisc: true,
       discHolderRef: null,
-      canUseVoice: false,
-      canUseRareMenu: true,
+      commands: { recordVoicePass: false, openRareMenu: true },
       footerMode: { kind: 'defense', hidden: false },
     },
   },
@@ -252,7 +243,7 @@ const singleTeamScenarios: Scenario[] = [
     ]),
     passModifier: 'pressure',
     expected: {
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       displaySideId: HOME,
       oppHasDisc: true,
       footerMode: { kind: 'defense', hidden: true },
@@ -265,8 +256,7 @@ const singleTeamScenarios: Scenario[] = [
     ]),
     expected: {
       discHolderRef: august,
-      canUseVoice: false,
-      canUseRareMenu: true,
+      commands: { recordVoicePass: false, openRareMenu: true },
       isPlayLive: false,
       footerMode: null,
     },
@@ -281,8 +271,7 @@ const singleTeamScenarios: Scenario[] = [
       oppHasDisc: false,
       perspectiveSideId: HOME,
       discHolderRef: null,
-      canUseVoice: false,
-      canUseRareMenu: false,
+      commands: { recordVoicePass: false, openRareMenu: false },
       isPlayLive: false,
       footerMode: null,
     },
@@ -299,7 +288,7 @@ const scrimmageScenarios: Scenario[] = [
       perspectiveSideId: HOME,
       displaySideId: HOME,
       discHolderRef: null,
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       footerMode: { kind: 'offense', hidden: false },
     },
   },
@@ -311,7 +300,7 @@ const scrimmageScenarios: Scenario[] = [
       perspectiveSideId: AWAY,
       displaySideId: AWAY,
       oppHasDisc: false,
-      canDropOpeningPull: true,
+      commands: { amendOpeningPull: true },
       footerMode: { kind: 'offense', hidden: false },
     },
   },
@@ -325,7 +314,7 @@ const scrimmageScenarios: Scenario[] = [
       displaySideId: HOME,
       oppHasDisc: false,
       discHolderRef: null,
-      canDropOpeningPull: false,
+      commands: { amendOpeningPull: false },
       footerMode: { kind: 'pickup', hidden: false },
     },
   },
@@ -340,7 +329,7 @@ const scrimmageScenarios: Scenario[] = [
       displaySideId: AWAY,
       oppHasDisc: false,
       discHolderRef: null,
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       footerMode: { kind: 'pickup', hidden: false },
     },
   },
@@ -355,8 +344,7 @@ const scrimmageScenarios: Scenario[] = [
       perspectiveSideId: AWAY,
       displaySideId: AWAY,
       discHolderRef: meves,
-      canUseVoice: true,
-      canUseRareMenu: true,
+      commands: { recordVoicePass: true, openRareMenu: true },
       footerMode: { kind: 'offense', hidden: false },
     },
   },
@@ -368,7 +356,7 @@ const scrimmageScenarios: Scenario[] = [
     passModifier: 'drop',
     expected: {
       displaySideId: HOME,
-      canUseVoice: false,
+      commands: { recordVoicePass: false },
       footerMode: { kind: 'offense', hidden: true },
     },
   },
@@ -396,7 +384,7 @@ const scrimmageScenarios: Scenario[] = [
       activeSideId: AWAY,
       perspectiveSideId: HOME,
       discHolderRef: null,
-      canUseRareMenu: false,
+      commands: { openRareMenu: false },
       isPlayLive: false,
       footerMode: null,
     },

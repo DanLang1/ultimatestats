@@ -34,9 +34,15 @@ export type TrackerFooterMode =
 export interface TrackerCommands {
   /** Correct the line or record an injury sub; an armed modifier owns the next tap instead. */
   changeLine: boolean;
+  /** A received pull can still be marked dropped by the receiving team. */
+  amendOpeningPull: boolean;
   pauseGameClock: boolean;
   startSecondHalfEarly: boolean;
   undo: boolean;
+  /** A voice pass can be captured: play is live, a holder exists, and no modifier is armed. */
+  recordVoicePass: boolean;
+  /** The rare-actions menu can open: a point is in play with the disc held and no modifier armed. */
+  openRareMenu: boolean;
 }
 
 /** Live tracker state derived once from the current game and the screen's armed modifier. */
@@ -55,14 +61,10 @@ export interface TrackerSessionView {
   /** Single-team tracking only: the untracked opponent holds the disc. */
   oppHasDisc: boolean;
   discHolderRef: PlayerRef | null;
-  /** A received pull can still be marked dropped by the receiving team. */
-  canDropOpeningPull: boolean;
   activeStoppage: StoppageAction | null;
   activeGameClockPause: GameClockPause | null;
   /** The point is in progress with no stoppage or game-clock pause, so in-point controls show. */
   isPlayLive: boolean;
-  canUseVoice: boolean;
-  canUseRareMenu: boolean;
   /** Null while play is not live, when no in-point footer shows. */
   footerMode: TrackerFooterMode | null;
   commands: TrackerCommands;
@@ -123,13 +125,9 @@ export function getTrackerSessionView(
     displaySideId,
     oppHasDisc,
     discHolderRef,
-    canDropOpeningPull,
     activeStoppage,
     activeGameClockPause,
     isPlayLive,
-    canUseVoice,
-    // An armed modifier owns the next tap; cancel it to reach rare actions.
-    canUseRareMenu: !isModifierArmed && !pointIsOver && (oppHasDisc || discHolderRef != null),
     footerMode: getTrackerFooterMode({
       isPlayLive,
       oppHasDisc,
@@ -138,9 +136,13 @@ export function getTrackerSessionView(
     }),
     commands: {
       changeLine: !isModifierArmed && canChangeLine(game).ok,
+      amendOpeningPull: canDropOpeningPull,
       pauseGameClock: canPauseGameClock(game).ok,
       startSecondHalfEarly: canStartSecondHalfEarly(game, lastUndoEntry),
       undo: canUndo(game, lastUndoEntry).ok,
+      recordVoicePass: canUseVoice,
+      // An armed modifier owns the next tap; cancel it to reach rare actions.
+      openRareMenu: !isModifierArmed && !pointIsOver && (oppHasDisc || discHolderRef != null),
     },
   };
 }

@@ -7,13 +7,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useCountdownSeconds } from '@/hooks/useTimer';
+import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
 import { getActivePlayElapsedMsAt } from '@/lib/advancedTracking/pointClock';
-import {
-  formatPointTime,
-  getActiveStoppage,
-  getSubsForStoppage,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
-import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
+import { formatPointTime, getSubsForStoppage } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS, MIN_TIMEOUT_SECONDS } from '@/lib/constants';
 import { formatTimerSeconds, hasItems } from '@/lib/utils';
@@ -31,9 +27,7 @@ export const StoppageOverlay = ({ game }: StoppageOverlayProps) => {
 
   const { cancelStoppage, resumeStoppage } = useAdvancedTrackingStore();
 
-  const point = getCurrentPoint(game);
-  const possession = getCurrentPossession(game);
-  const activeStoppage = getActiveStoppage(possession);
+  const { point, activeStoppage } = getLivePlayState(game);
 
   const stoppageTimestamp = activeStoppage?.pausedAt ?? activeStoppage?.recordedAt ?? null;
 

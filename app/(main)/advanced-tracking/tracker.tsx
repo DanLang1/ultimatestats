@@ -80,10 +80,9 @@ export default function AdvancedTrackerScreen() {
   const activeVoiceParticipants = buildVoiceParticipantContexts(activeParticipants);
 
   const handlers = useTrackerHandlers({
-    pointIsOver: session?.pointIsOver ?? false,
     oppHasDisc: session?.oppHasDisc ?? false,
     discHolderRef: session?.discHolderRef ?? null,
-    canDropOpeningPull: session?.canDropOpeningPull ?? false,
+    canDropOpeningPull: session?.commands.amendOpeningPull ?? false,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
@@ -91,11 +90,10 @@ export default function AdvancedTrackerScreen() {
   });
 
   const voiceControls = useVoiceStatCommands({
-    enabled: session?.canUseVoice ?? false,
+    enabled: session?.commands.recordVoicePass ?? false,
     activeParticipants: activeVoiceParticipants,
     pointIsOver: session?.pointIsOver ?? false,
     oppHasDisc: session?.oppHasDisc ?? false,
-    possession: session?.possession ?? null,
     discHolderRef: session?.discHolderRef ?? null,
     recordCaptureIntent,
   });
@@ -119,13 +117,12 @@ export default function AdvancedTrackerScreen() {
     pointIsOver,
     discHolderRef,
     oppHasDisc,
-    canDropOpeningPull,
     activeStoppage,
     activeGameClockPause,
     isPlayLive,
     commands,
   } = session;
-  const pointTimer = point ? getPointTimer(game, point) : null;
+  const pointTimer = getPointTimer(game);
   const activeBetweenPointTimeout = getActiveBetweenPointTimeout(game);
   const showPostPointLastActionCard = pointIsOver && activeBetweenPointTimeout == null;
   const showLastActionCard = isPlayLive || showPostPointLastActionCard;
@@ -197,7 +194,7 @@ export default function AdvancedTrackerScreen() {
 
   const offenseActions: OffenseActionsProps = {
     hasHolder: discHolderRef != null,
-    canDropOpeningPull,
+    canDropOpeningPull: commands.amendOpeningPull,
     onThrowaway: handlers.onThrowaway,
     onArmTapAction: setPassModifier,
   };
@@ -218,7 +215,7 @@ export default function AdvancedTrackerScreen() {
         isHalftimeBreakActive={isHalftimeBreakActive}
         discHolderRef={discHolderRef}
         oppHasDisc={oppHasDisc}
-        canDropOpeningPull={canDropOpeningPull}
+        canDropOpeningPull={commands.amendOpeningPull}
         passModifier={passModifier}
         handlers={handlers}
         onLineChangePress={() => setShowLineChangeMenu(true)}
@@ -283,7 +280,7 @@ export default function AdvancedTrackerScreen() {
         <TrackerActionFooter
           mode={session.footerMode}
           voiceControls={voiceControls}
-          canUseVoice={session.canUseVoice}
+          canUseVoice={commands.recordVoicePass}
           offenseActions={offenseActions}
           onOppScored={() => recordCaptureIntent({ kind: 'anonymous-opponent-goal' })}
           onOppTurnover={() => recordCaptureIntent({ kind: 'anonymous-opponent-turnover' })}

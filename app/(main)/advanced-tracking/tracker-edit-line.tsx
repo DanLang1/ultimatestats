@@ -2,10 +2,9 @@ import { Redirect, router, Stack } from 'expo-router';
 
 import { AdvancedActiveLineCorrectionScreen } from '@/components/advancedTracking/AdvancedActiveLineCorrectionScreen';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
+import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
 import { canChangeLine } from '@/lib/advancedTracking/trackerCommands';
-import { getActiveSideId } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
-import { getCurrentPoint, getCurrentPossession } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 
 export default function TrackerEditLineScreen() {
@@ -15,19 +14,19 @@ export default function TrackerEditLineScreen() {
     (state) => state.correctCurrentGamePointActiveLines,
   );
   const participants = useLiveRosterParticipants(game?.participants ?? []);
-  const point = game ? getCurrentPoint(game) : null;
-  const possession = game ? getCurrentPossession(game) : null;
 
-  if (!currentGameId || !game || !point) {
+  if (!currentGameId || !game) {
+    return <Redirect href="/dashboard" />;
+  }
+  const { point, activeSideId } = getLivePlayState(game);
+  if (!point) {
     return <Redirect href="/dashboard" />;
   }
   if (!canChangeLine(game).ok) {
     return <Redirect href="/advanced-tracking/tracker" />;
   }
 
-  const preferredFirstSideId = areBothSidesFullyTracked(game)
-    ? getActiveSideId(possession, game)
-    : game.focusSideId;
+  const preferredFirstSideId = areBothSidesFullyTracked(game) ? activeSideId : game.focusSideId;
 
   return (
     <>

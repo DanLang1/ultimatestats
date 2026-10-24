@@ -112,28 +112,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `store/advancedTracking/trackingStore.ts`
   `lib/advancedTracking/gameMutations.ts`
 
-## P3 - Shared Tracker Command Preconditions
-
-- `lib/advancedTracking/trackerCommands.ts` owns the command rules, but some consumers still
-  restate them. `useTrackerHandlers` guards captures on holder and point state itself, and
-  `recordVoicePass` in `useVoiceStatCommands` repeats the point-over and possession checks before
-  calling the store.
-- `TrackerSessionView` exposes newer availability through `commands`, while `canDropOpeningPull`,
-  `canUseVoice`, and `canUseRareMenu` remain top-level fields with their own consumers.
-- Live-play state is still re-derived in `tracker-injury-sub.tsx`, `tracker-edit-line.tsx`,
-  `StoppageOverlay.tsx`, `TrackerCapBar.tsx`, and `pointClock.ts`. `getLivePlayState` callers pass three different sides
-  to `holderFor` (session perspective side, `planCaptureIntent`, `canSetRedZone`), still
-  unreconciled.
-- Cleanup: route the remaining guards through the command functions, move the remaining session
-  flags under `commands`, and read live-play state
-  from `getLivePlayState`.
-- References:
-  `lib/advancedTracking/trackerCommands.ts`
-  `lib/advancedTracking/trackerSessionView.ts`
-  `lib/advancedTracking/livePlayState.ts`
-  `hooks/advancedTracking/useTrackerHandlers.ts`
-  `hooks/advancedTracking/useVoiceStatCommands.ts`
-
 ## P3 - Split trackingDisplayHelpers by Concept
 
 - `trackingDisplayHelpers.ts` (~670 lines) is mostly domain queries the store depends on, not

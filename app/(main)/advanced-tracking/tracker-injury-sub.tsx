@@ -5,16 +5,13 @@ import { TrackerLineContinuationMenu } from '@/components/advancedTracking/Track
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
+import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
 import {
-  getActiveSideId,
-  getActiveStoppage,
   getEffectiveLineParticipantIds,
   getLineParticipantIdsBeforeSub,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
-  getCurrentPoint,
-  getCurrentPossession,
   getOtherSideId,
   getParticipantIdsUsedBySide,
   getScrimmageLineSelectionGroups,
@@ -39,18 +36,21 @@ export default function TrackerInjurySubScreen() {
   const [draftLinesBySide, setDraftLinesBySide] = useState<Record<string, string[]>>({});
   const [showContinuationMenu, setShowContinuationMenu] = useState(false);
   const participants = useLiveRosterParticipants(game?.participants ?? []);
-  const point = game ? getCurrentPoint(game) : null;
-  const possession = game ? getCurrentPossession(game) : null;
-  const existingStoppage = getActiveStoppage(possession);
-  const isEdit = existingStoppage?.reason === 'injury';
 
-  if (!currentGameId || !game || !point) {
+  if (!currentGameId || !game) {
     return <Redirect href="/dashboard" />;
   }
 
+  const { point, activeSideId, activeStoppage: existingStoppage } = getLivePlayState(game);
+  if (!point) {
+    return <Redirect href="/dashboard" />;
+  }
+
+  const isEdit = existingStoppage?.reason === 'injury';
+
   const tracksBothSides = areBothSidesFullyTracked(game);
   const isScrimmage = game.gameType === 'scrimmage';
-  const firstSideId = tracksBothSides ? getActiveSideId(possession, game) : game.focusSideId;
+  const firstSideId = tracksBothSides ? activeSideId : game.focusSideId;
   const selectedSideIds = tracksBothSides
     ? [firstSideId, getOtherSideId(game, firstSideId)]
     : [firstSideId];

@@ -6,8 +6,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNow } from '@/hooks/useTimer';
 import { computeCapState, getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
+import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
 import {
-  getActiveGameClockPause,
   getGameClockElapsedMs,
   formatPointTime,
 } from '@/lib/advancedTracking/trackingDisplayHelpers';
@@ -24,7 +24,7 @@ interface TrackerCapBarProps {
 export const TrackerCapBar = ({ onMenuPress, onHelpPress, game }: TrackerCapBarProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const activeGameClockPause = getActiveGameClockPause(game);
+  const { activeGameClockPause } = getLivePlayState(game);
   const gameStartedAt = game.points[0]?.startedAt ?? null;
   const now = useNow(gameStartedAt !== null && activeGameClockPause === null);
   const gameElapsedMs = getGameClockElapsedMs(game, now);

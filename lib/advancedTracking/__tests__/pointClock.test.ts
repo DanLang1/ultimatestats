@@ -30,7 +30,7 @@ describe('getPointTimer', () => {
   it('freezes the live timer at an open stoppage after an undone goal', () => {
     const game = buildRevivedPointWithTimeout();
 
-    const timer = getPointTimer(game, game.points[0]);
+    const timer = getPointTimer(game)!;
 
     expect(timer.frozenAt).toBe(25_000);
     expect(shownMs(timer)).toBe(14_000);
@@ -39,7 +39,7 @@ describe('getPointTimer', () => {
   it('excludes a resumed stoppage after an undone goal from the running timer', () => {
     const game = buildRevivedPointWithTimeout(30_000);
 
-    const timer = getPointTimer(game, game.points[0]);
+    const timer = getPointTimer(game)!;
 
     expect(timer.frozenAt).toBeNull();
     expect(shownMs(timer, 40_000)).toBe(24_000);
@@ -55,7 +55,7 @@ describe('getPointTimer', () => {
       .goal(blair, { recordedAt: 21_000 })
       .build();
 
-    const timer = getPointTimer(game, game.points[0]);
+    const timer = getPointTimer(game)!;
 
     expect(timer.frozenAt).toBe(21_000);
     expect(shownMs(timer)).toBe(15_000);
@@ -70,7 +70,7 @@ describe('getPointTimer', () => {
       .goal(blair, { recordedAt: 21_000 })
       .build();
 
-    expect(shownMs(getPointTimer(game, game.points[0]))).toBe(20_000);
+    expect(shownMs(getPointTimer(game)!)).toBe(20_000);
   });
 
   it('keeps the goal time on screen when the goal is undone during a cap pause', () => {
@@ -83,7 +83,7 @@ describe('getPointTimer', () => {
     // Goal at 11s, cap pause opened at 13s, goal undone at 21s while still paused.
     game.points[0].revivalPauses = [{ pausedAt: 11_000, resumedAt: 21_000 }];
 
-    const timer = getPointTimer(game, game.points[0]);
+    const timer = getPointTimer(game)!;
 
     expect(timer.frozenAt).toBe(13_000);
     expect(shownMs(timer)).toBe(10_000);

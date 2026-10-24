@@ -6,7 +6,6 @@ const defender: PlayerRef = { refType: 'participant', participantId: 'dark-defen
 
 function makeInput(passModifier: PassModifier, hasHolder = true) {
   return {
-    pointIsOver: false,
     oppHasDisc: false,
     discHolderRef: hasHolder ? holder : null,
     canDropOpeningPull: false,
