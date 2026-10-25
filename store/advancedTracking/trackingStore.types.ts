@@ -2,78 +2,37 @@ import type { CorrectAdvancedPointActiveLinesInput } from '@/lib/advancedTrackin
 import type { CorrectAdvancedTouchInput } from '@/lib/advancedTracking/advancedTouchCorrectionUtils';
 import type { CorrectAdvancedTurnoverInput } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import type { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
+import type { RecordPullInput, UpdateThrowTypeInput } from '@/lib/advancedTracking/captureWrites';
+import type { CreateAdvancedGameInput } from '@/lib/advancedTracking/gameMutations';
+import type {
+  RecordInjurySubsInput,
+  UpdateInjurySubsInput,
+} from '@/lib/advancedTracking/injurySubUtils';
 import type { AdvancedTrackingUndoEntry } from '@/lib/advancedTracking/persistenceTypes';
 import type {
   AdvancedGameEndReason,
-  AdvancedGameType,
   AdvancedTrackedGame,
-  FieldLocation,
   GameClockPauseReason,
-  GameFlip,
   GameMetadata,
-  GameSide,
   InjurySubChange,
-  Participant,
   PlayerRef,
-  PointLine,
   PullResult,
-  ThrowType,
 } from '@/lib/advancedTracking/types';
-import type { GenderRatio } from '@/lib/genderRatioUtils';
 
-export type { InjurySubChange, PullResult };
-
-export interface CreateAdvancedGameInput {
-  id?: string;
-  gameType?: AdvancedGameType;
-  focusSideId: string;
-  initialReceivingSideId: string;
-  flip?: GameFlip;
-  sides: GameSide[];
-  participants: Participant[];
-  format: {
-    gameTo: number;
-    halftimeEnabled?: boolean;
-    softCapEnabled?: boolean;
-    hardCapEnabled?: boolean;
-    timeoutsPerHalf?: number;
-    floaterEnabled?: boolean;
-  };
-  metadata?: GameMetadata;
-}
-
-export interface RecordPullInput {
-  lines: PointLine[];
-  puller: PlayerRef;
-  receiver?: PlayerRef;
-  result: PullResult;
-  hangTimeMs?: number;
-  origin?: FieldLocation;
-  landing?: FieldLocation;
-  genderRatio?: GenderRatio;
-}
-
-export interface UpdateThrowTypeInput {
-  pointId: string;
-  possessionId: string;
-  actionId: string;
-  type?: ThrowType;
-}
+export type {
+  CreateAdvancedGameInput,
+  InjurySubChange,
+  PullResult,
+  RecordInjurySubsInput,
+  RecordPullInput,
+  UpdateInjurySubsInput,
+  UpdateThrowTypeInput,
+};
 
 /** A timeout is always called by a side; the store derives whether it spends the floater. */
 export type RecordStoppageInput =
   | { reason: 'timeout'; sideId: string }
   | { reason: 'injury' | 'manual_pause'; sideId?: string };
-
-export interface RecordInjurySubsInput {
-  sideId?: string;
-  changes: InjurySubChange[];
-}
-
-export interface UpdateInjurySubsInput {
-  stoppageActionId: string;
-  changes: InjurySubChange[];
-}
 
 /**
  * Recoverable UI state for the point that has not started yet. It remains separate from the

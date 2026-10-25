@@ -53,18 +53,23 @@ describe('injurySubUtils', () => {
       },
     ];
 
-    const result = replaceSubsForStoppage(point, 'active-stoppage', [
-      {
-        sideId: 'light',
-        inIds: [],
-        outIds: [],
-      },
-      {
-        sideId: 'dark',
-        inIds: ['dark-4'],
-        outIds: ['dark-1'],
-      },
-    ]);
+    const result = replaceSubsForStoppage(
+      point,
+      'active-stoppage',
+      [
+        {
+          sideId: 'light',
+          inIds: [],
+          outIds: [],
+        },
+        {
+          sideId: 'dark',
+          inIds: ['dark-4'],
+          outIds: ['dark-1'],
+        },
+      ],
+      () => 'new-sub',
+    );
 
     expect(result?.map((sub) => sub.id)).toEqual(['earlier-light', 'active-dark', 'later-dark']);
     expect(result?.[1]).toMatchObject({
@@ -89,7 +94,33 @@ describe('injurySubUtils', () => {
       },
     ];
 
-    expect(replaceSubsForStoppage(point, 'active-stoppage', [])).toBeUndefined();
+    expect(replaceSubsForStoppage(point, 'active-stoppage', [], () => 'new-sub')).toBeUndefined();
+  });
+
+  it('creates a side record ID with newId only for a side without one at the stoppage', () => {
+    const point = makePoint();
+    point.subs = [
+      {
+        id: 'active-light',
+        sideId: 'light',
+        type: 'injury',
+        inIds: ['light-2'],
+        outIds: ['light-1'],
+        stoppageActionId: 'active-stoppage',
+      },
+    ];
+
+    const result = replaceSubsForStoppage(
+      point,
+      'active-stoppage',
+      [
+        { sideId: 'light', inIds: ['light-3'], outIds: ['light-1'] },
+        { sideId: 'dark', inIds: ['dark-2'], outIds: ['dark-1'] },
+      ],
+      () => 'new-sub',
+    );
+
+    expect(result?.map((sub) => sub.id)).toEqual(['active-light', 'new-sub']);
   });
 
   it('appends a stoppage to only the selected possession without mutating the point', () => {

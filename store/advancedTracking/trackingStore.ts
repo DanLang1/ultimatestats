@@ -14,18 +14,28 @@ import {
   type CorrectAdvancedTurnoverInput,
 } from '@/lib/advancedTracking/advancedTurnoverCorrectionUtils';
 import { planCaptureIntent } from '@/lib/advancedTracking/captureIntentUtils';
-import { removeActionById } from '@/lib/advancedTracking/gameMutations';
-import { withAdvancedGameNote, withAdvancedPointNote } from '@/lib/advancedTracking/gameNoteUtils';
+import {
+  applyCapture,
+  applyPull,
+  applyPullDropAmendment,
+  applyRedZone,
+  applyThrowType,
+} from '@/lib/advancedTracking/captureWrites';
+import { createAdvancedGame, removeActionById } from '@/lib/advancedTracking/gameMutations';
+import { applyPointNote, withAdvancedGameNote } from '@/lib/advancedTracking/gameNoteUtils';
 import {
   getAdjustedHalftimeTimerDuration,
   getDefaultHalftimeTimerState,
 } from '@/lib/advancedTracking/halftimeTimerUtils';
-import {
-  replaceSubsForStoppage,
-  withAppendedStoppage,
-} from '@/lib/advancedTracking/injurySubUtils';
+import { applyInjurySubs, applyInjurySubUpdate } from '@/lib/advancedTracking/injurySubUtils';
 import { deriveRosterParticipantSyncPlan } from '@/lib/advancedTracking/participantSync';
 import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persistenceTypes';
+import {
+  applyGameClockPause,
+  applyGameClockResume,
+  applyStoppage,
+  applyStoppageResume,
+} from '@/lib/advancedTracking/stoppageWrites';
 import {
   assertCommandAllowed,
   canAmendOpeningPull,
@@ -39,19 +49,10 @@ import {
   getStoppageTapTarget,
   planTimeout,
 } from '@/lib/advancedTracking/trackerCommands';
-import {
-  getActiveGameClockPause,
-  getActiveSideId,
-  getActiveStoppage,
-  getGameClockElapsedMs,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
 import type { AdvancedGameLookupState } from '@/lib/advancedTracking/trackingUtils';
 import {
-  assertTwoSides,
-  assertValidInjurySubInput,
   assertValidLines,
   assertValidParticipantRefs,
-  assertValidPointLineHistory,
   assertValidSideIds,
   canStartSecondHalfEarly,
   deriveHalftimeTransition,
@@ -61,24 +62,16 @@ import {
   getEffectiveGameTo,
   getGameScore,
   getLiveInProgressGame,
-  getOtherSideId,
-  getReceivingSideForNextPoint,
-  hasInjurySubChanges,
   hasPointEnded,
   isAdvancedGameOver,
-  isPointEndingThrow,
   isPossessionOver,
-  syncCapTransitions,
-  syncDerivedHalftimeTransition,
 } from '@/lib/advancedTracking/trackingUtils';
 import {
-  ADVANCED_TRACKING_SCHEMA_VERSION,
-  AdvancedTrackedGame,
-  PointPossession,
-  StoppageAction,
-  getEligibleThrowTypes,
-  hasRequiredThrowDefender,
-} from '@/lib/advancedTracking/types';
+  applyBetweenPointTimeout,
+  applyBetweenPointTimeoutEnd,
+  applyEarlyHalftime,
+} from '@/lib/advancedTracking/transitionWrites';
+import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import {
   applyUndo,
   assertUndoTargets,
@@ -125,8 +118,26 @@ function getCurrentGame(state: AdvancedGameLookupState): AdvancedTrackedGame {
   return game;
 }
 
-function pushUndoEntry(state: Draft<AdvancedTrackingState>, entry: AdvancedTrackingUndoEntry) {
-  state.undoStack.push(entry);
+/**
+ * Runs `edit` on the live game draft and stamps `updatedAt` with the store's commit time. Every
+ * in-place write to the live game goes through here.
+ */
+function writeLiveGame<T>(
+  state: Draft<AdvancedTrackingState>,
+  committedAt: number,
+  edit: (game: AdvancedTrackedGame) => T,
+): T {
+  const game = getCurrentGame(state);
+  const result = edit(game);
+  game.updatedAt = committedAt;
+  return result;
+}
+
+function pushUndoEntry(
+  state: Draft<AdvancedTrackingState>,
+  ...entries: AdvancedTrackingUndoEntry[]
+) {
+  state.undoStack.push(...entries);
 }
 
 function resetHalftimeTimerState(state: Draft<AdvancedTrackingState>) {
@@ -207,10 +218,6 @@ function getRestorableUndoStack(
     reportError('advanced-undo-stack-load', error);
     return [];
   }
-}
-
-function isRedZoneOnlyAnonymousScaffold(possession: PointPossession): boolean {
-  return possession.redZone?.anonymousScaffold === true && possession.actions.length === 1;
 }
 
 export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
@@ -334,57 +341,14 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         createGame: (input) => {
-          const now = Date.now();
-
-          assertTwoSides(input.sides);
-
-          const sideIds = new Set(input.sides.map((side) => side.id));
-          if (!sideIds.has(input.focusSideId)) {
-            throw new Error('focusSideId must match one of the advanced tracking sides.');
-          }
-          if (!sideIds.has(input.initialReceivingSideId)) {
-            throw new Error(
-              'initialReceivingSideId must match one of the advanced tracking sides.',
-            );
-          }
-
-          const gameId = input.id ?? generateId();
-          const game: AdvancedTrackedGame = {
-            id: gameId,
-            schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
-            createdAt: now,
-            updatedAt: now,
-            gameType: input.gameType ?? 'game',
-            status: 'in_progress',
-            focusSideId: input.focusSideId,
-            initialReceivingSideId: input.initialReceivingSideId,
-            ...(input.flip != null ? { flip: input.flip } : {}),
-            metadata: withAdvancedGameNote(input.metadata, input.metadata?.notes),
-            settings: {
-              locationMode: 'none',
-              format: {
-                formatType: 'standard',
-                gameTo: input.format.gameTo,
-                halftimeAt:
-                  (input.format.halftimeEnabled ?? true)
-                    ? Math.ceil(input.format.gameTo / 2)
-                    : undefined,
-                softCapEnabled: input.format.softCapEnabled,
-                hardCapEnabled: input.format.hardCapEnabled,
-                timeoutsPerHalf: input.format.timeoutsPerHalf,
-                floaterEnabled: input.format.floaterEnabled,
-              },
-            },
-            sides: input.sides,
-            participants: input.participants,
-            points: [],
-          };
-
-          set((state) => {
-            setActiveGame(state, game, gameId);
+          const game = createAdvancedGame(input, {
+            id: input.id ?? generateId(),
+            now: Date.now(),
           });
-
-          return gameId;
+          set((state) => {
+            setActiveGame(state, game, game.id);
+          });
+          return game.id;
         },
 
         resetCurrentGame: () => {
@@ -430,23 +394,19 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
         },
 
         updateGameMetadata: async (metadata) => {
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            liveGame.metadata = withAdvancedGameNote(metadata, metadata.notes);
-            liveGame.updatedAt = Date.now();
+            writeLiveGame(state, now, (liveGame) => {
+              liveGame.metadata = withAdvancedGameNote(metadata, metadata.notes);
+            });
           });
           await persistCurrentLiveGame();
         },
 
         updatePointNote: async ({ pointId, note }: UpdatePointNoteInput) => {
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const pointIndex = liveGame.points.findIndex((candidate) => candidate.id === pointId);
-            const point = pointIndex >= 0 ? liveGame.points[pointIndex] : undefined;
-            if (point == null) throw new Error(`Point "${pointId}" was not found.`);
-            const updatedPoint = withAdvancedPointNote(point, note);
-            liveGame.points[pointIndex] = updatedPoint;
-            liveGame.updatedAt = Date.now();
+            writeLiveGame(state, now, (liveGame) => applyPointNote(liveGame, pointId, note));
           });
           await persistCurrentLiveGame();
         },
@@ -507,24 +467,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const game = getCurrentGame(get());
           assertCommandAllowed(canPauseGameClock(game), 'pause the game clock');
 
-          const pauseId = generateId();
-          const point = getCurrentPoint(game);
           const now = Date.now();
-
+          let pauseId!: string;
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            if (liveGame.gameClockPauses == null) {
-              liveGame.gameClockPauses = [];
-            }
-            liveGame.gameClockPauses.push({
-              id: pauseId,
-              reason,
-              pausedAt: now,
-              pointId: point != null && !hasPointEnded(point) ? point.id : undefined,
-            });
-            liveGame.updatedAt = now;
+            pauseId = writeLiveGame(state, now, (liveGame) =>
+              applyGameClockPause(liveGame, reason, { at: now, newId: generateId }),
+            );
           });
-
           return pauseId;
         },
 
@@ -534,10 +483,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
           const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const pause = getActiveGameClockPause(liveGame)!;
-            pause.resumedAt = now;
-            liveGame.updatedAt = now;
+            writeLiveGame(state, now, (liveGame) => applyGameClockResume(liveGame, now));
           });
         },
 
@@ -547,34 +493,18 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           }
 
           const game = getCurrentGame(get());
-          const currentPoint = getCurrentPoint(game);
           const lastUndoEntry = get().undoStack.at(-1);
 
           if (!canStartSecondHalfEarly(game, lastUndoEntry)) {
             return false;
           }
 
-          const currentPointId = currentPoint!.id;
-          const transitionId = generateId();
           const now = Date.now();
-
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            if (liveGame.gameTransitions == null) {
-              liveGame.gameTransitions = [];
-            }
-            liveGame.gameTransitions.push({
-              id: transitionId,
-              transitionType: 'halftime',
-              afterPointId: currentPointId,
-              triggeredEarly: true,
-            });
-            pushUndoEntry(state, {
-              kind: 'halftime_early',
-              pointId: currentPointId,
-              transitionId,
-            });
-            liveGame.updatedAt = now;
+            const undoEntry = writeLiveGame(state, now, (liveGame) =>
+              applyEarlyHalftime(liveGame, generateId),
+            );
+            pushUndoEntry(state, undoEntry);
             setHalftimeBreakActive(state, true);
           });
 
@@ -589,48 +519,36 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           if (timeout.plan.kind !== 'between-point') {
             throw new Error('Cannot record a between-point timeout before a point has ended.');
           }
+          const { isFloater } = timeout.plan;
 
-          const transitionId = generateId();
-          const pointId = getCurrentPoint(game)!.id;
           const now = Date.now();
-
+          let transitionId!: string;
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            if (livePoint.transitionsAfter == null) {
-              livePoint.transitionsAfter = [];
-            }
-            livePoint.transitionsAfter.push({
-              id: transitionId,
-              transitionType: 'timeout',
-              sideId: input.sideId,
-              ...(timeout.plan.isFloater ? { isFloater: true } : {}),
-              startedAt: now,
-            });
-            liveGame.updatedAt = now;
-            pushUndoEntry(state, {
-              kind: 'between_point_timeout',
-              pointId,
-              transitionId,
-            });
+            const undoEntry = writeLiveGame(state, now, (liveGame) =>
+              applyBetweenPointTimeout(
+                liveGame,
+                { sideId: input.sideId, isFloater },
+                { at: now, newId: generateId },
+              ),
+            );
+            pushUndoEntry(state, undoEntry);
+            transitionId = undoEntry.transitionId;
           });
 
           return transitionId;
         },
 
         endBetweenPointTimeout: (transitionId) => {
-          set((state) => {
-            const liveGame = getCurrentGame(state);
-            const currentPoint = getCurrentPoint(liveGame);
-            const timeout = currentPoint?.transitionsAfter?.find(
-              (transition) => transition.id === transitionId,
-            );
-            if (timeout == null || timeout.transitionType !== 'timeout') {
-              return;
-            }
+          const timeout = getCurrentPoint(getCurrentGame(get()))?.transitionsAfter?.find(
+            (transition) => transition.id === transitionId,
+          );
+          if (timeout == null || timeout.transitionType !== 'timeout') return;
 
-            timeout.endedAt = Date.now();
-            liveGame.updatedAt = Date.now();
+          const now = Date.now();
+          set((state) => {
+            writeLiveGame(state, now, (liveGame) =>
+              applyBetweenPointTimeoutEnd(liveGame, transitionId, now),
+            );
           });
         },
 
@@ -644,50 +562,15 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             throw new Error('Cannot record a pull while the current point is still in progress.');
           }
 
-          const receivingSideId = getReceivingSideForNextPoint(game);
-          const pullingSideId = getOtherSideId(game, receivingSideId);
-          const pointId = generateId();
-          const possessionId = generateId();
-          const actionId = generateId();
           const now = Date.now();
-
+          let actionId!: string;
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            liveGame.points.push({
-              id: pointId,
-              lines: input.lines,
-              genderRatio: input.genderRatio,
-              startedAt: now,
-              possessions: [
-                {
-                  id: possessionId,
-                  sideId: receivingSideId,
-                  actions: [
-                    {
-                      id: actionId,
-                      kind: 'pull',
-                      sideId: pullingSideId,
-                      receivingSideId,
-                      puller: input.puller,
-                      receiver: input.receiver,
-                      result: input.result,
-                      hangTimeMs: input.hangTimeMs,
-                      origin: input.origin,
-                      landing: input.landing,
-                      recordedAt: now,
-                    },
-                  ],
-                },
-              ],
-            });
-            pushUndoEntry(state, {
-              kind: 'action',
-              pointId,
-              possessionId,
-              actionId,
-            });
+            const undoEntry = writeLiveGame(state, now, (liveGame) =>
+              applyPull(liveGame, input, { at: now, newId: generateId }),
+            );
+            pushUndoEntry(state, undoEntry);
+            actionId = undoEntry.actionId;
             clearPendingNextPointLineSelection(state);
-            liveGame.updatedAt = now;
           });
 
           return actionId;
@@ -698,26 +581,12 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           assertValidParticipantRefs(game, [receiver]);
           assertCommandAllowed(canAmendOpeningPull(game), 'mark the pull as dropped');
 
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            const livePossession = getCurrentPossession(liveGame)!;
-            const liveOpeningAction = livePossession.actions[0];
-            if (liveOpeningAction.kind !== 'pull') return;
-
-            const previousResult = liveOpeningAction.result;
-            const previousReceiver = liveOpeningAction.receiver;
-            liveOpeningAction.result = 'dropped';
-            liveOpeningAction.receiver = receiver;
-            pushUndoEntry(state, {
-              kind: 'amend_pull_result',
-              pointId: livePoint.id,
-              possessionId: livePossession.id,
-              actionId: liveOpeningAction.id,
-              previousResult,
-              previousReceiver,
-            });
-            liveGame.updatedAt = Date.now();
+            const undoEntry = writeLiveGame(state, now, (liveGame) =>
+              applyPullDropAmendment(liveGame, receiver),
+            );
+            pushUndoEntry(state, undoEntry);
           });
         },
 
@@ -725,89 +594,23 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const game = getCurrentGame(get());
           const planned = planCaptureIntent(game, intent);
           if (!planned.ok) return planned;
-          if (planned.plan.pickup != null) {
-            assertValidSideIds(game, [planned.plan.pickup.sideId]);
-            assertValidParticipantRefs(game, [planned.plan.pickup.player]);
-          }
-          const throwInput = planned.plan.throw;
-          if (throwInput != null) {
-            assertValidParticipantRefs(game, [
-              throwInput.thrower,
-              throwInput.toPlayer,
-              throwInput.defender,
-            ]);
-            if (!hasRequiredThrowDefender(throwInput)) {
-              throw new Error(`Throw result "${throwInput.result}" requires a tracked defender.`);
-            }
-          }
-          const actionId = generateId();
-          let visibleActionId = actionId;
-          const now = Date.now();
+          const { hardCapMins, advancedSoftCapAtMins } = useSettingsStore.getState();
+          const capTiming = {
+            softCapAtMinutes: advancedSoftCapAtMins,
+            hardCapAtMinutes: hardCapMins,
+          };
 
+          const now = Date.now();
+          let visibleActionId!: string;
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            let possession = getCurrentPossession(liveGame)!;
-            if (planned.plan.pickup != null) {
-              if (isPossessionOver(possession)) {
-                possession = { id: generateId(), sideId: planned.plan.pickup.sideId, actions: [] };
-                livePoint.possessions.push(possession);
-              }
-              const pickupId = generateId();
-              visibleActionId = pickupId;
-              possession.actions.push({
-                id: pickupId,
-                kind: 'disc_pickup',
-                sideId: planned.plan.pickup.sideId,
-                player: planned.plan.pickup.player,
-                recordedAt: now,
-              });
-              pushUndoEntry(state, {
-                kind: 'action',
-                pointId: livePoint.id,
-                possessionId: possession.id,
-                actionId: pickupId,
-              });
-            }
-            if (throwInput == null) {
-              liveGame.updatedAt = now;
-              return;
-            }
-            visibleActionId = actionId;
-            possession.actions.push({
-              id: actionId,
-              kind: 'throw',
-              sideId: possession.sideId,
-              thrower: throwInput.thrower,
-              result: throwInput.result,
-              toPlayer: throwInput.toPlayer,
-              defender: throwInput.defender,
-              splitAttribution: throwInput.splitAttribution,
-              recordedAt: now,
-            });
-            pushUndoEntry(state, {
-              kind: 'action',
-              pointId: livePoint.id,
-              possessionId: possession.id,
-              actionId,
-            });
-            if (isPointEndingThrow(throwInput.result)) {
-              const gameStartedAt = liveGame.points[0]?.startedAt;
-              if (gameStartedAt != null) {
-                const { hardCapMins, advancedSoftCapAtMins } = useSettingsStore.getState();
-                syncCapTransitions(liveGame, {
-                  gameElapsedMs: getGameClockElapsedMs(liveGame, now),
-                  capTiming: {
-                    softCapAtMinutes: advancedSoftCapAtMins,
-                    hardCapAtMinutes: hardCapMins,
-                  },
-                });
-              }
-            }
-            if (syncDerivedHalftimeTransition(liveGame)) {
+            const result = writeLiveGame(state, now, (liveGame) =>
+              applyCapture(liveGame, planned.plan, { at: now, newId: generateId }, capTiming),
+            );
+            pushUndoEntry(state, ...result.undoEntries);
+            if (result.isHalftimeBreakActive) {
               setHalftimeBreakActive(state, true);
             }
-            liveGame.updatedAt = now;
+            visibleActionId = result.visibleActionId;
           });
 
           return { ok: true, actionId: visibleActionId };
@@ -826,73 +629,16 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
           const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            const liveCurrentPossession = getCurrentPossession(liveGame);
-            const liveActiveSideId = getActiveSideId(liveCurrentPossession, liveGame);
-            const liveActivePossession = isPossessionOver(liveCurrentPossession)
-              ? null
-              : liveCurrentPossession;
-
-            if (liveActivePossession == null) {
-              const possessionId = generateId();
-              livePoint.possessions.push({
-                id: possessionId,
-                sideId: liveActiveSideId,
-                redZone: { enteredAt: now, anonymousScaffold: true },
-                actions: [
-                  {
-                    id: generateId(),
-                    kind: 'disc_pickup',
-                    sideId: liveActiveSideId,
-                    player: { refType: 'untracked' },
-                    recordedAt: now,
-                  },
-                ],
-              });
-            } else if (isRedZone) {
-              liveActivePossession.redZone = { enteredAt: now };
-            } else if (isRedZoneOnlyAnonymousScaffold(liveActivePossession)) {
-              const scaffoldIndex = livePoint.possessions.findIndex(
-                (possession) => possession.id === liveActivePossession.id,
-              );
-              livePoint.possessions.splice(scaffoldIndex, 1);
-            } else {
-              delete liveActivePossession.redZone;
-            }
-            liveGame.updatedAt = now;
+            writeLiveGame(state, now, (liveGame) =>
+              applyRedZone(liveGame, isRedZone, { at: now, newId: generateId }),
+            );
           });
         },
 
         updateThrowType: (input: UpdateThrowTypeInput) => {
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = liveGame.points.find((candidate) => candidate.id === input.pointId);
-            const livePossession = livePoint?.possessions.find(
-              (candidate) => candidate.id === input.possessionId,
-            );
-            const liveAction = livePossession?.actions.find(
-              (candidate) => candidate.id === input.actionId,
-            );
-            if (liveAction?.kind !== 'throw') {
-              throw new Error(`Cannot update missing throw action "${input.actionId}".`);
-            }
-            const actionSide = liveGame.sides.find((side) => side.id === liveAction.sideId);
-            if (actionSide?.trackingMode !== 'full-roster') {
-              throw new Error('Throw details can only be added for fully tracked sides.');
-            }
-
-            if (input.type == null) {
-              delete liveAction.details;
-            } else if (!getEligibleThrowTypes(liveAction.result).includes(input.type)) {
-              if (input.type === 'backfield_reset') {
-                throw new Error('Backfield reset details require a turnover result.');
-              }
-              throw new Error(`Throw type "${input.type}" is not eligible for this result.`);
-            } else {
-              liveAction.details = { ...liveAction.details, type: input.type };
-            }
-            liveGame.updatedAt = Date.now();
+            writeLiveGame(state, now, (liveGame) => applyThrowType(liveGame, input));
           });
         },
 
@@ -913,24 +659,17 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             assertCommandAllowed(canRecordStoppage(game), 'stop play');
           }
 
-          const actionId = generateId();
           const now = Date.now();
-
+          let actionId!: string;
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const possession = getCurrentPossession(liveGame)!;
-            possession.actions.push({
-              id: actionId,
-              kind: 'stoppage',
-              reason: input.reason,
-              sideId: input.sideId,
-              isFloater,
-              recordedAt: now,
-              pausedAt: now,
-            });
-            liveGame.updatedAt = now;
+            actionId = writeLiveGame(state, now, (liveGame) =>
+              applyStoppage(
+                liveGame,
+                { reason: input.reason, sideId: input.sideId, isFloater },
+                { at: now, newId: generateId },
+              ),
+            );
           });
-
           return actionId;
         },
 
@@ -940,9 +679,7 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
 
           const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            getActiveStoppage(getCurrentPossession(liveGame))!.resumedAt = now;
-            liveGame.updatedAt = now;
+            writeLiveGame(state, now, (liveGame) => applyStoppageResume(liveGame, now));
           });
         },
 
@@ -950,76 +687,38 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           // A repeated Resume or Cancel tap finds the stoppage already resumed or removed.
           if (getStoppageTapTarget(getCurrentGame(get()), actionId) === 'settled') return;
 
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            const livePossession = getCurrentPossession(liveGame)!;
-            removeActionById(liveGame, livePoint.id, livePossession.id, actionId);
-            liveGame.updatedAt = Date.now();
+            writeLiveGame(state, now, (liveGame) => {
+              const livePoint = getCurrentPoint(liveGame)!;
+              const livePossession = getCurrentPossession(liveGame)!;
+              removeActionById(liveGame, livePoint.id, livePossession.id, actionId);
+            });
           });
         },
 
         recordInjurySubs: (input: RecordInjurySubsInput) => {
-          const game = getCurrentGame(get());
-          assertCommandAllowed(canChangeLine(game), 'record an injury substitution');
-          const point = getCurrentPoint(game)!;
-          const possession = getCurrentPossession(game)!;
-          if (input.sideId != null) {
-            assertValidSideIds(game, [input.sideId]);
-          }
-          if (!input.changes.some(hasInjurySubChanges)) {
-            throw new Error('An injury substitution must change at least one lineup.');
-          }
+          assertCommandAllowed(
+            canChangeLine(getCurrentGame(get())),
+            'record an injury substitution',
+          );
 
-          const actionId = generateId();
           const now = Date.now();
-          const stoppage: StoppageAction = {
-            id: actionId,
-            kind: 'stoppage',
-            reason: 'injury',
-            sideId: input.sideId,
-            recordedAt: now,
-            pausedAt: now,
-          };
-          const candidatePoint = withAppendedStoppage(point, possession.id, stoppage);
-          candidatePoint.subs = replaceSubsForStoppage(candidatePoint, actionId, input.changes);
-          assertValidPointLineHistory(game, candidatePoint);
-
+          let actionId!: string;
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            const livePossession = getCurrentPossession(liveGame)!;
-            livePossession.actions.push(stoppage);
-            livePoint.subs = candidatePoint.subs;
-            liveGame.updatedAt = now;
+            actionId = writeLiveGame(state, now, (liveGame) =>
+              applyInjurySubs(liveGame, input, { at: now, newId: generateId }),
+            );
           });
-
           return actionId;
         },
 
         updateInjurySubs: (input: UpdateInjurySubsInput) => {
-          const game = getCurrentGame(get());
-          const point = getCurrentPoint(game);
-          if (point == null) throw new Error('No active point.');
-          if (hasPointEnded(point)) {
-            throw new Error('Cannot update an injury substitution after the point has ended.');
-          }
-
-          const nextSubs = replaceSubsForStoppage(point, input.stoppageActionId, input.changes);
-          const candidatePoint = { ...point, subs: nextSubs };
-          for (const change of input.changes) {
-            assertValidInjurySubInput(game, candidatePoint, {
-              stoppageActionId: input.stoppageActionId,
-              ...change,
-            });
-          }
-          assertValidPointLineHistory(game, candidatePoint);
-
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const livePoint = getCurrentPoint(liveGame)!;
-            livePoint.subs = nextSubs;
-            liveGame.updatedAt = Date.now();
+            writeLiveGame(state, now, (liveGame) =>
+              applyInjurySubUpdate(liveGame, input, generateId),
+            );
           });
         },
 
@@ -1040,13 +739,14 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
             return false;
           }
 
+          const now = Date.now();
           set((state) => {
-            const liveGame = getCurrentGame(state);
-            const { isHalftimeBreakActive } = applyUndo(liveGame, entry, Date.now());
+            const { isHalftimeBreakActive } = writeLiveGame(state, now, (liveGame) =>
+              applyUndo(liveGame, entry, now),
+            );
             state.undoStack.pop();
             setHalftimeBreakActive(state, isHalftimeBreakActive);
             reconcilePendingNextPointLineSelection(state);
-            liveGame.updatedAt = Date.now();
           });
           return true;
         },
@@ -1149,16 +849,15 @@ useGameStore.subscribe((gameState) => {
   if (plan == null) return;
 
   useAdvancedTrackingStore.setState((state) => {
-    const liveGame = getCurrentGame(state);
-
     if (plan.participantsToAdd.length > 0) {
-      liveGame.participants.push(...plan.participantsToAdd);
-      liveGame.updatedAt = Date.now();
+      writeLiveGame(state, Date.now(), (liveGame) => {
+        liveGame.participants.push(...plan.participantsToAdd);
+      });
     }
 
     if (plan.unavailableParticipantIds.size > 0) {
       const selection = getCurrentPendingNextPointLineSelection(
-        liveGame,
+        getCurrentGame(state),
         state.pendingNextPointLineSelection,
       );
       if (selection != null) {

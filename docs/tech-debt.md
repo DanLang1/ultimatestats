@@ -98,19 +98,17 @@ rewrite it to describe only the remaining problem as it exists now.
   `store/basic/gameStore.ts`
   `store/basic/gameStore.types.ts`
 
-## P3 - Advanced Tracking Store Pure Mutations
+## P3 - Advanced Tracking Correction Utils Read the Clock
 
-- The record and correction actions in `trackingStore.ts` still edit the game inline: pushing
-  points, possessions, and actions, lazily creating optional arrays (`gameTransitions`,
-  `transitionsAfter`, `revivalPauses`, `subs`), and collapsing emptied arrays back to `undefined`.
-  `updatedAt` is stamped at about 20 sites, and actions read the game with `getCurrentGame(get())`
-  to validate, then again with `getCurrentGame(state)` to mutate.
-- Cleanup: move the edits into pure mutators in `gameMutations.ts` (which already holds
-  `removeActionById` and `removeSubsForStoppages`) and add one live-game mutation helper that stamps
-  `updatedAt`. The store keeps IDs, time, the undo stack, and persistence.
+- Live writes take their time from the store (`WriteContext`), but `correctAdvancedTouch`,
+  `correctAdvancedTurnover`, and `correctAdvancedPointActiveLines` still stamp `updatedAt` with
+  `Date.now()` inside lib, deep in internal helpers, and are shared by both advanced stores.
+- Cleanup: pass the commit time in from `trackingStore.ts` and `savedGamesStore.ts` (and their
+  tests' call sites).
 - References:
-  `store/advancedTracking/trackingStore.ts`
-  `lib/advancedTracking/gameMutations.ts`
+  `lib/advancedTracking/advancedTouchCorrectionUtils.ts`
+  `lib/advancedTracking/advancedTurnoverCorrectionUtils.ts`
+  `lib/advancedTracking/advancedPointLineCorrectionUtils.ts`
 
 ## P3 - Split trackingDisplayHelpers by Concept
 

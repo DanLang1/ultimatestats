@@ -1,5 +1,84 @@
+import { withAdvancedGameNote } from './gameNoteUtils';
 import { getSafeDiscHolderRef } from './trackingDisplayHelpers';
-import type { AdvancedTrackedGame, TrackedPoint } from './types';
+import { assertTwoSides } from './trackingUtils';
+import {
+  ADVANCED_TRACKING_SCHEMA_VERSION,
+  type AdvancedGameType,
+  type AdvancedTrackedGame,
+  type GameFlip,
+  type GameMetadata,
+  type GameSide,
+  type Participant,
+  type TrackedPoint,
+} from './types';
+
+export interface CreateAdvancedGameInput {
+  id?: string;
+  gameType?: AdvancedGameType;
+  focusSideId: string;
+  initialReceivingSideId: string;
+  flip?: GameFlip;
+  sides: GameSide[];
+  participants: Participant[];
+  format: {
+    gameTo: number;
+    halftimeEnabled?: boolean;
+    softCapEnabled?: boolean;
+    hardCapEnabled?: boolean;
+    timeoutsPerHalf?: number;
+    floaterEnabled?: boolean;
+  };
+  metadata?: GameMetadata;
+}
+
+/**
+ * Builds a new in-progress game with no points. `id` is the resolved game ID (the caller prefers
+ * `input.id`) and `now` its creation time. Throws when the focus or receiving side is not one of
+ * the game's two sides.
+ */
+export function createAdvancedGame(
+  input: CreateAdvancedGameInput,
+  { id, now }: { id: string; now: number },
+): AdvancedTrackedGame {
+  assertTwoSides(input.sides);
+
+  const sideIds = new Set(input.sides.map((side) => side.id));
+  if (!sideIds.has(input.focusSideId)) {
+    throw new Error('focusSideId must match one of the advanced tracking sides.');
+  }
+  if (!sideIds.has(input.initialReceivingSideId)) {
+    throw new Error('initialReceivingSideId must match one of the advanced tracking sides.');
+  }
+
+  return {
+    id,
+    schemaVersion: ADVANCED_TRACKING_SCHEMA_VERSION,
+    createdAt: now,
+    updatedAt: now,
+    gameType: input.gameType ?? 'game',
+    status: 'in_progress',
+    focusSideId: input.focusSideId,
+    initialReceivingSideId: input.initialReceivingSideId,
+    ...(input.flip != null ? { flip: input.flip } : {}),
+    metadata: withAdvancedGameNote(input.metadata, input.metadata?.notes),
+    settings: {
+      locationMode: 'none',
+      format: {
+        formatType: 'standard',
+        gameTo: input.format.gameTo,
+        halftimeAt:
+          (input.format.halftimeEnabled ?? true) ? Math.ceil(input.format.gameTo / 2) : undefined,
+        softCapEnabled: input.format.softCapEnabled,
+        hardCapEnabled: input.format.hardCapEnabled,
+        timeoutsPerHalf: input.format.timeoutsPerHalf,
+        floaterEnabled: input.format.floaterEnabled,
+      },
+    },
+    sides: input.sides,
+    participants: input.participants,
+    points: [],
+  };
+}
 
 /** Drops subs recorded at the given stoppages; collapses an emptied list to `undefined`. */
 export function removeSubsForStoppages(

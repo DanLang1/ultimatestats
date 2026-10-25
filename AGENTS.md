@@ -23,6 +23,7 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
   bare `console.error`; skip it only for expected outcomes such as validation failures or cancels.
 - Follow `docs/ui-patterns.md` and `docs/responsive-layout.md` for screens, modals, navigation, safe areas, and orientation.
 - Use `<Redirect href="..." />` for render-time navigation; never invoke router actions during render.
+- Before adding complexity for speculative race condition, explain concrete failure mode, likelihood, and complexity to the user. Do not silently expand scope for theoretical robustness.
 
 ## State and Persistence
 

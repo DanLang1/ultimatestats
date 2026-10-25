@@ -1,3 +1,4 @@
+import type { RecordPullInput } from '@/lib/advancedTracking/captureWrites';
 import type {
   AdvancedTrackedGame,
   Participant,
@@ -6,7 +7,6 @@ import type {
   PullResult,
 } from '@/lib/advancedTracking/types';
 import type { GenderRatio } from '@/lib/genderRatioUtils';
-import type { RecordPullInput } from '@/store/advancedTracking/trackingStore.types';
 
 export interface PullResultOption {
   value: PullResult;

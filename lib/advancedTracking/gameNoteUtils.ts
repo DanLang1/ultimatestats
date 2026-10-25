@@ -17,6 +17,13 @@ export function withAdvancedPointNote(point: TrackedPoint, note: string): Tracke
     : { ...pointWithoutNote, note: normalizedNote };
 }
 
+/** Sets, or clears when blank, a point's note on a live game draft. */
+export function applyPointNote(game: AdvancedTrackedGame, pointId: string, note: string): void {
+  const pointIndex = game.points.findIndex((candidate) => candidate.id === pointId);
+  if (pointIndex === -1) throw new Error(`Point "${pointId}" was not found.`);
+  game.points[pointIndex] = withAdvancedPointNote(game.points[pointIndex], note);
+}
+
 export function withAdvancedGameNote(
   metadata: GameMetadata | undefined,
   note?: string,
