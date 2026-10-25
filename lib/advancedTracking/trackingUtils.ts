@@ -321,6 +321,11 @@ export function isAdvancedGameOver(game: AdvancedTrackedGame): boolean {
   return (firstScore >= effectiveGameTo || secondScore >= effectiveGameTo) && notTied;
 }
 
+/**
+ * Whether the latest operation was the current point's last action. A between-point timeout is not
+ * on the undo stack, so it is read from the point: once one is called, the point's last action is
+ * no longer the latest operation.
+ */
 export function didLastOperationEndCurrentPoint(
   game: AdvancedTrackedGame,
   lastUndoEntry: AdvancedTrackingUndoEntry | undefined,
@@ -328,6 +333,7 @@ export function didLastOperationEndCurrentPoint(
   const currentPoint = getCurrentPoint(game);
   return (
     currentPoint != null &&
+    currentPoint.transitionsAfter == null &&
     lastUndoEntry?.kind === 'action' &&
     lastUndoEntry.pointId === currentPoint.id
   );

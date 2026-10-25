@@ -151,21 +151,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/TrackerRareMenu.tsx`
   `components/advancedTracking/bottomCard/ModifierPrompt.tsx`
 
-## P3 - Timeout Cancel and Undo Consistency
-
-- Mid-point stoppages and between-point timeouts reverse in opposite ways. A running stoppage has a
-  Cancel button (`cancelStoppage`) but is never on the undo stack, so once resumed it cannot be
-  removed and Undo skips past it. A running between-point timeout has no Cancel (only End Timeout);
-  after it ends, the between-point Undo removes it via its `between_point_timeout` entry.
-- Investigate: whether the running between-point timeout should offer Cancel (likely
-  `undoLastOperation`, since the timeout is the newest entry while it runs), and whether a resumed
-  mid-point stoppage needs a removal path (e.g. from the timeline) given its attached injury subs
-  and point-clock effects.
-- References:
-  `components/advancedTracking/BetweenPointDisplay.tsx`
-  `components/advancedTracking/StoppageOverlay.tsx`
-  `store/advancedTracking/trackingStore.ts`
-
 ## P3 - Advanced Screen Duplication and Prop Drilling
 
 - The timeline route computes touch/turnover/line edit permissions inline and drills them with side

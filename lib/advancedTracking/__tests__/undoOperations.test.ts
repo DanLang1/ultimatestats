@@ -53,7 +53,7 @@ describe('isUndoOfPointEndingAction', () => {
     ['the last action of a point still in play', undoOf(live, 0, 1), live],
     [
       'a standalone undo on the same point',
-      { kind: 'between_point_timeout', pointId: ended.id, transitionId: 't1' },
+      { kind: 'halftime_early', pointId: ended.id, transitionId: 't1' },
       ended,
     ],
     [

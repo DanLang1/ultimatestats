@@ -73,7 +73,8 @@ export const BetweenPointDisplay = ({
   const isDense = isLandscape && sizeClass !== 'large';
 
   const styles = createStyles(sizeClass, isDense);
-  const { endBetweenPointTimeout, undoLastOperation, undoStack } = useAdvancedTrackingStore();
+  const { cancelBetweenPointTimeout, endBetweenPointTimeout, undoLastOperation, undoStack } =
+    useAdvancedTrackingStore();
 
   const point = getCurrentPoint(game);
   const activeTimeout = getActiveBetweenPointTimeout(game);
@@ -121,10 +122,6 @@ export const BetweenPointDisplay = ({
   });
   const lastPointPlayers = getLastPointPlayers(point, summarySideId, participants);
   const showStandaloneUndo = isStandaloneUndo(undoStack.at(-1));
-  const handleEndTimeout = () => {
-    if (activeTimeout == null) return;
-    endBetweenPointTimeout(activeTimeout.transition.id);
-  };
 
   const renderAttributionItem = (label: string, name: string | null) => (
     <View style={styles.statItem}>
@@ -166,28 +163,6 @@ export const BetweenPointDisplay = ({
         <View style={styles.bottomActions}>
           <View style={styles.buttonRow}>
             <Pressable
-              testID="between-point-start-next"
-              style={({ pressed }) => [
-                styles.actionBtn,
-                styles.primaryBtn,
-                {
-                  borderColor: palette.success,
-                  backgroundColor: palette.successOverlay10,
-                },
-                pressed && { opacity: 0.7 },
-              ]}
-              onPress={onStartNextPoint}>
-              <ThemedText style={[styles.actionBtnText, { color: palette.success }]}>
-                NEXT POINT
-              </ThemedText>
-            </Pressable>
-            <PointNoteButton
-              hasNote={Boolean(point?.note)}
-              onPress={onPointNote}
-              buttonStyle={styles.iconBtn}
-              testID="between-point-note"
-            />
-            <Pressable
               testID="between-point-end-timeout"
               style={({ pressed }) => [
                 styles.actionBtn,
@@ -198,9 +173,22 @@ export const BetweenPointDisplay = ({
                 },
                 pressed && { opacity: 0.7 },
               ]}
-              onPress={handleEndTimeout}>
+              onPress={() => endBetweenPointTimeout(activeTimeout.transition.id)}>
               <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
                 END TIMEOUT
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              testID="between-point-cancel-timeout"
+              style={({ pressed }) => [
+                styles.actionBtn,
+                styles.cancelTimeoutBtn,
+                { borderColor: palette.overlay20, backgroundColor: palette.overlay05 },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => cancelBetweenPointTimeout(activeTimeout.transition.id)}>
+              <ThemedText style={[styles.actionBtnText, { color: palette.textInverse }]}>
+                CANCEL
               </ThemedText>
             </Pressable>
           </View>
@@ -545,7 +533,8 @@ function createStyles(sizeClass: SizeClass, isDense: boolean) {
       justifyContent: 'center',
     },
     primaryBtn: { flex: 2 },
-    endTimeoutBtn: { flex: 1.6 },
+    endTimeoutBtn: { flex: 2 },
+    cancelTimeoutBtn: { flex: 1 },
     actionBtnText: {
       fontFamily: Fonts.black,
       fontSize: getSizeClassValue(ACTION_TEXT_FONT_SIZE, densitySizeClass),

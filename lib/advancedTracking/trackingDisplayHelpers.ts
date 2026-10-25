@@ -33,7 +33,7 @@ import {
 
 export interface ActiveBetweenPointTimeout {
   point: TrackedPoint;
-  transition: Extract<BetweenPointTransition, { transitionType: 'timeout' }>;
+  transition: BetweenPointTransition;
 }
 
 export function getActiveBetweenPointTimeout(
@@ -45,8 +45,7 @@ export function getActiveBetweenPointTimeout(
   if (currentPoint == null || !hasPointEnded(currentPoint)) return null;
 
   const latestTransition = currentPoint.transitionsAfter?.at(-1);
-  if (latestTransition == null || latestTransition.transitionType !== 'timeout') return null;
-  if (latestTransition.endedAt != null) return null;
+  if (latestTransition == null || latestTransition.endedAt != null) return null;
 
   return {
     point: currentPoint,
@@ -381,7 +380,7 @@ export function getSideTimeoutState(game: AdvancedTrackedGame, sideId: string): 
     }
 
     for (const transition of point.transitionsAfter ?? []) {
-      if (transition.transitionType === 'timeout' && transition.sideId === sideId) {
+      if (transition.sideId === sideId) {
         if (transition.isFloater) {
           floaterUsed = true;
         } else {

@@ -88,6 +88,7 @@ export interface AdvancedTrackingState {
   resumeGameClockPause: (pauseId: string) => void;
   recordBetweenPointTimeout: (input: RecordBetweenPointTimeoutInput) => string;
   endBetweenPointTimeout: (transitionId: string) => void;
+  cancelBetweenPointTimeout: (transitionId: string) => void;
   recordPull: (input: RecordPullInput) => string;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
   recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;

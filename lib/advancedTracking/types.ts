@@ -282,25 +282,19 @@ export interface PointPossession {
 
 // --- Transitions ---
 
-export type BetweenPointTransition =
-  | {
-      id: string;
-      transitionType: 'timeout';
-      /** Which side called the timeout. */
-      sideId: string;
-      /** True when this was the one-per-game floater rather than a regular timeout. */
-      isFloater?: boolean;
-      /** Absolute timestamp (ms epoch) when the between-point timeout was called. */
-      startedAt?: number;
-      /** Absolute timestamp (ms epoch) when the between-point timeout display was ended. */
-      endedAt?: number;
-    }
-  | {
-      id: string;
-      transitionType: 'spirit_timeout' | 'administrative' | 'heat_timeout';
-      /** Not all stoppages are called by a specific side. */
-      sideId?: string;
-    };
+/** A timeout called between points. */
+export interface BetweenPointTransition {
+  id: string;
+  transitionType: 'timeout';
+  /** Which side called the timeout. */
+  sideId: string;
+  /** True when this was the one-per-game floater rather than a regular timeout. */
+  isFloater?: boolean;
+  /** Absolute timestamp (ms epoch) when the between-point timeout was called. */
+  startedAt?: number;
+  /** Absolute timestamp (ms epoch) when the between-point timeout display was ended. */
+  endedAt?: number;
+}
 
 export type GameTransition =
   | {

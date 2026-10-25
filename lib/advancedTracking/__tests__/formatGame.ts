@@ -70,13 +70,7 @@ function formatBetweenPointTransitions(
   transitions: BetweenPointTransition[],
   sides: GameSide[],
 ): string {
-  return transitions
-    .map((t) => {
-      if (t.transitionType === 'timeout') return `  ⏱  ${sideLabel(t.sideId, sides)} timeout`;
-      const label = t.transitionType.replace(/_/g, ' ');
-      return t.sideId ? `  ⏱  ${label} (${sideLabel(t.sideId, sides)})` : `  ⏱  ${label}`;
-    })
-    .join('\n');
+  return transitions.map((t) => `  ⏱  ${sideLabel(t.sideId, sides)} timeout`).join('\n');
 }
 
 function formatGameTransitions(transitions: GameTransition[], afterPointId: string): string {

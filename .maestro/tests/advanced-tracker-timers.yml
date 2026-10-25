@@ -83,7 +83,7 @@ tags:
 - assertVisible:
     id: 'tracker-menu-button'
 
-# A between-point timeout starts at the full duration and counts down until ended.
+# Cancelling a running between-point timeout removes it and returns to the point summary.
 - runFlow:
     file: ../flows/open-rare-menu.yaml
 - runFlow:
@@ -91,6 +91,24 @@ tags:
 - runFlow:
     file: ../flows/record-opponent-goal.yaml
 # The score bar may already show the timeout page from the mid-point timeout.
+- tapOn:
+    id: 'timeout-dots-focus'
+    optional: true
+- tapOn:
+    id: 'timeout-button-away'
+    retryTapIfNoChange: true
+- assertVisible:
+    id: 'between-point-timeout-timer'
+- assertNotVisible:
+    id: 'between-point-start-next'
+- tapOn:
+    id: 'between-point-cancel-timeout'
+- assertVisible:
+    id: 'between-point-start-next'
+- assertNotVisible:
+    id: 'between-point-timeout-timer'
+
+# A between-point timeout starts at the full duration and counts down until ended.
 - tapOn:
     id: 'timeout-dots-focus'
     optional: true

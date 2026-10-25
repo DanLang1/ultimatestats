@@ -15,13 +15,6 @@ export interface ActionUndoEntry {
   actionId: string;
 }
 
-/** Undo of a timeout called between points, removing it from the point's `transitionsAfter`. */
-export interface BetweenPointTimeoutUndoEntry {
-  kind: 'between_point_timeout';
-  pointId: string;
-  transitionId: string;
-}
-
 /** Undo of starting the second half early, removing the halftime game transition. */
 export interface EarlyHalftimeUndoEntry {
   kind: 'halftime_early';
@@ -41,7 +34,6 @@ export interface PullAmendmentUndoEntry {
 
 export type AdvancedTrackingUndoEntry =
   | ActionUndoEntry
-  | BetweenPointTimeoutUndoEntry
   | EarlyHalftimeUndoEntry
   | PullAmendmentUndoEntry;
 
@@ -87,7 +79,7 @@ function isAdvancedTrackingUndoEntry(value: unknown): value is AdvancedTrackingU
   const kind = Reflect.get(value, 'kind');
   if (!hasStringField(value, 'pointId')) return false;
 
-  if (kind === 'between_point_timeout' || kind === 'halftime_early') {
+  if (kind === 'halftime_early') {
     return hasStringField(value, 'transitionId');
   }
 

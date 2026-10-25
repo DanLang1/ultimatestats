@@ -1120,13 +1120,6 @@ describe('getTransitionLabel', () => {
     expect(
       getTransitionLabel({ id: 't1', transitionType: 'timeout', sideId: ZOO, isFloater: true }),
     ).toBe('Floater Timeout');
-    expect(getTransitionLabel({ id: 't1', transitionType: 'spirit_timeout' })).toBe(
-      'Spirit Timeout',
-    );
-    expect(getTransitionLabel({ id: 't1', transitionType: 'administrative' })).toBe(
-      'Administrative',
-    );
-    expect(getTransitionLabel({ id: 't1', transitionType: 'heat_timeout' })).toBe('Heat Timeout');
   });
 
   it('returns correct labels for game transitions', () => {
@@ -1369,21 +1362,9 @@ describe('getTransitionIcon', () => {
     );
   });
 
-  it('returns timer-pause-outline for timeout variants', () => {
+  it('returns timer-pause-outline for timeouts', () => {
     expect(getTransitionIcon({ id: 't1', transitionType: 'timeout', sideId: 'Zoo' })).toBe(
       'timer-pause-outline',
-    );
-    expect(getTransitionIcon({ id: 't1', transitionType: 'spirit_timeout' })).toBe(
-      'timer-pause-outline',
-    );
-    expect(getTransitionIcon({ id: 't1', transitionType: 'heat_timeout' })).toBe(
-      'timer-pause-outline',
-    );
-  });
-
-  it('returns clipboard-text-outline for administrative', () => {
-    expect(getTransitionIcon({ id: 't1', transitionType: 'administrative' })).toBe(
-      'clipboard-text-outline',
     );
   });
 });

@@ -1,8 +1,4 @@
-import type {
-  ActionUndoEntry,
-  BetweenPointTimeoutUndoEntry,
-  EarlyHalftimeUndoEntry,
-} from '../persistenceTypes';
+import type { ActionUndoEntry, EarlyHalftimeUndoEntry } from '../persistenceTypes';
 import {
   assertPointActionParticipantsPreserved,
   assertTwoSides,
@@ -719,11 +715,6 @@ const pt1ActionUndo: ActionUndoEntry = {
   possessionId: 'pos1',
   actionId: 'a1',
 };
-const pt1TimeoutUndo: BetweenPointTimeoutUndoEntry = {
-  kind: 'between_point_timeout',
-  pointId: 'pt1',
-  transitionId: 'to1',
-};
 const pt1EarlyHalftimeUndo: EarlyHalftimeUndoEntry = {
   kind: 'halftime_early',
   pointId: 'pt1',
@@ -743,10 +734,16 @@ describe('didLastOperationEndCurrentPoint', () => {
     expect(didLastOperationEndCurrentPoint(game, pt1ActionUndo)).toBe(true);
   });
 
-  it('returns false for between-point operations', () => {
-    const game = makeGame([{ ...endedPoint, id: 'pt1' }]);
+  it('returns false once a between-point timeout follows the point', () => {
+    const game = makeGame([
+      {
+        ...endedPoint,
+        id: 'pt1',
+        transitionsAfter: [{ id: 'to1', transitionType: 'timeout', sideId: HOME }],
+      },
+    ]);
 
-    expect(didLastOperationEndCurrentPoint(game, pt1TimeoutUndo)).toBe(false);
+    expect(didLastOperationEndCurrentPoint(game, pt1ActionUndo)).toBe(false);
   });
 
   it('returns false for the early-halftime undo marker', () => {
@@ -814,12 +811,6 @@ describe('canStartSecondHalfEarly', () => {
     };
 
     expect(canStartSecondHalfEarly(game, pt1ActionUndo)).toBe(false);
-  });
-
-  it('returns false after a non-point-ending undoable operation', () => {
-    const game = makeHalftimeGame({ ...endedPoint, id: 'pt1' });
-
-    expect(canStartSecondHalfEarly(game, pt1TimeoutUndo)).toBe(false);
   });
 
   it('returns false when the game is already over', () => {

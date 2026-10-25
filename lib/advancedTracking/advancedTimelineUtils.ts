@@ -611,12 +611,6 @@ export function getTransitionLabel(transition: BetweenPointTransition | GameTran
   switch (transition.transitionType) {
     case 'timeout':
       return transition.isFloater ? 'Floater Timeout' : 'Timeout';
-    case 'spirit_timeout':
-      return 'Spirit Timeout';
-    case 'administrative':
-      return 'Administrative';
-    case 'heat_timeout':
-      return 'Heat Timeout';
     case 'halftime':
       return 'Halftime';
     case 'soft_cap':
@@ -746,11 +740,7 @@ export function getTransitionIcon(transition: BetweenPointTransition | GameTrans
     case 'hard_cap':
       return 'flag-outline';
     case 'timeout':
-    case 'spirit_timeout':
-    case 'heat_timeout':
       return 'timer-pause-outline';
-    case 'administrative':
-      return 'clipboard-text-outline';
     default:
       return assertNever(transition, 'Unsupported transition');
   }

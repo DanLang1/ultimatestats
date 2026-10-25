@@ -8,7 +8,10 @@ import {
   upsertAdvancedLiveSnapshot,
 } from '@/lib/advancedTracking/storage';
 import { deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
-import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
+import {
+  getEffectiveLineParticipantIds,
+  getSideTimeoutState,
+} from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getActiveAdvancedGame,
   getCurrentPoint,
@@ -2270,25 +2273,46 @@ describe('advancedTrackingStore', () => {
     ]);
   });
 
-  it('undoLastOperation removes the last between-point timeout', () => {
-    createGame();
+  describe('between-point timeout cancel and undo', () => {
+    const scoreHomePointAndCallTimeout = () => {
+      createGame();
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore
+        .getState()
+        .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
+      return useAdvancedTrackingStore.getState().recordBetweenPointTimeout({ sideId: homeSideId });
+    };
+    const homeTimeoutsUsed = () =>
+      getSideTimeoutState(getCurrentGame()!, homeSideId).regularUsedInHalf;
 
-    useAdvancedTrackingStore.getState().recordPull({
-      lines: homeLinesAugust,
-      puller: untracked,
-      receiver: august,
-      result: 'inbound',
+    it('cancel removes the running timeout and gives the timeout back', () => {
+      const transitionId = scoreHomePointAndCallTimeout();
+      const undoStackBefore = useAdvancedTrackingStore.getState().undoStack;
+      expect(homeTimeoutsUsed()).toBe(1);
+
+      useAdvancedTrackingStore.getState().cancelBetweenPointTimeout(transitionId);
+
+      expect(getCurrentGame()!.points[0].transitionsAfter).toBeUndefined();
+      expect(homeTimeoutsUsed()).toBe(0);
+      expect(useAdvancedTrackingStore.getState().undoStack).toEqual(undoStackBefore);
     });
-    useAdvancedTrackingStore
-      .getState()
-      .recordThrow({ thrower: august, result: 'goal', toPlayer: meves });
 
-    useAdvancedTrackingStore.getState().recordBetweenPointTimeout({
-      sideId: homeSideId,
+    it('undo after End removes the goal and the point timeouts with it', () => {
+      const transitionId = scoreHomePointAndCallTimeout();
+      useAdvancedTrackingStore.getState().endBetweenPointTimeout(transitionId);
+
+      expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+      const point = getCurrentGame()!.points[0];
+      expect(hasPointEnded(point)).toBe(false);
+      expect(point.transitionsAfter).toBeUndefined();
+      expect(homeTimeoutsUsed()).toBe(0);
     });
-
-    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
-    expect(getCurrentGame()!.points[0].transitionsAfter).toBeUndefined();
   });
 
   it('drops and reports an undo entry whose action is missing without changing the game', () => {

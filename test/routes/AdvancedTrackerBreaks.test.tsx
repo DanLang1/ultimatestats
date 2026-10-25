@@ -81,7 +81,6 @@ describe('between-point breaks', () => {
     const game = useAdvancedTrackingStore.getState().currentGame!;
     expect(game.points).toHaveLength(1);
     const timeout = game.points[0].transitionsAfter![0];
-    if (timeout.transitionType !== 'timeout') throw new Error('Expected timeout transition');
     expect(timeout.endedAt! - startedAt).toBeGreaterThanOrEqual(10000);
     expect(screen.queryByTestId('between-point-end-timeout')).not.toBeOnTheScreen();
     expect(screen.getByTestId('between-point-start-next')).toBeVisible();

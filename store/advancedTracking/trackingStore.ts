@@ -68,6 +68,7 @@ import {
 } from '@/lib/advancedTracking/trackingUtils';
 import {
   applyBetweenPointTimeout,
+  applyBetweenPointTimeoutCancel,
   applyBetweenPointTimeoutEnd,
   applyEarlyHalftime,
 } from '@/lib/advancedTracking/transitionWrites';
@@ -524,15 +525,13 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const now = Date.now();
           let transitionId!: string;
           set((state) => {
-            const undoEntry = writeLiveGame(state, now, (liveGame) =>
+            transitionId = writeLiveGame(state, now, (liveGame) =>
               applyBetweenPointTimeout(
                 liveGame,
                 { sideId: input.sideId, isFloater },
                 { at: now, newId: generateId },
               ),
             );
-            pushUndoEntry(state, undoEntry);
-            transitionId = undoEntry.transitionId;
           });
 
           return transitionId;
@@ -542,12 +541,21 @@ export const useAdvancedTrackingStore = create<AdvancedTrackingState>()(
           const timeout = getCurrentPoint(getCurrentGame(get()))?.transitionsAfter?.find(
             (transition) => transition.id === transitionId,
           );
-          if (timeout == null || timeout.transitionType !== 'timeout') return;
+          if (timeout == null) return;
 
           const now = Date.now();
           set((state) => {
             writeLiveGame(state, now, (liveGame) =>
               applyBetweenPointTimeoutEnd(liveGame, transitionId, now),
+            );
+          });
+        },
+
+        cancelBetweenPointTimeout: (transitionId) => {
+          const now = Date.now();
+          set((state) => {
+            writeLiveGame(state, now, (liveGame) =>
+              applyBetweenPointTimeoutCancel(liveGame, transitionId),
             );
           });
         },
