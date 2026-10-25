@@ -5,15 +5,11 @@ import { TrackerLineContinuationMenu } from '@/components/advancedTracking/Track
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useLiveRosterParticipants } from '@/hooks/advancedTracking/useLiveRosterParticipants';
+import { getActiveLineIds, getParticipantIdsUsedBySide } from '@/lib/advancedTracking/lineup';
 import { getLivePlayState } from '@/lib/advancedTracking/livePlayState';
-import {
-  getEffectiveLineParticipantIds,
-  getLineParticipantIdsBeforeSub,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import {
   getOtherSideId,
-  getParticipantIdsUsedBySide,
   getScrimmageLineSelectionGroups,
   hasInjurySubChanges,
   haveSameParticipantIds,
@@ -58,7 +54,7 @@ export default function TrackerInjurySubScreen() {
   const sideLabel = game.sides.find((side) => side.id === sideId)?.label ?? 'Side';
   const otherSideId = tracksBothSides ? selectedSideIds[1] : null;
   const otherSideLabel = game.sides.find((side) => side.id === otherSideId)?.label ?? 'other side';
-  const effectiveLine = draftLinesBySide[sideId] ?? getEffectiveLineParticipantIds(point, sideId);
+  const effectiveLine = draftLinesBySide[sideId] ?? getActiveLineIds(point, sideId);
   const otherSide = game.sides.find((side) => side.id !== sideId);
   const otherSideParticipantIds =
     otherSide == null ? [] : getParticipantIdsUsedBySide(point, otherSide.id);
@@ -77,15 +73,15 @@ export default function TrackerInjurySubScreen() {
 
   const getBaselineIds = (candidateSideId: string) => {
     if (!isEdit || existingStoppage == null) {
-      return getEffectiveLineParticipantIds(point, candidateSideId);
+      return getActiveLineIds(point, candidateSideId);
     }
-    return getLineParticipantIdsBeforeSub(point, candidateSideId, existingStoppage.id);
+    return getActiveLineIds(point, candidateSideId, existingStoppage.id);
   };
 
   const buildChanges = (linesBySide: Record<string, string[]>): InjurySubChange[] =>
     game.sides.map((side) => {
       const baselineIds = getBaselineIds(side.id);
-      const selectedIds = linesBySide[side.id] ?? getEffectiveLineParticipantIds(point, side.id);
+      const selectedIds = linesBySide[side.id] ?? getActiveLineIds(point, side.id);
       return {
         sideId: side.id,
         inIds: selectedIds.filter((id) => !baselineIds.includes(id)),
@@ -142,8 +138,7 @@ export default function TrackerInjurySubScreen() {
     router.back();
   };
 
-  const firstSideLine =
-    draftLinesBySide[firstSideId] ?? getEffectiveLineParticipantIds(point, firstSideId);
+  const firstSideLine = draftLinesBySide[firstSideId] ?? getActiveLineIds(point, firstSideId);
   const firstSideHasChanges = !haveSameParticipantIds(firstSideLine, getBaselineIds(firstSideId));
   const requireChanges = !tracksBothSides || (sideIndex > 0 && !isEdit && !firstSideHasChanges);
   const confirmLabel = tracksBothSides && sideIndex === 0 ? 'CONTINUE' : 'CONFIRM SUB';

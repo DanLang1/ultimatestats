@@ -1,14 +1,12 @@
 import {
   getCompletedGameClockPauseMs,
-  getEffectiveLineParticipantIds,
   getGameClockElapsedMs,
-  getLineParticipantIdsBeforeSub,
   getLastTurnoverEvent,
   getGoalInfo,
   getPassChainEvents,
   getSideTimeoutState,
 } from '../trackingDisplayHelpers';
-import type { AdvancedTrackedGame, PointPossession, PointSub, TrackedPoint } from '../types';
+import type { AdvancedTrackedGame, PointPossession, TrackedPoint } from '../types';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -387,135 +385,6 @@ describe('getPassChainEvents', () => {
     expect(truncated).toBe(false);
     expect(events.map((e) => e.name)).toEqual(['August', 'Meves']);
     expect(events.map((e) => e.id)).toEqual(['a3', 'a4']);
-  });
-});
-
-describe('getEffectiveLineParticipantIds', () => {
-  const makePoint = (participantIds: string[], subs?: TrackedPoint['subs']): TrackedPoint => ({
-    id: 'pt1',
-    lines: [{ sideId: HOME, participantIds }],
-    subs,
-    possessions: [],
-  });
-
-  const ids = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
-
-  it('returns start line when no subs', () => {
-    const point = makePoint(ids);
-    expect(getEffectiveLineParticipantIds(point, HOME)).toEqual(ids);
-  });
-
-  it('applies a single out/in swap', () => {
-    const sub: PointSub = {
-      id: 's1',
-      sideId: HOME,
-      type: 'injury',
-      outIds: ['p7'],
-      inIds: ['p8'],
-      stoppageActionId: 'stop1',
-    };
-    const point = makePoint(ids, [sub]);
-    const result = getEffectiveLineParticipantIds(point, HOME);
-    expect(result).not.toContain('p7');
-    expect(result).toContain('p8');
-    expect(result).toHaveLength(7);
-  });
-
-  it('applies two subs in sequence', () => {
-    const subs: PointSub[] = [
-      {
-        id: 's1',
-        sideId: HOME,
-        type: 'injury',
-        outIds: ['p7'],
-        inIds: ['p8'],
-        stoppageActionId: 'stop1',
-      },
-      {
-        id: 's2',
-        sideId: HOME,
-        type: 'injury',
-        outIds: ['p6'],
-        inIds: ['p9'],
-        stoppageActionId: 'stop2',
-      },
-    ];
-    const point = makePoint(ids, subs);
-    const result = getEffectiveLineParticipantIds(point, HOME);
-    expect(result).not.toContain('p7');
-    expect(result).not.toContain('p6');
-    expect(result).toContain('p8');
-    expect(result).toContain('p9');
-    expect(result).toHaveLength(7);
-  });
-
-  it('handles player subbed out then back in', () => {
-    const subs: PointSub[] = [
-      {
-        id: 's1',
-        sideId: HOME,
-        type: 'injury',
-        outIds: ['p7'],
-        inIds: ['p8'],
-        stoppageActionId: 'stop1',
-      },
-      {
-        id: 's2',
-        sideId: HOME,
-        type: 'injury',
-        outIds: ['p8'],
-        inIds: ['p7'],
-        stoppageActionId: 'stop2',
-      },
-    ];
-    const point = makePoint(ids, subs);
-    const result = getEffectiveLineParticipantIds(point, HOME);
-    expect(result).toContain('p7');
-    expect(result).not.toContain('p8');
-  });
-
-  it('returns the line before a later sub for edit diffs', () => {
-    const initialLine = ['bob', 'jerry', 'mike', 'john'];
-    const subs: PointSub[] = [
-      {
-        id: 's1',
-        sideId: HOME,
-        type: 'injury',
-        outIds: ['bob'],
-        inIds: ['joey'],
-        stoppageActionId: 'stop1',
-      },
-      {
-        id: 's2',
-        sideId: HOME,
-        type: 'injury',
-        outIds: ['joey'],
-        inIds: ['chuck'],
-        stoppageActionId: 'stop2',
-      },
-    ];
-    const point = makePoint(initialLine, subs);
-
-    expect(getEffectiveLineParticipantIds(point, HOME)).toEqual(['jerry', 'mike', 'john', 'chuck']);
-    expect(getLineParticipantIdsBeforeSub(point, HOME, 'stop2')).toEqual([
-      'jerry',
-      'mike',
-      'john',
-      'joey',
-    ]);
-  });
-
-  it('ignores subs for the other side', () => {
-    const sub: PointSub = {
-      id: 's1',
-      sideId: AWAY,
-      type: 'injury',
-      outIds: ['p1'],
-      inIds: ['p8'],
-      stoppageActionId: 'stop1',
-    };
-    const point = makePoint(ids, [sub]);
-    expect(getEffectiveLineParticipantIds(point, HOME)).toEqual(ids);
   });
 });
 

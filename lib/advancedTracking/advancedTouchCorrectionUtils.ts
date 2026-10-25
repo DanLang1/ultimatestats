@@ -1,3 +1,4 @@
+import { getActiveLineIds } from './lineup';
 import {
   getPossessionEnd,
   getOtherSideId,
@@ -13,50 +14,12 @@ import {
   type Participant,
   type PlayerRef,
   type PointPossession,
-  type PointSub,
   type PossessionAction,
   type PullAction,
   type ThrowAction,
   type ThrowResult,
   type TrackedPoint,
 } from './types';
-
-function applySubToEffectiveLines(effectiveLines: Map<string, Set<string>>, sub: PointSub) {
-  const line = effectiveLines.get(sub.sideId) ?? new Set<string>();
-  for (const participantId of sub.outIds) line.delete(participantId);
-  for (const participantId of sub.inIds) line.add(participantId);
-  effectiveLines.set(sub.sideId, line);
-}
-
-/** Returns the participants active for a side immediately before the located action. */
-function getActiveParticipantIdsAtAction(
-  point: TrackedPoint,
-  actionId: string,
-  sideId: string,
-): string[] {
-  const effectiveLines = new Map(
-    point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
-  );
-  const subsByStoppage = new Map<string, PointSub[]>();
-  for (const sub of point.subs ?? []) {
-    const stoppageSubs = subsByStoppage.get(sub.stoppageActionId) ?? [];
-    stoppageSubs.push(sub);
-    subsByStoppage.set(sub.stoppageActionId, stoppageSubs);
-  }
-
-  for (const possession of point.possessions) {
-    for (const action of possession.actions) {
-      if (action.id === actionId) return [...(effectiveLines.get(sideId) ?? [])];
-      if (action.kind === 'stoppage') {
-        for (const sub of subsByStoppage.get(action.id) ?? []) {
-          applySubToEffectiveLines(effectiveLines, sub);
-        }
-      }
-    }
-  }
-
-  throw new Error(`Action "${actionId}" was not found while resolving its active lineup.`);
-}
 
 /** A stable location for a correction in the persisted point/possession/action model. */
 export interface AdvancedTouchLocator {
@@ -186,7 +149,7 @@ function getParticipantsForActionIds(
   if (actionIds.length === 0) return [];
   let eligibleIds: Set<string> | null = null;
   for (const actionId of actionIds) {
-    const active = new Set(getActiveParticipantIdsAtAction(point, actionId, sideId));
+    const active = new Set(getActiveLineIds(point, sideId, actionId));
     if (eligibleIds == null) {
       eligibleIds = active;
       continue;

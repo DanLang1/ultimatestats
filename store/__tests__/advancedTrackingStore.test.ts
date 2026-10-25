@@ -2,16 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { captureException } from '@sentry/react-native';
 
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import {
   loadAdvancedGameHistorySnapshot,
   upsertAdvancedGame,
   upsertAdvancedLiveSnapshot,
 } from '@/lib/advancedTracking/storage';
 import { deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
-import {
-  getEffectiveLineParticipantIds,
-  getSideTimeoutState,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { getSideTimeoutState } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import {
   getActiveAdvancedGame,
   getCurrentPoint,
@@ -1374,7 +1372,7 @@ describe('advancedTrackingStore', () => {
     const point = getCurrentPoint(getCurrentGame());
     expect(point?.possessions).toHaveLength(1);
     expect(point?.subs).toBeUndefined();
-    expect(getEffectiveLineParticipantIds(point!, homeSideId)).toEqual([august.participantId]);
+    expect(getActiveLineIds(point!, homeSideId)).toEqual([august.participantId]);
   });
 
   it('refuses to mark a pull as dropped a second time', () => {
@@ -2783,7 +2781,7 @@ describe('advancedTrackingStore', () => {
       firstStoppageId,
       secondStoppageId,
     ]);
-    expect(getEffectiveLineParticipantIds(point!, homeSideId)).toEqual([august.participantId]);
+    expect(getActiveLineIds(point!, homeSideId)).toEqual([august.participantId]);
   });
 
   it('recordInjurySubs rejects duplicate side changes for one stoppage', () => {
@@ -2917,8 +2915,8 @@ describe('advancedTrackingStore', () => {
     const point = getCurrentPoint(getCurrentGame());
     expect(point?.subs).toHaveLength(2);
     expect(point?.subs?.every((sub) => sub.stoppageActionId === stoppageId)).toBe(true);
-    expect(getEffectiveLineParticipantIds(point!, homeSideId)).toContain(lightBenchId);
-    expect(getEffectiveLineParticipantIds(point!, awaySideId)).toContain(darkBenchId);
+    expect(getActiveLineIds(point!, homeSideId)).toContain(lightBenchId);
+    expect(getActiveLineIds(point!, awaySideId)).toContain(darkBenchId);
   });
 
   it('rejects moving a participant to the other side after a point starts', () => {
@@ -3549,7 +3547,7 @@ describe('advancedTrackingStore', () => {
 
       const point = getCurrentPoint(getCurrentGame());
       expect(point?.subs).toHaveLength(1);
-      expect(getEffectiveLineParticipantIds(point!, homeSideId)).toContain(lightCorrectionId);
+      expect(getActiveLineIds(point!, homeSideId)).toContain(lightCorrectionId);
     });
 
     it('preserves an injury sub when its incoming player records an action', () => {
@@ -3587,7 +3585,7 @@ describe('advancedTrackingStore', () => {
 
       const point = getCurrentPoint(getCurrentGame());
       expect(point?.subs).toHaveLength(1);
-      expect(getEffectiveLineParticipantIds(point!, homeSideId)).toContain(lightBenchId);
+      expect(getActiveLineIds(point!, homeSideId)).toContain(lightBenchId);
     });
 
     it('rejects removing a sub when that would orphan an action participant', () => {
@@ -3670,9 +3668,7 @@ describe('advancedTrackingStore', () => {
       expect(useAdvancedTrackingStore.getState().undoStack).toEqual(undoStackBefore);
       const persistedGame =
         useSavedAdvancedGamesStore.getState().gamesById['dual-tracked-scrimmage'];
-      expect(getEffectiveLineParticipantIds(persistedGame.points[0], homeSideId)).toContain(
-        lightBenchId,
-      );
+      expect(getActiveLineIds(persistedGame.points[0], homeSideId)).toContain(lightBenchId);
     });
   });
 });

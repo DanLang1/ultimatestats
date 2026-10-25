@@ -14,6 +14,7 @@ import {
   type AttributionType,
   type PointState,
 } from './analyticsTypes';
+import { getParticipantIdsUsedBySide } from './lineup';
 import { getActivePlayElapsedMsAt } from './pointClock';
 import { getSideTrackingModes } from './trackingModeUtils';
 import {
@@ -306,8 +307,6 @@ function deriveScoringSideId(point: TrackedPoint, ctx: GameBuildContext): string
  * Sub-out players retain credit via the starting lines; sub-ins are merged in additively.
  */
 function buildLinesBySide(point: TrackedPoint, ctx: GameBuildContext): Record<string, string[]> {
-  const linesBySide: Record<string, string[]> = {};
-
   for (const line of point.lines) {
     assertSideId(
       line.sideId,
@@ -321,7 +320,6 @@ function buildLinesBySide(point: TrackedPoint, ctx: GameBuildContext): Record<st
         `buildAnalyticsGame requires point "${point.id}" line participantId "${participantId}" to match a game participant`,
       );
     }
-    linesBySide[line.sideId] = [...line.participantIds];
   }
 
   for (const sub of point.subs ?? []) {
@@ -337,17 +335,15 @@ function buildLinesBySide(point: TrackedPoint, ctx: GameBuildContext): Record<st
         `buildAnalyticsGame requires point "${point.id}" sub participantId "${participantId}" to match a game participant`,
       );
     }
-    if (!linesBySide[sub.sideId]) linesBySide[sub.sideId] = [];
-    const existing = new Set(linesBySide[sub.sideId]);
-    for (const id of sub.inIds) {
-      if (!existing.has(id)) {
-        linesBySide[sub.sideId].push(id);
-        existing.add(id);
-      }
-    }
   }
 
-  return linesBySide;
+  const sideIds = new Set([
+    ...point.lines.map((line) => line.sideId),
+    ...(point.subs ?? []).map((sub) => sub.sideId),
+  ]);
+  return Object.fromEntries(
+    [...sideIds].map((sideId) => [sideId, getParticipantIdsUsedBySide(point, sideId)]),
+  );
 }
 
 function derivePointState(

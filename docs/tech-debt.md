@@ -110,17 +110,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `lib/advancedTracking/advancedTurnoverCorrectionUtils.ts`
   `lib/advancedTracking/advancedPointLineCorrectionUtils.ts`
 
-## P3 - Consolidate Lineup Rules
-
-- Lineup rules ("apply a sub": remove `outIds`, add `inIds`; "base line plus sub-ins") are
-  duplicated across `trackingUtils.ts`, `trackingDisplayHelpers.ts`,
-  `advancedTouchCorrectionUtils.ts`, `advancedPointLineCorrectionUtils.ts`, and
-  `buildAnalyticsGame.ts`.
-- Cleanup: extract `lineup.ts` (effective line at an action, before a sub, by side).
-- References:
-  `lib/advancedTracking/trackingDisplayHelpers.ts`
-  `lib/advancedTracking/trackingUtils.ts`
-
 ## P3 - Between-Point Stats Duplicate Team Stats
 
 - `components/advancedTracking/betweenPointUtils.ts` is domain code in `components/`.

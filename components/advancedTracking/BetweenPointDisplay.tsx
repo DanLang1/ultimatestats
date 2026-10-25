@@ -6,6 +6,7 @@ import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useCountdownSeconds } from '@/hooks/useTimer';
+import { getParticipantIdsUsedBySide } from '@/lib/advancedTracking/lineup';
 import { getActiveBetweenPointTimeout } from '@/lib/advancedTracking/livePlayState';
 import { getGoalInfo } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
@@ -549,21 +550,7 @@ function getLastPointPlayers(
 ): Participant[] {
   if (point == null) return [];
 
-  const line = point.lines.find((pointLine) => pointLine.sideId === focusSideId);
-  if (line == null) return [];
-
-  const participantIds = new Set(line.participantIds);
-  const focusSideSubs = point.subs?.filter((sub) => sub.sideId === focusSideId) ?? [];
-  for (const sub of focusSideSubs) {
-    for (const inId of sub.inIds) {
-      participantIds.add(inId);
-    }
-    for (const outId of sub.outIds) {
-      participantIds.add(outId);
-    }
-  }
-
-  return Array.from(participantIds)
+  return getParticipantIdsUsedBySide(point, focusSideId)
     .map((participantId) => participants.find((participant) => participant.id === participantId))
     .filter((participant): participant is Participant => participant != null);
 }

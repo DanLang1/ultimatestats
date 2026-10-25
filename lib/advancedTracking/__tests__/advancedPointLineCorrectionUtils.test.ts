@@ -5,7 +5,7 @@ import {
   reconcileAdvancedLineCorrectionDraft,
   type CorrectAdvancedPointActiveLinesInput,
 } from '../advancedPointLineCorrectionUtils';
-import { getEffectiveLineParticipantIds } from '../trackingUtils';
+import { getActiveLineIds } from '../lineup';
 import type { AdvancedTrackedGame } from '../types';
 
 const HOME = 'home';
@@ -100,7 +100,7 @@ describe('advanced active-line corrections', () => {
     expect(new Set(correctedPoint.lines[0].participantIds)).toEqual(
       new Set(['thrower', 'injured-out', 'scorer', 'replacement', 'home-5', 'home-6', 'home-7']),
     );
-    expect(getEffectiveLineParticipantIds(correctedPoint, HOME)).toEqual(desiredActiveLine);
+    expect(getActiveLineIds(correctedPoint, HOME)).toEqual(desiredActiveLine);
     expect(correctedPoint.possessions[0].actions[1]).toMatchObject({
       id: 'goal-1',
       thrower: participantRef('thrower'),
@@ -144,7 +144,7 @@ describe('advanced active-line corrections', () => {
     const corrected = correctAdvancedPointActiveLines(game, correction(desiredActiveLine));
 
     expect(corrected.points[0].subs).toEqual(game.points[0].subs);
-    expect(getEffectiveLineParticipantIds(corrected.points[0], HOME)).toEqual(desiredActiveLine);
+    expect(getActiveLineIds(corrected.points[0], HOME)).toEqual(desiredActiveLine);
     expect(corrected.points[0].lines[0].participantIds).toContain('injured-out');
     expect(corrected.points[0].lines[0].participantIds).not.toContain('injury-in');
   });

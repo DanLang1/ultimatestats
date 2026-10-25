@@ -13,7 +13,8 @@ import type {
   ThrowAnalyticsAction,
 } from './analyticsTypes';
 import { buildAnalyticsGame, UNKNOWN_PARTICIPANT_ID } from './buildAnalyticsGame';
-import { getEffectiveLineParticipantIds, isContinuingThrow } from './trackingUtils';
+import { getActiveLineIds } from './lineup';
+import { isContinuingThrow } from './trackingUtils';
 import type {
   AdvancedTrackedGame,
   BetweenPointTransition,
@@ -136,7 +137,7 @@ function buildLinesBySide(
   const result: Record<string, AdvancedTimelineLinePlayer[]> = {};
 
   for (const [sideId, participantIds] of Object.entries(analyticsPoint.linesBySide)) {
-    const activeParticipantIds = new Set(getEffectiveLineParticipantIds(rawPoint, sideId));
+    const activeParticipantIds = new Set(getActiveLineIds(rawPoint, sideId));
 
     result[sideId] = participantIds.map((pid) => ({
       participantId: pid,

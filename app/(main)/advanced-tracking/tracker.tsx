@@ -32,9 +32,9 @@ import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers'
 import { useTrackerSession } from '@/hooks/advancedTracking/useTrackerSession';
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import { getActiveBetweenPointTimeout } from '@/lib/advancedTracking/livePlayState';
 import { getPointTimer } from '@/lib/advancedTracking/pointClock';
-import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';
@@ -71,9 +71,7 @@ export default function AdvancedTrackerScreen() {
   // Hooks run before the no-game redirect below, so they read the nullable session directly.
   const session = useTrackerSession(passModifier);
   const participants = useLiveRosterParticipants(session?.game.participants ?? []);
-  const activeIds = session?.point
-    ? getEffectiveLineParticipantIds(session.point, session.displaySideId)
-    : [];
+  const activeIds = session?.point ? getActiveLineIds(session.point, session.displaySideId) : [];
   const activeParticipants = participants.filter((p) => activeIds.includes(p.id));
   const activeVoiceParticipants = buildVoiceParticipantContexts(activeParticipants);
 

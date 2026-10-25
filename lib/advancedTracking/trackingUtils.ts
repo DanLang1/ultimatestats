@@ -5,6 +5,7 @@ import { assertNever, hasItems } from '@/lib/utils';
 
 import type { AnalyticsAction } from './analyticsTypes';
 import { getCapThresholdMinutes, type CapTimingSettings } from './capUtils';
+import { applySub, getParticipantIdsUsedBySide, replayActionLineups } from './lineup';
 import { getParticipantName } from './participantUtils';
 import type { AdvancedTrackingUndoEntry } from './persistenceTypes';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
@@ -578,15 +579,6 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
   }
 }
 
-function applySubToLine(currentLine: Set<string>, sub: PointSub) {
-  for (const participantId of sub.outIds) {
-    currentLine.delete(participantId);
-  }
-  for (const participantId of sub.inIds) {
-    currentLine.add(participantId);
-  }
-}
-
 export function haveSameParticipantIds(firstIds: string[], secondIds: string[]): boolean {
   if (firstIds.length !== secondIds.length) return false;
   const firstIdSet = new Set(firstIds);
@@ -634,38 +626,17 @@ export function getPointActionParticipantIds(point: TrackedPoint): string[] {
 }
 
 function getActionParticipantSides(point: TrackedPoint): Map<string, Map<string, string>> {
-  const effectiveLines = new Map(
-    point.lines.map((line) => [line.sideId, new Set(line.participantIds)]),
-  );
-  const subsByStoppage = new Map<string, PointSub[]>();
-  for (const sub of point.subs ?? []) {
-    const stoppageSubs = subsByStoppage.get(sub.stoppageActionId) ?? [];
-    stoppageSubs.push(sub);
-    subsByStoppage.set(sub.stoppageActionId, stoppageSubs);
-  }
-
   const actionParticipantSides = new Map<string, Map<string, string>>();
-  for (const possession of point.possessions) {
-    for (const action of possession.actions) {
-      const participantSides = new Map<string, string>();
-      for (const participantId of getActionParticipantIds(action)) {
-        const activeSide = [...effectiveLines].find(([, ids]) => ids.has(participantId))?.[0];
-        if (activeSide != null) {
-          participantSides.set(participantId, activeSide);
-        }
-      }
-      actionParticipantSides.set(action.id, participantSides);
-
-      if (action.kind === 'stoppage') {
-        for (const sub of subsByStoppage.get(action.id) ?? []) {
-          const currentLine = effectiveLines.get(sub.sideId) ?? new Set<string>();
-          applySubToLine(currentLine, sub);
-          effectiveLines.set(sub.sideId, currentLine);
-        }
+  replayActionLineups(point, (action, linesBySide) => {
+    const participantSides = new Map<string, string>();
+    for (const participantId of getActionParticipantIds(action)) {
+      const activeSide = [...linesBySide].find(([, ids]) => ids.has(participantId))?.[0];
+      if (activeSide != null) {
+        participantSides.set(participantId, activeSide);
       }
     }
-  }
-
+    actionParticipantSides.set(action.id, participantSides);
+  });
   return actionParticipantSides;
 }
 
@@ -691,31 +662,6 @@ export function assertPointActionParticipantsPreserved(
       );
     }
   }
-}
-
-export function getEffectiveLineParticipantIds(point: TrackedPoint, sideId: string): string[] {
-  const currentLine = new Set(
-    point.lines.find((line) => line.sideId === sideId)?.participantIds ?? [],
-  );
-  for (const sub of point.subs ?? []) {
-    if (sub.sideId === sideId) {
-      applySubToLine(currentLine, sub);
-    }
-  }
-  return [...currentLine];
-}
-
-export function getParticipantIdsUsedBySide(point: TrackedPoint, sideId: string): string[] {
-  const participantIds = new Set(
-    point.lines.find((line) => line.sideId === sideId)?.participantIds ?? [],
-  );
-  for (const sub of point.subs ?? []) {
-    if (sub.sideId !== sideId) continue;
-    for (const participantId of [...sub.inIds, ...sub.outIds]) {
-      participantIds.add(participantId);
-    }
-  }
-  return [...participantIds];
 }
 
 /**
@@ -876,9 +822,7 @@ export function assertValidPointLineHistory(game: AdvancedTrackedGame, point: Tr
         }
       }
 
-      const nextLine = nextLines.get(sub.sideId) ?? new Set<string>();
-      applySubToLine(nextLine, sub);
-      nextLines.set(sub.sideId, nextLine);
+      nextLines.set(sub.sideId, new Set(applySub(nextLines.get(sub.sideId) ?? [], sub)));
     }
 
     assertFullyTrackedEffectiveLines(game, nextLines);

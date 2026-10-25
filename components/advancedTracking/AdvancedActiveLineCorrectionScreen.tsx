@@ -10,11 +10,10 @@ import {
   reconcileAdvancedLineCorrectionDraft,
   type CorrectAdvancedPointActiveLinesInput,
 } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
+import { getActiveLineIds, getParticipantIdsUsedBySide } from '@/lib/advancedTracking/lineup';
 import { getParticipantName } from '@/lib/advancedTracking/participantUtils';
 import { getFullyTrackedSideIds } from '@/lib/advancedTracking/trackingModeUtils';
 import {
-  getEffectiveLineParticipantIds,
-  getParticipantIdsUsedBySide,
   getScrimmageLineSelectionGroups,
   haveSameParticipantIds,
 } from '@/lib/advancedTracking/trackingUtils';
@@ -74,7 +73,7 @@ export function AdvancedActiveLineCorrectionScreen({
   const activeLinesBySide = Object.fromEntries(
     selectedSideIds.map((selectedSideId) => [
       selectedSideId,
-      getEffectiveLineParticipantIds(point, selectedSideId),
+      getActiveLineIds(point, selectedSideId),
     ]),
   );
   const selectedIds = draftLinesBySide[sideId] ?? activeLinesBySide[sideId];

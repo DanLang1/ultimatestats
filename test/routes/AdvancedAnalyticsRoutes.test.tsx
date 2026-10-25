@@ -6,8 +6,8 @@ import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking
 import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/player-stats';
 import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/timeline/[gameId]';
 import TimelineEditLineScreen from '@/app/(main)/advanced-tracking/timeline-edit-line';
+import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
-import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -605,11 +605,11 @@ describe('advanced analytics routes', () => {
 
     await waitFor(() => {
       const correctedPoint = useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0];
-      expect(getEffectiveLineParticipantIds(correctedPoint, 'windchill')).toContain('irene');
+      expect(getActiveLineIds(correctedPoint, 'windchill')).toContain('irene');
     });
     const correctedPoint = useSavedAdvancedGamesStore.getState().gamesById[game.id].points[0];
     expect(correctedPoint.subs).toEqual(game.points[0].subs);
-    expect(getEffectiveLineParticipantIds(correctedPoint, 'windchill')).toContain('hana');
+    expect(getActiveLineIds(correctedPoint, 'windchill')).toContain('hana');
   });
 
   it('allows correcting the final active line of a terminated unfinished point', async () => {

@@ -3,7 +3,6 @@ import { hasItems } from '@/lib/utils';
 import { getActiveGameClockPause, getPostInjuryPickupState } from './livePlayState';
 import {
   isDroppedPull,
-  getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
   getLastPlayAction,
   getPossessionEnd,
   isDefenseScoringThrow,
@@ -418,38 +417,4 @@ function getTurnoverResponsibleName({
   }
   if (result === 'block') return null;
   return getRefName(thrower, participants);
-}
-
-/**
- * Calculates the current 'active' line for a side by applying all subs in sequence.
- */
-export function getEffectiveLineParticipantIds(point: TrackedPoint, sideId: string): string[] {
-  return deriveEffectiveLineParticipantIds(point, sideId);
-}
-
-/**
- * Calculates the active line before applying the sub tied to the given stoppage.
- */
-export function getLineParticipantIdsBeforeSub(
-  point: TrackedPoint,
-  sideId: string,
-  stoppageActionId: string,
-): string[] {
-  const baseLine = point.lines.find((l) => l.sideId === sideId)?.participantIds ?? [];
-  const sideSubs = point.subs?.filter((s) => s.sideId === sideId) ?? [];
-
-  const currentLine = new Set(baseLine);
-  for (const sub of sideSubs) {
-    if (sub.stoppageActionId === stoppageActionId) {
-      break;
-    }
-    for (const outId of sub.outIds) {
-      currentLine.delete(outId);
-    }
-    for (const inId of sub.inIds) {
-      currentLine.add(inId);
-    }
-  }
-
-  return Array.from(currentLine);
 }

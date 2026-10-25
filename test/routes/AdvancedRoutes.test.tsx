@@ -10,8 +10,8 @@ import TrackerEditLineScreen from '@/app/(main)/advanced-tracking/tracker-edit-l
 import TrackerGameCompleteScreen from '@/app/(main)/advanced-tracking/tracker-game-complete';
 import TrackerInjurySubScreen from '@/app/(main)/advanced-tracking/tracker-injury-sub';
 import TrackerLineSelectScreen from '@/app/(main)/advanced-tracking/tracker-line-select';
+import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import * as advancedStorage from '@/lib/advancedTracking/storage';
-import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -1531,12 +1531,12 @@ describe('advanced tracking routes', () => {
     await user.press(screen.getByTestId('line-select-confirm'));
 
     const point = useAdvancedTrackingStore.getState().currentGame?.points[0];
-    expect(getEffectiveLineParticipantIds(point!, 'light')).toEqual([
+    expect(getActiveLineIds(point!, 'light')).toEqual([
       participants[0].id,
       ...participants.slice(2, 7).map((participant) => participant.id),
       participants[8].id,
     ]);
-    expect(getEffectiveLineParticipantIds(point!, 'dark')).toEqual([
+    expect(getActiveLineIds(point!, 'dark')).toEqual([
       participants[7].id,
       ...participants.slice(9, 14).map((participant) => participant.id),
       participants[1].id,

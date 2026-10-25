@@ -1,10 +1,9 @@
+import { getActiveLineIds, getParticipantIdsUsedBySide, reverseSub } from './lineup';
 import { getParticipantName } from './participantUtils';
 import { getFullyTrackedSideIds } from './trackingModeUtils';
 import {
   assertPointActionParticipantsPreserved,
   assertValidPointLineHistory,
-  getEffectiveLineParticipantIds,
-  getParticipantIdsUsedBySide,
   getPointActionParticipantIds,
   hasPointEnded,
 } from './trackingUtils';
@@ -55,7 +54,7 @@ function assertValidActiveLines(
 
   const participantIds = new Set(game.participants.map((participant) => participant.id));
   for (const line of activeLines) {
-    const currentActiveParticipantCount = getEffectiveLineParticipantIds(point, line.sideId).length;
+    const currentActiveParticipantCount = getActiveLineIds(point, line.sideId).length;
     if (line.participantIds.length !== currentActiveParticipantCount) {
       throw new Error('A lineup correction must preserve the number of active participants.');
     }
@@ -138,15 +137,7 @@ function reverseInjurySub(
     );
   }
 
-  const incomingIdSet = new Set(sub.inIds);
-  const firstIncomingIndex = activeParticipantIds.findIndex((participantId) =>
-    incomingIdSet.has(participantId),
-  );
-  const previousParticipantIds = activeParticipantIds.filter(
-    (participantId) => !incomingIdSet.has(participantId),
-  );
-  previousParticipantIds.splice(firstIncomingIndex, 0, ...sub.outIds);
-  return previousParticipantIds;
+  return reverseSub(activeParticipantIds, sub);
 }
 
 function deriveStartingLineFromActiveLine(
@@ -207,7 +198,7 @@ export function getAdvancedLineCorrectionRestrictions(
   const restrictions = new Map<string, AdvancedLineCorrectionRestriction>();
   const actionParticipantIds = new Set(getPointActionParticipantIds(point));
   const activeParticipantIdsBySide = new Map(
-    game.sides.map((side) => [side.id, new Set(getEffectiveLineParticipantIds(point, side.id))]),
+    game.sides.map((side) => [side.id, new Set(getActiveLineIds(point, side.id))]),
   );
   const usedParticipantIdsBySide = new Map(
     game.sides.map((side) => [side.id, new Set(getParticipantIdsUsedBySide(point, side.id))]),
