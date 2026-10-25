@@ -32,11 +32,9 @@ import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers'
 import { useTrackerSession } from '@/hooks/advancedTracking/useTrackerSession';
 import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatCommands';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { getActiveBetweenPointTimeout } from '@/lib/advancedTracking/livePlayState';
 import { getPointTimer } from '@/lib/advancedTracking/pointClock';
-import {
-  getActiveBetweenPointTimeout,
-  getEffectiveLineParticipantIds,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { getEffectiveLineParticipantIds } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
 import { buildVoiceParticipantContexts } from '@/lib/advancedTracking/voiceContext';

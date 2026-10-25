@@ -1,57 +1,28 @@
 import { hasItems } from '@/lib/utils';
 
-import { areBothSidesFullyTracked } from './trackingModeUtils';
+import { getActiveGameClockPause, getPostInjuryPickupState } from './livePlayState';
 import {
   isDroppedPull,
   getEffectiveLineParticipantIds as deriveEffectiveLineParticipantIds,
   getLastPlayAction,
-  getOtherSideId,
   getPossessionEnd,
-  hasPointEnded,
   isDefenseScoringThrow,
   isPossessionLosingThrow,
-  isPossessionOver,
   isTurnoverThrow,
 } from './trackingUtils';
 import {
   AdvancedTrackedGame,
-  BetweenPointTransition,
-  GameClockPause,
   Participant,
   PlayerRef,
   PointPossession,
-  PointSub,
   PossessionAction,
   PossessionLosingThrowResult,
-  StoppageAction,
   THROW_RESULT_SPECS,
   ThrowDetails,
   ThrowResult,
   getEligibleThrowTypes,
   TrackedPoint,
 } from './types';
-
-export interface ActiveBetweenPointTimeout {
-  point: TrackedPoint;
-  transition: BetweenPointTransition;
-}
-
-export function getActiveBetweenPointTimeout(
-  game: AdvancedTrackedGame | null,
-): ActiveBetweenPointTimeout | null {
-  if (game == null) return null;
-
-  const currentPoint = game.points.at(-1) ?? null;
-  if (currentPoint == null || !hasPointEnded(currentPoint)) return null;
-
-  const latestTransition = currentPoint.transitionsAfter?.at(-1);
-  if (latestTransition == null || latestTransition.endedAt != null) return null;
-
-  return {
-    point: currentPoint,
-    transition: latestTransition,
-  };
-}
 
 export interface GoalInfo {
   /** True when the focus team scored (including callahan). */
@@ -132,119 +103,6 @@ export function getLatestThrowDetailsTarget(
     result: action.result,
     details: action.details,
   };
-}
-
-/** Returns the side ID that currently has (or will next pick up) the disc. */
-export function getActiveSideId(
-  possession: PointPossession | null,
-  game: AdvancedTrackedGame,
-): string {
-  if (possession == null) {
-    return game.focusSideId;
-  }
-  return isPossessionOver(possession) ? getOtherSideId(game, possession.sideId) : possession.sideId;
-}
-
-/**
- * Returns the side whose live tracker controls and last-action context should be displayed.
- * In dual-side tracking, possession changes immediately after a turnover but remains with the
- * scoring side after a goal so the completed-point card keeps the correct perspective.
- */
-export function getTrackerDisplaySideId(
-  game: AdvancedTrackedGame,
-  possession: PointPossession | null,
-  point: TrackedPoint | null,
-): string {
-  const activeSideId = getActiveSideId(possession, game);
-  if (!areBothSidesFullyTracked(game)) return game.focusSideId;
-  if (hasPointEnded(point)) return possession?.sideId ?? activeSideId;
-  return activeSideId;
-}
-
-/** Returns the PlayerRef of the player currently holding the disc, if it's our possession. */
-export function getDiscHolderRef(
-  possession: PointPossession | null,
-  focusSideId: string,
-): PlayerRef | null {
-  if (!possession || isPossessionOver(possession) || possession.sideId !== focusSideId) {
-    return null;
-  }
-  return getDiscHolderRefFromActions(possession.actions);
-}
-
-function getDiscHolderRefFromActions(actions: PossessionAction[]): PlayerRef | null {
-  for (let i = actions.length - 1; i >= 0; i--) {
-    const action = actions[i];
-    if (action.kind === 'disc_pickup') {
-      return action.player;
-    } else if (action.kind === 'throw' && action.toPlayer) {
-      return action.toPlayer;
-    }
-  }
-  return null;
-}
-
-function getPostInjuryPickupState(
-  possession: PointPossession,
-  point: TrackedPoint | null | undefined,
-): { shouldPromptForPickup: boolean; pickupIndex: number } | null {
-  // Injury stoppages can change the player restarting with a dead disc. Timeouts pause play
-  // without changing the holder, so they intentionally do not reset holder/pass-chain state.
-  const injuryIndex = possession.actions.findLastIndex(
-    (action) =>
-      action.kind === 'stoppage' && action.reason === 'injury' && action.resumedAt != null,
-  );
-  if (injuryIndex === -1) return null;
-
-  const pickupIndex = possession.actions.findIndex(
-    (action, index) => index > injuryIndex && action.kind === 'disc_pickup',
-  );
-  if (pickupIndex !== -1) {
-    return { shouldPromptForPickup: false, pickupIndex };
-  }
-
-  const injuryAction = possession.actions[injuryIndex];
-  const holderBeforeInjury = getDiscHolderRefFromActions(possession.actions.slice(0, injuryIndex));
-  if (holderBeforeInjury?.refType !== 'participant') {
-    return { shouldPromptForPickup: true, pickupIndex: -1 };
-  }
-
-  const subs = getSubsForStoppage(point ?? null, injuryAction.id);
-  return {
-    shouldPromptForPickup: subs.some((sub) =>
-      sub.outIds.includes(holderBeforeInjury.participantId),
-    ),
-    pickupIndex: -1,
-  };
-}
-
-/**
- * Returns the disc holder ref, accounting for injury-just-resumed state.
- * After injury, the holder is forced to null only when the holder is unknown or subbed out.
- */
-export function getSafeDiscHolderRef(
-  possession: PointPossession | null,
-  focusSideId: string,
-  point?: TrackedPoint | null,
-): PlayerRef | null {
-  if (
-    possession &&
-    !isPossessionOver(possession) &&
-    possession.sideId === focusSideId &&
-    getPostInjuryPickupState(possession, point)?.shouldPromptForPickup
-  ) {
-    return null;
-  }
-  return getDiscHolderRef(possession, focusSideId);
-}
-
-/** Returns the ID of the player currently holding the disc, if it's a known participant. */
-export function getDiscHolderId(
-  possession: PointPossession | null,
-  focusSideId: string,
-): string | null {
-  const ref = getDiscHolderRef(possession, focusSideId);
-  return ref?.refType === 'participant' ? ref.participantId : null;
 }
 
 export interface PassChainEvent {
@@ -406,11 +264,6 @@ export function formatPointTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-export function getActiveGameClockPause(game: AdvancedTrackedGame | null): GameClockPause | null {
-  if (!game) return null;
-  return game.gameClockPauses?.find((pause) => pause.resumedAt == null) ?? null;
-}
-
 export function getCompletedGameClockPauseMs(game: AdvancedTrackedGame | null): number {
   if (!game) return 0;
   return (game.gameClockPauses ?? []).reduce((total, pause) => {
@@ -425,14 +278,6 @@ export function getGameClockElapsedMs(game: AdvancedTrackedGame | null, now: num
   const activePause = getActiveGameClockPause(game);
   const currentTime = activePause?.pausedAt ?? now;
   return Math.max(0, currentTime - gameStartedAt - getCompletedGameClockPauseMs(game));
-}
-
-/** Returns the active (unresolved) stoppage action in the current possession, if any. */
-export function getActiveStoppage(possession: PointPossession | null): StoppageAction | null {
-  if (!possession) return null;
-  const last = possession.actions[possession.actions.length - 1];
-  if (last?.kind === 'stoppage' && last.resumedAt == null) return last;
-  return null;
 }
 
 /**
@@ -607,12 +452,4 @@ export function getLineParticipantIdsBeforeSub(
   }
 
   return Array.from(currentLine);
-}
-
-/**
- * Returns every PointSub associated with a specific stoppage action ID.
- */
-export function getSubsForStoppage(point: TrackedPoint | null, actionId: string): PointSub[] {
-  if (!point?.subs) return [];
-  return point.subs.filter((sub) => sub.stoppageActionId === actionId);
 }

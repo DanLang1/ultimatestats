@@ -6,8 +6,9 @@ import type { GenderRatio } from '@/lib/genderRatioUtils';
 
 import type { PlannedCapture } from './captureIntentUtils';
 import type { CapTimingSettings } from './capUtils';
+import { getActiveSideId } from './livePlayState';
 import type { ActionUndoEntry, PullAmendmentUndoEntry } from './persistenceTypes';
-import { getActiveSideId, getGameClockElapsedMs } from './trackingDisplayHelpers';
+import { getGameClockElapsedMs } from './trackingDisplayHelpers';
 import {
   assertValidParticipantRefs,
   assertValidSideIds,

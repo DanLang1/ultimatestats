@@ -6,10 +6,8 @@ import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useCountdownSeconds } from '@/hooks/useTimer';
-import {
-  getActiveBetweenPointTimeout,
-  getGoalInfo,
-} from '@/lib/advancedTracking/trackingDisplayHelpers';
+import { getActiveBetweenPointTimeout } from '@/lib/advancedTracking/livePlayState';
+import { getGoalInfo } from '@/lib/advancedTracking/trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
 import { getCurrentPoint, getPointScoringSideId } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, Participant, TrackedPoint } from '@/lib/advancedTracking/types';

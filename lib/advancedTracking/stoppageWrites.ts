@@ -2,7 +2,7 @@
  * Live writes that stop and restart the clocks: game-clock pauses and in-point stoppages. The
  * store asserts the tracker command first; these mutate a live game draft and produce no undo entry.
  */
-import { getActiveGameClockPause, getActiveStoppage } from './trackingDisplayHelpers';
+import { getActiveGameClockPause, getActiveStoppage } from './livePlayState';
 import { getCurrentPoint, getCurrentPossession, hasPointEnded } from './trackingUtils';
 import type { AdvancedTrackedGame, GameClockPauseReason, StoppageReason } from './types';
 import type { WriteContext } from './writeContext';

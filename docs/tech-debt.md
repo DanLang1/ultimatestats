@@ -110,15 +110,13 @@ rewrite it to describe only the remaining problem as it exists now.
   `lib/advancedTracking/advancedTurnoverCorrectionUtils.ts`
   `lib/advancedTracking/advancedPointLineCorrectionUtils.ts`
 
-## P3 - Split trackingDisplayHelpers by Concept
+## P3 - Consolidate Lineup Rules
 
-- `trackingDisplayHelpers.ts` (~670 lines) is mostly domain queries the store depends on, not
-  display code. Lineup rules are duplicated: "apply a sub" (remove `outIds`, add `inIds`) in 4
-  places and "base line plus sub-ins" in 3 (`trackingUtils.ts`, `advancedTouchCorrectionUtils.ts`,
-  `advancedPointLineCorrectionUtils.ts`, `buildAnalyticsGame.ts`).
-- Cleanup: extract `lineup.ts` (effective line at an action, before a sub, by side) and move the
-  live-play queries (`getActiveSideId`, `getActiveStoppage`, `getActiveGameClockPause`,
-  `getSafeDiscHolderRef`) into `livePlayState.ts`; leave labels and formatting behind.
+- Lineup rules ("apply a sub": remove `outIds`, add `inIds`; "base line plus sub-ins") are
+  duplicated across `trackingUtils.ts`, `trackingDisplayHelpers.ts`,
+  `advancedTouchCorrectionUtils.ts`, `advancedPointLineCorrectionUtils.ts`, and
+  `buildAnalyticsGame.ts`.
+- Cleanup: extract `lineup.ts` (effective line at an action, before a sub, by side).
 - References:
   `lib/advancedTracking/trackingDisplayHelpers.ts`
   `lib/advancedTracking/trackingUtils.ts`

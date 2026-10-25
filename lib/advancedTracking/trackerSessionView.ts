@@ -1,4 +1,4 @@
-import { getLivePlayState } from './livePlayState';
+import { getLivePlayState, getTrackerDisplaySideId } from './livePlayState';
 import type { AdvancedTrackingUndoEntry } from './persistenceTypes';
 import {
   canAmendOpeningPull,
@@ -7,7 +7,6 @@ import {
   canPauseGameClock,
   canUndo,
 } from './trackerCommands';
-import { getTrackerDisplaySideId } from './trackingDisplayHelpers';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import { canStartSecondHalfEarly, getOtherSideId } from './trackingUtils';
 import {

@@ -1,5 +1,5 @@
+import { getSafeDiscHolderRef } from '../livePlayState';
 import { getTrackerSessionView, TrackerCommands, TrackerSessionView } from '../trackerSessionView';
-import { getSafeDiscHolderRef } from '../trackingDisplayHelpers';
 import type {
   AdvancedTrackedGame,
   PassModifier,

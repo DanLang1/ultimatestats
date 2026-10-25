@@ -1,5 +1,9 @@
-import { replaceSubsForStoppage, withAppendedStoppage } from '../injurySubUtils';
-import type { StoppageAction, TrackedPoint } from '../types';
+import {
+  getSubsForStoppage,
+  replaceSubsForStoppage,
+  withAppendedStoppage,
+} from '../injurySubUtils';
+import type { PointSub, StoppageAction, TrackedPoint } from '../types';
 
 function makePoint(): TrackedPoint {
   return {
@@ -138,5 +142,36 @@ describe('injurySubUtils', () => {
     expect(result.possessions[0].actions).toEqual([]);
     expect(result.possessions[1].actions).toEqual([stoppage]);
     expect(point.possessions[1].actions).toEqual([]);
+  });
+});
+
+describe('getSubsForStoppage', () => {
+  const sub: PointSub = {
+    id: 's1',
+    sideId: 'home',
+    type: 'injury',
+    inIds: ['p8'],
+    outIds: ['p7'],
+    stoppageActionId: 'stop1',
+  };
+  const point: TrackedPoint = { id: 'pt1', lines: [], subs: [sub], possessions: [] };
+
+  it('returns every side substitution linked to the stoppage', () => {
+    const awaySub: PointSub = {
+      ...sub,
+      id: 's2',
+      sideId: 'away',
+    };
+    const pointWithBothSubs: TrackedPoint = {
+      ...point,
+      subs: [sub, awaySub],
+    };
+
+    expect(getSubsForStoppage(pointWithBothSubs, 'stop1')).toEqual([sub, awaySub]);
+  });
+
+  it('returns an empty array when no substitution matches', () => {
+    expect(getSubsForStoppage(point, 'stop2')).toEqual([]);
+    expect(getSubsForStoppage(null, 'stop1')).toEqual([]);
   });
 });

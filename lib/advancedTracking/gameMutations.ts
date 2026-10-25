@@ -1,5 +1,5 @@
 import { withAdvancedGameNote } from './gameNoteUtils';
-import { getSafeDiscHolderRef } from './trackingDisplayHelpers';
+import { getSafeDiscHolderRef } from './livePlayState';
 import { assertTwoSides } from './trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
