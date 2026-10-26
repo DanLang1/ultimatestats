@@ -30,6 +30,20 @@ current holder/side, timestamps, undo, caps, and canonical pickup/throw actions 
 Possession metadata such as Red Zone enters through a dedicated store mutation that resolves the
 same canonical possession boundary without creating a parallel counter.
 
+## Live Write Boundaries
+
+Each rule has one home; extend it there rather than in a screen or a second store action.
+
+- Command availability (`canX`/`planX`) lives in `trackerCommands.ts`; the UI reads it and the store
+  asserts it.
+- Live edits are `apply*` functions in `lib/advancedTracking/` that take a `WriteContext`
+  (`writeContext.ts`); the store supplies time and IDs and only `writeLiveGame` stamps `updatedAt`.
+- Undo entries are meaning-based (`undoOperations.ts`); a stale entry is reported and dropped.
+  Stoppages and between-point timeouts are not undoable: they are cancelled while running and
+  permanent once ended.
+- Live-play facts come from `livePlayState.ts`, lineups from `lineup.ts`, and point timing from
+  `pointClock.ts`.
+
 ## Pregame Team Controls
 
 Basic and advanced pregame expose an inline opponent-name pencil in the team/receiving control.

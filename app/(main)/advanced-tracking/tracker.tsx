@@ -292,7 +292,11 @@ export default function AdvancedTrackerScreen() {
         />
       )}
 
-      <TrackerHelpSheet visible={showHelp} onClose={() => setShowHelp(false)} />
+      <TrackerHelpSheet
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        onAdvancedTutorial={handleAdvancedTutorial}
+      />
 
       <TrackerHomeMenu
         visible={showHomeMenu}
@@ -304,7 +308,6 @@ export default function AdvancedTrackerScreen() {
         onGameNote={() => setShowGameNote(true)}
         onStartSecondHalfEarly={triggerHalftimeEarly}
         onEndGameEarly={handleEndGameEarly}
-        onAdvancedTutorial={handleAdvancedTutorial}
       />
 
       {showGameNote && (

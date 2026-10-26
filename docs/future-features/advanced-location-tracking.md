@@ -403,3 +403,27 @@ bursts, sideline/end-zone taps, accidental OB throwaways and undo, missing-locat
 names, pulls, defensive plays, and rapid possession changes. Measure missed events, wrong players,
 location error, and attention taken away from play—not just tap count. Validate portrait and
 landscape on real phone sizes. No implementation is committed by this document.
+
+### Codebase Readiness Notes (October 2026 review)
+
+The capture boundary (`recordCaptureIntent` → `planCaptureIntent` → `apply*` writes with
+`WriteContext`), tracker commands, undo, and the persisted model already fit this proposal. Gaps to
+close when implementation starts:
+
+- Holder after an in-bounds pull: analytics already credits an inbound pull's `receiver` with a
+  touch, so also writing a holder-establishing pickup would count the catch twice. Prefer deriving
+  the holder from the pull receiver (the existing tracker never sets one). Decide whether a roller
+  receiver is a touch.
+- Backdated observation time: a goal timestamped before a later write in the same point (for example
+  a Red Zone toggle) makes `buildAnalyticsGame` throw and share validation reject the game. Guard
+  `observedAt` against the point's latest gameplay timestamp.
+- Mode routing: `/advanced-tracking/tracker` is hard-coded at about a dozen call sites. Switching on
+  `locationMode` inside `tracker.tsx` avoids opening an `xy` game in the old tracker.
+- Rules that live only in the existing UI: `recordPull` does not clear the halftime break (the pull
+  route does), and only `useTrackerHandlers` rejects a drop to the current holder. Move both into
+  the store or planner so the new UI cannot skip them.
+- Sharing: see the "Share Schema Version Stamping" entry in `docs/tech-debt.md` before bumping the
+  schema version.
+- Attacking direction (needed for end-zone goal taps and later normalization) should be one lib query;
+  the receiving-side and halftime walk is already duplicated in `trackingUtils.ts` and
+  `buildAnalyticsGame.ts`.

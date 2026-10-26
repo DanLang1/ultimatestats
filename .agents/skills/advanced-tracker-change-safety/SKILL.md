@@ -58,5 +58,18 @@ text that restates code (formulas, field lists, labels).
 4. Run `npm run check`; use `npm run check:all` when the change spans multiple surfaces or changes
    persisted/domain behavior.
 
+## Prove behavior-preserving refactors against real games
+
+When a refactor must not change analytics or stored data (consolidating duplicated rules, moving
+derivations), compare old and new on real games instead of trusting unit tests alone:
+
+1. Dump the public `shared_payloads` table from Supabase (read-only `SELECT`) to the scratchpad.
+2. Before editing, copy the old module into a scratch file; write a scratch Jest test that runs old
+   and new on every game, point, side, and action (migrate each game first), and requires identical
+   output, including order.
+3. Add builder-made games (`advancedGameBuilder`) only for shapes the real data lacks; skip shapes
+   no write path can produce.
+4. Delete the scratch files before handoff and report game, point, and comparison counts.
+
 Report the change-surface coverage and any intentionally untested or unresolved edge case in the
 handoff.

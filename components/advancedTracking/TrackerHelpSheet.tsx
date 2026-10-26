@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import type { TutorialAdvancedVariant } from '@/components/tutorial/tutorialNavigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -11,6 +12,7 @@ interface TrackerHelpSheetProps {
   visible: boolean;
   onClose: () => void;
   showReturnToTracking?: boolean;
+  onAdvancedTutorial?: (variant: TutorialAdvancedVariant) => void;
 }
 
 interface HelpRow {
@@ -47,14 +49,31 @@ const helpRows: HelpRow[] = [
   },
 ];
 
+interface TutorialRow {
+  variant: TutorialAdvancedVariant;
+  label: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+}
+
+const tutorialRows: TutorialRow[] = [
+  { variant: 'buttons', label: 'Tutorial: Buttons', icon: 'gesture-tap' },
+  { variant: 'gestures', label: 'Tutorial: Gestures', icon: 'gesture-swipe-vertical' },
+];
+
 export function TrackerHelpSheet({
   visible,
   onClose,
   showReturnToTracking = true,
+  onAdvancedTutorial,
 }: TrackerHelpSheetProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+
+  const handleAdvancedTutorial = (variant: TutorialAdvancedVariant) => {
+    onClose();
+    onAdvancedTutorial?.(variant);
+  };
 
   return (
     <Modal
@@ -123,6 +142,36 @@ export function TrackerHelpSheet({
               </View>
             </View>
           </View>
+
+          {onAdvancedTutorial && (
+            <View style={styles.referenceSection}>
+              <ThemedText style={[styles.sectionLabel, { color: palette.modalTextMuted }]}>
+                PRACTICE
+              </ThemedText>
+              {tutorialRows.map((row) => (
+                <Pressable
+                  key={row.variant}
+                  accessibilityRole="button"
+                  testID={`tracker-help-tutorial-${row.variant}`}
+                  onPress={() => handleAdvancedTutorial(row.variant)}
+                  style={({ pressed }) => [styles.tutorialRow, pressed && { opacity: 0.7 }]}>
+                  <MaterialCommunityIcons
+                    name={row.icon}
+                    size={scaleBySizeClass(26, sizeClass)}
+                    color={palette.modalText}
+                  />
+                  <ThemedText style={[styles.event, styles.rowText, { color: palette.modalText }]}>
+                    {row.label}
+                  </ThemedText>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={scaleBySizeClass(22, sizeClass)}
+                    color={palette.modalTextMuted}
+                  />
+                </Pressable>
+              ))}
+            </View>
+          )}
         </ScrollView>
         {showReturnToTracking && (
           <Pressable
@@ -175,6 +224,7 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: scaleBySizeClass(6, sizeClass),
     },
     row: { flexDirection: 'row', gap: 14 },
+    tutorialRow: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 44 },
     rowIcon: { marginTop: 2 },
     rowText: { flex: 1, gap: 4 },
     event: { fontSize: scaleBySizeClass(16, sizeClass), fontFamily: Fonts.semiBold },
