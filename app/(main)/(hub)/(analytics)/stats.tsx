@@ -11,11 +11,14 @@ import {
 } from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
+import CombineGamesButton from '@/components/view-stats/CombineGamesButton';
+import LiveGameRow from '@/components/view-stats/LiveGameRow';
 import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
-import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
+import { useHasLiveStats } from '@/hooks/useActiveGameSession';
+import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_SHARE_ADVANCED_GAMES, MAX_SHARE_GAMES } from '@/lib/constants';
 import {
   advancedGameSummaryToListItem,
@@ -35,10 +38,11 @@ import { useTournamentStore } from '@/store/tournamentStore';
 
 const GAME_NAVIGATION_GUARD_MS = 750;
 
-export default function SavedGameStatsScreen() {
+export default function StatsScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const styles = createStyles();
+  const styles = createStyles(sizeClass);
+  const hasLiveStats = useHasLiveStats();
   const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
@@ -64,6 +68,7 @@ export default function SavedGameStatsScreen() {
     tournamentId: advancedTournamentIdsByGame.get(summary.id),
   }));
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
+  const hasNoSavedGames = allGames.length === 0;
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
   const isAdvancedSelection = selectedGameKind === 'advanced';
@@ -225,25 +230,6 @@ export default function SavedGameStatsScreen() {
   const selectIconColor = selectionMode ? palette.accent : palette.textMuted;
   const headerActions: ResponsiveHeaderAction[] = [
     {
-      key: 'aggregate',
-      label: 'Combine Games',
-      onPress: () => router.push('/aggregate-stats'),
-      inlineIcon: (
-        <MaterialCommunityIcons
-          name="chart-box-outline"
-          size={scaleBySizeClass(22, sizeClass)}
-          color={palette.accent}
-        />
-      ),
-      menuIcon: (
-        <MaterialCommunityIcons
-          name="chart-box-outline"
-          size={scaleBySizeClass(20, sizeClass)}
-          color={palette.accent}
-        />
-      ),
-    },
-    {
       key: 'select',
       label: selectionMode ? 'Cancel' : 'Select',
       onPress: handleToggleSelectionMode,
@@ -272,12 +258,13 @@ export default function SavedGameStatsScreen() {
         title="SAVED GAMES"
         onBack={() => router.back()}
         titleColor={palette.textMuted}
-        backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
         rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {hasLiveStats ? <LiveGameRow /> : null}
+        {hasNoSavedGames ? null : <CombineGamesButton />}
         <SavedGamesList
           games={allGames}
           onSelectGame={handleSelectGame}
@@ -311,7 +298,7 @@ export default function SavedGameStatsScreen() {
   );
 }
 
-function createStyles() {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -320,6 +307,7 @@ function createStyles() {
       padding: 24,
       paddingTop: 8,
       paddingBottom: 100,
+      gap: scaleBySizeClass(16, sizeClass),
     },
   });
 }

@@ -4,16 +4,23 @@ import { router } from 'expo-router';
 
 import CreateTournamentScreen from '@/app/(main)/(hub)/(analytics)/create-tournament';
 import GameTimelineScreen from '@/app/(main)/(hub)/(analytics)/game-timeline';
+import LiveStatsScreen from '@/app/(main)/(hub)/(analytics)/live-stats';
 import PlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/player-stats';
-import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/saved-game-stats';
 import SavedGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]';
-import ViewStatsScreen from '@/app/(main)/(hub)/(analytics)/view-stats';
+import StatsScreen from '@/app/(main)/(hub)/(analytics)/stats';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { GameEvent, PointLineRecord } from '@/lib/storage/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useGameSessionStore } from '@/store/gameSessionStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { useTournamentStore } from '@/store/tournamentStore';
+import {
+  ADVANCED_TEST_OPPONENT_SIDE_ID,
+  createAdvancedGameScenario,
+  participantRef,
+  UNTRACKED_PLAYER,
+} from '@/test/fixtures/advancedGameBuilder';
 import { arrangeBasicGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -27,11 +34,105 @@ describe('basic analytics routes', () => {
   });
 
   it('renders the empty saved-games route from real stores', async () => {
-    await renderScreen(<SavedGameStatsScreen />);
+    await renderScreen(<StatsScreen />);
 
     expect(screen.getByText('SAVED GAMES')).toBeVisible();
     expect(screen.getByText('No saved games yet')).toBeVisible();
+    expect(screen.getByText('See what full game stats look like')).toBeVisible();
     expect(screen.queryByPlaceholderText('Search teams or dates...')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Combine games' })).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('stats-live-game')).not.toBeOnTheScreen();
+  });
+
+  it('combines games from a non-empty saved library', async () => {
+    useGameStore.setState({ savedGames: [createSavedBasicGame()], savedTeams: [testTeam] });
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    await user.press(screen.getByRole('button', { name: 'Combine games' }));
+
+    expect(router.push).toHaveBeenCalledWith('/aggregate-stats');
+  });
+
+  const liveGameCases = [
+    {
+      kind: 'stat-tracked basic',
+      arrange: () => {
+        arrangeBasicGame({ statTrackingEnabled: true });
+        useGameStore.setState({
+          team1Score: 1,
+          events: [
+            {
+              type: 'goal',
+              team: 'team1',
+              goalPlayerId: 'player-alex',
+              assistPlayerId: 'player-blair',
+              pointNumber: 1,
+            },
+          ],
+        });
+      },
+      liveRowText: /LIVE\s*Windchill\s*1\s*Rivals\s*0/,
+      expectLiveStats: () => {
+        expect(screen.getByText('Windchill')).toBeVisible();
+        expect(screen.getByText('Rivals')).toBeVisible();
+      },
+    },
+    {
+      kind: 'advanced',
+      arrange: () => {
+        const game = createAdvancedGameScenario({
+          initialReceivingSideId: ADVANCED_TEST_OPPONENT_SIDE_ID,
+          settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
+        })
+          .hold({
+            puller: participantRef('alex'),
+            receiver: UNTRACKED_PLAYER,
+            scorer: UNTRACKED_PLAYER,
+          })
+          .build();
+        useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+        useGameSessionStore.getState().setActiveGameType('advanced');
+      },
+      liveRowText: /LIVE\s*Focus\s*0\s*Opponent\s*1/,
+      expectLiveStats: () =>
+        expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('0 - 1'),
+    },
+  ];
+
+  it.each(liveGameCases)(
+    'pins the live $kind game in the Stats list',
+    async ({ arrange, liveRowText }) => {
+      arrange();
+      const user = userEvent.setup();
+      await renderScreen(<StatsScreen />);
+
+      expect(screen.getByText('SAVED GAMES')).toBeVisible();
+      expect(screen.getByText('No saved games yet')).toBeVisible();
+      expect(screen.getByTestId('stats-live-game')).toHaveTextContent(liveRowText);
+
+      await user.press(screen.getByRole('button', { name: 'Open live game stats' }));
+      expect(router.push).toHaveBeenCalledWith('/live-stats');
+    },
+  );
+
+  it.each(liveGameCases)(
+    'renders live stats for the $kind game',
+    async ({ arrange, expectLiveStats }) => {
+      arrange();
+      await renderScreen(<LiveStatsScreen />);
+
+      expect(screen.getByText('CURRENT GAME')).toBeVisible();
+      expectLiveStats();
+    },
+  );
+
+  it('pins no live game while a score-only basic game is live', async () => {
+    arrangeBasicGame();
+    await renderScreen(<StatsScreen />);
+
+    expect(screen.getByText('No saved games yet')).toBeVisible();
+    expect(screen.queryByTestId('stats-live-game')).not.toBeOnTheScreen();
   });
 
   it('creates a tournament through the real persisted store action', async () => {
@@ -43,29 +144,6 @@ describe('basic analytics routes', () => {
 
     expect(useTournamentStore.getState().tournaments[0]?.name).toBe('Windy City Invite');
     expect(router.back).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders current-game stats from the real basic game store', async () => {
-    arrangeBasicGame({ statTrackingEnabled: true });
-    useGameStore.setState({
-      team1Score: 1,
-      events: [
-        {
-          type: 'goal',
-          team: 'team1',
-          goalPlayerId: 'player-alex',
-          assistPlayerId: 'player-blair',
-          pointNumber: 1,
-        },
-      ],
-    });
-
-    await renderScreen(<ViewStatsScreen />);
-
-    expect(screen.getByText('CURRENT GAME')).toBeVisible();
-    expect(screen.getByText('Live Stats')).toBeVisible();
-    expect(screen.getByText('Windchill')).toBeVisible();
-    expect(screen.getByText('Rivals')).toBeVisible();
   });
 
   it('switches live stats perspective when both sides are fully tracked', async () => {
@@ -80,7 +158,7 @@ describe('basic analytics routes', () => {
       status: 'in_progress',
       focusSideId: 'light',
       initialReceivingSideId: 'light',
-      settings: { locationMode: 'none' },
+      settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
       sides: [
         { id: 'light', label: 'Light', trackingMode: 'full-roster' },
         { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
@@ -128,7 +206,7 @@ describe('basic analytics routes', () => {
       currentGame: game,
     });
 
-    await renderScreen(<ViewStatsScreen />);
+    await renderScreen(<LiveStatsScreen />);
 
     expect(screen.getByText('STATS FOR')).toBeVisible();
     expect(screen.getByTestId('advanced-stats-team-name')).toHaveTextContent('Light');
@@ -278,7 +356,7 @@ it('sorts live player stats and opens analytics for a player with only line part
     ],
   });
   const user = userEvent.setup();
-  await renderScreen(<ViewStatsScreen />);
+  await renderScreen(<LiveStatsScreen />);
   const expectNameOrder = (expected: string[]) => {
     const nodes = screen.getAllByText(/^(Alex|Blair|Casey)$/);
     expect(nodes).toHaveLength(expected.length);

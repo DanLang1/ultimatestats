@@ -54,14 +54,6 @@ tags:
 - tapOn:
     id: 'screen-header-back'
     waitToSettleTimeoutMs: 1000
-- runFlow:
-    when:
-      visible:
-        id: 'screen-header-back'
-    commands:
-      - tapOn:
-          id: 'screen-header-back'
-          waitToSettleTimeoutMs: 1000
 
 # Verify back on tracker
 - extendedWaitUntil:

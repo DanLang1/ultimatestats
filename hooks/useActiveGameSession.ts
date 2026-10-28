@@ -2,6 +2,7 @@ import { router, type Href } from 'expo-router';
 
 import { getLiveInProgressGame, isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 
 type ActiveGameKind = 'advanced' | 'basic' | 'none';
@@ -55,4 +56,11 @@ export function useActiveGameSession(): ActiveGameSession {
   }
 
   return { kind: 'none', route: '/dashboard' };
+}
+
+/** Live advanced games always have stats; basic games only when stat tracking is on. */
+export function useHasLiveStats(): boolean {
+  const { kind } = useActiveGameSession();
+  const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
+  return kind === 'advanced' || (kind === 'basic' && statTrackingEnabled);
 }

@@ -14,6 +14,7 @@ import { resumeGameSession, useActiveGameSession } from '@/hooks/useActiveGameSe
 import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
+import { useOpenLiveStats } from '@/hooks/useOpenLiveStats';
 import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { APP_STORE_URL, DISCORD_URL, PLAY_STORE_URL } from '@/lib/constants';
@@ -62,6 +63,7 @@ export default function DashboardScreen() {
     startScrimmage,
   } = useNewGameLauncher();
   const activeSession = useActiveGameSession();
+  const openLiveStats = useOpenLiveStats();
   const { hasNewVersion } = useVersionCheck();
   const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
   const {
@@ -69,11 +71,13 @@ export default function DashboardScreen() {
     statTrackingEnabled,
     team1Name,
     rosterCount,
-    gamesCount,
     sessionStatus,
+    currentGameId,
     hasCompletedGame,
     completedGameSummary,
   } = useDashboardSession();
+  // Only a game that has been ended at least once has a saved record to open.
+  const lastCompletedGameId = hasCompletedGame && statTrackingEnabled ? currentGameId : null;
   const hasActiveAdvancedGame = activeSession.kind === 'advanced';
   const hasActiveBasicGame = activeSession.kind === 'basic';
   const hasLiveGame = activeSession.kind !== 'none';
@@ -167,7 +171,7 @@ export default function DashboardScreen() {
                       icon: 'chart-bar' as const,
                       label: 'View Stats',
                       description: 'Live player and team stats',
-                      onPress: () => router.push('/view-stats'),
+                      onPress: openLiveStats,
                       disabled: !hasActiveBasicGame || !statTrackingEnabled,
                     },
                   ]),
@@ -175,7 +179,7 @@ export default function DashboardScreen() {
           },
         ]
       : []),
-    ...(hasCompletedGame && statTrackingEnabled
+    ...(lastCompletedGameId !== null
       ? [
           {
             title: 'LAST COMPLETED GAME',
@@ -184,13 +188,21 @@ export default function DashboardScreen() {
                 icon: 'chart-bar' as const,
                 label: 'View Stats',
                 description: completedGameSummary,
-                onPress: () => router.push('/view-stats'),
+                onPress: () =>
+                  router.push({
+                    pathname: '/saved-games/[gameId]',
+                    params: { gameId: lastCompletedGameId },
+                  }),
               },
               {
                 icon: 'timeline-clock-outline' as const,
                 label: 'Game Timeline',
                 description: 'Review the play-by-play from the finished game',
-                onPress: () => router.push('/game-timeline'),
+                onPress: () =>
+                  router.push({
+                    pathname: '/game-timeline',
+                    params: { gameId: lastCompletedGameId },
+                  }),
               },
             ],
           },
@@ -199,23 +211,6 @@ export default function DashboardScreen() {
     {
       title: 'DATA',
       items: [
-        {
-          icon: 'history' as const,
-          label: 'Saved Games',
-          description:
-            gamesCount > 0
-              ? `${gamesCount} ${pluralize(gamesCount, 'game', 'games')} saved`
-              : 'No games yet',
-          onPress: () => router.push('/saved-game-stats'),
-          disabled: gamesCount === 0,
-        },
-        {
-          icon: 'chart-box-outline' as const,
-          label: 'Aggregate Stats',
-          description: gamesCount > 0 ? 'Combine stats across games' : 'No games yet',
-          onPress: () => router.push('/aggregate-stats'),
-          disabled: gamesCount === 0,
-        },
         {
           icon: 'account-group-outline' as const,
           label: 'Manage Team',
@@ -580,30 +575,6 @@ export default function DashboardScreen() {
                 </ThemedText>
                 <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
                   DEV ONLY - Reload app to start from the first tutorial
-                </ThemedText>
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                useTutorialStore.setState({ hasSeenShowcaseHint: false });
-              }}
-              style={({ pressed }) => [
-                styles.discordBanner,
-                { backgroundColor: palette.danger, marginTop: 12 },
-                pressed && styles.menuItemPressed,
-              ]}>
-              <MaterialCommunityIcons
-                name="trophy-outline"
-                size={metrics.bannerIconSize}
-                color={palette.textOnAccent}
-              />
-              <View style={styles.discordText}>
-                <ThemedText style={[styles.discordTitle, { color: palette.textOnAccent }]}>
-                  Reset Showcase Hint
-                </ThemedText>
-                <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
-                  DEV ONLY - Show hint banner on Stats page again
                 </ThemedText>
               </View>
             </Pressable>

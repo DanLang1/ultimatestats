@@ -43,7 +43,7 @@ export const TrackerHomeMenu = ({
 
   const handleViewStats = () => {
     onClose();
-    router.push('/view-stats');
+    router.navigate('/live-stats');
   };
 
   const handleGameFormat = () => {

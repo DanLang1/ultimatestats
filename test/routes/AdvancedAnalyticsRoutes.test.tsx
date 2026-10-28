@@ -90,7 +90,7 @@ describe('advanced analytics routes', () => {
     await renderScreen(<AdvancedGameScreen />);
     expect(screen.getByText('Game not found.')).toBeVisible();
     await userEvent.setup().press(screen.getByText('Go to Saved Games'));
-    expect(router.replace).toHaveBeenCalledWith('/saved-game-stats');
+    expect(router.dismissTo).toHaveBeenCalledWith('/stats');
   });
 
   it('shows the share action for a terminated advanced game', async () => {

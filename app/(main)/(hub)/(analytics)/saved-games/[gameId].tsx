@@ -86,7 +86,7 @@ export default function SavedGameStatsScreen() {
   };
 
   const handleGoToSavedGames = () => {
-    router.replace('/saved-game-stats');
+    router.dismissTo('/stats');
   };
 
   const handleOpenTimeline = () => {
@@ -117,7 +117,7 @@ export default function SavedGameStatsScreen() {
           onPress: async () => {
             await deleteSavedGame(selectedGame.id);
             await removeGameFromTournament('basic', selectedGame.id);
-            router.replace('/saved-game-stats');
+            router.dismissTo('/stats');
           },
         },
       ],

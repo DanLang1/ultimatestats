@@ -29,6 +29,21 @@ rewrite it to describe only the remaining problem as it exists now.
   `lib/sharing/serialize.ts`
   `lib/sharing/validate.ts`
 
+## P3 - Live Stats Back Behavior
+
+- Live stats opened from the scoreboard or Dashboard sits on top of the Stats list, so back lands
+  on the list instead of where the user came from. From the advanced tracker menu, back returns to
+  the tracker, so the two game modes disagree.
+- Option: move `live-stats` outside the hub tabs so it opens over the current screen and back
+  returns to its opener everywhere. `router.push('/live-stats')` would then work from any screen,
+  so `useOpenLiveStats` (an expo-router workaround) could be deleted. Check first how its Timeline
+  action opens `/game-timeline`, which lives in the Stats tab. Pushing it from outside the tabs may
+  stack a second hub.
+- References:
+  `app/(main)/(hub)/(analytics)/live-stats.tsx`
+  `hooks/useOpenLiveStats.ts`
+  `components/advancedTracking/TrackerHomeMenu.tsx`
+
 ## P3 - Advanced Tracker Tablet Landscape Polish
 
 - Tablet landscape puts the scorecard and last-action card side by side in one header row above a

@@ -10,9 +10,9 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { arrangeAdvancedGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import { arrangeAdvancedGame, testTeam } from '@/test/fixtures/domain';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
-import { resetMockRouter } from '@/test/mocks/expoRouter';
+import { navigation, resetMockRouter } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
 
 function arrangeDashboard() {
@@ -42,8 +42,6 @@ describe('<DashboardScreen />', () => {
     expect(screen.getByText('DASHBOARD')).toBeVisible();
     expect(screen.getByText('Open a fresh scoreboard and start tracking')).toBeVisible();
     expect(screen.getByText('Manage Team')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Saved Games' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Aggregate Stats' })).toBeDisabled();
     expect(screen.queryByText('Resume Game')).not.toBeOnTheScreen();
   });
 
@@ -90,7 +88,13 @@ describe('<DashboardScreen />', () => {
     expect(screen.getByText('IN PROGRESS')).toBeVisible();
     expect(screen.getByText('Return to the live scoreboard')).toBeVisible();
     expect(screen.getByText('Game Timeline')).toBeVisible();
-    expect(screen.getByText('View Stats')).toBeVisible();
+
+    await user.press(screen.getByText('View Stats'));
+    expect(navigation.navigate).toHaveBeenCalledWith('(analytics)', {
+      screen: 'live-stats',
+      initial: false,
+      pop: true,
+    });
 
     await user.press(screen.getByText('Resume Game'));
 
@@ -111,14 +115,12 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it('opens data, roster, and help destinations when saved games and a roster exist', async () => {
+it('opens roster and help destinations when a roster exists', async () => {
   const queryClient = arrangeDashboard();
-  useGameStore.setState({ currentTeam: testTeam, savedGames: [createSavedBasicGame()] });
+  useGameStore.setState({ currentTeam: testTeam });
   const user = userEvent.setup();
   await renderScreen(<DashboardScreen />, { queryClient });
   const destinations = [
-    ['Saved Games', '/saved-game-stats'],
-    ['Aggregate Stats', '/aggregate-stats'],
     ['Team Line Presets', '/line-preset-editor'],
     ['Showcase (Beta)', '/showcase'],
     ['Partners', '/partners'],
@@ -156,15 +158,24 @@ it('resumes advanced line setup and starts a scrimmage after warning about the a
 
 it('offers review actions for a completed game after its active session is cleared', async () => {
   const queryClient = arrangeDashboard();
-  useGameStore.setState({ currentGameStatus: 'finished', team1Score: 15, team2Score: 12 });
+  useGameStore.setState({ team1Score: 15, team2Score: 12 });
+  await useGameStore.getState().saveCurrentGame();
+  useGameStore.getState().setCurrentGameStatus('finished');
+  const [savedGame] = useGameStore.getState().savedGames;
   const user = userEvent.setup();
   await renderScreen(<DashboardScreen />, { queryClient });
   expect(screen.getByText('LAST COMPLETED GAME')).toBeVisible();
   expect(screen.queryByText('Resume Game')).not.toBeOnTheScreen();
   await user.press(screen.getByText('View Stats'));
-  expect(router.push).toHaveBeenLastCalledWith('/view-stats');
+  expect(router.push).toHaveBeenLastCalledWith({
+    pathname: '/saved-games/[gameId]',
+    params: { gameId: savedGame.id },
+  });
   await user.press(screen.getByText('Game Timeline'));
-  expect(router.push).toHaveBeenLastCalledWith('/game-timeline');
+  expect(router.push).toHaveBeenLastCalledWith({
+    pathname: '/game-timeline',
+    params: { gameId: savedGame.id },
+  });
 });
 
 it.each(['ios', 'android'] as const)(

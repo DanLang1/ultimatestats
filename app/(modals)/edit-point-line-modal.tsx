@@ -37,7 +37,7 @@ export default function EditPointLineModal() {
       : getSavedGameSource(savedGames.find((game) => game.id === savedGameId));
 
   if (!source) {
-    return <Redirect href="/saved-game-stats" />;
+    return <Redirect href="/stats" />;
   }
 
   const editablePoint = resolveEditableBasicPointLine({

@@ -4,14 +4,11 @@ tags:
   - basic
   - extended
 ---
-# Dashboard -> Saved Games search -> saved game box score -> player detail.
+# Stats tab -> Saved Games search -> saved game box score -> player detail.
 - runFlow: ../flows/setup-basic-saved-game.yaml
+# Setup lands on a saved game inside the Stats tab; pressing the focused tab returns to its root.
 - tapOn:
-    id: 'hub-tab-home'
-- extendedWaitUntil:
-    visible: 'DASHBOARD'
-    timeout: 5000
-- tapOn: 'Saved Games'
+    id: 'hub-tab-stats'
 - extendedWaitUntil:
     visible: 'SAVED GAMES'
     timeout: 5000

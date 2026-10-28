@@ -1,4 +1,3 @@
-import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { getGameSessionStatus } from '@/lib/basic/gameSessionUtils';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -6,9 +5,6 @@ import { useGameStore } from '@/store/basic/gameStore';
 export function useDashboardSession() {
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
   const currentTeam = useGameStore((state) => state.currentTeam);
-  const savedGames = useGameStore((state) => state.savedGames);
-  const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
-  const advancedSavedGameCount = completedAdvancedSavedGameSummaries.length;
   const team1Score = useGameStore((state) => state.team1Score);
   const team2Score = useGameStore((state) => state.team2Score);
   const gameTo = useGameStore((state) => state.gameTo);
@@ -29,7 +25,6 @@ export function useDashboardSession() {
 
   const team1Name = currentTeam.name;
   const rosterCount = currentTeam.roster.length;
-  const gamesCount = savedGames.length + advancedSavedGameCount;
   const sessionStatus = getGameSessionStatus({
     team1Score,
     team2Score,
@@ -55,8 +50,8 @@ export function useDashboardSession() {
     team1Name,
     team2Name,
     rosterCount,
-    gamesCount,
     sessionStatus,
+    currentGameId,
     hasInProgressGame: sessionStatus === 'inProgress',
     hasCompletedGame: sessionStatus === 'finished',
     completedGameSummary: `${team1Name} ${team1Score} - ${team2Score} ${team2Name}`,

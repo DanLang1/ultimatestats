@@ -28,7 +28,6 @@ type TabConfig = {
   href: Href;
   inactiveIcon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
-  rootRoute: string;
 };
 
 const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
@@ -38,22 +37,20 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
     href: '/dashboard',
     inactiveIcon: 'view-dashboard-outline',
     label: 'Home',
-    rootRoute: 'dashboard',
   },
   '(analytics)': {
     activeIcon: 'chart-bar',
     activePathnames: [
-      '/view-stats',
       '/player-stats',
-      '/saved-game-stats',
+      '/stats',
+      '/live-stats',
       '/aggregate-stats',
       '/game-timeline',
     ],
     activePathPrefixes: ['/advanced-tracking/analytics/', '/saved-games/'],
-    href: '/view-stats',
+    href: '/stats',
     inactiveIcon: 'chart-bar',
     label: 'Stats',
-    rootRoute: 'view-stats',
   },
   '(game)': {
     activeIcon: 'scoreboard',
@@ -62,7 +59,6 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
     href: '/scoreboard',
     inactiveIcon: 'scoreboard-outline',
     label: 'Game',
-    rootRoute: 'scoreboard',
   },
   '(team)': {
     activeIcon: 'account-group',
@@ -70,7 +66,6 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
     href: '/edit-roster',
     inactiveIcon: 'account-group-outline',
     label: 'Team',
-    rootRoute: 'edit-roster',
   },
 };
 
@@ -152,7 +147,7 @@ export default function HubTabBar({ state, descriptors, navigation }: BottomTabB
       if (event.defaultPrevented) return;
 
       if (isFocused) {
-        router.navigate(tabConfig.href);
+        router.dismissTo(tabConfig.href);
         return;
       }
 

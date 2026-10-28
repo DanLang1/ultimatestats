@@ -1,0 +1,49 @@
+appId: com.langdk.ultimatestats.dev
+name: Basic Scoreboard Live Stats
+tags:
+  - basic
+---
+# The scoreboard's stats button returns to the Stats tab's existing live-stats screen, closing
+# anything left open over it; back from live stats lands on the Stats list's pinned live game.
+- runFlow: ../flows/setup-basic-game.yaml
+
+# Open live stats, then leave the timeline open in the Stats tab.
+- tapOn:
+    id: 'scoreboard-view-stats'
+- extendedWaitUntil:
+    visible: 'CURRENT GAME'
+    timeout: 5000
+# A tap during the tab switch can be dropped.
+- waitForAnimationToEnd
+- tapOn:
+    id: 'header-action-timeline'
+- extendedWaitUntil:
+    visible: 'GAME TIMELINE'
+    timeout: 5000
+
+# Back at the game, the stats button lands on live stats instead of the timeline.
+- tapOn:
+    id: 'hub-tab-game'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+- tapOn:
+    id: 'scoreboard-view-stats'
+- extendedWaitUntil:
+    visible: 'CURRENT GAME'
+    timeout: 5000
+- assertNotVisible: 'GAME TIMELINE'
+
+# Only the Stats list is left under live stats, with the game pinned at the top.
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible:
+      id: 'stats-live-game'
+    timeout: 5000
+- assertVisible: 'SAVED GAMES'
+- tapOn:
+    id: 'stats-live-game'
+- extendedWaitUntil:
+    visible: 'CURRENT GAME'
+    timeout: 5000

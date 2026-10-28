@@ -141,7 +141,7 @@ describe('shared-link import', () => {
           pathname: '/advanced-tracking/analytics/[gameId]',
           params: { gameId: 'first' },
         });
-      else expect(router.push).toHaveBeenCalledWith('/saved-game-stats');
+      else expect(router.navigate).toHaveBeenCalledWith('/stats');
     },
   );
 

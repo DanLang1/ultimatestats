@@ -159,7 +159,7 @@ it.each(['basic', 'advanced'] as const)(
     expect(useTournamentStore.getState().gameLinks).toHaveLength(1);
     await user.press(screen.getByTestId('header-action-delete'));
     await user.press(screen.getByText('Delete'));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/saved-game-stats'));
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/stats'));
     expect(useTournamentStore.getState().gameLinks).toHaveLength(0);
     if (kind === 'basic') expect(useGameStore.getState().savedGames).toHaveLength(0);
     else expect(await useSavedAdvancedGamesStore.getState().loadGame(id)).toBeNull();
@@ -195,7 +195,7 @@ it.each(['basic', 'advanced'] as const)(
       queryClient,
     });
     await userEvent.setup().press(await screen.findByText('Go to Saved Games'));
-    expect(router.replace).toHaveBeenCalledWith('/saved-game-stats');
+    expect(router.dismissTo).toHaveBeenCalledWith('/stats');
   },
 );
 

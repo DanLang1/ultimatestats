@@ -136,8 +136,7 @@ without assuming every saved game is already in memory.
 Screens and utilities that currently read `savedGames` directly would need review.
 Likely touch points:
 
-- `app/(main)/(hub)/(analytics)/view-stats.tsx`
-- `app/(main)/(hub)/(analytics)/saved-game-stats.tsx`
+- `app/(main)/(hub)/(analytics)/stats.tsx`
 - `app/(main)/(hub)/(analytics)/aggregate-stats.tsx`
 - `app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`
 - `app/(main)/(hub)/(analytics)/game-timeline.tsx`

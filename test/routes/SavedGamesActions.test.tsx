@@ -3,7 +3,7 @@ import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 
-import SavedGameStatsScreen from '@/app/(main)/(hub)/(analytics)/saved-game-stats';
+import StatsScreen from '@/app/(main)/(hub)/(analytics)/stats';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -66,7 +66,7 @@ it.each(['basic', 'advanced'] as const)(
       .spyOn(global, 'fetch')
       .mockImplementation(async () => new Response(null, { status: 201 }));
     const user = userEvent.setup();
-    await renderScreen(<SavedGameStatsScreen />);
+    await renderScreen(<StatsScreen />);
     expect(screen.queryByText('Proceed')).not.toBeOnTheScreen();
     await user.press(screen.getByTestId('header-action-select'));
     await user.press(screen.getByText('First Rival'));
@@ -114,7 +114,7 @@ it('caps advanced game shares at four while basic shares allow more', async () =
     );
   }
   const user = userEvent.setup();
-  await renderScreen(<SavedGameStatsScreen />);
+  await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
 
   for (const label of rivals) await user.press(screen.getByText(`Advanced ${label}`));
@@ -142,7 +142,7 @@ it.each(['basic', 'advanced'] as const)(
       .getState()
       .addGamesToTournament(tournamentId, kind, ['first', 'second']);
     const user = userEvent.setup();
-    await renderScreen(<SavedGameStatsScreen />);
+    await renderScreen(<StatsScreen />);
     await user.press(screen.getByTestId('header-action-select'));
     await user.press(screen.getByText('First Rival'));
     await user.press(screen.getByText('Delete (1)'));
@@ -171,7 +171,7 @@ it.each(['basic', 'advanced'] as const)(
 it('cancels sharing without losing selection and clears selection when search changes', async () => {
   await arrangeGames('basic');
   const user = userEvent.setup();
-  await renderScreen(<SavedGameStatsScreen />);
+  await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
   await user.press(screen.getByText('Share (1)'));
@@ -180,8 +180,6 @@ it('cancels sharing without losing selection and clears selection when search ch
   await user.type(screen.getByPlaceholderText('Search teams or dates...'), 'Second');
   expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
   expect(screen.queryByText('First Rival')).not.toBeOnTheScreen();
-  await user.press(screen.getByTestId('header-action-aggregate'));
-  expect(router.push).toHaveBeenCalledWith('/aggregate-stats');
 });
 
 it.each(['basic', 'advanced'] as const)(
@@ -189,7 +187,7 @@ it.each(['basic', 'advanced'] as const)(
   async (kind) => {
     await arrangeGames(kind);
     const user = userEvent.setup();
-    await renderScreen(<SavedGameStatsScreen />);
+    await renderScreen(<StatsScreen />);
     await user.press(screen.getByText('First Rival'));
     await user.press(screen.getByText('Second Rival'));
     expect(router.push).toHaveBeenCalledTimes(1);
@@ -208,7 +206,7 @@ it('waits for upload and clipboard completion before showing share results', asy
   const fetchSpy = jest.spyOn(global, 'fetch').mockReturnValue(upload.promise);
   const clipboard = jest.spyOn(Clipboard, 'setStringAsync').mockReturnValue(copying.promise);
   const user = userEvent.setup();
-  await renderScreen(<SavedGameStatsScreen />);
+  await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
   await user.press(screen.getByText('Share (1)'));
@@ -239,7 +237,7 @@ it('keeps a failed upload open and clears the error after a successful retry', a
     .mockResolvedValueOnce(new Response(JSON.stringify({ message: 'Offline' }), { status: 400 }))
     .mockResolvedValueOnce(new Response(null, { status: 201 }));
   const user = userEvent.setup();
-  await renderScreen(<SavedGameStatsScreen />);
+  await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
   await user.press(screen.getByText('Share (1)'));
@@ -281,7 +279,7 @@ it.each([
   async (label, ascending, descending) => {
     arrangeSortableGames();
     const user = userEvent.setup();
-    await renderScreen(<SavedGameStatsScreen />);
+    await renderScreen(<StatsScreen />);
     await user.press(screen.getByTestId('header-action-select'));
     for (const expected of [ascending, descending]) {
       await user.press(screen.getByText('Hybrid'));
@@ -298,7 +296,7 @@ it.each([
 it('filters saved games by either team, trims search text, and reports an unmatched query', async () => {
   arrangeSortableGames();
   const user = userEvent.setup();
-  await renderScreen(<SavedGameStatsScreen />);
+  await renderScreen(<StatsScreen />);
   const input = screen.getByPlaceholderText('Search teams or dates...');
   await user.type(input, ' DARK ');
   expect(screen.getByText('Light')).toBeVisible();
@@ -328,7 +326,7 @@ it('enters bulk selection by long press, dismisses its hint, and excludes the ot
   }
   useGameStore.setState({ savedGames: [createSavedBasicGame()] });
   const user = userEvent.setup();
-  await renderScreen(<SavedGameStatsScreen />);
+  await renderScreen(<StatsScreen />);
   expect(screen.getByText('Scrimmage')).toBeVisible();
   expect(screen.getByText('Advanced')).toBeVisible();
   expect(screen.getByText(/Long press a game to select/)).toBeVisible();

@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
@@ -122,9 +123,21 @@ export default function SavedGamesList({
         <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
           No saved games yet
         </ThemedText>
-        <ThemedText style={[styles.emptySubtext, { color: palette.textMuted }]}>
-          Save games from the win screen to see them here
-        </ThemedText>
+        <Pressable
+          testID="saved-games-showcase"
+          accessibilityRole="button"
+          accessibilityLabel="See what full game stats look like"
+          onPress={() => router.push('/showcase')}
+          style={({ pressed }) => [styles.showcaseLink, pressed && styles.showcaseLinkPressed]}>
+          <ThemedText style={[styles.showcaseLinkText, { color: palette.accent }]}>
+            See what full game stats look like
+          </ThemedText>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={scaleBySizeClass(18, sizeClass)}
+            color={palette.accent}
+          />
+        </Pressable>
       </View>
     );
   }
@@ -517,10 +530,18 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(16, sizeClass),
       textAlign: 'center',
     },
-    emptySubtext: {
+    showcaseLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(2, sizeClass),
+      minHeight: scaleBySizeClass(44, sizeClass),
+    },
+    showcaseLinkPressed: {
+      opacity: 0.6,
+    },
+    showcaseLinkText: {
       fontSize: scaleBySizeClass(14, sizeClass),
-      textAlign: 'center',
-      opacity: 0.7,
+      fontFamily: Fonts.semiBold,
     },
     noResults: {
       padding: 20,

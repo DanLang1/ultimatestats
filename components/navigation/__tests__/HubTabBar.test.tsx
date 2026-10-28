@@ -54,7 +54,7 @@ it('routes a focused tab to its root and dispatches other tabs through the navig
   const user = userEvent.setup();
   await renderScreen(<HubTabBar {...props} />);
   await user.press(screen.getByRole('button', { name: 'Home', selected: true }));
-  expect(router.navigate).toHaveBeenCalledWith('/dashboard');
+  expect(router.dismissTo).toHaveBeenCalledWith('/dashboard');
   await user.press(screen.getByRole('button', { name: 'Stats' }));
   expect(mockNavigate).toHaveBeenCalledWith('(analytics)');
   expect(mockEmit).toHaveBeenCalledWith({

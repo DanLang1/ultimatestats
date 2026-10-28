@@ -51,7 +51,7 @@ export default function AdvancedGameRecoveryScreen({
         </ThemedText>
         {!isLoading && (
           <Pressable
-            onPress={() => router.replace('/saved-game-stats')}
+            onPress={() => router.dismissTo('/stats')}
             style={[styles.recoverButton, { backgroundColor: palette.overlay10 }]}>
             <ThemedText style={[styles.recoverButtonText, { color: palette.accent }]}>
               Go to Saved Games

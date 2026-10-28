@@ -183,7 +183,7 @@ export default function AdvancedSavedGameStatsScreen({
           onPress: async () => {
             await deleteSavedGame(gameId);
             await removeGameFromTournament('advanced', gameId);
-            router.replace('/saved-game-stats');
+            router.dismissTo('/stats');
           },
         },
       ],
