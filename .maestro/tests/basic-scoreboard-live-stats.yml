@@ -13,10 +13,10 @@ tags:
 - extendedWaitUntil:
     visible: 'CURRENT GAME'
     timeout: 5000
-# A tap during the tab switch can be dropped.
-- waitForAnimationToEnd
+# maestro-runner finds header-action-timeline here, but its id tap never opens the timeline on
+# this scoreboard path (it works from the tracker and by hand). A tap at the button's position does.
 - tapOn:
-    id: 'header-action-timeline'
+    point: '79%,10%'
 - extendedWaitUntil:
     visible: 'GAME TIMELINE'
     timeout: 5000

@@ -18,36 +18,32 @@ export default function CombineGamesButton() {
       accessibilityRole="button"
       accessibilityLabel="Combine games"
       onPress={() => router.push('/aggregate-stats')}
-      style={({ pressed }) => [
-        styles.button,
-        { borderColor: palette.accentOverlay30 },
-        pressed && styles.pressed,
-      ]}>
+      style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
       <MaterialCommunityIcons
         name="chart-box-outline"
-        size={scaleBySizeClass(20, sizeClass)}
+        size={scaleBySizeClass(18, sizeClass)}
         color={palette.accent}
       />
-      <ThemedText style={[styles.label, { color: palette.accent }]}>Combine games</ThemedText>
+      <ThemedText style={[styles.label, { color: palette.accent }]}>Combine</ThemedText>
+      <MaterialCommunityIcons
+        name="chevron-right"
+        size={scaleBySizeClass(18, sizeClass)}
+        color={palette.accent}
+      />
     </Pressable>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
-    button: {
+    link: {
       minHeight: scaleBySizeClass(44, sizeClass),
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
-      paddingHorizontal: scaleBySizeClass(16, sizeClass),
-      paddingVertical: scaleBySizeClass(10, sizeClass),
-      borderRadius: scaleBySizeClass(12, sizeClass),
-      borderWidth: 1,
+      gap: scaleBySizeClass(4, sizeClass),
     },
     pressed: {
-      opacity: 0.7,
+      opacity: 0.6,
     },
     label: {
       fontSize: scaleBySizeClass(14, sizeClass),

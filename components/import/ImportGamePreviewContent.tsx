@@ -67,7 +67,7 @@ export function ImportGamePreviewContent({
     score1 = game.myScore;
     score2 = game.opponentScore;
     timestamp = game.timestamp;
-    pointsTracked = game.pointsTracked;
+    pointsTracked = state.payload.data.points.length;
     onImport = () => onImportAdvancedGame(state.payload);
   }
 

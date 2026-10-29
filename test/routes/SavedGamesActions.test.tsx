@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, screen, userEvent, waitFor, within } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 
@@ -255,8 +255,8 @@ it('keeps a failed upload open and clears the error after a successful retry', a
 function arrangeSortableGames() {
   useGameStore.setState({
     savedGames: [
-      { name: 'Light', opponent: 'Dark', day: 3, score: 7 },
-      { name: 'Hybrid', opponent: 'Rivals', day: 2, score: 1 },
+      { name: 'Light', opponent: 'Dark', day: 2, score: 7 },
+      { name: 'Hybrid', opponent: 'Rivals', day: 3, score: 1 },
       { name: 'Alpha', opponent: 'Beta', day: 1, score: 4 },
     ].map(({ name, opponent, day, score }) => ({
       ...createSavedBasicGame(),
@@ -271,27 +271,28 @@ function arrangeSortableGames() {
 }
 
 it.each([
-  ['Team', ['Alpha', 'Hybrid', 'Light'], ['Light', 'Hybrid', 'Alpha']],
-  ['Score', ['Hybrid', 'Alpha', 'Light'], ['Light', 'Alpha', 'Hybrid']],
-  ['Date', ['Alpha', 'Hybrid', 'Light'], ['Light', 'Hybrid', 'Alpha']],
-])(
-  'sorts saved games by %s in both directions and clears selection',
-  async (label, ascending, descending) => {
-    arrangeSortableGames();
-    const user = userEvent.setup();
-    await renderScreen(<StatsScreen />);
-    await user.press(screen.getByTestId('header-action-select'));
-    for (const expected of [ascending, descending]) {
-      await user.press(screen.getByText('Hybrid'));
-      expect(screen.getByText('Share (1)')).toBeVisible();
-      await user.press(screen.getByText(label));
-      expect(
-        screen.getAllByText(/^(Alpha|Hybrid|Light)$/).map((node) => node.props.children),
-      ).toEqual(expected);
-      expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
-    }
-  },
-);
+  ['team-asc', 'Team A–Z', ['Beta', 'Rivals', 'Dark']],
+  ['team-desc', 'Team Z–A', ['Dark', 'Rivals', 'Beta']],
+  ['points-asc', 'Low scoring', ['Rivals', 'Beta', 'Dark']],
+  ['points-desc', 'High scoring', ['Dark', 'Beta', 'Rivals']],
+  ['oldest', 'Oldest', ['Beta', 'Dark', 'Rivals']],
+  ['newest', 'Newest', ['Rivals', 'Dark', 'Beta']],
+])('sorts saved games by %s and clears selection', async (key, buttonLabel, expected) => {
+  arrangeSortableGames();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Rivals'));
+  expect(screen.getByText('Share (1)')).toBeVisible();
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId(`saved-games-sort-option-${key}`));
+  expect(screen.getAllByText(/^(Beta|Rivals|Dark)$/).map((node) => node.props.children)).toEqual(
+    expected,
+  );
+  expect(screen.queryByTestId('saved-games-sort-sheet')).not.toBeOnTheScreen();
+  expect(within(screen.getByTestId('saved-games-sort')).getByText(buttonLabel)).toBeVisible();
+  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+});
 
 it('filters saved games by either team, trims search text, and reports an unmatched query', async () => {
   arrangeSortableGames();
@@ -299,15 +300,38 @@ it('filters saved games by either team, trims search text, and reports an unmatc
   await renderScreen(<StatsScreen />);
   const input = screen.getByPlaceholderText('Search teams or dates...');
   await user.type(input, ' DARK ');
-  expect(screen.getByText('Light')).toBeVisible();
-  expect(screen.queryByText('Hybrid')).not.toBeOnTheScreen();
+  expect(screen.getByText('Dark')).toBeVisible();
+  expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
   await user.clear(input);
   await user.type(input, 'hybrid');
-  expect(screen.getByText('Hybrid')).toBeVisible();
-  expect(screen.queryByText('Light')).not.toBeOnTheScreen();
+  expect(screen.getByText('Rivals')).toBeVisible();
+  expect(screen.queryByText('Dark')).not.toBeOnTheScreen();
   await user.clear(input);
   await user.type(input, 'missing');
   expect(screen.getByText('No games match "missing"')).toBeVisible();
+});
+
+it.each([
+  ['one tracked team', ['Light', 'Light'], '1–1'],
+  ['mixed tracked teams', ['Light', 'Hybrid'], null],
+] as const)('shows a day record only for %s', async (_case, teamNames, expectedRecord) => {
+  useGameStore.setState({
+    savedGames: teamNames.map((name, i) => ({
+      ...createSavedBasicGame(),
+      id: `game-${i}`,
+      team1: { ...testTeam, id: name, name },
+      team2Name: `Rival ${i}`,
+      createdAt: Date.UTC(2026, 0, 1, 12 + i),
+      team1Score: i === 0 ? 5 : 1,
+      team2Score: 3,
+    })),
+  });
+  await renderScreen(<StatsScreen />);
+  if (expectedRecord) {
+    expect(screen.getByTestId('saved-games-day-record')).toHaveTextContent(expectedRecord);
+  } else {
+    expect(screen.queryByTestId('saved-games-day-record')).not.toBeOnTheScreen();
+  }
 });
 
 it('enters bulk selection by long press, dismisses its hint, and excludes the other tracking kind', async () => {
@@ -327,15 +351,15 @@ it('enters bulk selection by long press, dismisses its hint, and excludes the ot
   useGameStore.setState({ savedGames: [createSavedBasicGame()] });
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
-  expect(screen.getByText('Scrimmage')).toBeVisible();
-  expect(screen.getByText('Advanced')).toBeVisible();
+  expect(screen.getByText(/ · Scrimmage$/)).toBeVisible();
+  expect(screen.getByText(/ · Advanced$/)).toBeVisible();
   expect(screen.getByText(/Long press a game to select/)).toBeVisible();
   await user.longPress(screen.getByText('Rivals'), { duration: 400 });
   expect(screen.getByText('Share (1)')).toBeVisible();
   expect(screen.queryByText(/Long press a game to select/)).not.toBeOnTheScreen();
   expect(useTutorialStore.getState().hasSeenLongPressSelectHint).toBe(true);
-  await user.press(screen.getByText('Advanced'));
-  await user.press(screen.getByText('Scrimmage'));
+  await user.press(screen.getByText(/ · Advanced$/));
+  await user.press(screen.getByText(/ · Scrimmage$/));
   expect(screen.getByText('Share (1)')).toBeVisible();
   expect(router.push).not.toHaveBeenCalled();
   await user.press(screen.getByText('Rivals'));

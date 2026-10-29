@@ -57,25 +57,11 @@ describe('basicGameToListItem', () => {
     expect(item.myTeamName).toBe('My Team');
   });
 
-  it('counts goals from events for pointsTracked', () => {
-    const game: SavedGame = {
-      ...baseBasicGame,
-      events: [
-        { type: 'goal', team: 'team1', goalPlayerId: null, assistPlayerId: null },
-        { type: 'goal', team: 'team1', goalPlayerId: null, assistPlayerId: null },
-        { type: 'turnover', team: 'team1', subtype: 'throwaway', playerId: null },
-      ],
-    };
-    const item = basicGameToListItem(game, []);
-    expect(item.pointsTracked).toBe(2);
-  });
-
-  it('passes through tournamentId and importedAt when present', () => {
-    const game: SavedGame = { ...baseBasicGame, tournamentId: 'tour1', importedAt: 999 };
+  it('passes through tournamentId when present', () => {
+    const game: SavedGame = { ...baseBasicGame, tournamentId: 'tour1' };
     const item = basicGameToListItem(game, []);
     if (item.kind !== 'basic') throw new Error('expected basic kind');
     expect(item.tournamentId).toBe('tour1');
-    expect(item.importedAt).toBe(999);
   });
 });
 
@@ -192,11 +178,6 @@ describe('advancedGameToListItem', () => {
     };
     expect(advancedGameToListItem(game).timestamp).toBe(2000);
   });
-
-  it('counts total points for pointsTracked', () => {
-    const item = advancedGameToListItem(baseAdvancedGame);
-    expect(item.pointsTracked).toBe(1);
-  });
 });
 
 // ── advancedGameSummaryToListItem ─────────────────────────────────────────────
@@ -232,7 +213,6 @@ describe('advancedGameSummaryToListItem', () => {
       opponentName: 'Rivals',
       myScore: 12,
       opponentScore: 10,
-      pointsTracked: 22,
     });
   });
 

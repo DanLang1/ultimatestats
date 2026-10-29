@@ -1,16 +1,21 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
+import SavedGameResultRow from '@/components/view-stats/SavedGameResultRow';
+import {
+  SAVED_GAMES_SORT_OPTIONS,
+  SavedGamesSortKey,
+  SavedGamesSortSheet,
+} from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatDate } from '@/lib/basic/statsUtils';
-import { GameKind, GameListItem } from '@/lib/gameListUtils';
+import { GameKind, GameListItem, getGameResult, isScrimmage } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -26,12 +31,82 @@ interface SavedGamesListProps {
   onClearSelection?: () => void;
   tournaments?: Tournament[];
   selectionMode?: boolean;
+  /** Shown at the end of the row that counts the listed games. */
+  summaryAction?: ReactNode;
 }
 
-type SortField = 'date' | 'team' | 'score';
-type SortDirection = 'asc' | 'desc';
 const EMPTY_GAME_IDS = new Set<string>();
 const EMPTY_TOURNAMENTS: Tournament[] = [];
+
+interface SavedGameGroup {
+  key: string;
+  /** Null when the list is not sorted by date, so the games share one ungrouped section. */
+  title: string | null;
+  games: GameListItem[];
+}
+
+function formatDayTitle(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+function formatShortDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/** Groups consecutive games that share a calendar day, preserving the sorted order. */
+function groupGamesByDay(games: GameListItem[]): SavedGameGroup[] {
+  const groups: SavedGameGroup[] = [];
+  for (const game of games) {
+    const key = new Date(game.timestamp).toDateString();
+    const current = groups.at(-1);
+    if (current?.key === key) {
+      current.games.push(game);
+    } else {
+      groups.push({ key, title: formatDayTitle(game.timestamp), games: [game] });
+    }
+  }
+  return groups;
+}
+
+/**
+ * Win–loss(–tie) record for a day; scrimmages are counted separately since they have no result.
+ * Null when the day mixes tracked teams, since one combined record would credit neither.
+ */
+function formatRecord(games: GameListItem[]): string | null {
+  // Scrimmage sides are labels like "Light", not tracked teams, so they don't count as a mix.
+  const trackedTeams = new Set(
+    games.filter((game) => !isScrimmage(game)).map((game) => game.myTeamName),
+  );
+  if (trackedTeams.size > 1) return null;
+
+  let wins = 0;
+  let losses = 0;
+  let ties = 0;
+  let scrimmages = 0;
+  for (const game of games) {
+    if (isScrimmage(game)) {
+      scrimmages++;
+      continue;
+    }
+    const result = getGameResult(game);
+    if (result === 'win') wins++;
+    else if (result === 'loss') losses++;
+    else ties++;
+  }
+  const scrimmageLabel = `${scrimmages} ${scrimmages === 1 ? 'scrim' : 'scrims'}`;
+  if (wins + losses + ties === 0) return scrimmageLabel;
+  const record = ties > 0 ? `${wins}–${losses}–${ties}` : `${wins}–${losses}`;
+  return scrimmages > 0 ? `${record} · ${scrimmageLabel}` : record;
+}
 
 export default function SavedGamesList({
   games,
@@ -43,15 +118,16 @@ export default function SavedGamesList({
   onClearSelection,
   tournaments = EMPTY_TOURNAMENTS,
   selectionMode = false,
+  summaryAction,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { hasSeenLongPressSelectHint, dismissLongPressSelectHint } = useTutorialStore();
-  const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(isLandscape, sizeClass);
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortKey, setSortKey] = useState<SavedGamesSortKey>('newest');
+  const [showSortSheet, setShowSortSheet] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
   const [showTournamentFilter, setShowTournamentFilter] = useState(false);
 
@@ -96,9 +172,10 @@ export default function SavedGamesList({
   }
 
   // Sort
-  const dir = sortDirection === 'asc' ? 1 : -1;
+  const sortOption = SAVED_GAMES_SORT_OPTIONS[sortKey];
+  const dir = sortOption.direction === 'asc' ? 1 : -1;
   filteredAndSortedGames.sort((a, b) => {
-    switch (sortField) {
+    switch (sortOption.field) {
       case 'team':
         return dir * a.myTeamName.localeCompare(b.myTeamName);
       case 'score': {
@@ -142,51 +219,22 @@ export default function SavedGamesList({
     );
   }
 
-  const sortFields: {
-    field: SortField;
-    label: string;
-    ascIcon: keyof typeof MaterialCommunityIcons.glyphMap;
-    descIcon: keyof typeof MaterialCommunityIcons.glyphMap;
-  }[] = [
-    {
-      field: 'date',
-      label: 'Date',
-      ascIcon: 'sort-calendar-ascending',
-      descIcon: 'sort-calendar-descending',
-    },
-    {
-      field: 'team',
-      label: 'Team',
-      ascIcon: 'sort-alphabetical-ascending',
-      descIcon: 'sort-alphabetical-descending',
-    },
-    {
-      field: 'score',
-      label: 'Score',
-      ascIcon: 'sort-numeric-ascending',
-      descIcon: 'sort-numeric-descending',
-    },
-  ];
+  const listedGamesCount = filteredAndSortedGames.length;
+  const isGroupedByDay = sortOption.field === 'date';
+  const gameGroups: SavedGameGroup[] = isGroupedByDay
+    ? groupGamesByDay(filteredAndSortedGames)
+    : [{ key: 'all', title: null, games: filteredAndSortedGames }];
+  const tournamentNames = new Map(tournaments.map((t) => [t.id, t.name]));
 
-  const handleSortPress = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection(field === 'date' ? 'desc' : 'asc');
-    }
-    onClearSelection?.();
-  };
+  const tournamentFilterLabel = activeTournament
+    ? `Filter by tournament, ${activeTournament.name} selected`
+    : 'Filter by tournament';
 
   return (
     <View style={styles.container}>
       {/* Controls Header */}
       <View style={styles.controlsHeader}>
-        <View
-          style={[
-            styles.searchWrapper,
-            { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-          ]}>
+        <View style={[styles.searchWrapper, { backgroundColor: palette.overlay05 }]}>
           <MaterialCommunityIcons
             name="magnify"
             size={scaleBySizeClass(20, sizeClass)}
@@ -204,228 +252,139 @@ export default function SavedGamesList({
             clearButtonMode="while-editing"
           />
         </View>
-        <View style={styles.sortPills}>
-          {sortFields.map((opt) => {
-            const isActive = sortField === opt.field;
-            const icon = isActive && sortDirection === 'asc' ? opt.ascIcon : opt.descIcon;
-            return (
-              <Pressable
-                key={opt.field}
-                style={[
-                  styles.sortPill,
-                  { borderColor: palette.overlay10 },
-                  isActive && { backgroundColor: palette.overlay10, borderColor: palette.accent },
-                ]}
-                onPress={() => handleSortPress(opt.field)}>
-                <MaterialCommunityIcons
-                  name={icon}
-                  size={scaleBySizeClass(16, sizeClass)}
-                  color={isActive ? palette.accent : palette.textMuted}
-                />
-                <ThemedText
-                  style={[
-                    styles.sortPillText,
-                    { color: isActive ? palette.accent : palette.textMuted },
-                    isActive && { fontFamily: Fonts.bold },
-                  ]}>
-                  {opt.label}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-          {visibleTournaments.length > 0 && (
-            <Pressable
-              style={[
-                styles.sortPill,
-                { borderColor: activeTournament ? palette.accent : palette.overlay10 },
-                activeTournament && {
-                  backgroundColor: palette.overlay10,
-                  borderColor: palette.accent,
-                },
-              ]}
-              onPress={() => setShowTournamentFilter(true)}>
-              <MaterialCommunityIcons
-                name="trophy"
-                size={scaleBySizeClass(14, sizeClass)}
-                color={activeTournament ? palette.accent : palette.textMuted}
-              />
-              {activeTournament && (
-                <ThemedText
-                  style={[styles.sortPillText, { color: palette.accent, fontFamily: Fonts.bold }]}
-                  numberOfLines={1}>
-                  {activeTournament.name}
-                </ThemedText>
-              )}
-            </Pressable>
-          )}
-        </View>
+        <Pressable
+          testID="saved-games-sort"
+          accessibilityRole="button"
+          accessibilityLabel={`Sort games, ${sortOption.label}`}
+          onPress={() => setShowSortSheet(true)}
+          style={({ pressed }) => [
+            styles.controlButton,
+            { backgroundColor: pressed ? palette.overlay10 : palette.overlay05 },
+          ]}>
+          <MaterialCommunityIcons
+            name="sort"
+            size={scaleBySizeClass(18, sizeClass)}
+            color={palette.textMuted}
+          />
+          <ThemedText
+            style={[styles.controlButtonText, { color: palette.textInverse }]}
+            numberOfLines={1}>
+            {sortOption.shortLabel}
+          </ThemedText>
+        </Pressable>
+        {visibleTournaments.length > 0 && (
+          <Pressable
+            testID="saved-games-tournament-filter"
+            accessibilityRole="button"
+            accessibilityLabel={tournamentFilterLabel}
+            onPress={() => setShowTournamentFilter(true)}
+            style={({ pressed }) => [
+              styles.controlButton,
+              {
+                backgroundColor: activeTournament ? palette.accentOverlay15 : palette.overlay05,
+              },
+              pressed && { opacity: 0.7 },
+            ]}>
+            <MaterialCommunityIcons
+              name="trophy"
+              size={scaleBySizeClass(18, sizeClass)}
+              color={activeTournament ? palette.accent : palette.textMuted}
+            />
+            {activeTournament && (
+              <ThemedText
+                style={[styles.tournamentName, { color: palette.accent }]}
+                numberOfLines={1}>
+                {activeTournament.name}
+              </ThemedText>
+            )}
+          </Pressable>
+        )}
+      </View>
+
+      <View style={styles.summaryRow}>
+        <ThemedText style={[styles.summaryCount, { color: palette.textMuted }]}>
+          {listedGamesCount} {listedGamesCount === 1 ? 'GAME' : 'GAMES'}
+        </ThemedText>
+        {summaryAction}
       </View>
 
       <View style={styles.savedGamesList}>
-        {filteredAndSortedGames.map((game) => {
-          const isAdvanced = game.kind === 'advanced';
-          const advancedBadgeLabel =
-            isAdvanced && game.gameType === 'scrimmage' ? 'Scrimmage' : 'Advanced';
-          const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
-          const isSelected = selectedGameIds.has(game.id);
-          const isSelectionDisabled = selectionMode && !isSelectable;
-
-          let myScoreColor: string;
-          if (game.myScore > game.opponentScore) {
-            myScoreColor = palette.success;
-          } else if (game.myScore < game.opponentScore) {
-            myScoreColor = palette.danger;
-          } else {
-            myScoreColor = palette.warning;
-          }
-
-          let oppScoreColor: string;
-          if (game.opponentScore > game.myScore) {
-            oppScoreColor = palette.success;
-          } else if (game.opponentScore < game.myScore) {
-            oppScoreColor = palette.danger;
-          } else {
-            oppScoreColor = palette.warning;
-          }
+        {gameGroups.map((group) => {
+          const groupTournamentId = group.games[0].tournamentId;
+          const sharesTournament =
+            groupTournamentId != null &&
+            group.games.every((game) => game.tournamentId === groupTournamentId);
+          const groupTournamentName = sharesTournament
+            ? tournamentNames.get(groupTournamentId)
+            : undefined;
+          const groupRecord = formatRecord(group.games);
 
           return (
             <Animated.View
-              key={game.id}
-              exiting={FadeOut.duration(200)}
-              layout={LinearTransition.duration(300)}>
-              <View
-                style={[
-                  styles.savedGameCard,
-                  { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
-                  isSelected && { borderColor: palette.accent },
-                  isSelectionDisabled && styles.disabledCard,
-                ]}>
-                {selectionMode && (
-                  <Pressable
-                    style={styles.checkboxWrapper}
-                    onPress={() => {
-                      if (isSelectable) {
-                        onToggleGameSelection?.(game.id);
-                      }
-                    }}
-                    hitSlop={8}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        { borderColor: isSelectable ? palette.overlay20 : palette.overlay10 },
-                        isSelected && {
-                          backgroundColor: palette.accent,
-                          borderColor: palette.accent,
-                        },
-                      ]}>
-                      {isSelected && (
-                        <MaterialCommunityIcons
-                          name="check"
-                          size={scaleBySizeClass(14, sizeClass)}
-                          color={palette.textOnAccent}
-                        />
-                      )}
-                    </View>
-                  </Pressable>
-                )}
-
-                <Pressable
-                  style={[styles.cardContent, selectionMode && { paddingLeft: 8 }]}
-                  onPress={() => {
-                    if (selectionMode && isSelectable) {
-                      onToggleGameSelection?.(game.id);
-                    } else if (!selectionMode) {
-                      onSelectGame(game);
-                    }
-                  }}
-                  onLongPress={() => {
-                    if (!selectionMode) {
-                      dismissLongPressSelectHint();
-                      onEnterSelectionWithGame?.(game.id);
-                    }
-                  }}
-                  delayLongPress={350}>
-                  <View style={styles.savedGameHeader}>
-                    <ThemedText style={[styles.savedGameDate, { color: palette.textMuted }]}>
-                      {formatDate(game.timestamp)}
+              key={group.key}
+              layout={LinearTransition.duration(300)}
+              style={styles.gameGroup}>
+              {group.title != null && (
+                <View style={styles.groupHeader}>
+                  <ThemedText
+                    style={[styles.groupTitle, { color: palette.textInverse }]}
+                    numberOfLines={1}>
+                    {group.title}
+                    {groupTournamentName != null && (
+                      <ThemedText style={[styles.groupTitle, { color: palette.textMuted }]}>
+                        {` · ${groupTournamentName}`}
+                      </ThemedText>
+                    )}
+                  </ThemedText>
+                  {groupRecord != null && (
+                    <ThemedText
+                      testID="saved-games-day-record"
+                      style={[styles.groupRecord, { color: palette.textMuted }]}>
+                      {groupRecord}
                     </ThemedText>
-                    <View style={styles.headerBadges}>
-                      {isAdvanced && (
-                        <View
-                          style={[
-                            styles.advancedBadge,
-                            {
-                              backgroundColor: palette.indigoOverlay20,
-                              borderColor: palette.accent,
-                            },
-                          ]}>
-                          <ThemedText style={[styles.advancedBadgeText, { color: palette.accent }]}>
-                            {advancedBadgeLabel}
-                          </ThemedText>
-                        </View>
-                      )}
-                      {game.importedAt != null && (
-                        <MaterialCommunityIcons
-                          name="cloud-download-outline"
-                          size={scaleBySizeClass(14, sizeClass)}
-                          color={palette.textMuted}
-                        />
-                      )}
-                    </View>
-                  </View>
-                  {isLandscape ? (
-                    <View style={styles.savedGameTeams}>
-                      <ThemedText
-                        style={[styles.savedGameTeamName, { color: palette.textInverse }]}
-                        numberOfLines={1}>
-                        {game.myTeamName}
-                      </ThemedText>
-                      <ScoreBadge score1={game.myScore} score2={game.opponentScore} />
-                      <ThemedText
-                        style={[
-                          styles.savedGameTeamName,
-                          styles.savedGameTeamRight,
-                          { color: palette.textInverse },
-                        ]}
-                        numberOfLines={1}>
-                        {game.opponentName}
-                      </ThemedText>
-                    </View>
-                  ) : (
-                    <View style={styles.savedGameTeamsPortrait}>
-                      <View style={styles.teamScoreRow}>
-                        <ThemedText
-                          style={[styles.savedGameTeamName, { color: palette.textInverse }]}
-                          numberOfLines={1}>
-                          {game.myTeamName}
-                        </ThemedText>
-                        <ThemedText style={[styles.teamScoreValue, { color: myScoreColor }]}>
-                          {game.myScore}
-                        </ThemedText>
-                      </View>
-                      <View style={styles.teamScoreRow}>
-                        <ThemedText
-                          style={[styles.savedGameTeamName, { color: palette.textInverse }]}
-                          numberOfLines={1}>
-                          {game.opponentName}
-                        </ThemedText>
-                        <ThemedText style={[styles.teamScoreValue, { color: oppScoreColor }]}>
-                          {game.opponentScore}
-                        </ThemedText>
-                      </View>
-                    </View>
                   )}
-                  <View style={[styles.savedGameMeta, { borderTopColor: palette.overlay08 }]}>
-                    <MaterialCommunityIcons
-                      name="account-multiple"
-                      size={scaleBySizeClass(14, sizeClass)}
-                      color={palette.textMuted}
-                    />
-                    <ThemedText style={[styles.savedGameMetaText, { color: palette.textMuted }]}>
-                      {game.pointsTracked} point{game.pointsTracked !== 1 ? 's' : ''} tracked
-                    </ThemedText>
-                  </View>
-                </Pressable>
+                </View>
+              )}
+              <View style={[styles.groupSurface, { backgroundColor: palette.overlay05 }]}>
+                {group.games.map((game, index) => {
+                  const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
+                  const whenLabel = isGroupedByDay
+                    ? formatTime(game.timestamp)
+                    : formatShortDate(game.timestamp);
+                  const detailParts = [whenLabel];
+                  if (game.kind === 'advanced') {
+                    detailParts.push(game.gameType === 'scrimmage' ? 'Scrimmage' : 'Advanced');
+                  }
+
+                  return (
+                    <Animated.View
+                      key={game.id}
+                      exiting={FadeOut.duration(200)}
+                      layout={LinearTransition.duration(300)}>
+                      <SavedGameResultRow
+                        game={game}
+                        detailLabel={detailParts.join(' · ')}
+                        showDivider={index < group.games.length - 1}
+                        selectionMode={selectionMode}
+                        isSelectable={isSelectable}
+                        isSelected={selectedGameIds.has(game.id)}
+                        onPress={() => {
+                          if (selectionMode && isSelectable) {
+                            onToggleGameSelection?.(game.id);
+                          } else if (!selectionMode) {
+                            onSelectGame(game);
+                          }
+                        }}
+                        onLongPress={() => {
+                          if (!selectionMode) {
+                            dismissLongPressSelectHint();
+                            onEnterSelectionWithGame?.(game.id);
+                          }
+                        }}
+                      />
+                    </Animated.View>
+                  );
+                })}
               </View>
             </Animated.View>
           );
@@ -463,6 +422,16 @@ export default function SavedGamesList({
         </View>
       )}
 
+      <SavedGamesSortSheet
+        visible={showSortSheet}
+        selectedKey={sortKey}
+        onSelect={(key) => {
+          setSortKey(key);
+          onClearSelection?.();
+        }}
+        onClose={() => setShowSortSheet(false)}
+      />
+
       <TournamentFilterModal
         visible={showTournamentFilter}
         tournaments={visibleTournaments}
@@ -478,46 +447,52 @@ export default function SavedGamesList({
   );
 }
 
-function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       gap: 16,
     },
     controlsHeader: {
-      flexDirection: isLandscape ? 'row' : 'column',
-      gap: isLandscape ? 12 : 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(8, sizeClass),
     },
     searchWrapper: {
       flex: 1,
+      // Keeps the field usable when the sort and tournament labels are long; they truncate instead.
+      minWidth: scaleBySizeClass(140, sizeClass),
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 16,
-      height: 48,
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      height: scaleBySizeClass(44, sizeClass),
       borderRadius: 12,
-      borderWidth: 1,
-      gap: 10,
+      gap: scaleBySizeClass(8, sizeClass),
     },
     searchInput: {
       flex: 1,
       fontSize: scaleBySizeClass(16, sizeClass),
       paddingVertical: 8,
     },
-    sortPills: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
-    },
-    sortPill: {
+    controlButton: {
+      flexShrink: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 10,
-      height: 48,
+      justifyContent: 'center',
+      height: scaleBySizeClass(44, sizeClass),
+      minWidth: scaleBySizeClass(44, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
       borderRadius: 12,
-      borderWidth: 1,
-      gap: 4,
+      gap: scaleBySizeClass(6, sizeClass),
     },
-    sortPillText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+    controlButtonText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    tournamentName: {
+      flexShrink: 1,
+      // Scaled with the text so the name truncates at the same character count on tablets.
+      maxWidth: scaleBySizeClass(96, sizeClass),
+      fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },
     emptyState: {
@@ -547,103 +522,46 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       padding: 20,
       alignItems: 'center',
     },
+    summaryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      minHeight: scaleBySizeClass(44, sizeClass),
+      marginBottom: -8,
+    },
+    summaryCount: {
+      fontSize: scaleBySizeClass(12, sizeClass),
+      fontFamily: Fonts.semiBold,
+      letterSpacing: 1,
+    },
     savedGamesList: {
-      gap: 12,
+      gap: scaleBySizeClass(20, sizeClass),
     },
-    savedGameCard: {
-      borderRadius: 12,
-      borderWidth: 1,
+    gameGroup: {
+      gap: scaleBySizeClass(8, sizeClass),
+    },
+    groupHeader: {
       flexDirection: 'row',
-      alignItems: 'center',
-      overflow: 'hidden',
-    },
-    disabledCard: {
-      opacity: 0.45,
-    },
-    checkboxWrapper: {
-      paddingLeft: 16,
-      paddingRight: 8,
-      alignSelf: 'stretch',
-      justifyContent: 'center',
-    },
-    cardContent: {
-      flex: 1,
-      padding: 16,
-    },
-    savedGameHeader: {
-      flexDirection: 'row',
+      alignItems: 'baseline',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
+      gap: 12,
+      paddingHorizontal: scaleBySizeClass(4, sizeClass),
     },
-    headerBadges: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    advancedBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      borderWidth: 1,
-    },
-    advancedBadgeText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.3,
-    },
-    checkbox: {
-      width: 22,
-      height: 22,
-      borderRadius: 6,
-      borderWidth: 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    savedGameDate: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+    groupTitle: {
+      flexShrink: 1,
+      fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
     },
-    savedGameTeams: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    savedGameTeamsPortrait: {
-      gap: 4,
-    },
-    teamScoreRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    teamScoreValue: {
-      fontSize: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.bold,
+    groupRecord: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontFamily: Fonts.semiBold,
       fontVariant: ['tabular-nums'],
-      minWidth: 28,
-      textAlign: 'right',
     },
-    savedGameTeamName: {
-      flex: 1,
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    savedGameTeamRight: {
-      textAlign: 'right',
-    },
-    savedGameMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 12,
-      paddingTop: 12,
-      borderTopWidth: 1,
-    },
-    savedGameMetaText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
+    // One shared surface per day; rows inside are separated by hairlines rather than cards.
+    groupSurface: {
+      borderRadius: 14,
+      overflow: 'hidden',
     },
     longPressHint: {
       flexDirection: 'row',

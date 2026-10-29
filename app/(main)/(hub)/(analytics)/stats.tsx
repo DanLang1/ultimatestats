@@ -37,6 +37,8 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 
 const GAME_NAVIGATION_GUARD_MS = 750;
+// Combining a single game shows nothing its own stats don't.
+const MIN_GAMES_TO_COMBINE = 2;
 
 export default function StatsScreen() {
   const { palette } = useTheme();
@@ -68,7 +70,7 @@ export default function StatsScreen() {
     tournamentId: advancedTournamentIdsByGame.get(summary.id),
   }));
   const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
-  const hasNoSavedGames = allGames.length === 0;
+  const canCombineGames = allGames.length >= MIN_GAMES_TO_COMBINE;
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
   const isAdvancedSelection = selectedGameKind === 'advanced';
@@ -264,7 +266,6 @@ export default function StatsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {hasLiveStats ? <LiveGameRow /> : null}
-        {hasNoSavedGames ? null : <CombineGamesButton />}
         <SavedGamesList
           games={allGames}
           onSelectGame={handleSelectGame}
@@ -275,6 +276,7 @@ export default function StatsScreen() {
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
           tournaments={tournaments}
           selectionMode={selectionMode}
+          summaryAction={canCombineGames ? <CombineGamesButton /> : null}
         />
       </ScrollView>
 
@@ -304,7 +306,7 @@ function createStyles(sizeClass: SizeClass) {
       flex: 1,
     },
     scrollContent: {
-      padding: 24,
+      padding: 16,
       paddingTop: 8,
       paddingBottom: 100,
       gap: scaleBySizeClass(16, sizeClass),

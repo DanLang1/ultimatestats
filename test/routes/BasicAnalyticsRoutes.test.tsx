@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { screen, userEvent } from '@testing-library/react-native';
+import { act, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import CreateTournamentScreen from '@/app/(main)/(hub)/(analytics)/create-tournament';
@@ -44,11 +44,21 @@ describe('basic analytics routes', () => {
     expect(screen.queryByTestId('stats-live-game')).not.toBeOnTheScreen();
   });
 
-  it('combines games from a non-empty saved library', async () => {
-    useGameStore.setState({ savedGames: [createSavedBasicGame()], savedTeams: [testTeam] });
+  it('offers to combine games only once two are saved', async () => {
+    const savedGame = createSavedBasicGame();
+    useGameStore.setState({ savedGames: [savedGame], savedTeams: [testTeam] });
     const user = userEvent.setup();
     await renderScreen(<StatsScreen />);
 
+    expect(screen.getByText('1 GAME')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Combine games' })).not.toBeOnTheScreen();
+
+    await act(() =>
+      useGameStore.setState({
+        savedGames: [savedGame, { ...savedGame, id: 'saved-basic-game-2' }],
+      }),
+    );
+    expect(screen.getByText('2 GAMES')).toBeVisible();
     await user.press(screen.getByRole('button', { name: 'Combine games' }));
 
     expect(router.push).toHaveBeenCalledWith('/aggregate-stats');
@@ -72,7 +82,7 @@ describe('basic analytics routes', () => {
           ],
         });
       },
-      liveRowText: /LIVE\s*Windchill\s*1\s*Rivals\s*0/,
+      liveRowText: /LIVE\s*Point 2\s*Windchill\s*1\s*Rivals\s*0/,
       expectLiveStats: () => {
         expect(screen.getByText('Windchill')).toBeVisible();
         expect(screen.getByText('Rivals')).toBeVisible();
@@ -94,7 +104,7 @@ describe('basic analytics routes', () => {
         useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
         useGameSessionStore.getState().setActiveGameType('advanced');
       },
-      liveRowText: /LIVE\s*Focus\s*0\s*Opponent\s*1/,
+      liveRowText: /LIVE\s*Point 2\s*Focus\s*0\s*Opponent\s*1/,
       expectLiveStats: () =>
         expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('0 - 1'),
     },

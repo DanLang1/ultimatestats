@@ -20,6 +20,20 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
+## P2 - Saved Games Ghost Rows After Search
+
+- Searching the saved games list can leave rows from day groups the search removed drawn over the
+  current list. The ghost rows and header stay after the search is cleared, until the app
+  relaunches. Seen on the iOS simulator; not reproduced in tests.
+- Likely cause (unconfirmed): nested Reanimated layout animations. Each day group is an
+  `Animated.View` with `LinearTransition`, and each row inside it has its own `LinearTransition`
+  and `FadeOut` exiting animation, so removing a whole group runs row exits inside a parent that is
+  also being removed and moved.
+- Fix: animate at one level only, e.g. drop `LinearTransition` from the groups or the rows and
+  keep the row `FadeOut`. Verify by searching and clearing in the simulator.
+- References:
+  `components/view-stats/SavedGamesList.tsx`
+
 ## P3 - Share Schema Version Stamping
 
 - Any advanced schema bump (e.g. a new `ThrowResult`) blocks sharing every advanced game to older

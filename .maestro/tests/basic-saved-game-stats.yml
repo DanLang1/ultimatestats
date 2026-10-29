@@ -17,7 +17,7 @@ tags:
 - tapOn: 'Search teams or dates...'
 - inputText: 'Rivals'
 - hideKeyboard
-- tapOn: '.*Zoboomafoo, 2, Rivals, 1.*'
+- tapOn: '.*versus Rivals, 2 to 1.*'
 - extendedWaitUntil:
     visible: 'TOP PERFORMERS'
     timeout: 5000

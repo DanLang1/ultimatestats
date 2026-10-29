@@ -16,9 +16,7 @@ export type GameListItem =
       opponentName: string;
       myScore: number;
       opponentScore: number;
-      pointsTracked: number;
       tournamentId?: string;
-      importedAt?: number;
     }
   | {
       kind: 'advanced';
@@ -29,9 +27,7 @@ export type GameListItem =
       opponentName: string;
       myScore: number;
       opponentScore: number;
-      pointsTracked: number;
       tournamentId?: string;
-      importedAt?: number;
     };
 
 export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): GameListItem {
@@ -43,9 +39,7 @@ export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): G
     opponentName: game.team2Name,
     myScore: game.team1Score,
     opponentScore: game.team2Score,
-    pointsTracked: game.events.filter((e) => e.type === 'goal').length,
     tournamentId: game.tournamentId,
-    importedAt: game.importedAt,
   };
 }
 
@@ -74,8 +68,6 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
     opponentName,
     myScore,
     opponentScore,
-    pointsTracked: game.points.length,
-    importedAt: game.importedAt,
   };
 }
 
@@ -89,9 +81,21 @@ export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): Gam
     opponentName: summary.opponentName,
     myScore: summary.myScore,
     opponentScore: summary.opponentScore,
-    pointsTracked: summary.pointsTracked,
-    importedAt: summary.importedAt,
   };
+}
+
+export type GameResult = 'win' | 'loss' | 'tie';
+
+/** A scrimmage pits two sides of the same team, so it has no win or loss for the tracked side. */
+export function isScrimmage(game: GameListItem): boolean {
+  return game.kind === 'advanced' && game.gameType === 'scrimmage';
+}
+
+/** Result from the tracked side's perspective. */
+export function getGameResult(game: GameListItem): GameResult {
+  if (game.myScore > game.opponentScore) return 'win';
+  if (game.myScore < game.opponentScore) return 'loss';
+  return 'tie';
 }
 
 /** Aggregate team row subtitle, e.g. "2 games • 5 points tracked". */
