@@ -34,7 +34,7 @@ export const DevDebugModal = ({ visible, onClose, data }: DevDebugModalProps) =>
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       supportedOrientations={['portrait', 'landscape']}
       onRequestClose={onClose}>
       <View

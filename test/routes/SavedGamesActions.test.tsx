@@ -311,6 +311,26 @@ it('filters saved games by either team, trims search text, and reports an unmatc
   expect(screen.getByText('No games match "missing"')).toBeVisible();
 });
 
+it('finds games by the weekday shown in day headings and dates rows with the year when ungrouped', async () => {
+  arrangeSortableGames();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  const hybridWeekday = new Date(Date.UTC(2026, 0, 3)).toLocaleDateString(undefined, {
+    weekday: 'short',
+  });
+  await user.type(screen.getByPlaceholderText('Search teams or dates...'), hybridWeekday);
+  expect(screen.getByText('Rivals')).toBeVisible();
+  expect(screen.queryByText('Dark')).not.toBeOnTheScreen();
+  expect(screen.queryByText('Beta')).not.toBeOnTheScreen();
+
+  await user.clear(screen.getByPlaceholderText('Search teams or dates...'));
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId('saved-games-sort-option-team-asc'));
+  expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}, \d{4}$/)).toHaveLength(3);
+  await user.type(screen.getByPlaceholderText('Search teams or dates...'), 'missing');
+  expect(screen.getByText('No games match "missing"')).toBeVisible();
+});
+
 it.each([
   ['one tracked team', ['Light', 'Light'], '1–1'],
   ['mixed tracked teams', ['Light', 'Hybrid'], null],

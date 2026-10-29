@@ -27,7 +27,7 @@ function getResultStyle(result: RowResult, palette: Palette) {
     win: { letter: 'W', color: palette.success },
     loss: { letter: 'L', color: palette.danger },
     tie: { letter: 'T', color: palette.warning },
-    scrimmage: { letter: 'S', color: palette.textMuted },
+    scrimmage: { letter: 'S', color: palette.accent },
   };
   return styles[result];
 }

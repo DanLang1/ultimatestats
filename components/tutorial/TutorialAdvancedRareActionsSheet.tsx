@@ -64,7 +64,7 @@ export default function TutorialAdvancedRareActionsSheet({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       supportedOrientations={['portrait', 'landscape']}
       onRequestClose={onClose}>
       <BottomSheet

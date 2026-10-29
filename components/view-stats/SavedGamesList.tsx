@@ -2,7 +2,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/ThemedText';
 import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
@@ -14,7 +13,6 @@ import {
 } from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatDate } from '@/lib/basic/statsUtils';
 import { GameKind, GameListItem, getGameResult, isScrimmage } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -58,8 +56,13 @@ function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
+/** Outside day groups, the year tells games from different seasons apart. */
 function formatShortDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 /** Groups consecutive games that share a calendar day, preserving the sorted order. */
@@ -75,6 +78,13 @@ function groupGamesByDay(games: GameListItem[]): SavedGameGroup[] {
     }
   }
   return groups;
+}
+
+/** Day groups when sorted by date, otherwise one untitled group. Every group has at least one game. */
+function groupGames(games: GameListItem[], isGroupedByDay: boolean): SavedGameGroup[] {
+  if (games.length === 0) return [];
+  if (isGroupedByDay) return groupGamesByDay(games);
+  return [{ key: 'all', title: null, games }];
 }
 
 /**
@@ -166,7 +176,8 @@ export default function SavedGamesList({
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
       const t1 = game.myTeamName.toLowerCase();
       const t2 = game.opponentName.toLowerCase();
-      const date = formatDate(game.timestamp).toLowerCase();
+      // Matches the day heading and time the list shows, e.g. "Thu, Oct 29, 2026 5:44 PM".
+      const date = `${formatDayTitle(game.timestamp)} ${formatTime(game.timestamp)}`.toLowerCase();
       return t1.includes(query) || t2.includes(query) || date.includes(query);
     });
   }
@@ -221,9 +232,7 @@ export default function SavedGamesList({
 
   const listedGamesCount = filteredAndSortedGames.length;
   const isGroupedByDay = sortOption.field === 'date';
-  const gameGroups: SavedGameGroup[] = isGroupedByDay
-    ? groupGamesByDay(filteredAndSortedGames)
-    : [{ key: 'all', title: null, games: filteredAndSortedGames }];
+  const gameGroups = groupGames(filteredAndSortedGames, isGroupedByDay);
   const tournamentNames = new Map(tournaments.map((t) => [t.id, t.name]));
 
   const tournamentFilterLabel = activeTournament
@@ -320,10 +329,7 @@ export default function SavedGamesList({
           const groupRecord = formatRecord(group.games);
 
           return (
-            <Animated.View
-              key={group.key}
-              layout={LinearTransition.duration(300)}
-              style={styles.gameGroup}>
+            <View key={group.key} style={styles.gameGroup}>
               {group.title != null && (
                 <View style={styles.groupHeader}>
                   <ThemedText
@@ -357,36 +363,32 @@ export default function SavedGamesList({
                   }
 
                   return (
-                    <Animated.View
+                    <SavedGameResultRow
                       key={game.id}
-                      exiting={FadeOut.duration(200)}
-                      layout={LinearTransition.duration(300)}>
-                      <SavedGameResultRow
-                        game={game}
-                        detailLabel={detailParts.join(' · ')}
-                        showDivider={index < group.games.length - 1}
-                        selectionMode={selectionMode}
-                        isSelectable={isSelectable}
-                        isSelected={selectedGameIds.has(game.id)}
-                        onPress={() => {
-                          if (selectionMode && isSelectable) {
-                            onToggleGameSelection?.(game.id);
-                          } else if (!selectionMode) {
-                            onSelectGame(game);
-                          }
-                        }}
-                        onLongPress={() => {
-                          if (!selectionMode) {
-                            dismissLongPressSelectHint();
-                            onEnterSelectionWithGame?.(game.id);
-                          }
-                        }}
-                      />
-                    </Animated.View>
+                      game={game}
+                      detailLabel={detailParts.join(' · ')}
+                      showDivider={index < group.games.length - 1}
+                      selectionMode={selectionMode}
+                      isSelectable={isSelectable}
+                      isSelected={selectedGameIds.has(game.id)}
+                      onPress={() => {
+                        if (selectionMode && isSelectable) {
+                          onToggleGameSelection?.(game.id);
+                        } else if (!selectionMode) {
+                          onSelectGame(game);
+                        }
+                      }}
+                      onLongPress={() => {
+                        if (!selectionMode) {
+                          dismissLongPressSelectHint();
+                          onEnterSelectionWithGame?.(game.id);
+                        }
+                      }}
+                    />
                   );
                 })}
               </View>
-            </Animated.View>
+            </View>
           );
         })}
       </View>

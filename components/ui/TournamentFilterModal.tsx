@@ -40,7 +40,7 @@ export function TournamentFilterModal({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       supportedOrientations={['portrait', 'landscape']}
       onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
