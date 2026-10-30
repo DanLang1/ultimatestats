@@ -66,7 +66,6 @@ export default function StatsTable({
   }>({ key: 'plusMinus', direction: 'desc' });
   const [showLegend, setShowLegend] = useState(false);
 
-  // Compute playing time stats if pointLines are available
   let playingTimeStats: Map<string, PlayingTimeStats> | null;
   if (games && games.length > 0) {
     playingTimeStats = aggregatePlayingTimeStats(games);
@@ -84,11 +83,9 @@ export default function StatsTable({
     playingTimeStats = null;
   }
 
-  // Only show playing time columns if we have data
   const hasPlayingTimeData = playingTimeStats !== null && playingTimeStats.size > 0;
   const styles = createStyles(isLandscape, hasPlayingTimeData, sizeClass);
 
-  // Helper to get playing time stats for a player by ID
   const getPlayingTimeStats = (playerId: string): PlayingTimeStats | null => {
     return playingTimeStats?.get(playerId) ?? null;
   };
@@ -133,7 +130,6 @@ export default function StatsTable({
   const allPlayerStats = [...playerStats, ...playingTimeOnlyPlayers];
 
   const sortedStats = [...allPlayerStats].sort((a, b) => {
-    // Handle playing time keys
     if (
       sortConfig.key === 'pointsPlayed' ||
       sortConfig.key === 'oEfficiency' ||
@@ -149,7 +145,6 @@ export default function StatsTable({
       return 0;
     }
 
-    // Handle regular player stats keys
     const aValue = a[sortConfig.key as keyof typeof a];
     const bValue = b[sortConfig.key as keyof typeof b];
 

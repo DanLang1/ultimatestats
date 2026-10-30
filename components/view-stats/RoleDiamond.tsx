@@ -28,11 +28,6 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
   const blocks = rawBlocks / scaleMax;
   const turnovers = rawTurnovers / scaleMax;
 
-  // Diamond layout:
-  // Top: Goals
-  // Right: Assists
-  // Bottom: Turnovers
-  // Left: Blocks
   const topY = center - goals * maxRadius;
   const rightX = center + assists * maxRadius;
   const bottomY = center + turnovers * maxRadius;
@@ -40,7 +35,6 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
 
   const points = `${center},${topY} ${rightX},${center} ${center},${bottomY} ${leftX},${center}`;
 
-  // Max outline diamond
   const outlinePoints = [
     `${center},${center - maxRadius}`,
     `${center + maxRadius},${center}`,
@@ -52,17 +46,13 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
     <View style={styles.container}>
       <ThemedText style={[styles.title, { color: palette.textMuted }]}>PROFILE</ThemedText>
 
-      {/* Diamond with external labels */}
       <View style={styles.diamondWrapper}>
-        {/* Left label: BLOCKS */}
         <ThemedText style={[styles.sideLabel, styles.leftLabel, { color: palette.textMuted }]}>
           BLOCKS{'\n'}({rawBlocks})
         </ThemedText>
 
-        {/* SVG Diamond */}
         <View style={styles.diamondArea}>
           <Svg width={size} height={size}>
-            {/* Axis lines */}
             <SvgLine
               x1={center}
               y1={center - maxRadius}
@@ -80,7 +70,6 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
               strokeWidth="1"
             />
 
-            {/* Max outline */}
             <Polygon
               points={outlinePoints}
               fill="none"
@@ -89,7 +78,6 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
               strokeDasharray="4,4"
             />
 
-            {/* Player shape */}
             <Polygon
               points={points}
               fill={palette.accent}
@@ -98,7 +86,6 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
               strokeWidth="2"
             />
 
-            {/* Center dot */}
             <Circle cx={center} cy={center} r="3" fill={palette.textMuted} />
           </Svg>
 
@@ -110,7 +97,6 @@ export default function RoleDiamond({ roleStats }: RoleDiamondProps) {
           </ThemedText>
         </View>
 
-        {/* Right label: ASSISTS */}
         <ThemedText style={[styles.sideLabel, styles.rightLabel, { color: palette.textMuted }]}>
           ASSISTS{'\n'}({rawAssists})
         </ThemedText>

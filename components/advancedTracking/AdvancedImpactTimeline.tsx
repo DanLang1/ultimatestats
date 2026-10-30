@@ -183,7 +183,6 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
 
   const hasImpact = data.some((d) => d.cumulativePlusMinus !== 0);
 
-  // Build chart data
   const startPoint: ChartPoint = {
     x: 0,
     y: 0,
@@ -206,10 +205,8 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
 
   const chartData = [startPoint, ...dataPoints];
 
-  // Event log — only on-field points with impact events
   const eventLog = data.filter((d) => d.onField && d.parts.length > 0);
 
-  // Calculate min/max/final
   const allY = chartData.map((d) => d.y);
   const axisMin = Math.floor(Math.min(...allY, 0));
   const axisMax = Math.ceil(Math.max(...allY, 0));
@@ -223,12 +220,10 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
     finalColor = palette.textMuted;
   }
 
-  // Scrollbar tracking
   const [viewportWidth, setViewportWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
   const [scrollX, setScrollX] = useState(0);
 
-  // Chart width
   const playerEventCount = chartData.length - 1;
   const playerMinWidth = playerEventCount * pxPerEvent;
   const gameEndIdx = data[data.length - 1]?.pointIndex ?? 1;
@@ -263,7 +258,6 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
   const getX = (value: number) => plotLeft + ((value - minIdx) / xRange) * plotWidth;
   const getY = (value: number) => plotBottom - clamp01((value - axisMin) / yRange) * plotHeight;
 
-  // Rendered points for SVG
   const renderedPoints: ChartPoint[] = chartData.map((pt) => ({
     x: getX(pt.x),
     y: getY(pt.y),
@@ -277,11 +271,9 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
   const lineSegments = buildLineSegments(renderedPoints, palette);
   const visibleEventPoints = renderedPoints.slice(1);
 
-  // Y-axis ticks
   const tickValues: number[] = [];
   for (let v = axisMin; v <= axisMax; v++) tickValues.push(v);
 
-  // Score label positions — show each unique score once
   const scorePositions: { score: string; dataIndex: number; x: number }[] = [];
   chartData.forEach((pt, idx) => {
     const isStartPoint = idx === 0;
@@ -321,7 +313,6 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
   });
   if (lastScorePos) visibleScorePositions.push(lastScorePos);
 
-  // Y-axis label candidates
   const axisLabelCandidates = [
     {
       key: 'max',
@@ -460,7 +451,6 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
                 ))}
 
                 {visibleEventPoints.map((pt, i) => {
-                  // On-field with impact events → colored dot + label
                   if (!pt.onField || pt.parts.length === 0) return null;
                   const isPositive = isPositiveImpactEvent(pt.plusMinusDelta);
                   const dotColor = getImpactEventColor(pt.plusMinusDelta, palette);
@@ -486,7 +476,6 @@ export default function AdvancedImpactTimeline({ data }: AdvancedImpactTimelineP
 
                 {scaleMode === 'game' &&
                   visibleEventPoints.map((pt, i) => {
-                    // On-field with no impact events → point played without impact.
                     if (!pt.onField || pt.parts.length > 0) return null;
                     return (
                       <SvgCircle

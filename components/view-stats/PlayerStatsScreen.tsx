@@ -46,7 +46,6 @@ export default function PlayerStatsScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles();
 
-  // Derive player name for display
   const playerName = getPlayerName(roster, playerId) ?? playerId ?? '';
 
   const handleDismiss = () => {
@@ -200,11 +199,9 @@ export default function PlayerStatsScreen() {
             roster={roster}
           />
 
-          {/* Full-width Impact Timeline - show if impact data or playing time data exists */}
           {(hasImpactTimelineData(stats.impact) || hasItems(stripPointLines)) && (
             <StatsSectionCard title="Game impact">
               <View style={styles.chartContent}>
-                {/* Game context / selector */}
                 {(displayGame || hasMultipleSelectableGames) && (
                   <View style={{ marginBottom: 12, paddingHorizontal: 16 }}>
                     <ThemedText
@@ -282,10 +279,8 @@ export default function PlayerStatsScreen() {
                   </View>
                 )}
 
-                {/* Impact timeline — only when selected game has recorded events */}
                 {hasImpactTimelineData(stats.impact) && <ImpactTimeline data={stats.impact} />}
 
-                {/* Point presence strip */}
                 {hasItems(stripPointLines) && (
                   <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
                     <PointPresenceStrip
@@ -304,7 +299,6 @@ export default function PlayerStatsScreen() {
             </StatsSectionCard>
           )}
 
-          {/* Full-width Chemistry Map - only show if connections exist */}
           {stats.chemistry.some((c) => c.goalsFrom > 0 || c.assistsTo > 0) && (
             <StatsSectionCard title="Scoring chemistry">
               <View style={styles.chartContent}>
@@ -313,7 +307,6 @@ export default function PlayerStatsScreen() {
             </StatsSectionCard>
           )}
 
-          {/* Playing Time Section */}
           <PlayingTimeSection
             playerId={playerId}
             events={events}

@@ -45,7 +45,6 @@ export type RatioCheckResult = {
 };
 
 /**
- * Check if a line of players has the correct gender ratio.
  * Returns null if ratio can't be determined (e.g., players missing matchingType).
  */
 export function checkLineRatio(
@@ -65,7 +64,6 @@ export function checkLineRatio(
     }
   }
 
-  // Can't determine if we don't have enough data
   if (fmpCount + mmpCount === 0) {
     return null;
   }

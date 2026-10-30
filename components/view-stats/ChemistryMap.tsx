@@ -61,11 +61,9 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
   const centerY = svgHeight / 2;
   const columnOffset = scaleBySizeClass(75, sizeClass);
 
-  // Calculate max count for scaling
   const maxFeederCount = Math.max(...feeders.map((f) => f.goalsFrom), 1);
   const maxTargetCount = Math.max(...targets.map((t) => t.assistsTo), 1);
 
-  // Calculate summary stat: strongest connection
   const allConnections = [
     ...feeders.map((f) => ({ name: f.playerName, count: f.goalsFrom, type: 'Received' })),
     ...targets.map((t) => ({ name: t.playerName, count: t.assistsTo, type: 'Threw' })),
@@ -91,7 +89,6 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
         </ThemedText>
       </View>
 
-      {/* Column Headers */}
       <View style={[styles.columnHeaders, { width: svgWidth }]}>
         <View style={styles.columnHeader}>
           <ThemedText style={[styles.headerText, { color: palette.textMuted }]}>
@@ -151,7 +148,6 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
           );
         })}
 
-        {/* Center Player Node */}
         <Circle cx={centerX} cy={centerY} r={centerNodeRadius} fill={palette.accent} />
         <SvgText
           x={centerX}
@@ -163,17 +159,14 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
           {centerLabel}
         </SvgText>
 
-        {/* Feeder Nodes (Left Side) */}
         {feeders.map((feeder, i) => {
           const y = centerY - ((feeders.length - 1) * rowSpacing) / 2 + i * rowSpacing;
           const x = centerX - columnOffset;
-          // Scale node radius based on count
           const nodeRadius =
             minNodeRadius + (feeder.goalsFrom / maxFeederCount) * (maxNodeRadius - minNodeRadius);
 
           return (
             <G key={`feeder-${feeder.playerName}`}>
-              {/* Node Circle with Count inside */}
               <Circle cx={x} cy={y} r={nodeRadius} fill={palette.accent} opacity={0.2} />
               <Circle
                 cx={x}
@@ -193,7 +186,6 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 {feeder.goalsFrom}
               </SvgText>
 
-              {/* Player Name to the left of node */}
               <SvgText
                 x={x - nodeRadius - 6}
                 y={y + 4}
@@ -209,17 +201,14 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
           );
         })}
 
-        {/* Target Nodes (Right Side) */}
         {targets.map((target, i) => {
           const y = centerY - ((targets.length - 1) * rowSpacing) / 2 + i * rowSpacing;
           const x = centerX + columnOffset;
-          // Scale node radius based on count
           const nodeRadius =
             minNodeRadius + (target.assistsTo / maxTargetCount) * (maxNodeRadius - minNodeRadius);
 
           return (
             <G key={`target-${target.playerName}`}>
-              {/* Node Circle with Count inside */}
               <Circle cx={x} cy={y} r={nodeRadius} fill={palette.success} opacity={0.2} />
               <Circle
                 cx={x}
@@ -239,7 +228,6 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
                 {target.assistsTo}
               </SvgText>
 
-              {/* Player Name to the right of node */}
               <SvgText
                 x={x + nodeRadius + 6}
                 y={y + 4}
@@ -256,7 +244,6 @@ export default function ChemistryMap({ playerName, connections }: ChemistryMapPr
         })}
       </Svg>
 
-      {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />

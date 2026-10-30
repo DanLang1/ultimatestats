@@ -19,7 +19,6 @@ export default function TeamText({
   isCompactVertical = false,
 }: TeamTextProps) {
   const { sizeClass } = useLayout();
-  // Dynamic font size: starts at baseFontSize, shrinks for longer names
   const baseFontSize = getSizeClassValue({ small: 40, medium: 52, large: 60 }, sizeClass);
   const minFontSize = getSizeClassValue({ small: 24, medium: 30, large: 36 }, sizeClass);
   const shrinkThreshold = 8; // Start shrinking after 8 characters

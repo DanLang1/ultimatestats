@@ -4,31 +4,23 @@ export const MAX_TEAM_NAME_LENGTH = 30;
 /** Maximum character length for player names (inputs + import truncation). */
 export const MAX_PLAYER_NAME_LENGTH = 20;
 
-/** Maximum character length for player jersey numbers. */
 export const MAX_PLAYER_NUMBER_LENGTH = 3;
 
-/** Duration for transient "event recorded" toast visibility. */
 export const EVENT_RECORDED_TOAST_DURATION_MS = 2000;
 
 /** Maximum minutes allowed when editing a point duration. */
 export const MAX_POINT_DURATION_MINUTES = 50;
 
-/** Default halftime break length in seconds. */
 export const DEFAULT_HALFTIME_BREAK_SECONDS = 7 * 60;
 
-/** Minimum halftime break length in seconds. */
 export const MIN_HALFTIME_BREAK_SECONDS = 0;
 
-/** Maximum halftime break length in seconds. */
 export const MAX_HALFTIME_BREAK_SECONDS = 15 * 60;
 
-/** Default timeout length in seconds. */
 export const DEFAULT_TIMEOUT_SECONDS = 70;
 
-/** Minimum timeout length in seconds. */
 export const MIN_TIMEOUT_SECONDS = 0;
 
-/** Maximum timeout length in seconds. */
 export const MAX_TIMEOUT_SECONDS = 5 * 60;
 
 /** Cap progress bar turns red when time remaining drops below this (ms). */
@@ -43,7 +35,6 @@ export const STOPWATCH_TICK_MS = 100;
 /** Earliest valid year for recorded Ultimate games in the played-at editor. */
 export const MIN_PLAYED_AT_YEAR = 1968;
 
-/** Maximum number of games that can be shared at once. */
 export const MAX_SHARE_GAMES = 10;
 
 /**
@@ -53,7 +44,6 @@ export const MAX_SHARE_GAMES = 10;
  */
 export const MAX_SHARE_ADVANCED_GAMES = 4;
 
-/** Maximum character length for tournament names. */
 export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 
 /** Maximum character length for a private advanced-game note. */

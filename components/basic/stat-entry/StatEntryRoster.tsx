@@ -23,7 +23,6 @@ export function StatEntryRoster({
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
 
-  // Sort roster alphabetically by name
   const sortedRoster = [...roster].sort((a, b) => a.name.localeCompare(b.name));
 
   return (

@@ -5,7 +5,6 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { GenderRatio } from '@/lib/genderRatioUtils';
 import { reportHydrationError } from '@/lib/sentry';
 
-// Default colors from theme
 const DEFAULT_MMP_COLOR = '#60A5FA'; // Blue 400
 const DEFAULT_FMP_COLOR = '#F472B6'; // Pink 400
 
@@ -17,18 +16,14 @@ interface SettingsState {
   mmpColor: string;
   fmpColor: string;
 
-  // Gender Ratio Settings
   genderRatioEnabled: boolean;
   firstPointRatio: GenderRatio | null;
 
-  // Line Calling Settings
   lineCallingEnabled: boolean;
   numPlayers: number;
 
-  // Roster View
   rosterViewMode: 'chips' | 'cards';
 
-  // App Orientation
   orientationMode: OrientationMode;
 
   // Hard Cap / Cap Timing (minutes)
@@ -38,7 +33,6 @@ interface SettingsState {
   advancedHardCapEnabled: boolean;
   advancedSoftCapEnabled: boolean;
 
-  // Actions
   setMmpColor: (color: string) => void;
   setFmpColor: (color: string) => void;
   resetMatchingTypeColors: () => void;

@@ -85,7 +85,6 @@ export default function EditRosterScreen() {
   const { palette } = useTheme();
   const { rosterViewMode, setRosterViewMode, linePlayerSortOrder } = useSettingsStore();
 
-  // Derived values
   const roster = currentTeam.roster;
   const { kind: activeGameKind } = useActiveGameSession();
   const gameActive = activeGameKind !== 'none';
@@ -117,7 +116,6 @@ export default function EditRosterScreen() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>(null);
   const [bulkVisiblePlayerIds, setBulkVisiblePlayerIds] = useState<Set<string> | null>(null);
 
-  // Selection mode state
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
 
@@ -143,7 +141,6 @@ export default function EditRosterScreen() {
     bulkVisiblePlayerIds,
   );
 
-  // Derived: check if edited team name already exists
   const teamNameExists =
     editTeamName.trim() !== '' &&
     savedTeams.some(
@@ -151,12 +148,10 @@ export default function EditRosterScreen() {
         t.name.toLowerCase() === editTeamName.trim().toLowerCase() && t.id !== currentTeam.id,
     );
 
-  // Derived: check if new team name already exists
   const newTeamNameExists =
     newTeamName.trim() !== '' &&
     savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
 
-  // Selection mode handlers
   const toggleSelectionMode = () => {
     setSelectionMode((prev) => {
       if (prev) {
@@ -227,7 +222,6 @@ export default function EditRosterScreen() {
     if (!trimmedName || newTeamNameExists) return;
     resetSelectionState();
 
-    // Save current team first if it has a roster
     if (hasRoster) {
       await saveCurrentTeam();
     }
@@ -372,7 +366,6 @@ export default function EditRosterScreen() {
 
   const useChipView = selectionMode || rosterViewMode === 'chips';
 
-  // Group players by matching type for chip grid
   const groupedPlayers = useChipView ? groupPlayersByMatchingType(visibleRoster) : [];
 
   const allActiveSelected = areAllActivePlayersSelected(visibleRoster, selectedPlayerIds);
@@ -523,7 +516,6 @@ export default function EditRosterScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.mainLayout}>
-        {/* Main Content */}
         <View style={styles.mainContent}>
           <ScreenHeader
             title={currentTeam.name.toUpperCase()}
@@ -550,7 +542,6 @@ export default function EditRosterScreen() {
             }
           />
 
-          {/* Actions bar - medium and large screens */}
           {sizeClass !== 'small' && !selectionMode && (
             <TeamActionsBar
               viewMode={rosterViewMode}
@@ -580,7 +571,6 @@ export default function EditRosterScreen() {
             />
           )}
 
-          {/* Add Player Input */}
           {!selectionMode && (
             <View style={[styles.addPlayerSection, { borderBottomColor: palette.overlay10 }]}>
               <View style={styles.inputWrapper}>
@@ -642,7 +632,6 @@ export default function EditRosterScreen() {
             />
           )}
 
-          {/* Player List */}
           <ScrollView
             style={styles.playerList}
             contentContainerStyle={[
@@ -652,7 +641,6 @@ export default function EditRosterScreen() {
             {playerListContent}
           </ScrollView>
 
-          {/* Bulk Actions Bar */}
           <RosterBulkActions
             selectedCount={selectedPlayerIds.size}
             onSetMatching={handleBulkSetMatching}
@@ -662,7 +650,6 @@ export default function EditRosterScreen() {
         </View>
       </View>
 
-      {/* Rename Team Modal */}
       <AlertModal
         visible={renameModalVisible}
         title="Rename Team"
@@ -720,7 +707,6 @@ export default function EditRosterScreen() {
         </View>
       </AlertModal>
 
-      {/* New Team Modal */}
       <AlertModal
         visible={newTeamModalVisible}
         title="New Team"
@@ -1014,7 +1000,6 @@ function createStyles(sizeClass: SizeClass) {
       flexWrap: 'wrap',
       gap: scaleBySizeClass(8, sizeClass),
     },
-    // Alert modal content styles
     alertInput: {
       borderWidth: 1,
       borderRadius: scaleBySizeClass(10, sizeClass),

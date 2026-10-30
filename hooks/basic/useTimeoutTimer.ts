@@ -28,7 +28,7 @@ export function useTimeoutTimer() {
   const handleContinue = () => {
     // Resume point timer if it was paused (timeout pauses the point timer)
     if (pointTimerEnabled && currentPointStartTime !== null && pointTimerPausedElapsed !== null) {
-      togglePointTimerPause(); // This will resume it
+      togglePointTimerPause();
     }
     clearTimeoutModal();
   };

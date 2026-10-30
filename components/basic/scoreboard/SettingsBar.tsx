@@ -55,7 +55,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: barBg, shadowColor: palette.shadow }]}>
-      {/* Play/Pause */}
       <Pressable
         onPress={toggleTimer}
         style={styles.iconButton}
@@ -69,7 +68,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         />
       </Pressable>
 
-      {/* Timer Text */}
       <View style={styles.timerContainer}>
         <ThemedText
           testID="scoreboard-clock-value"
@@ -79,7 +77,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         {capIcon}
       </View>
 
-      {/* Gender Ratio Indicator */}
       {genderRatioEnabled && firstPointRatio && (
         <Pressable onPress={() => setShowAbbaModal(true)} style={styles.ratioContainer}>
           <ThemedText style={[styles.ratioText, { color: barContentColor }]}>
@@ -91,7 +88,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         </Pressable>
       )}
 
-      {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
         <Pressable
           onPress={() => router.push('/live-stats')}
@@ -103,7 +99,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         </Pressable>
       )}
 
-      {/* Info */}
       <Pressable
         onPress={() => router.push('/game-info')}
         style={styles.iconButton}
@@ -113,7 +108,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         <MaterialCommunityIcons name="information" size={iconSize} color={barContentColor} />
       </Pressable>
 
-      {/* Settings */}
       <Pressable
         onPress={() => router.push('/settings')}
         style={styles.iconButton}
@@ -123,7 +117,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         <MaterialCommunityIcons name="cog" size={iconSize} color={barContentColor} />
       </Pressable>
 
-      {/* Undo */}
       <Pressable
         onPress={onUndo}
         accessibilityLabel="Undo last action"
@@ -134,7 +127,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
         <MaterialCommunityIcons name="undo" size={iconSize} color={barContentColor} />
       </Pressable>
 
-      {/* ABBA Rule Explanation Modal */}
       <AlertModal
         visible={showAbbaModal}
         title="Ratio Rule A (ABBA)"

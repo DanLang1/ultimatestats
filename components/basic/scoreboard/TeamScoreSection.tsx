@@ -53,18 +53,15 @@ export default function TeamScoreSection({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass, isCompactVertical);
 
-  // Determine what happens on tap
   // If possession tracking is enabled (hasPossession is defined):
   //   - If this team HAS possession: tap = score (they scored)
   //   - If this team does NOT have possession: tap does nothing (turnovers come from the action bar)
   // If possession tracking is disabled (hasPossession is undefined): tap = score (original behavior)
   const handleTap = () => {
     if (hasPossession === undefined) {
-      // Possession tracking disabled - original behavior
       triggerScoreHaptic();
       onIncrement();
     } else if (hasPossession) {
-      // This team has the disc - they scored
       triggerScoreHaptic();
       onIncrement();
     }

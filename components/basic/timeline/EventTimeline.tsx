@@ -69,7 +69,6 @@ export default function EventTimeline({
 
   return (
     <View style={styles.container}>
-      {/* Score Header */}
       <View style={[styles.scoreHeader, { backgroundColor: palette.overlay05 }]}>
         <ThemedText style={[styles.headerScore, { color: palette.success }]}>
           {finalScore.team1}
@@ -83,9 +82,7 @@ export default function EventTimeline({
         </ThemedText>
       </View>
 
-      {/* Timeline */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {/* Edit hint */}
         {(onEditEvent || onEditPointDuration || onEditEventTime) && (
           <View style={styles.editHint}>
             {onEditEvent && (
@@ -141,7 +138,6 @@ function createStyles(sizeClass: SizeClass) {
       flex: 1,
       gap: 12,
     },
-    // Header
     scoreHeader: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -166,7 +162,6 @@ function createStyles(sizeClass: SizeClass) {
       textTransform: 'uppercase',
       letterSpacing: 1,
     },
-    // List
     listContent: {
       paddingHorizontal: 16,
       paddingBottom: 24,

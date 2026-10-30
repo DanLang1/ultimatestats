@@ -12,11 +12,8 @@ export interface TimeoutState {
  * Derives timeout state by replaying events.
  * This ensures correct timeout state after undo operations, especially across halftime.
  *
- * @param events - Array of game events to replay
  * @param _baseGameTo - Legacy argument retained for call-site compatibility
- * @param autoHalftimeEnabled - Whether automatic halftime is enabled
  * @param timeoutCount - Number of regular timeouts per team
- * @returns The derived timeout state for both teams
  */
 export function deriveTimeoutState(
   events: GameEvent[],

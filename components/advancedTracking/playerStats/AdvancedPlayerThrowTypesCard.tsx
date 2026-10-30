@@ -56,7 +56,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
   const hasHuckReceiving = huckTargetTotal > 0;
   const hasResetTurnovers = stats.resetTurnovers > 0 || stats.resetsDropped > 0;
 
-  // Build Huck Throwing outcome tokens
   const huckOutcomeItems: OutcomeItem[] = [];
   if (stats.huckCompletions > 0) {
     huckOutcomeItems.push({
@@ -89,7 +88,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
     });
   }
 
-  // Build Huck Receiving outcome tokens
   const huckReceivingItems: OutcomeItem[] = [];
   if (stats.hucksCaught > 0) {
     huckReceivingItems.push({
@@ -157,7 +155,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
           HUCK THROWING
         </ThemedText>
 
-        {/* Horizontal Stat Pair: Rate (Left) & Count (Right) */}
         <View style={styles.statHeroRow}>
           <View style={styles.statColLeft}>
             <ThemedText style={[styles.rateValue, { color: getRateColor(huckCompletionPct) }]}>
@@ -178,7 +175,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
           </View>
         </View>
 
-        {/* Progress bar */}
         <View style={[styles.progressBarTrack, { backgroundColor: palette.overlay10 }]}>
           {huckCompletionPct > 0 && (
             <View
@@ -193,7 +189,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
           )}
         </View>
 
-        {/* Outcomes inline text */}
         {renderOutcomes(huckOutcomeItems)}
       </View>
     );
@@ -211,7 +206,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
           HUCK RECEIVING
         </ThemedText>
 
-        {/* Horizontal Stat Pair: Catch Rate (Left) & Caught Count (Right) */}
         <View style={styles.statHeroRow}>
           <View style={styles.statColLeft}>
             <ThemedText style={[styles.rateValue, { color: getRateColor(huckCatchPct) }]}>
@@ -232,7 +226,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
           </View>
         </View>
 
-        {/* Progress bar */}
         <View style={[styles.progressBarTrack, { backgroundColor: palette.overlay10 }]}>
           {huckCatchPct > 0 && (
             <View
@@ -247,7 +240,6 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
           )}
         </View>
 
-        {/* Receiving outcomes */}
         {renderOutcomes(huckReceivingItems)}
       </View>
     );
@@ -263,23 +255,18 @@ export default function AdvancedPlayerThrowTypesCard({ stats }: AdvancedPlayerTh
         message: 'Classifications are optional, so this data may not be fully accurate.',
       }}>
       <View style={styles.content}>
-        {/* Section 1: Huck Throwing */}
         {renderHuckThrowing()}
 
-        {/* Divider between Huck Throwing and Huck Receiving */}
         {hasHuckThrowing && hasHuckReceiving && (
           <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
         )}
 
-        {/* Section 2: Huck Receiving */}
         {renderHuckReceiving()}
 
-        {/* Divider before Backfield Turnovers if previous sections exist */}
         {(hasHuckThrowing || hasHuckReceiving) && hasResetTurnovers && (
           <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
         )}
 
-        {/* Section 3: Backfield Turnovers */}
         {hasResetTurnovers && (
           <View style={styles.section}>
             <View style={styles.resetHeaderRow}>

@@ -28,17 +28,12 @@ function getPlayerName(playerId: string | null | undefined, roster: Player[]): s
   return resolved;
 }
 
-// ---------------------------------------------------------------------------
-// Turnover signal
-// ---------------------------------------------------------------------------
-
 function getTurnoverMessage(event: TurnoverEvent, roster: Player[], team2Name: string) {
   const isOpponent = event.team === 'team2';
   const playerName = getPlayerName(event.playerId, roster);
   const player2Name = getPlayerName(event.player2Id, roster);
 
   if (isOpponent) {
-    // Opponent action
     switch (event.subtype) {
       case 'block':
         // "Opp D" button — their team blocked us
@@ -50,7 +45,6 @@ function getTurnoverMessage(event: TurnoverEvent, roster: Player[], team2Name: s
     }
   }
 
-  // Our team actions
   const playerLabel = playerName ?? UNKNOWN_PLAYER_LABEL;
   const nameLabel = playerName ? ` by ${playerName}` : '';
   switch (event.subtype) {
@@ -86,12 +80,10 @@ const DEFAULT_ICON: EventIconInfo = { library: 'material', name: 'swap-horizonta
 
 function getTurnoverIcon(event: TurnoverEvent): EventIconInfo {
   if (event.team === 'team2') {
-    // Opponent actions
     if (event.subtype === 'block') return { library: 'material', name: 'hand-front-left-outline' };
     return { library: 'material', name: 'gift-outline' };
   }
 
-  // Our team actions
   switch (event.subtype) {
     case 'block':
       return { library: 'material', name: 'hand-back-left-outline' };
@@ -105,10 +97,6 @@ function getTurnoverIcon(event: TurnoverEvent): EventIconInfo {
       return DEFAULT_ICON;
   }
 }
-
-// ---------------------------------------------------------------------------
-// Undo signal
-// ---------------------------------------------------------------------------
 
 function getUndoMessage(event: GameEvent, roster: Player[], team2Name: string): string {
   if (event.type === 'goal') {
@@ -156,10 +144,6 @@ function getUndoMessage(event: GameEvent, roster: Player[], team2Name: string): 
 
   return 'Action undone';
 }
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
 
 type ToastOptions = {
   roster: Player[];

@@ -1,10 +1,6 @@
 import { useNow } from '@/hooks/useTimer';
 import { useGameStore } from '@/store/basic/gameStore';
 
-/**
- * Hook to manage point timer elapsed time display.
- * Returns the current elapsed time in seconds and pause state.
- */
 export function usePointTimer() {
   const {
     currentPointStartTime,

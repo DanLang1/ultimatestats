@@ -1,10 +1,3 @@
-/**
- * Color utility functions for team color management
- */
-
-/**
- * Common team colors for the preset picker
- */
 export const TEAM_COLOR_PRESETS = [
   // Neutrals
   { name: 'White', hex: '#FFFFFF' },
@@ -30,39 +23,31 @@ export const TEAM_COLOR_PRESETS = [
 ] as const;
 
 /**
- * Calculate relative luminance of a color
  * Based on WCAG 2.1 formula
  */
 function getLuminance(hex: string): number {
-  // Handle invalid input
   if (!hex || typeof hex !== 'string') {
     return 0;
   }
 
-  // Remove # if present
   let cleanHex = hex.replace('#', '');
 
-  // Handle 8-char RGBA format (strip alpha)
   if (cleanHex.length === 8) {
     cleanHex = cleanHex.substring(0, 6);
   }
 
-  // Handle 3-char shorthand
   if (cleanHex.length === 3) {
     cleanHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
   }
 
-  // Validate we have 6 chars
   if (cleanHex.length !== 6) {
     return 0;
   }
 
-  // Parse RGB values
   const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
   const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
   const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
 
-  // Handle NaN from invalid hex chars
   if (isNaN(r) || isNaN(g) || isNaN(b)) {
     return 0;
   }
@@ -72,12 +57,10 @@ function getLuminance(hex: string): number {
   const gLinear = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
   const bLinear = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
 
-  // Calculate luminance
   return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
 }
 
 /**
- * Returns black or white text color based on background color
  * Uses WCAG contrast ratio recommendations
  *
  * @param backgroundColor - Hex color string (e.g., '#FFFFFF' or 'FFFFFF')
@@ -90,7 +73,6 @@ export function getContrastingTextColor(backgroundColor: string): '#000000' | '#
 }
 
 /**
- * Convert a hex color to HSL components.
  * Returns null if the input is not a parseable hex color.
  */
 function hexToHsl(hex: string): [number, number, number] | null {
@@ -127,7 +109,6 @@ function hexToHsl(hex: string): [number, number, number] | null {
 }
 
 /**
- * Convert HSL components back to a hex color string.
  * h: 0–360, s: 0–100, l: 0–100
  */
 function hslToHex(h: number, s: number, l: number): string {
@@ -168,7 +149,6 @@ export function ensureContrast(color: string, bgColor: string, minRatio: number)
   const colorLum = getLuminance(color);
   if (contrastRatio(colorLum, bgLum) >= minRatio) return color;
 
-  // On dark backgrounds push lighter; on light backgrounds push darker
   const [h, s, l] = hsl;
   const step = bgLum < 0.5 ? 1 : -1;
   let adjustedL = l;
@@ -191,12 +171,10 @@ export function normalizeHexColor(color: string): string {
 
   let hex = color.startsWith('#') ? color.substring(1) : color;
 
-  // Strip alpha from 8-char RGBA
   if (hex.length === 8) {
     hex = hex.substring(0, 6);
   }
 
-  // Expand 3-char shorthand
   if (hex.length === 3) {
     hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
   }

@@ -16,7 +16,6 @@ interface TutorialState {
   // Runtime
   hasHydrated: boolean;
 
-  // Actions
   completeTutorial: () => void;
   completeAdvancedOnboarding: () => void;
   queueStatsTutorialForNextGameStart: () => void;

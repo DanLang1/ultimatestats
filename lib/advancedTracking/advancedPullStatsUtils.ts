@@ -1,8 +1,6 @@
 import type { AnalyticsGame } from './analyticsTypes';
 import { PULL_RESULT_SPECS, PULL_RESULTS, type PullResult } from './types';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export interface PullStats {
   totalPulls: number;
   /** Pull result → count. E.g. { inbound: 3, ob: 2, dropped: 1, roller: 1 } */
@@ -19,10 +17,7 @@ export function getInboundPullCount(stats: Pick<PullStats, 'outcomes'>): number 
   return count;
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
-
 /**
- * Compute pull outcome and hang time stats from pull actions.
  * Optionally filter to a specific pulling side.
  */
 export function computePullStats(game: AnalyticsGame, sideId?: string): PullStats {

@@ -17,7 +17,6 @@ export default function NotFoundScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.primary }]}>
-      {/* Header */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.replace('/')}
@@ -35,7 +34,6 @@ export default function NotFoundScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Content */}
       <View style={styles.content}>
         <MaterialCommunityIcons
           name="link-off"
@@ -51,7 +49,6 @@ export default function NotFoundScreen() {
           If you came from a share link, it may have expired.
         </ThemedText>
 
-        {/* Actions */}
         <View style={styles.actions}>
           <Pressable
             onPress={() => router.replace('/')}

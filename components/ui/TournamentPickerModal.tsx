@@ -93,18 +93,15 @@ export function TournamentPickerModal({
               },
             ]}
             onPress={(e) => e.stopPropagation()}>
-            {/* Handle bar */}
             <View style={styles.handleContainer}>
               <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
             </View>
 
-            {/* Title */}
             <ThemedText style={[styles.title, { color: palette.modalText }]}>
               Select Tournament
             </ThemedText>
 
             <ScrollView bounces={false}>
-              {/* Create new option */}
               <Pressable
                 style={[styles.row, { borderBottomColor: palette.overlay10 }]}
                 onPress={handleCreateNew}>
@@ -114,7 +111,6 @@ export function TournamentPickerModal({
                 </ThemedText>
               </Pressable>
 
-              {/* Existing tournaments */}
               {compatibleTournaments.map((tournament) => (
                 <Pressable
                   key={tournament.id}

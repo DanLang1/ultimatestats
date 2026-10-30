@@ -17,8 +17,8 @@ export type UpdateRosterPlayerResult =
 export type GoalEvent = {
   type: 'goal';
   team: 'team1' | 'team2';
-  goalPlayerId: string | null; // Player ID who scored
-  assistPlayerId: string | null; // Player ID who assisted
+  goalPlayerId: string | null;
+  assistPlayerId: string | null;
   gameId?: string; // Populated on save - links to SavedGame.id
   elapsedMs?: number; // Elapsed game time in ms when goal was scored
   pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
@@ -41,7 +41,7 @@ export type TimeoutEvent = {
   type: 'timeout';
   team: 'team1' | 'team2'; // Team that called the timeout
   index: number; // Which timeout slot (0, 1 for regular timeouts)
-  isFloater: boolean; // Whether this was a floater timeout
+  isFloater: boolean;
   gameId?: string; // Populated on save - links to SavedGame.id
   elapsedMs?: number; // Elapsed game time in ms when timeout was called
   pointTimerWasPaused?: boolean; // Timer state BEFORE timeout (for undo restoration)
@@ -56,11 +56,9 @@ export type EventToastSignal =
   | { id: number; kind: 'opponentGoal' };
 
 export interface GameState {
-  // Teams
   currentTeam: SavedTeam; // My team (id, name, roster) - defaults to Team 1
   team2Name: string; // Opposing team name (no roster/ID needed)
 
-  // Team colors and game state
   team1BgColor: string;
   team2BgColor: string;
   team1Score: number;
@@ -87,39 +85,32 @@ export interface GameState {
   isPostGameFlowPending: boolean;
   currentGameId: string | null; // ID of saved game for current session (prevents duplicates on undo+re-win)
 
-  // Halftime Break
   isHalftimeBreak: boolean;
   halftimeEndTime: number | null; // Absolute timestamp when halftime timer ends
   halftimeTimeLeft: number; // Seconds remaining in halftime break
 
-  // Timeout Modal
-  pendingTimeoutModal: boolean; // Whether to show the timeout modal
+  pendingTimeoutModal: boolean;
   timeoutEndTime: number | null; // Absolute timestamp when timeout timer ends
   timeoutTimeLeft: number; // Seconds remaining in timeout (default 70)
 
-  // Stat Tracking
   statTrackingEnabled: boolean;
-  events: GameEvent[]; // Unified event log
+  events: GameEvent[];
   pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
   pointTimerEnabled: boolean; // Optional: show "Start Point" button for accurate timing
   currentPointStartTime: number | null; // Working timestamp for current point
   pointStartTimestamps: Record<number, number>; // Finalized timestamps for completed points
   pointTimerPausedElapsed: number | null; // Elapsed ms when paused (null = running)
 
-  // Turnover Tracking
   possession: 'team1' | 'team2' | null;
   startingPossession: 'team1' | 'team2' | null;
   pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
   eventToastSignal: EventToastSignal | null;
 
-  // Point tracking for timeline
   currentPoint: number;
 
-  // Line Calling
   currentLine: string[]; // 7 playerIds on field now
-  pointLines: PointLineRecord[]; // Line records per point
+  pointLines: PointLineRecord[];
 
-  // Actions
   setCurrentTeam: (team: SavedTeam) => void;
   setTeam2Name: (name: string) => void;
   setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
@@ -150,13 +141,11 @@ export interface GameState {
   setHalftimeTimeLeft: (seconds: number) => void;
   clearHalftimeBreak: () => void;
 
-  // Timeout Modal Actions
   setPendingTimeoutModal: (pending: boolean) => void;
   setTimeoutEndTime: (time: number | null) => void;
   setTimeoutTimeLeft: (seconds: number) => void;
   clearTimeoutModal: () => void;
 
-  // Stat Tracking Actions
   setStatTrackingEnabled: (enabled: boolean) => void;
   addPlayer: (name: string) => string | null;
   updateRosterPlayer: (
@@ -175,7 +164,6 @@ export interface GameState {
   startPoint: () => void;
   togglePointTimerPause: () => void;
 
-  // Turnover Tracking Actions
   setPossession: (team: 'team1' | 'team2') => void;
   triggerTurnover: () => void;
   addTurnoverEvent: (event: {
@@ -187,7 +175,6 @@ export interface GameState {
   clearEventToastSignal: () => void;
   clearPendingTurnoverEntry: () => void;
 
-  // Event Editing Actions
   updateEvent: (
     eventIndex: number,
     updates: {
@@ -201,7 +188,6 @@ export interface GameState {
   ) => void;
   deleteEvent: (eventIndex: number) => boolean; // Returns false if deletion blocked (goal/assist)
 
-  // Saved Game Event Editing Actions
   updateSavedGameEvent: (
     gameId: string,
     eventIndex: number,
@@ -218,7 +204,6 @@ export interface GameState {
   updateSavedGamePlayedAt: (gameId: string, playedAt: number) => Promise<void>;
   updateSavedGameTournament: (gameId: string, tournamentId: string | undefined) => Promise<void>;
 
-  // Line Calling Actions
   setCurrentLine: (playerIds: string[]) => void;
   recordLineForPoint: (
     pointNumber: number,
@@ -232,7 +217,6 @@ export interface GameState {
     playerIds: string[],
   ) => Promise<boolean>;
 
-  // Saved Games & Teams
   savedGames: SavedGame[];
   savedTeams: SavedTeam[];
   saveCurrentGame: () => Promise<void>;

@@ -67,9 +67,6 @@ function getThrowTypeLabel(type: 'huck' | 'backfield_reset' | undefined): string
   return '';
 }
 
-/**
- * Generate CSV for a single advanced game.
- */
 export function generateAdvancedGameCSV(
   analyticsGame: AnalyticsGame,
   perspectiveSideId = analyticsGame.focusSideId,
@@ -108,9 +105,6 @@ export function generateAdvancedGameCSV(
   return csv;
 }
 
-/**
- * Generate CSV for aggregate advanced stats across multiple games.
- */
 export function generateAggregateAdvancedCSV(
   games: AnalyticsGame[],
   aggregatedGame: AnalyticsGame,

@@ -96,7 +96,6 @@ export default function StatsContent({
 
   return (
     <>
-      {/* Team Summary Card */}
       <View
         style={[
           styles.summaryCard,
@@ -162,7 +161,6 @@ export default function StatsContent({
         ) : null}
       </View>
 
-      {/* Team Stats Section */}
       <TeamStatsSection
         events={events}
         startingPossession={startingPossession}
@@ -174,7 +172,6 @@ export default function StatsContent({
         team2Color={team2Color}
       />
 
-      {/* Player Stats Table */}
       {playerStats.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons

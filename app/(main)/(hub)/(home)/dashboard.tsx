@@ -388,7 +388,6 @@ export default function DashboardScreen() {
           </View>
         ))}
 
-        {/* Discord Banner */}
         <Pressable
           onPress={() => Linking.openURL(DISCORD_URL)}
           style={({ pressed }) => [
@@ -412,7 +411,6 @@ export default function DashboardScreen() {
           />
         </Pressable>
 
-        {/* Dev tools - only visible in development */}
         {__DEV__ && (
           <>
             <Pressable

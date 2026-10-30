@@ -27,7 +27,6 @@ export default function TimeoutModal() {
     canIncrement,
   } = useTimeoutTimer();
 
-  // Get the last timeout event to know which team called it
   const lastEvent = events[events.length - 1];
   let timeoutTeam: string;
   if (lastEvent?.type === 'timeout') {
@@ -77,7 +76,6 @@ export default function TimeoutModal() {
             styles.container,
             { backgroundColor: palette.primary, shadowColor: palette.shadow },
           ]}>
-          {/* Close button - top right */}
           <Pressable
             testID="timeout-modal-close"
             onPress={onClose}
@@ -105,7 +103,6 @@ export default function TimeoutModal() {
           </View>
 
           <View style={styles.content}>
-            {/* Timer display with +/- controls */}
             <View style={[styles.timerCompact, { backgroundColor: palette.overlay05 }]}>
               <Pressable
                 onPress={() => adjustTimer(-10)}
@@ -152,7 +149,6 @@ export default function TimeoutModal() {
               </Pressable>
             </View>
 
-            {/* Continue button */}
             <Pressable
               testID="timeout-modal-end"
               onPress={onContinue}

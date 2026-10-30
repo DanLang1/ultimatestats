@@ -6,14 +6,12 @@ import { computePointByPointEvents } from './timelineUtils';
 export type { TimeOfPossessionStats } from '../timeOfPossessionTypes';
 
 export interface TeamStats {
-  // Offensive
   offensivePoints: number;
   holds: number;
   cleanHolds: number;
   dirtyHolds: number;
   holdPercentage: number;
 
-  // Defensive
   defensivePoints: number;
   breaks: number;
   dPointsWithTurnover: number;
@@ -21,18 +19,15 @@ export interface TeamStats {
   dEfficiency: number;
   totalBlocks: number;
 
-  // Negative
   timesBroken: number;
   totalTurnovers: number;
 
-  // Game flow
   longestScoringRun: number;
   longestDrought: number;
   turnoversPerPoint: number;
   turnoversOnOPoint: number;
   turnoversPerOPoint: number;
 
-  // Efficiency
   pointsPerTurnover: number;
   blocksPerDPoint: number;
   opponentTurnovers: number;
@@ -40,7 +35,6 @@ export interface TeamStats {
 }
 
 /**
- * Computes team-level statistics from game events.
  * All stats are from team1's perspective.
  */
 export function computeTeamStats(
@@ -58,7 +52,6 @@ export function computeTeamStats(
     autoHalftimeEnabled,
   );
 
-  // Count totals
   let offensivePoints = 0;
   let defensivePoints = 0;
   let holds = 0;
@@ -72,7 +65,6 @@ export function computeTeamStats(
   let team1Blocks = 0;
   let turnoversOnOPoint = 0;
 
-  // Game flow tracking
   let currentRun = 0;
   let currentDrought = 0;
   let longestScoringRun = 0;
@@ -83,7 +75,6 @@ export function computeTeamStats(
     const isTeam1Offense = point.offensiveTeam === 'team1';
     const team1Scored = point.scoringTeam === 'team1';
 
-    // Count O-points and D-points
     if (isTeam1Offense) {
       offensivePoints++;
     } else {
@@ -109,22 +100,18 @@ export function computeTeamStats(
     ).length;
     opponentTurnovers += opponentTurnoversThisPoint;
 
-    // D-point specific stats (only on D-points)
     if (!isTeam1Offense) {
       if (opponentTurnoversThisPoint > 0 || team1Scored) {
         dPointsWithTurnover++;
       }
     }
 
-    // Count ALL blocks team1 got (regardless of O-point or D-point)
     const blocksThisPoint = point.turnovers.filter(
       (t) => t.team === 'team1' && t.type === 'block',
     ).length;
     team1Blocks += blocksThisPoint;
 
-    // Classify the point outcome
     if (isTeam1Offense && team1Scored) {
-      // Hold
       holds++;
       if (team1TurnoversThisPoint === 0) {
         cleanHolds++;
@@ -132,14 +119,11 @@ export function computeTeamStats(
         dirtyHolds++;
       }
     } else if (!isTeam1Offense && team1Scored) {
-      // Break
       breaks++;
     } else if (isTeam1Offense && !team1Scored) {
-      // Broken
       timesBroken++;
     }
 
-    // Track scoring runs and droughts
     if (team1Scored) {
       team1Goals++;
       currentRun++;
@@ -152,12 +136,10 @@ export function computeTeamStats(
     }
   }
 
-  // Calculate percentages (avoid divide by zero)
   const holdPercentage = offensivePoints > 0 ? (holds / offensivePoints) * 100 : 0;
   const breakEfficiency = dPointsWithTurnover > 0 ? (breaks / dPointsWithTurnover) * 100 : 0;
   const dEfficiency = defensivePoints > 0 ? (breaks / defensivePoints) * 100 : 0;
 
-  // Calculate efficiency stats
   const totalPoints = pointEvents.length;
   const turnoversPerPoint = totalPoints > 0 ? totalTurnovers / totalPoints : 0;
   const turnoversPerOPoint = offensivePoints > 0 ? turnoversOnOPoint / offensivePoints : 0;
@@ -196,7 +178,6 @@ export function computeTeamStats(
 }
 
 /**
- * Aggregates multiple TeamStats objects into a single combined TeamStats.
  * Percentages are recalculated from the summed raw values.
  */
 export function aggregateTeamStats(allStats: TeamStats[]): TeamStats {
@@ -272,31 +253,20 @@ export function aggregateTeamStats(allStats: TeamStats[]): TeamStats {
   };
 }
 
-// --- Timing Stats (separate for easy testing) ---
-
 export interface TimingStats {
-  /** Whether any timing data is available */
   hasTimingData: boolean;
   /** Average duration of all completed points (ms) */
   avgPointDurationMs: number;
-  /** Average duration of offensive points (ms) */
   avgOPointDurationMs: number;
-  /** Average duration of defensive points (ms) */
   avgDPointDurationMs: number;
-  /** Duration of the longest point (ms) */
   longestPointDurationMs: number;
-  /** Duration of the shortest point (ms) */
   shortestPointDurationMs: number;
-  /** Number of points with timing data */
   timedPointCount: number;
-  /** Number of O-points with timing data */
   timedOPointCount: number;
-  /** Number of D-points with timing data */
   timedDPointCount: number;
 }
 
 /**
- * Computes timing statistics from game events.
  * Returns null-like stats (hasTimingData=false) if no points have duration data.
  */
 export function computeTimingStats(
@@ -319,12 +289,10 @@ export function computeTimingStats(
   const dDurations: number[] = [];
 
   for (const point of pointEvents) {
-    // Skip in-progress points
     if (point.isInProgress) continue;
 
     const isTeam1Offense = point.offensiveTeam === 'team1';
 
-    // Only track points with valid duration
     if (point.pointDurationMs !== undefined && point.pointDurationMs > 0) {
       allDurations.push(point.pointDurationMs);
       if (isTeam1Offense) {
@@ -354,10 +322,7 @@ export function computeTimingStats(
   };
 }
 
-// --- Time of Possession Stats ---
-
 /**
- * Computes time-of-possession stats from game events.
  * Only counts points where every event has a valid elapsedMs.
  * Returns hasTopData=false if no qualifying points exist.
  */
@@ -383,10 +348,8 @@ export function computeTimeOfPossessionStats(
   for (const point of pointEvents) {
     if (point.isInProgress) continue;
 
-    // Need a valid goal elapsed time
     if (!point.goalElapsedMs) continue;
 
-    // Every turnover must also have elapsedMs
     if (!point.turnovers.every((t) => t.elapsedMs !== undefined)) continue;
 
     let currentPossessor: 'team1' | 'team2' = point.offensiveTeam;
@@ -412,9 +375,8 @@ export function computeTimeOfPossessionStats(
 
     if (!validPoint) continue;
 
-    // Final possession up to the goal
     const finalSegment = point.goalElapsedMs - prevElapsedMs;
-    if (finalSegment < 0) continue; // goal timestamp before last turnover — skip
+    if (finalSegment < 0) continue;
 
     if (currentPossessor === 'team1') {
       team1PointMs += finalSegment;
@@ -474,7 +436,6 @@ export function aggregateTopStats(allStats: TimeOfPossessionStats[]): TimeOfPoss
 }
 
 /**
- * Aggregates multiple TimingStats into a combined TimingStats.
  * Durations are weighted by point count to get accurate averages.
  */
 export function aggregateTimingStats(allStats: TimingStats[]): TimingStats {

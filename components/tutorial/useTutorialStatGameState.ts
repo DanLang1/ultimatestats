@@ -6,8 +6,6 @@ import {
   TUTORIAL_STAT_TEAM1_NAME,
 } from './tutorialStatData';
 
-// ── Step Definitions ─────────────────────────────────────────────────
-
 export type TutorialStatPhase = 'scoreboard' | 'turnover-entry' | 'stat-entry';
 
 type ExpectedAction =
@@ -51,7 +49,6 @@ const TUTORIAL_STAT_STEPS: TutorialStatStepDef[] = [
     tooltipTarget: 'action-bar',
     phase: 'scoreboard',
   },
-  // ── Turnover entry phase (who made the block?) ──
   {
     title: 'Who Made the Block?',
     message: 'Select the player who made the block.',
@@ -66,7 +63,6 @@ const TUTORIAL_STAT_STEPS: TutorialStatStepDef[] = [
     tooltipTarget: 'team1',
     phase: 'scoreboard',
   },
-  // ── Stat entry phase ──
   {
     title: 'Who Scored?',
     message: 'Select the player who scored the goal.',
@@ -83,20 +79,15 @@ const TUTORIAL_STAT_STEPS: TutorialStatStepDef[] = [
   },
 ];
 
-// ── Hook ─────────────────────────────────────────────────────────────
-
 // The initial line for point 6 (FMP) — 4 FMP + 3 MMP (correct ratio)
 const INITIAL_LINE = ['f1', 'f2', 'f3', 'f4', 'm1', 'm2', 'm3'];
 
 export default function useTutorialStatGameState(onComplete?: () => void) {
-  // Phase & step
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Scores
   const [team1Score, setTeam1Score] = useState(TUTORIAL_STAT_INITIAL_SCORE_TEAM1);
   const [team2Score] = useState(TUTORIAL_STAT_INITIAL_SCORE_TEAM2);
 
-  // Possession: opponent starts with disc
   const [possession, setPossession] = useState<'team1' | 'team2'>('team2');
 
   // The tutorial uses a fixed line for player attribution.
@@ -104,12 +95,8 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
   const [pointTimerRunning, setPointTimerRunning] = useState(false);
   const [hasPointStarted, setHasPointStarted] = useState(false);
 
-  // Turnover entry
-
-  // Stat entry
   const [goalScorerId, setGoalScorerId] = useState<string | null>(null);
 
-  // Derived
   const step = TUTORIAL_STAT_STEPS[currentStep];
   const phase = step?.phase ?? 'scoreboard';
   const isLastStep = currentStep === TUTORIAL_STAT_STEPS.length - 1;
@@ -121,8 +108,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
       onComplete?.();
     }
   };
-
-  // ── Handlers ─────────────────────────────────────────────────────
 
   const handleStartPoint = () => {
     setPointTimerRunning(true);
@@ -174,7 +159,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
   };
 
   return {
-    // State
     currentStep,
     step,
     phase,
@@ -186,7 +170,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
     hasPointStarted,
     goalScorerId,
 
-    // Handlers
     handleStartPoint,
     handleBlock,
     handleSelectBlocker,

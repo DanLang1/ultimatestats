@@ -52,7 +52,6 @@ export default function TutorialActionBar({
     ReduceMotion.Never,
   );
 
-  // Drag state — start centered near bottom
   const translateX = useSharedValue((screenWidth - metrics.estimatedWidth) / 2);
   const translateY = useSharedValue(
     screenHeight - insets.top - insets.bottom - metrics.estimatedHeight - 100,
@@ -151,7 +150,6 @@ export default function TutorialActionBar({
             shadowColor: palette.shadow,
           },
         ]}>
-        {/* Drag handle */}
         <Pressable style={styles.dragHandle}>
           <MaterialCommunityIcons
             name="arrow-expand-vertical"

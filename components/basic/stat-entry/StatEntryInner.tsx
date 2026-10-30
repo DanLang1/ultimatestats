@@ -35,7 +35,6 @@ export function StatEntryInner({
   entryOrder,
   showAddPlayer = true,
 }: StatEntryInnerProps) {
-  // Determine initial step based on order
   const [step, setStep] = useState<EntryStep>(entryOrder === 'goal_first' ? 'goal' : 'assist');
 
   const [goalPlayerId, setGoalPlayerId] = useState<string | null>(null);
@@ -48,10 +47,8 @@ export function StatEntryInner({
   const styles = createStyles(sizeClass);
   const compactRosterMaxHeight = isLandscape ? 220 : 400;
 
-  // Only show active players
   const activeRoster = getActiveRoster(roster);
 
-  // Get player name for display
   // If we are in step 2, we show the previous selection
   // If goal_first: Step 1 (Goal) -> Step 2 (Assist, show Goal)
   // If assist_first: Step 1 (Assist) -> Step 2 (Goal, show Assist)
@@ -75,7 +72,6 @@ export function StatEntryInner({
     }
   }
 
-  // Check if Callahan is possible
   // Show on first step if event before the current goal was a block by our team
   // Note: goal event is now pushed immediately in incrementScore, so we check the second-to-last event
   const lastEvent = events[events.length - 1];
@@ -94,10 +90,8 @@ export function StatEntryInner({
     eventToCheck?.subtype === 'block' &&
     eventToCheck?.team === 'team1';
 
-  // Get the blocker's player ID if the relevant event was a block
   const blockerId = eventToCheck?.type === 'turnover' ? eventToCheck.playerId : null;
 
-  // Show Callahan on first step (goal for goal_first, assist for assist_first)
   const isFirstStep =
     (entryOrder === 'goal_first' && step === 'goal') ||
     (entryOrder === 'assist_first' && step === 'assist');
@@ -139,7 +133,6 @@ export function StatEntryInner({
     setNewPlayerName('');
     Keyboard.dismiss();
 
-    // Determine which player ID to use
     let playerIdToSelect = newPlayerId;
 
     // If player wasn't added (duplicate), find the existing player
@@ -149,7 +142,6 @@ export function StatEntryInner({
       playerIdToSelect = existingPlayer?.id ?? null;
     }
 
-    // Auto-select the player (new or existing)
     if (playerIdToSelect) {
       handlePlayerSelect(playerIdToSelect);
     }
@@ -165,7 +157,6 @@ export function StatEntryInner({
     }
   };
 
-  // Shared footer buttons
   const renderFooter = () => (
     <View style={styles.footer}>
       <Pressable
@@ -200,7 +191,6 @@ export function StatEntryInner({
         </Animated.View>
       )}
 
-      {/* Callahan button - shows when conditions are met */}
       {showCallahan && (
         <Animated.View entering={FadeIn}>
           <Pressable
@@ -223,7 +213,6 @@ export function StatEntryInner({
         </Animated.View>
       )}
 
-      {/* Unknown button - allows recording a play without knowing the player */}
       <Animated.View entering={FadeIn}>
         <Pressable
           style={[
@@ -241,7 +230,6 @@ export function StatEntryInner({
     </View>
   );
 
-  // Compact vertical layout when not showing add player input
   if (!showAddPlayer) {
     return (
       <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
@@ -266,7 +254,6 @@ export function StatEntryInner({
     );
   }
 
-  // Portrait: vertical stack layout
   if (!isLandscape) {
     return (
       <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
@@ -324,12 +311,10 @@ export function StatEntryInner({
     );
   }
 
-  // Landscape: side-by-side layout with add player input
   return (
     <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
       <View style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
-          {/* Left Column: Info, Add Player, Actions */}
           <View style={styles.leftColumn}>
             <StatEntryHeader
               teamName={teamName}
@@ -373,7 +358,6 @@ export function StatEntryInner({
             {renderFooter()}
           </View>
 
-          {/* Right Column: Roster Selection */}
           <View style={styles.rightColumn}>
             <StatEntryRoster
               roster={activeRoster}
@@ -397,11 +381,9 @@ function createStyles(sizeClass: SizeClass) {
     sheetContent: {
       padding: 16,
     },
-    // Compact vertical layout (no add player)
     compactContainer: {
       gap: 12,
     },
-    // Side-by-side layout (with add player)
     sideBySideContainer: {
       flexDirection: 'row',
       gap: 24,

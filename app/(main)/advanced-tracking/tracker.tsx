@@ -353,8 +353,6 @@ export default function AdvancedTrackerScreen() {
   );
 }
 
-// --- Styles ---
-
 function createStyles(palette: Palette, sizeClass: SizeClass) {
   const scoreBarCardInsets = getScoreBarCardInsets(sizeClass);
   return StyleSheet.create({

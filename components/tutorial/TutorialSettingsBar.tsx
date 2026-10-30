@@ -14,7 +14,6 @@ interface TutorialSettingsBarProps {
   // Message-only mode (score step)
   message?: string;
 
-  // Play / timer
   showPlay?: boolean;
   isPlaying?: boolean;
   onPlay?: () => void;
@@ -24,7 +23,6 @@ interface TutorialSettingsBarProps {
   // Ratio label (e.g., "M1")
   ratioLabel?: string;
 
-  // Undo
   onUndo?: () => void;
   canUndo?: boolean;
   highlightUndo?: boolean;
@@ -96,7 +94,6 @@ export default function TutorialSettingsBar({
         </Pressable>
       )}
 
-      {/* Timer */}
       {timeLeft !== undefined && (
         <View style={styles.timerContainer}>
           <ThemedText style={[styles.timerText, { color: barContentColor }]}>
@@ -105,7 +102,6 @@ export default function TutorialSettingsBar({
         </View>
       )}
 
-      {/* Ratio label */}
       {ratioLabel && (
         <View style={styles.ratioContainer}>
           <ThemedText style={[styles.ratioText, { color: barContentColor }]}>
@@ -114,7 +110,6 @@ export default function TutorialSettingsBar({
         </View>
       )}
 
-      {/* Undo */}
       {onUndo && (
         <Pressable
           onPress={onUndo}

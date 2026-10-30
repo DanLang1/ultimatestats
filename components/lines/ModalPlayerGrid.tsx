@@ -53,7 +53,6 @@ export interface ModalPlayerGridProps {
   selectedIds: string[];
   onTogglePlayer: (playerId: string) => void;
   sortDirection?: SortDirection;
-  /** Use modal-appropriate colors for chips and labels */
   useModalColors?: boolean;
   /** Whether a game is currently active (shows pts played) */
   gameActive?: boolean;
@@ -63,7 +62,6 @@ export interface ModalPlayerGridProps {
   playerStatusLabels?: ReadonlyMap<string, string>;
 }
 
-// Generic labels grouped by role
 type GenericColumnKey = 'handler' | 'cutter' | 'hybrid' | 'unassigned';
 
 const GENERIC_COLUMN_LABELS: Record<GenericColumnKey, string> = {
@@ -120,7 +118,6 @@ export function ModalPlayerGrid({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  // Determine colors based on context
   const labelColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
   const emptyTextColor = useModalColorsProp ? palette.modalTextMuted : palette.textMuted;
 

@@ -54,7 +54,6 @@ export function PresetListView({
         }
       />
 
-      {/* Preset List */}
       <ScrollView
         style={styles.listContainer}
         contentContainerStyle={styles.listContent}

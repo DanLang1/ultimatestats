@@ -21,7 +21,6 @@ export function shouldShowLinePrompt(): boolean {
   if (!lineCallingEnabled || !statTrackingEnabled) return false;
   if (currentGameStatus === 'finished' || isHalftimeBreak) return false;
 
-  // Check if line already set for current point
   const hasLineForPoint = pointLines.some(
     (record) => record.pointNumber === currentPoint && !record.isSubstitution,
   );

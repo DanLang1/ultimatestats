@@ -75,12 +75,10 @@ export default function GameSelectorModal() {
     <BottomSheet
       onDismiss={handleDismiss}
       sheetStyle={[styles.sheet, { backgroundColor: palette.primary }]}>
-      {/* Handle indicator */}
       <View style={styles.handleContainer}>
         <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
       </View>
 
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
         <ThemedText style={[styles.headerTitle, { color: palette.textMuted }]}>
           SELECT GAME
@@ -94,7 +92,6 @@ export default function GameSelectorModal() {
         </Pressable>
       </View>
 
-      {/* Game list */}
       <ScrollView bounces={false} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {sortedGames.map((g) => {
           const isSelected = effectiveGameId === g.id;
@@ -113,7 +110,6 @@ export default function GameSelectorModal() {
                 }
                 return [styles.gameRow, { backgroundColor }];
               }}>
-              {/* Selected indicator */}
               <View
                 style={[
                   styles.radio,
@@ -131,7 +127,6 @@ export default function GameSelectorModal() {
                 )}
               </View>
 
-              {/* Game info */}
               <View style={styles.gameInfo}>
                 <ThemedText
                   style={[
@@ -149,7 +144,6 @@ export default function GameSelectorModal() {
                 </ThemedText>
               </View>
 
-              {/* Score */}
               <ThemedText style={[styles.scoreText, { color: palette.textMuted }]}>
                 {g.team1Score}-{g.team2Score}
               </ThemedText>

@@ -43,7 +43,6 @@ export default function RoleBalanceBar({
 
   return (
     <View style={styles.container}>
-      {/* O-LINE card */}
       <View style={styles.roleCard}>
         <ThemedText style={[styles.roleLabel, { color: palette.accent }]}>O-Line</ThemedText>
         <View style={styles.countRow}>
@@ -81,7 +80,6 @@ export default function RoleBalanceBar({
         )}
       </View>
 
-      {/* D-LINE card */}
       <View style={styles.roleCard}>
         <ThemedText style={[styles.roleLabel, { color: dLineColor }]}>D-Line</ThemedText>
         <View style={styles.countRow}>

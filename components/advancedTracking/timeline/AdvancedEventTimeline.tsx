@@ -56,7 +56,6 @@ export default function AdvancedEventTimeline({
 
   return (
     <View style={styles.container}>
-      {/* Score Header */}
       <View style={[styles.scoreHeader, { backgroundColor: palette.overlay05 }]}>
         <ThemedText style={[styles.headerScore, { color: palette.success }]}>
           {focusScore}
@@ -68,7 +67,6 @@ export default function AdvancedEventTimeline({
         </ThemedText>
       </View>
 
-      {/* Timeline */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {points.map((point) => (
           <Fragment key={point.pointId}>

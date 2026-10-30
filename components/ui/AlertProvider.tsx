@@ -18,7 +18,6 @@ export interface AlertOptions {
   title: string;
   message?: string;
   buttons?: AlertButton[];
-  // For prompt mode
   prompt?: {
     placeholder?: string;
     defaultValue?: string;
@@ -86,7 +85,6 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
               styles.container,
               { backgroundColor: palette.secondary, borderColor: palette.overlay20 },
             ]}>
-            {/* Close icon */}
             <Pressable
               style={[styles.closeButton, { backgroundColor: palette.overlay10 }]}
               onPress={handleDismiss}

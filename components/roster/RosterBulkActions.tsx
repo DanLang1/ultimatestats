@@ -35,7 +35,6 @@ export default function RosterBulkActions({
         styles.bottomBar,
         { backgroundColor: palette.primary, borderTopColor: palette.overlay20 },
       ]}>
-      {/* Row 1: Matching type */}
       <View style={styles.pillGroup}>
         <Pressable
           style={[
@@ -63,7 +62,6 @@ export default function RosterBulkActions({
         </Pressable>
       </View>
 
-      {/* Row 2: Roles */}
       <View style={styles.pillGroup}>
         <Pressable
           style={[

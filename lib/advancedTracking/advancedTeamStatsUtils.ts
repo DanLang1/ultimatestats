@@ -7,8 +7,6 @@ import { getPointStateForSide } from './buildAnalyticsGame';
 import { isCompletedThrow } from './trackingUtils';
 import { THROW_RESULT_SPECS } from './types';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export interface AdvancedTeamStats {
   sideId: string;
   holds: number;
@@ -58,7 +56,6 @@ export interface AdvancedTeamStats {
   totalPossessionsOnD: number;
   /** scoredDPossessions / totalPossessionsOnD. Null if no D-point possessions. */
   dPossessionConversionPct: number | null;
-  /** Goals scored by this side. */
   totalGoals: number;
   /** All possessions by this side, including a current unresolved possession. */
   totalPossessions: number;
@@ -213,8 +210,6 @@ function computeAdvancedRedZoneStats(game: AnalyticsGame, sideId: string): Advan
   };
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
-
 export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): AdvancedTeamStats {
   const throwTypes = computeAdvancedThrowTypeStats(game, sideId);
   const redZoneStats = computeAdvancedRedZoneStats(game, sideId);
@@ -228,7 +223,6 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let oPoints = 0;
   let dPoints = 0;
 
-  // Scoring run tracking
   let currentScoringRun = 0;
   let longestScoringRun = 0;
   let currentDrought = 0;
@@ -298,13 +292,11 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
   let totalCompletedPasses = 0;
   let scoredOPossessions = 0;
   let scoredDPossessions = 0;
-  // Build O/D lookup for each point
   const isOPointById = new Map<string, boolean>();
   for (const point of game.points) {
     isOPointById.set(point.id, point.receivingSideId === sideId);
   }
 
-  // Group possessions by point to get per-point possession counts
   const possessionsByPoint = new Map<string, number>();
   const turnoversByPoint = new Map<string, number>();
 

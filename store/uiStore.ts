@@ -6,11 +6,9 @@ interface ActionBarPosition {
 }
 
 interface UIState {
-  // Action Bar Settings
   actionBarPosition: ActionBarPosition;
   actionBarOrientation: 'horizontal' | 'vertical';
 
-  // Actions
   setActionBarPosition: (position: ActionBarPosition) => void;
   toggleActionBarOrientation: () => void;
 }

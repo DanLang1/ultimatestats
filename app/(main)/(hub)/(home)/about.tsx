@@ -44,7 +44,6 @@ export default function AboutScreen() {
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
-        {/* App Info Card */}
         <View style={[styles.card, { backgroundColor: palette.overlay08 }]}>
           <View style={styles.appInfo}>
             <Image
@@ -65,7 +64,6 @@ export default function AboutScreen() {
           </View>
         </View>
 
-        {/* What's New Section */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
             WHAT&apos;S NEW
@@ -100,7 +98,6 @@ export default function AboutScreen() {
             olderEntries.map((entry) => <ChangelogCard key={entry.version} entry={entry} />)}
         </View>
 
-        {/* Links Section */}
         <View style={styles.section}>
           <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
             CONNECT

@@ -55,18 +55,15 @@ export function groupPlayersByGenderRole(roster: Player[]): PlayerGroup[] {
 
   const grouped = new Map<GenderRoleGroup, Player[]>();
 
-  // Initialize all groups
   for (const key of GROUP_ORDER) {
     grouped.set(key, []);
   }
 
-  // Group players
   for (const player of activePlayers) {
     const key = getGroupKey(player);
     grouped.get(key)!.push(player);
   }
 
-  // Build result, filtering out empty groups
   const result: PlayerGroup[] = [];
   for (const key of GROUP_ORDER) {
     const players = grouped.get(key)!;
@@ -214,7 +211,7 @@ export function sortByPointsPlayed(players: Player[], playingTime: Map<string, n
     const aPoints = playingTime.get(a.id) ?? 0;
     const bPoints = playingTime.get(b.id) ?? 0;
     if (aPoints !== bPoints) {
-      return aPoints - bPoints; // Ascending - least played first
+      return aPoints - bPoints;
     }
     return a.name.localeCompare(b.name);
   });

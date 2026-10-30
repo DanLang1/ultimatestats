@@ -47,9 +47,7 @@ export function PresetEditView({
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary, paddingTop: 12 }]}>
-      {/* Header Row */}
       <View style={styles.headerRow}>
-        {/* Back button */}
         <Pressable
           onPress={onBack}
           accessibilityLabel="Go back"
@@ -64,7 +62,6 @@ export function PresetEditView({
           />
         </Pressable>
 
-        {/* Preset Name Input */}
         <View style={styles.nameSection}>
           <Pressable
             accessible={false}
@@ -90,7 +87,6 @@ export function PresetEditView({
           </Pressable>
         </View>
 
-        {/* Sort + Delete + Count + Save */}
         <View style={styles.rightSection}>
           <Pressable
             onPress={onSave}
@@ -122,7 +118,6 @@ export function PresetEditView({
         </View>
       </View>
 
-      {/* Player Selection Grid */}
       <View style={styles.playersSection}>
         <ModalPlayerGrid
           roster={roster}

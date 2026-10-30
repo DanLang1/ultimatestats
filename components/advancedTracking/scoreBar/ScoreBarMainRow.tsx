@@ -32,7 +32,6 @@ export const ScoreBarMainRow = ({
 
   if (!data) return null;
 
-  // ... (rest of the destructuring)
   const {
     focusSideName,
     focusScore,

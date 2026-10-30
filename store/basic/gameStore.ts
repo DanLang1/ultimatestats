@@ -133,11 +133,10 @@ export const useGameStore = create<GameState>()(
   immer(
     persist(
       (set, get) => ({
-        // Teams - default to Team 1 so addPlayer always has a team to work with
+        // Default to Team 1 so addPlayer always has a team to work with
         currentTeam: { id: generateId(), name: 'Team 1', roster: [] },
         team2Name: 'Team 2',
 
-        // Team colors and game state
         team1BgColor: palette.surface,
         team2BgColor: palette.primary,
         team1Score: 0,
@@ -159,39 +158,32 @@ export const useGameStore = create<GameState>()(
         isPostGameFlowPending: false,
         currentGameId: null,
 
-        // Halftime Break Initial State
         isHalftimeBreak: false,
         halftimeEndTime: null,
         halftimeTimeLeft: DEFAULT_HALFTIME_BREAK_SECONDS,
 
-        // Timeout Modal Initial State
         pendingTimeoutModal: false,
         timeoutEndTime: null,
         timeoutTimeLeft: DEFAULT_TIMEOUT_SECONDS,
 
-        // Stat Tracking Initial State
         statTrackingEnabled: false,
-        events: [], // Unified event log
+        events: [],
         pendingStatEntry: null,
         pointTimerEnabled: false, // Optional: show "Start Point" button for accurate timing
         currentPointStartTime: null, // Working timestamp for current point
         pointStartTimestamps: {}, // Finalized timestamps for completed points
         pointTimerPausedElapsed: null, // Elapsed ms when paused (null = running)
 
-        // Turnover Tracking Initial State
         possession: null,
         startingPossession: null,
         pendingTurnoverEntry: null,
         eventToastSignal: null,
 
-        // Point tracking for timeline
         currentPoint: 1,
 
-        // Line Calling Initial State
         currentLine: [],
         pointLines: [],
 
-        // Saved Games & Teams Initial State
         savedGames: [],
         savedTeams: [],
 
@@ -298,13 +290,11 @@ export const useGameStore = create<GameState>()(
               triggeredSoftcap = true;
               const highestScore = Math.max(state.team1Score, state.team2Score);
 
-              // Only adjust gameTo if the game total hasn't been reached yet
               if (highestScore < state.gameTo) {
                 state.gameTo = highestScore + 1;
               }
             }
 
-            // Halftime: reset timeouts and set halftime break
             // Skip if game is won (soft cap may have reduced gameTo to halftime score,
             // or hardcap means game ends when one team is ahead)
             const gameWon = checkGameOver({
@@ -323,7 +313,6 @@ export const useGameStore = create<GameState>()(
 
             state.currentPoint++;
 
-            // Early return if stat tracking is disabled
             if (!state.statTrackingEnabled) {
               state.events.push({
                 type: 'goal',
@@ -337,8 +326,6 @@ export const useGameStore = create<GameState>()(
               return;
             }
 
-            // --- Stat tracking enabled below ---
-
             // Set possession: halftime flips to non-starting team, otherwise to non-scoring team
             if (!triggeredHalftime) {
               state.possession = isTeam1 ? 'team2' : 'team1';
@@ -348,7 +335,6 @@ export const useGameStore = create<GameState>()(
             if (state.currentPointStartTime !== null) {
               state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
             }
-            // Calculate elapsed game time (ms since point start)
             const elapsedMs =
               state.currentPointStartTime !== null
                 ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
@@ -430,7 +416,6 @@ export const useGameStore = create<GameState>()(
               if (isTeam1) state.team1Score--;
               else state.team2Score--;
 
-              // If this goal triggered the soft cap, restore pre-softcap state
               if (lastEvent.triggeredSoftcap) {
                 state.isSoftCap = false;
                 state.softCapPending = true;
@@ -443,7 +428,6 @@ export const useGameStore = create<GameState>()(
               // Restore point timer state from the undone point
               // Resume timer running from where it left off by adjusting start time
               if (lastEvent.elapsedMs !== undefined) {
-                // Set start time so elapsed = elapsedMs (timer resumes running)
                 state.currentPointStartTime = Date.now() - lastEvent.elapsedMs;
                 state.pointTimerPausedElapsed = null;
               } else {
@@ -500,7 +484,6 @@ export const useGameStore = create<GameState>()(
             const timeouts = isTeam1 ? state.team1Timeouts : state.team2Timeouts;
             const isFloater = index >= timeouts.length;
 
-            // Check if timeout is available
             let isAvailable = timeouts[index];
             if (isFloater) {
               isAvailable = isTeam1 ? state.team1Floater : state.team2Floater;
@@ -511,12 +494,10 @@ export const useGameStore = create<GameState>()(
             // Floater rule: can't use if regular timeouts remain
             if (isFloater && timeouts.some((t) => t)) return;
 
-            // Check point timer state before pausing
             const startTime = state.currentPointStartTime;
             const pointTimerWasRunning =
               startTime !== null && state.pointTimerPausedElapsed === null;
 
-            // Pause point timer if running
             if (pointTimerWasRunning && startTime !== null) {
               state.pointTimerPausedElapsed = Date.now() - startTime;
             }
@@ -527,7 +508,6 @@ export const useGameStore = create<GameState>()(
                 ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
                 : undefined;
 
-            // Push timeout event
             state.events.push({
               type: 'timeout',
               team: isTeam1 ? 'team1' : 'team2',
@@ -546,7 +526,6 @@ export const useGameStore = create<GameState>()(
               timeouts[index] = false;
             }
 
-            // Flag for modal rendering
             state.pendingTimeoutModal = true;
           }),
 
@@ -629,7 +608,6 @@ export const useGameStore = create<GameState>()(
             state.halftimeTimeLeft = DEFAULT_HALFTIME_BREAK_SECONDS;
           }),
 
-        // Timeout Modal Actions
         setPendingTimeoutModal: (pending: boolean) =>
           set((state: GameState) => {
             state.pendingTimeoutModal = pending;
@@ -652,7 +630,6 @@ export const useGameStore = create<GameState>()(
             state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
           }),
 
-        // Stat Tracking Actions
         setStatTrackingEnabled: (enabled: boolean) =>
           set((state: GameState) => {
             state.statTrackingEnabled = enabled;
@@ -661,7 +638,6 @@ export const useGameStore = create<GameState>()(
         addPlayer: (name: string) => {
           const trimmedName = name.trim();
           if (!trimmedName) return null;
-          // Check if name already exists (case-insensitive)
           const state = get();
           const lowerName = trimmedName.toLowerCase();
           if (state.currentTeam.roster.some((p) => p.name.toLowerCase() === lowerName)) return null;
@@ -751,7 +727,6 @@ export const useGameStore = create<GameState>()(
             // Revert the score (stat entry only shows for team1 goals)
             state.team1Score--;
 
-            // If this goal triggered the soft cap, restore pre-softcap state
             if (lastEvent.triggeredSoftcap) {
               state.isSoftCap = false;
               state.softCapPending = true;
@@ -764,7 +739,6 @@ export const useGameStore = create<GameState>()(
               state.pointTimerPausedElapsed = null;
             }
 
-            // Remove the goal event
             state.events.pop();
 
             const halftimeReached = hasReachedHalftime(state.events, state.autoHalftimeEnabled);
@@ -776,10 +750,8 @@ export const useGameStore = create<GameState>()(
             // Reset possession to team1 (they were attacking)
             state.possession = 'team1';
 
-            // Decrement current point
             state.currentPoint = Math.max(1, state.currentPoint - 1);
 
-            // Remove entry from pointStartTimestamps
             delete state.pointStartTimestamps[state.currentPoint];
 
             // Remove any future line records and restore the active line for the reverted point
@@ -789,7 +761,6 @@ export const useGameStore = create<GameState>()(
             state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
             useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
 
-            // Clear pending entry
             state.pendingStatEntry = null;
 
             // Re-derive timeout state from remaining events. The canceled goal may have
@@ -842,7 +813,6 @@ export const useGameStore = create<GameState>()(
             }
           }),
 
-        // Turnover Tracking Actions
         setPossession: (team: 'team1' | 'team2') =>
           set((state: GameState) => {
             state.possession = team;
@@ -908,7 +878,6 @@ export const useGameStore = create<GameState>()(
             state.pendingTurnoverEntry = null;
           }),
 
-        // Line Calling Actions
         setCurrentLine: (playerIds: string[]) =>
           set((state: GameState) => {
             state.currentLine = playerIds;
@@ -1063,7 +1032,6 @@ export const useGameStore = create<GameState>()(
           return didReplace;
         },
 
-        // Event Editing Actions
         updateEvent: (
           eventIndex: number,
           updates: {
@@ -1080,7 +1048,6 @@ export const useGameStore = create<GameState>()(
             const event = state.events[eventIndex];
             if (!event) return;
 
-            // Handle elapsedMs for any event type
             if (updates.elapsedMs !== undefined) {
               if (updates.elapsedMs === null) {
                 delete event.elapsedMs;
@@ -1138,7 +1105,6 @@ export const useGameStore = create<GameState>()(
           return result;
         },
 
-        // Saved Game Event Editing Actions
         updateSavedGameEvent: async (
           gameId: string,
           eventIndex: number,
@@ -1158,10 +1124,8 @@ export const useGameStore = create<GameState>()(
           const event = game.events[eventIndex];
           if (!event) return;
 
-          // Create updated events array
           const updatedEvents = [...game.events];
 
-          // Create updated event based on type
           let updatedEvent;
           if (event.type === 'turnover') {
             updatedEvent = { ...event };
@@ -1193,7 +1157,6 @@ export const useGameStore = create<GameState>()(
             updatedEvent = { ...event };
           }
 
-          // Handle elapsedMs for any event type
           if (updates.elapsedMs !== undefined) {
             if (updates.elapsedMs === null) {
               delete updatedEvent.elapsedMs;
@@ -1219,10 +1182,8 @@ export const useGameStore = create<GameState>()(
           const event = game.events[eventIndex];
           if (!event) return false;
 
-          // Block deletion of goals
           if (event.type === 'goal') return false;
 
-          // Create updated game with event removed
           const updatedEvents = [...game.events];
           updatedEvents.splice(eventIndex, 1);
           const updatedGame: SavedGame = { ...game, events: updatedEvents };
@@ -1445,11 +1406,9 @@ export const useGameStore = create<GameState>()(
           currentPointStartTime: state.currentPointStartTime,
           pointStartTimestamps: state.pointStartTimestamps,
           pointTimerPausedElapsed: state.pointTimerPausedElapsed,
-          // Timeout state
           pendingTimeoutModal: state.pendingTimeoutModal,
           timeoutEndTime: state.timeoutEndTime,
           timeoutTimeLeft: state.timeoutTimeLeft,
-          // Line calling state
           currentLine: state.currentLine,
           pointLines: state.pointLines,
         }),

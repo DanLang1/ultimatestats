@@ -144,9 +144,6 @@ export function applyInjurySubUpdate(
   point.subs = nextSubs;
 }
 
-/**
- * Returns every PointSub associated with a specific stoppage action ID.
- */
 export function getSubsForStoppage(point: TrackedPoint | null, actionId: string): PointSub[] {
   if (!point?.subs) return [];
   return point.subs.filter((sub) => sub.stoppageActionId === actionId);

@@ -18,7 +18,7 @@ interface AggregateGamesListProps {
   games: SavedGame[];
   selectedTeam: string | null; // Team ID (not name)
   selectedGameIds: Set<string>;
-  onSelectTeam: (teamId: string) => void; // Pass team ID
+  onSelectTeam: (teamId: string) => void;
   onToggleGameSelection: (gameId: string) => void;
   onSelectAllGames: (gameIds: string[]) => void;
   onDeselectAllGames: () => void;
@@ -30,7 +30,7 @@ interface AggregateGamesListProps {
 }
 
 interface TeamGroup {
-  id: string; // Team ID for selection
+  id: string;
   name: string; // Display name (resolved live)
   gameCount: number;
   totalPoints: number;
@@ -81,7 +81,6 @@ export default function AggregateGamesList({
     .map(([id, data]) => ({ id, ...data }))
     .sort((a, b) => b.gameCount - a.gameCount);
 
-  // Games for the selected team (by ID), optionally filtered by tournament
   const allGamesForTeam = selectedTeam
     ? games
         .filter((g) => g.team1.id === selectedTeam)
@@ -92,7 +91,6 @@ export default function AggregateGamesList({
     ? allGamesForTeam.filter((g) => tournamentIdsByGame.get(g.id) === tournamentFilter)
     : allGamesForTeam;
 
-  // Game counts per tournament for this team
   const tournamentGameCounts = new Map<string, number>();
   for (const game of allGamesForTeam) {
     const tournamentId = tournamentIdsByGame.get(game.id);
@@ -101,7 +99,6 @@ export default function AggregateGamesList({
     }
   }
 
-  // Empty state
   if (games.length === 0) {
     return (
       <View style={styles.emptyState}>
@@ -124,7 +121,6 @@ export default function AggregateGamesList({
   if (selectedTeam) {
     return (
       <View style={styles.container}>
-        {/* Tournament cards section */}
         <View style={styles.tournamentSection}>
           <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
             Tournaments
@@ -184,7 +180,6 @@ export default function AggregateGamesList({
           </ScrollView>
         </View>
 
-        {/* Games header */}
         <View style={styles.headerRow}>
           <View style={styles.gamesHeaderLeft}>
             <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
@@ -220,14 +215,12 @@ export default function AggregateGamesList({
           </View>
         </View>
 
-        {/* Empty state for filtered results */}
         {gamesForTeam.length === 0 && tournamentFilter && (
           <ThemedText style={[styles.emptyFilterText, { color: palette.textMuted }]}>
             No games in this tournament
           </ThemedText>
         )}
 
-        {/* Game list with checkboxes */}
         <View style={styles.gamesList}>
           {gamesForTeam.map((game) => {
             const isSelected = selectedGameIds.has(game.id);
@@ -240,7 +233,6 @@ export default function AggregateGamesList({
                   isSelected && { borderColor: palette.accent },
                 ]}
                 onPress={() => onToggleGameSelection(game.id)}>
-                {/* Checkbox */}
                 <View
                   style={[
                     styles.checkbox,
@@ -256,7 +248,6 @@ export default function AggregateGamesList({
                   )}
                 </View>
 
-                {/* Game info */}
                 <View style={styles.gameInfo}>
                   <ThemedText style={[styles.opponentText, { color: palette.textInverse }]}>
                     vs {game.team2Name}

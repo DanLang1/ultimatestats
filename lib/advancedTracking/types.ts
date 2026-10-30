@@ -1,4 +1,3 @@
-// Advanced Stat Tracking Types
 // See docs/features/advanced-tracking/data-model.md
 
 import type { GenderRatio } from '@/lib/genderRatioUtils';
@@ -502,7 +501,6 @@ export type TurnoverThrowResult = ThrowResultWithOutcome<'turnover'>;
 /** Results that end a possession by giving the disc (or the point) to the defense. */
 export type PossessionLosingThrowResult = ThrowResultWithOutcome<'turnover' | 'defense_scores'>;
 
-/** Returns the manual classifications supported by a throw result. */
 export function getEligibleThrowTypes(result: ThrowResult): readonly ThrowType[] {
   return THROW_RESULT_SPECS[result].eligibleThrowTypes;
 }

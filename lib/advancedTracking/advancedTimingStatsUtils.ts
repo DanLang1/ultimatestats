@@ -1,7 +1,5 @@
 import type { AnalyticsGame } from './analyticsTypes';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export interface AdvancedTimingStats {
   /** True if at least one point has durationMs. */
   hasTimingData: boolean;
@@ -11,11 +9,8 @@ export interface AdvancedTimingStats {
   longestPointDurationMs: number | null;
   /** Shortest point duration in ms. Null if no timing data. */
   shortestPointDurationMs: number | null;
-  /** Number of points with timing data. */
   timedPointCount: number;
 }
-
-// ── Main ──────────────────────────────────────────────────────────────────────
 
 export function computeAdvancedTimingStats(game: AnalyticsGame): AdvancedTimingStats {
   const durations: number[] = [];

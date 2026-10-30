@@ -6,25 +6,22 @@ import { formatClockDuration, formatSplitDuration } from '../durationFormatUtils
 
 export { formatClockDuration, formatSplitDuration };
 
-// Represents a turnover for display purposes
 export interface DisplayTurnover {
   team: 'team1' | 'team2';
   type: TurnoverType;
   playerId: string | null;
   player2Id?: string | null;
   eventIndex: number; // Index in raw events array for editing
-  elapsedMs?: number; // Elapsed game time when this event occurred
+  elapsedMs?: number;
 }
 
-// Represents a timeout for display purposes
 export interface DisplayTimeout {
   team: 'team1' | 'team2';
   isFloater: boolean;
   eventIndex: number; // Index in raw events array
-  elapsedMs?: number; // Elapsed game time when timeout was called
+  elapsedMs?: number;
 }
 
-// Represents all events that occurred during a single point
 export interface PointEvents {
   pointNumber: number; // The point number (1, 2, 3...)
   scoringTeam: 'team1' | 'team2';
@@ -33,17 +30,13 @@ export interface PointEvents {
   goalPlayerId: string | null;
   assistPlayerId: string | null;
   goalEventIndex: number; // Index in raw events array for editing
-  goalElapsedMs?: number; // Elapsed game time when the goal was scored
-  // Turnovers that happened during this point
+  goalElapsedMs?: number;
   turnovers: DisplayTurnover[];
-  // Timeouts that happened during this point
   timeouts: DisplayTimeout[];
-  // Possession data
   offensiveTeam: 'team1' | 'team2'; // Who started with the disk
   possessionType: 'hold' | 'break' | null; // scoringTeam === offensiveTeam ? hold : break, null if in progress
   // Point in progress (turnovers recorded but no goal yet)
   isInProgress?: boolean;
-  // Timing info
   pointStartTimestamp?: number; // When point started (from Start Point button)
   pointDurationMs?: number; // Time from point start (or first event) to goal
 }
@@ -165,7 +158,6 @@ export function getEventTimeValidationError(
 }
 
 /**
- * Computes point-by-point events from unified game events array.
  * Events are already in chronological order, so we just group turnovers between goals.
  */
 export function computePointByPointEvents(
@@ -191,7 +183,6 @@ export function computePointByPointEvents(
   for (let eventIdx = 0; eventIdx < events.length; eventIdx++) {
     const event = events[eventIdx];
     if (event.type === 'turnover') {
-      // Collect turnovers for the current point
       currentTurnovers.push({
         team: event.team,
         type: event.subtype,
@@ -201,7 +192,6 @@ export function computePointByPointEvents(
         elapsedMs: event.elapsedMs,
       });
     } else if (event.type === 'timeout') {
-      // Collect timeouts for the current point
       currentTimeouts.push({
         team: event.team,
         isFloater: event.isFloater,
@@ -211,11 +201,9 @@ export function computePointByPointEvents(
     } else if (event.type === 'goal') {
       pointNumber++;
 
-      // Determine possession type for THIS point
       const possessionType = event.team === currentOffensiveTeam ? 'hold' : 'break';
       const offensiveTeamForThisPoint = currentOffensiveTeam;
 
-      // Update score
       if (event.team === 'team1') {
         team1Score++;
       } else {
@@ -225,7 +213,6 @@ export function computePointByPointEvents(
       // Point duration is simply the goal's elapsedMs (already is the duration)
       const pointDurationMs = event.elapsedMs;
 
-      // Record the point
       result.push({
         pointNumber,
         scoringTeam: event.team,
@@ -241,11 +228,9 @@ export function computePointByPointEvents(
         pointDurationMs,
       });
 
-      // Reset for next point
       currentTurnovers = [];
       currentTimeouts = [];
 
-      // Update offensive team for NEXT point
       if (autoHalftimeEnabled && didGoalTriggerHalftime(event, hasReachedHalftime)) {
         // Halftime reached! The team that started on defense receives to start 2nd half.
         currentOffensiveTeam = startingPossession === 'team1' ? 'team2' : 'team1';
@@ -282,7 +267,6 @@ export function computePointByPointEvents(
   return result;
 }
 
-// Union type for timeline events (turnovers and timeouts)
 export type TimelineEvent =
   | { kind: 'turnover'; data: DisplayTurnover; originalIndex: number }
   | { kind: 'timeout'; data: DisplayTimeout; originalIndex: number };
@@ -461,9 +445,6 @@ export function buildTimelineLineupEntries(
   }));
 }
 
-/**
- * Get total turnovers by type
- */
 export function getTurnoverSummary(turnovers: DisplayTurnover[], teamFilter?: 'team1' | 'team2') {
   return {
     blocks: turnovers.filter(

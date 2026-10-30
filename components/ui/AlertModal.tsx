@@ -16,8 +16,6 @@ interface AlertModalProps {
 
 /**
  * A reusable modal component matching the AlertProvider styling.
- * Provides consistent overlay, container, close button, and title.
- * Custom content is passed via children.
  */
 export function AlertModal({ visible, title, onClose, children }: AlertModalProps) {
   const { palette } = useTheme();
@@ -36,7 +34,6 @@ export function AlertModal({ visible, title, onClose, children }: AlertModalProp
             styles.container,
             { backgroundColor: palette.secondary, borderColor: palette.overlay20 },
           ]}>
-          {/* Close icon */}
           <Pressable
             style={[styles.closeButton, { backgroundColor: palette.overlay10 }]}
             onPress={onClose}

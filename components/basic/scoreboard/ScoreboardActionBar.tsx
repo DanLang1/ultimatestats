@@ -45,7 +45,6 @@ export function ScoreboardActionBar({
   const { width: screenWidth, height: screenHeight, sizeClass } = useLayout();
   const metrics = getActionBarMetrics(sizeClass);
   const styles = createStyles(metrics);
-  // Icon sizes derived from metrics.iconSize — used inline in JSX
   const { iconSize } = metrics;
   const dragIconSize = iconSize - 6;
   const startIconSize = iconSize + 2;
@@ -78,7 +77,6 @@ export function ScoreboardActionBar({
   const isVertical = actionBarOrientation === 'vertical';
   const isMyTeam = possession === 'team1';
 
-  // Derive initial position: use stored position or calculate default center-bottom
   const hasStoredPosition = actionBarPosition.x !== 0 || actionBarPosition.y !== 0;
   const getInitialX = () => {
     if (!hasStoredPosition) {
@@ -94,7 +92,6 @@ export function ScoreboardActionBar({
     return actionBarPosition.y;
   };
 
-  // Shared values for smooth dragging
   const translateX = useSharedValue(getInitialX());
   const translateY = useSharedValue(getInitialY());
   const startX = useSharedValue(0);
@@ -107,7 +104,6 @@ export function ScoreboardActionBar({
     height: metrics.estimatedHeight,
   });
 
-  // Clamp position within screen bounds
   const clampPosition = (x: number, y: number) => {
     'worklet';
     const effectiveWidth = boxWidth.get();
@@ -124,7 +120,6 @@ export function ScoreboardActionBar({
     return { x: clampedX, y: clampedY };
   };
 
-  // Re-clamp position when screen dimensions change (e.g. rotation)
   useReclampOnResize({
     translateX,
     translateY,
@@ -154,7 +149,6 @@ export function ScoreboardActionBar({
       'worklet';
       isDragging.set(false);
 
-      // Perform final hard clamp
       const finalClamped = clampPosition(translateX.get(), translateY.get());
 
       translateX.set(withSpring(finalClamped.x));
@@ -175,7 +169,6 @@ export function ScoreboardActionBar({
     };
   });
 
-  // Show bar if there's possession OR if there's an active timeout
   if (!possession && !pendingTimeoutModal) return null;
 
   const barBackgroundColor = palette.glassBg;
@@ -336,7 +329,6 @@ export function ScoreboardActionBar({
             shadowColor: palette.shadow,
           },
         ]}>
-        {/* Drag handle - opens modal during timeout, toggles orientation otherwise */}
         <Pressable
           style={styles.dragHandle}
           onPress={
@@ -355,7 +347,6 @@ export function ScoreboardActionBar({
   );
 }
 
-// ── Metrics ───────────────────────────────────────────────────────────
 // Only the fields that don't scale linearly from iconSize are kept
 // explicit. Everything else is derived in createStyles via:
 //   d = (iconSize - 20) / 2   →   0 (small) | 1 (medium) | 2 (large)
@@ -365,7 +356,7 @@ type ActionBarMetrics = {
   estimatedHeight: number; // needed for initial position / clamping math
   iconSize: number; // base action icon size; drives all icon + spacing derivations
   containerRadius: number; // non-linear (28 → 30 → 34), keep explicit
-  textSize: number; // button label text size
+  textSize: number;
 };
 
 function getActionBarMetrics(sizeClass: SizeClass): ActionBarMetrics {

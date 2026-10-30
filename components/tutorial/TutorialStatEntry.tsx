@@ -55,12 +55,10 @@ export default function TutorialStatEntry({
               : {}),
           },
         ]}>
-        {/* Header */}
         <View style={styles.header}>
           <ThemedText style={[styles.title, { color: palette.modalText }]}>{title}</ThemedText>
         </View>
 
-        {/* Previous selection badge */}
         {step === 'assist' && goalScorerName && (
           <View style={[styles.badge, { backgroundColor: palette.success + '20' }]}>
             <MaterialCommunityIcons
@@ -74,7 +72,6 @@ export default function TutorialStatEntry({
           </View>
         )}
 
-        {/* Player chips */}
         <View style={styles.chipGrid}>
           {linePlayers.map((player) => (
             <PlayerChip

@@ -87,7 +87,6 @@ export function PresetPickerModal({
           style={styles.presetList}
           contentContainerStyle={styles.presetListContent}
           showsVerticalScrollIndicator={false}>
-          {/* Presets Section */}
           {hasBothSections && (
             <ThemedText style={[styles.sectionHeader, { color: palette.modalTextMuted }]}>
               Presets
@@ -153,12 +152,10 @@ export function PresetPickerModal({
             )
           )}
 
-          {/* Divider between sections */}
           {hasBothSections && (
             <View style={[styles.sectionDivider, { backgroundColor: palette.overlay15 }]} />
           )}
 
-          {/* Recent Lines Section */}
           {recentLines.length > 0 && (
             <>
               {hasBothSections && (

@@ -1,4 +1,3 @@
-// Analytics Layer Types
 // See docs/features/advanced-tracking/analytics-layer.md
 
 import type {
@@ -170,7 +169,6 @@ export interface AnalyticsGame {
   gameType: AdvancedGameType;
   /** The side the coach is tracking for — defines the analytics perspective. */
   focusSideId: string;
-  /** The opposing side (non-focus). */
   oppSideId: string;
   /** Which side received the opening pull. */
   initialReceivingSideId: string;

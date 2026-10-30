@@ -241,7 +241,7 @@ export function getGameScore(game: AdvancedTrackedGame): Record<string, number> 
   return score;
 }
 
-/** Returns the score for a specific side. Throws if the sideId is not present in the game. */
+/** Throws if the sideId is not present in the game. */
 export function getSideScore(game: AdvancedTrackedGame, sideId: string): number {
   const score = getGameScore(game)[sideId];
   if (score == null) throw new Error(`No score entry for side "${sideId}" in game ${game.id}.`);

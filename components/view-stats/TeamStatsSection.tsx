@@ -39,11 +39,6 @@ interface TeamStatsSectionProps {
   team2Color?: string;
 }
 
-/**
- * Standalone team stats section component.
- * Displays team-level performance metrics with arc gauges and stat grids.
- * Designed to be easily migrated to its own route if needed.
- */
 export default function TeamStatsSection({
   events,
   startingPossession,
@@ -67,12 +62,10 @@ export default function TeamStatsSection({
     autoHalftimeEnabled,
   );
 
-  // Don't render if no events
   if (events.length === 0) {
     return null;
   }
 
-  // Primary stats for ring gauges
   const primaryStats = [
     {
       percentage: stats.holdPercentage,
@@ -114,7 +107,6 @@ Possessions = O-Points + Opponent Turnovers`,
     },
   ];
 
-  // Secondary stats grid
   const secondaryStats = [
     { label: pluralize(stats.cleanHolds, 'Clean Hold', 'Clean Holds'), value: stats.cleanHolds },
     { label: pluralize(stats.dirtyHolds, 'Dirty Hold', 'Dirty Holds'), value: stats.dirtyHolds },
@@ -125,14 +117,12 @@ Possessions = O-Points + Opponent Turnovers`,
     },
   ];
 
-  // Game flow stats
   const gameFlowStats = [
     { label: 'Run', value: stats.longestScoringRun, sublabel: 'Longest' },
     { label: 'Turns/Pt', value: formatDecimal(stats.turnoversPerPoint) },
     { label: 'Turns/O-Pt', value: formatDecimal(stats.turnoversPerOPoint) },
   ];
 
-  // Efficiency stats
   const efficiencyStats = [
     { label: 'Blk/D-Pt', value: formatDecimal(stats.blocksPerDPoint) },
     {
@@ -144,7 +134,6 @@ Possessions = O-Points + Opponent Turnovers`,
 
   return (
     <StatsSectionCard title="TEAM PERFORMANCE" testID="basic-team-stats-card">
-      {/* Ring Gauges */}
       <View style={styles.ringRow}>
         {primaryStats.map((stat, index) => (
           <View key={index} style={styles.ringWrapper}>
@@ -159,10 +148,8 @@ Possessions = O-Points + Opponent Turnovers`,
         ))}
       </View>
 
-      {/* Primary Stats Grid */}
       <StatsGrid stats={secondaryStats} columns={isLandscape ? 4 : 2} variant="summary" />
 
-      {/* Game Flow Section */}
       <View style={styles.subsection}>
         <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
           GAME FLOW
@@ -170,7 +157,6 @@ Possessions = O-Points + Opponent Turnovers`,
         <StatsGrid stats={gameFlowStats} columns={3} variant="summary" />
       </View>
 
-      {/* Efficiency Section */}
       <View style={styles.subsection}>
         <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>
           EFFICIENCY
@@ -178,7 +164,6 @@ Possessions = O-Points + Opponent Turnovers`,
         <StatsGrid stats={efficiencyStats} columns={isLandscape ? 4 : 2} variant="summary" />
       </View>
 
-      {/* Timing Section - only show if timing data exists */}
       {timingStats.hasTimingData && (
         <View style={styles.subsection}>
           <ThemedText style={[styles.subsectionTitle, { color: palette.textMuted }]}>

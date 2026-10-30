@@ -93,7 +93,6 @@ export default function CreateTournamentScreen() {
 
       <KeyboardAvoidingView automaticOffset style={styles.keyboardAvoid} behavior="padding">
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {/* Name */}
           <View style={styles.field}>
             <ThemedText style={[styles.label, { color: palette.textMuted }]}>NAME</ThemedText>
             <TextInput
@@ -115,7 +114,6 @@ export default function CreateTournamentScreen() {
             )}
           </View>
 
-          {/* Start Date */}
           <View style={styles.field}>
             <ThemedText style={[styles.label, { color: palette.textMuted }]}>START DATE</ThemedText>
             {Platform.OS === 'ios' ? (
@@ -148,7 +146,6 @@ export default function CreateTournamentScreen() {
             )}
           </View>
 
-          {/* End Date */}
           <View style={styles.field}>
             <ThemedText style={[styles.label, { color: palette.textMuted }]}>END DATE</ThemedText>
             {Platform.OS === 'ios' ? (
@@ -182,7 +179,6 @@ export default function CreateTournamentScreen() {
             )}
           </View>
 
-          {/* Save Button */}
           <Pressable
             style={[
               styles.saveButton,

@@ -92,7 +92,6 @@ export default function AdvancedStatsContent({
 
   return (
     <>
-      {/* Team Summary Card */}
       <View
         testID="advanced-stats-summary-card"
         style={[
@@ -145,7 +144,6 @@ export default function AdvancedStatsContent({
         )}
       </View>
 
-      {/* Team Performance Card */}
       <StatsSectionCard title="TEAM PERFORMANCE">
         <View style={styles.ringRow}>
           <View style={styles.ringWrapper}>
@@ -229,7 +227,6 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
         />
       </StatsSectionCard>
 
-      {/* Possession & Game Flow Card */}
       <AdvancedPossessionFlowCard
         teamStats={teamStats}
         topStats={topStats}
@@ -237,24 +234,18 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
         team2Name={opponentName}
       />
 
-      {/* Efficiency Card */}
       <AdvancedEfficiencyCard teamStats={teamStats} />
 
-      {/* Red Zone Card */}
       <AdvancedRedZoneCard teamStats={teamStats} />
 
-      {/* Throw Types Card */}
       <AdvancedThrowTypesCard throwTypes={teamStats.throwTypes} />
 
-      {/* Pulling Card */}
       <AdvancedPullingCard pullStats={pullStats} />
 
-      {/* Opening Results Card */}
       {(flipStats || initialPullWinStats) && (
         <OpeningSetupStats flipStats={flipStats} initialPullWinStats={initialPullWinStats} />
       )}
 
-      {/* Player Stats Table */}
       {playerStats.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons

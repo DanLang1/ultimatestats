@@ -27,7 +27,7 @@ import { computePointByPointEvents } from './timelineUtils';
 
 export interface PlayerStats {
   id: string; // Player ID (for lookups) - may be UNKNOWN_PLAYER_ID or OTHER_TEAM
-  name: string; // Display name
+  name: string;
   goals: number;
   assists: number;
   blocks: number;
@@ -87,10 +87,7 @@ export interface RelativePlayingTimeMetric {
 }
 
 /**
- * Compute player stats from events.
  * Stats are keyed by player ID to prevent collisions for players with the same name.
- * @param events - Game events
- * @param team - Which team's stats to compute
  * @param roster - Optional roster to resolve player IDs to names. If not provided, IDs are used as names.
  */
 export function computePlayerStats(
@@ -98,10 +95,8 @@ export function computePlayerStats(
   team: 'team1' | 'team2',
   roster?: Player[],
 ): PlayerStats[] {
-  // Key by player ID instead of name to prevent collisions
   const statsMap = new Map<string, PlayerStats>();
 
-  // Helper to resolve playerId to name (falls back to ID if no roster or not found)
   const resolveName = (playerId: string | null) => getPlayerName(roster, playerId);
 
   const getOrCreate = (playerId: string): PlayerStats => {
@@ -139,7 +134,6 @@ export function computePlayerStats(
         stats.callahans++;
       }
 
-      // Don't count 'OTHER_TEAM' or null as an assist to any player
       if (assistPlayerId && assistPlayerId !== 'OTHER_TEAM') {
         const assistStats = getOrCreate(assistPlayerId);
         assistStats.assists++;
@@ -153,9 +147,9 @@ export function computePlayerStats(
         const throwerId = event.playerId ?? UNKNOWN_PLAYER_ID;
         const receiverId = event.player2Id ?? UNKNOWN_PLAYER_ID;
         const throwerStats = getOrCreate(throwerId);
-        throwerStats.throwaways += 0.5; // Thrower gets half a throwaway
+        throwerStats.throwaways += 0.5;
         const receiverStats = getOrCreate(receiverId);
-        receiverStats.drops += 0.5; // Receiver gets half a drop
+        receiverStats.drops += 0.5;
         continue;
       }
 
@@ -175,12 +169,10 @@ export function computePlayerStats(
     }
   }
 
-  // Calculate plusMinus for each player
   for (const stats of statsMap.values()) {
     stats.plusMinus = stats.goals + stats.assists + stats.blocks - stats.throwaways - stats.drops;
   }
 
-  // Sort by plusMinus descending, then by name
   return Array.from(statsMap.values()).sort(
     (a, b) => b.plusMinus - a.plusMinus || a.name.localeCompare(b.name),
   );
@@ -426,27 +418,20 @@ export function computeRelativePlayingTimeStats(
   ].filter((metric): metric is RelativePlayingTimeMetric => !!metric);
 }
 
-// --- Visualization Helpers ---
-
 export interface ChemistryConnection {
-  playerId: string; // Player ID for lookups
-  playerName: string; // Display name
+  playerId: string;
+  playerName: string;
   goalsFrom: number; // How many goals did I catch from this person?
   assistsTo: number; // How many assists did I throw to this person?
   totalConnections: number;
 }
 
-/**
- * Get chemistry stats showing connections between players.
- * @param playerId - The player ID to analyze
- */
 export function getChemistryStats(
   playerId: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
   roster?: Player[],
 ): ChemistryConnection[] {
-  // Key by player ID to prevent collisions
   const connections = new Map<
     string,
     { goalsFrom: number; assistsTo: number; totalConnections: number }
@@ -466,13 +451,11 @@ export function getChemistryStats(
       const goalPlayerId = event.goalPlayerId;
       const assistPlayerId = event.assistPlayerId;
 
-      // Did I catch a goal? (player is the goal scorer, check if assist exists)
       if (goalPlayerId === playerId && assistPlayerId && assistPlayerId !== 'OTHER_TEAM') {
         const stats = getOrCreate(assistPlayerId);
         stats.goalsFrom++;
         stats.totalConnections++;
       }
-      // Did I throw an assist? (player is the assister, check if goal scorer exists)
       if (assistPlayerId === playerId && goalPlayerId) {
         const stats = getOrCreate(goalPlayerId);
         stats.assistsTo++;
@@ -530,14 +513,12 @@ export function getSelectablePlayerStatGames(
 
 /**
  * Get impact timeline for a player showing cumulative +/- over the game.
- * @param playerId - The player ID to analyze
  */
 export function getImpactStats(
   playerId: string,
   events: GameEvent[],
   team: 'team1' | 'team2',
 ): ImpactPoint[] {
-  // Track score throughout the game
   let team1Score = 0;
   let team2Score = 0;
   const getScore = () => `${team1Score}-${team2Score}`;
@@ -667,13 +648,13 @@ export interface RoleStats {
   turnovers: number; // Normalized Total Turnovers (0-1)
   throwaways: number; // Normalized Throwaways (0-1)
   drops: number; // Normalized Drops (0-1)
-  rawGoals: number; // Raw goal count
-  rawAssists: number; // Raw assist count
-  rawBlocks: number; // Raw block count
+  rawGoals: number;
+  rawAssists: number;
+  rawBlocks: number;
   rawTurnovers: number; // Raw total turnovers (throwaways + drops)
-  rawDrops: number; // Raw drop count
-  rawThrowaways: number; // Raw throwaway count
-  totalEvents: number; // Raw count of total events
+  rawDrops: number;
+  rawThrowaways: number;
+  totalEvents: number;
 }
 
 export type PlayerRoleLabel =
@@ -690,7 +671,6 @@ export type PlayerRoleLabel =
 
 /**
  * Get role stats for radar chart visualization.
- * @param playerId - The player ID to analyze
  */
 export function getRoleStats(
   playerId: string,
@@ -712,7 +692,6 @@ export function getRoleStats(
   const maxPlusMinus = Math.max(...plusMinusValues, 0);
   const plusMinusRange = Math.max(maxPlusMinus - minPlusMinus, 1);
 
-  // Find by player ID instead of name
   const myStats = allPlayerStats.find((p) => p.id === playerId);
 
   if (!myStats) {
@@ -767,7 +746,6 @@ export function getPlayerRoleLabel(roleStats: RoleStats, isMVP = false): PlayerR
     rawDrops,
     rawThrowaways,
   } = roleStats;
-  // Minimum threshold: need at least 2 events to get a label
   if (totalEvents < 2) return null;
 
   // MVP takes priority
@@ -817,9 +795,6 @@ export function getPlayerRoleLabel(roleStats: RoleStats, isMVP = false): PlayerR
   return null;
 }
 
-/**
- * Generate CSV for a single saved game.
- */
 export function generateSavedGameCSV(game: SavedGame): string {
   const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
   const playerStats = computePlayerStats(game.events, 'team1', game.team1.roster);
@@ -870,9 +845,6 @@ export function generateSavedGameCSV(game: SavedGame): string {
   return csv;
 }
 
-/**
- * Generate CSV for aggregated stats across multiple saved games.
- */
 export function generateAggregateCSV(
   games: SavedGame[],
   teamName: string,
@@ -885,7 +857,6 @@ export function generateAggregateCSV(
 
   let csv = `# Aggregated Stats: ${teamName} (${games.length} games)\n`;
 
-  // Section 1: Combined Team Stats
   csv += '\n# Combined Team Stats\n';
   csv += teamStatsCSV(
     aggregateTeamStats(
@@ -916,11 +887,9 @@ export function generateAggregateCSV(
     'Opponents',
   );
 
-  // Section 2: Combined Player Summary
   csv += '\n\n# Combined Player Summary\n';
   csv += playerSummaryCSV(playerRows, playingTimeStats.size > 0);
 
-  // Section 3: Game Log
   csv += '\n\n# Game Log\n';
   csv += 'Date,Opponent,Result,Score,Our Score,Their Score\n';
   csv += games
@@ -940,7 +909,6 @@ export function generateAggregateCSV(
     })
     .join('\n');
 
-  // Section 4: Individual Games
   csv += '\n\n# Individual Game Details';
   for (const game of games) {
     const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
@@ -1002,8 +970,6 @@ export function generateAggregateCSV(
 
   return csv;
 }
-
-// --- CSV Helper Functions ---
 
 interface PlayerSummaryCSVRow extends PlayerStats {
   pointsPlayed?: number;

@@ -80,7 +80,6 @@ export default function PreGameConfirm() {
     startEditingOpponentName,
   } = useOpponentNameDraft();
 
-  // Determine what's needed
   const needPossession = statTrackingEnabled && possession === null;
   const needRatio = genderRatioEnabled && firstPointRatio === null;
 
@@ -91,16 +90,13 @@ export default function PreGameConfirm() {
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
-  // Derived values
   const softCapTime = hardCapMins - softCapMins;
   const timeoutCount = team1Timeouts.length;
 
-  // Determine if the start button should be enabled
   const possessionReady = !needPossession || selectedTeam !== '';
   const ratioReady = !needRatio || selectedRatio !== '';
   const canStart = possessionReady && ratioReady;
 
-  // Derived colors
   const t1Color = team1BgColor || palette.primary;
   const t2Color = team2BgColor || palette.accent;
   const t1TextColor = getContrastingTextColor(t1Color);
@@ -145,7 +141,6 @@ export default function PreGameConfirm() {
     router.replace('/dashboard');
   };
 
-  // Number picker helpers
   const openNumberPicker = (config: {
     value: number;
     min: number;
@@ -192,7 +187,6 @@ export default function PreGameConfirm() {
         bottomOffset={16}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}>
-        {/* Lock Warning */}
         <View style={[styles.lockInfo, { backgroundColor: palette.dangerOverlay15 }]}>
           <MaterialCommunityIcons
             name="lock-outline"
@@ -205,13 +199,11 @@ export default function PreGameConfirm() {
         </View>
 
         <View key={isLandscape ? 'landscape' : 'portrait'} style={styles.columnsContainer}>
-          {/* Left Column: Settings */}
           <View style={styles.column}>
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
               GAME SETTINGS
             </ThemedText>
             <View style={styles.settingsGrid}>
-              {/* Game To */}
               <EditableSettingCard
                 icon="trophy-outline"
                 label="Game To"
@@ -230,7 +222,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Hard Cap */}
               <EditableSettingCard
                 icon="clock-outline"
                 label="Hard Cap"
@@ -245,7 +236,6 @@ export default function PreGameConfirm() {
                     onChange: (val) => {
                       setHardCapMins(val);
                       setTimerTimeLeft(val * 60);
-                      // Clamp soft cap if needed
                       if (softCapMins > val) {
                         setSoftCapMins(val);
                       }
@@ -257,7 +247,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Soft Cap */}
               <EditableSettingCard
                 icon="clock-alert-outline"
                 label="Soft Cap"
@@ -276,7 +265,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Players */}
               <EditableSettingCard
                 icon="account-multiple-outline"
                 label="Players"
@@ -295,7 +283,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Halftime */}
               <EditableSettingCard
                 icon="swap-vertical"
                 label="Halftime"
@@ -313,7 +300,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Timeouts */}
               <TimeoutSettingCard
                 timeoutCount={timeoutCount}
                 autoHalftimeEnabled={autoHalftimeEnabled}
@@ -322,7 +308,6 @@ export default function PreGameConfirm() {
                 onSetFloaterEnabled={setFloaterEnabled}
               />
 
-              {/* Stat Tracking */}
               <EditableSettingCard
                 icon="chart-bar"
                 label="Stat Tracking"
@@ -346,7 +331,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Line Calling - only when stat tracking enabled */}
               {statTrackingEnabled && (
                 <EditableSettingCard
                   icon="clipboard-list-outline"
@@ -363,7 +347,6 @@ export default function PreGameConfirm() {
                 </EditableSettingCard>
               )}
 
-              {/* Gender Ratio */}
               <EditableSettingCard
                 icon="account-group"
                 label="Gender Ratio"
@@ -378,7 +361,6 @@ export default function PreGameConfirm() {
                 </ThemedText>
               </EditableSettingCard>
 
-              {/* Point Timer - only when stat tracking enabled */}
               {statTrackingEnabled && (
                 <EditableSettingCard
                   icon="timer-outline"
@@ -397,13 +379,11 @@ export default function PreGameConfirm() {
             </View>
           </View>
 
-          {/* Right Column: Game Start Choices */}
           <View style={styles.column}>
             <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
               STARTING OPTIONS
             </ThemedText>
 
-            {/* Receiving Team Selection */}
             <View style={styles.choiceGroup}>
               <SegmentedControl
                 label={statTrackingEnabled ? 'WHO IS RECEIVING?' : 'TEAMS'}
@@ -455,7 +435,6 @@ export default function PreGameConfirm() {
               />
             </View>
 
-            {/* Gender Ratio Selection */}
             {genderRatioEnabled && (
               <View style={styles.choiceGroup}>
                 <SegmentedControl
@@ -494,7 +473,6 @@ export default function PreGameConfirm() {
               </View>
             )}
 
-            {/* Start Game Button */}
             <Pressable
               onPress={handleStart}
               disabled={!canStart}

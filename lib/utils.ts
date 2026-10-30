@@ -12,12 +12,10 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-/** True when an array exists and has at least one item. */
 export function hasItems<T>(arr: readonly T[] | null | undefined): arr is readonly T[] {
   return Array.isArray(arr) && arr.length > 0;
 }
 
-/** Singular when count is exactly 1, plural otherwise. */
 export function pluralize(count: number, singular: string, plural: string): string {
   return count === 1 ? singular : plural;
 }

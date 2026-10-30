@@ -170,7 +170,6 @@ export default function SavedGamesList({
     );
   }
 
-  // Search filter
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
@@ -182,7 +181,6 @@ export default function SavedGamesList({
     });
   }
 
-  // Sort
   const sortOption = SAVED_GAMES_SORT_OPTIONS[sortKey];
   const dir = sortOption.direction === 'asc' ? 1 : -1;
   filteredAndSortedGames.sort((a, b) => {
@@ -241,7 +239,6 @@ export default function SavedGamesList({
 
   return (
     <View style={styles.container}>
-      {/* Controls Header */}
       <View style={styles.controlsHeader}>
         <View style={[styles.searchWrapper, { backgroundColor: palette.overlay05 }]}>
           <MaterialCommunityIcons

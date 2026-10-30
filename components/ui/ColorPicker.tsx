@@ -50,7 +50,6 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
     <View style={styles.container}>
       <ThemedText style={[styles.label, { color: palette.textMuted }]}>{label}</ThemedText>
 
-      {/* Preset Grid */}
       <View style={styles.presetGrid}>
         {TEAM_COLOR_PRESETS.map((preset) => (
           <Pressable
@@ -75,7 +74,6 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
         ))}
       </View>
 
-      {/* Custom Color Button */}
       <Pressable
         style={({ pressed }) => [
           styles.customButton,
@@ -99,7 +97,6 @@ export function TeamColorPicker({ label, value, onChange }: ColorPickerProps) {
         />
       </Pressable>
 
-      {/* Advanced Picker Modal */}
       <Modal
         visible={showAdvanced}
         transparent

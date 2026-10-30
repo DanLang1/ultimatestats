@@ -37,7 +37,6 @@ export default function EditPlayerModal() {
   const roster = currentTeam.roster;
   const player = roster.find((p) => p.id === playerId);
 
-  // Initialize state from player
   const [name, setName] = useState(player?.name ?? '');
   const [number, setNumber] = useState(player?.number ?? '');
   const [isActive, setIsActive] = useState(player?.isActive ?? true);
@@ -53,7 +52,6 @@ export default function EditPlayerModal() {
     return <Redirect href="/edit-roster" />;
   }
 
-  // Check if name already exists (excluding current player)
   const nameExists =
     name.trim() !== '' &&
     roster.some((p) => p.name.toLowerCase() === name.trim().toLowerCase() && p.id !== player.id);
@@ -125,7 +123,6 @@ export default function EditPlayerModal() {
       return;
     }
 
-    // Actually delete
     const newRoster = roster.filter((p) => p.id !== playerId);
     setCurrentTeam({ ...currentTeam, roster: newRoster });
     removePlayerFromPresets(playerId);
@@ -133,7 +130,6 @@ export default function EditPlayerModal() {
     router.back();
   };
 
-  // Check for stats
   const hasCurrentGameStats = hasPlayerRecordedStats(playerId, events);
   const hasAdvancedGameParticipation = hasPlayerRecordedActionsInActiveAdvancedGame(playerId);
   const hasStatsInSavedGames = hasPlayerRecordedStatsInSavedGames(playerId, savedGames);
@@ -146,7 +142,6 @@ export default function EditPlayerModal() {
         minBottomPadding={16}>
         <View style={[styles.handle, { backgroundColor: palette.overlay20 }]} />
         {confirmingDelete ? (
-          // In-sheet delete confirmation view
           <View style={styles.confirmContainer}>
             <MaterialCommunityIcons
               name="alert-circle-outline"
@@ -183,7 +178,6 @@ export default function EditPlayerModal() {
             </View>
           </View>
         ) : (
-          // Normal edit view
           <>
             <View style={styles.headerRow}>
               <ThemedText style={[styles.headerTitle, { color: palette.modalText }]}>
@@ -206,7 +200,6 @@ export default function EditPlayerModal() {
               style={styles.scrollArea}
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled">
-              {/* Name and Number inputs row */}
               <View style={styles.inputsRow}>
                 <View style={styles.nameField}>
                   <ThemedText style={[styles.fieldLabel, { color: palette.modalTextMuted }]}>
@@ -266,7 +259,6 @@ export default function EditPlayerModal() {
                 </View>
               </View>
 
-              {/* Active Toggle */}
               {!hasAdvancedGameParticipation && (
                 <View style={[styles.sectionRow, styles.activeRow]}>
                   <View style={styles.activeTextContainer}>
@@ -296,7 +288,6 @@ export default function EditPlayerModal() {
                 </ThemedText>
               )}
 
-              {/* Matching Preference */}
               <View style={styles.sectionRow}>
                 <ThemedText style={[styles.sectionLabel, { color: palette.modalText }]}>
                   Matching preference
@@ -347,7 +338,6 @@ export default function EditPlayerModal() {
                 </View>
               </View>
 
-              {/* Role */}
               <View style={styles.sectionRow}>
                 <ThemedText style={[styles.sectionLabel, { color: palette.modalText }]}>
                   Role
@@ -434,7 +424,6 @@ export default function EditPlayerModal() {
                 </View>
               </View>
 
-              {/* Buttons */}
               <View style={styles.buttonRow}>
                 {!hasCurrentGameStats && !hasAdvancedGameParticipation && (
                   <Pressable
@@ -633,7 +622,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
     },
-    // Confirmation styles
     confirmContainer: {
       alignItems: 'center',
       paddingVertical: 12,

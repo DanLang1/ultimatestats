@@ -14,7 +14,6 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
 import { Fonts } from '@/theme/theme';
 
-// Extended type to include opponent turnover and opponent block for editing
 type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';
 
 function parseEventType(param: string | undefined): 'turnover' | 'goal' | undefined {
@@ -79,7 +78,6 @@ export default function EditEventModal() {
     deleteSavedGameEvent,
   } = useGameStore();
 
-  // Get roster from either current game or saved game
   const isSavedGame = params.gameId && params.gameId !== 'current';
   const savedGame = isSavedGame ? savedGames.find((g) => g.id === params.gameId) : null;
   const roster = savedGame?.team1.roster ?? currentTeam.roster;
@@ -94,21 +92,18 @@ export default function EditEventModal() {
   // Use params for event type since saved games don't have events in store
   const eventType = parseEventType(params.eventType);
 
-  // Map stored subtype to editable subtype based on team
   // Opponent events are stored with regular subtypes but displayed as opponentBlock/opponentTurn
   const getInitialSubtype = (): EditableTurnoverType => {
     const storedSubtype = parseSubtype(params.subtype);
     const team = parseTeam(params.originalTeam);
 
     if (team === 'team2') {
-      // Opponent event - map to opponent-specific types
       if (storedSubtype === 'block') return 'opponentBlock';
       return 'opponentTurn'; // throwaway, drop, etc. from opponent = OPP TURN
     }
     return storedSubtype ?? 'throwaway';
   };
 
-  // Local state for editing
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(
     params.playerId === 'null' ? null : (params.playerId ?? null),
   );
@@ -171,7 +166,6 @@ export default function EditEventModal() {
 
   const isFiftyFifty = selectedSubtype === 'fiftyfifty';
 
-  // Guard: Invalid params
   if (eventIndex < 0 || !eventType) {
     return null;
   }
@@ -226,7 +220,6 @@ export default function EditEventModal() {
         updateEvent(eventIndex, updates);
       }
     } else if (isGoal) {
-      // Only update the field that was edited
       const updates =
         params.editField === 'scorer'
           ? { goalPlayerId: selectedPlayerId }
@@ -335,7 +328,6 @@ export default function EditEventModal() {
         </View>
       ) : (
         <>
-          {/* Header */}
           <View style={[styles.header, { borderBottomColor: palette.overlay15 }]}>
             <ThemedText style={[styles.headerTitle, { color: palette.modalText }]}>
               {headerTitle}
@@ -401,7 +393,6 @@ export default function EditEventModal() {
             style={styles.content}
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled>
-            {/* Event Type Section */}
             {isTurnover && (
               <View style={styles.section}>
                 <ThemedText style={[styles.sectionLabel, { color: palette.textSecondary }]}>
@@ -424,7 +415,6 @@ export default function EditEventModal() {
                       ]}
                       onPress={() => {
                         setSelectedSubtype(type.value);
-                        // When switching to 50/50, reset to step 1
                         if (type.value === 'fiftyfifty') {
                           setFiftyFiftyStep(1);
                           setSelectedPlayer2Id(null);
@@ -484,10 +474,8 @@ export default function EditEventModal() {
                 </View>
               )}
 
-            {/* Step 2 for 50/50: Receiver selection */}
             {isTurnover && isFiftyFifty && fiftyFiftyStep === 2 && (
               <View style={styles.section}>
-                {/* Show thrower badge */}
                 <View
                   style={[
                     styles.throwerBadge,
@@ -557,8 +545,6 @@ export default function EditEventModal() {
               </View>
             )}
 
-            {/* Goal editing - scorer and assist selection */}
-            {/* Goal editing - single field based on editField */}
             {isGoal && (
               <View style={styles.section}>
                 <ThemedText style={[styles.sectionLabel, { color: palette.textSecondary }]}>
@@ -646,7 +632,6 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },
-    // 50/50 Thrower Badge
     throwerBadge: {
       flexDirection: 'row',
       alignItems: 'center',

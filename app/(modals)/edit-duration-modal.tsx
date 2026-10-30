@@ -156,14 +156,11 @@ export default function EditDurationModal() {
             { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
           ]}
           onPress={(e) => e.stopPropagation()}>
-          {/* Header */}
           <View style={styles.header}>
             <ThemedText style={[styles.title, { color: palette.modalText }]}>{title}</ThemedText>
           </View>
 
-          {/* Main Content */}
           <View style={styles.content}>
-            {/* Two-field display */}
             <View style={styles.fieldsRow}>
               <Pressable
                 onPress={() => setActiveField('minutes')}
@@ -221,7 +218,6 @@ export default function EditDurationModal() {
               </Pressable>
             </View>
 
-            {/* Numpad */}
             {isLandscape ? (
               <View style={styles.numpadContainer}>
                 <View style={styles.numpadRow}>
@@ -354,7 +350,6 @@ export default function EditDurationModal() {
             </ThemedText>
           )}
 
-          {/* Action Buttons */}
           <View style={styles.actionRow}>
             <Pressable
               onPress={handleClearDuration}

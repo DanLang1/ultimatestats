@@ -47,7 +47,6 @@ export default function LineEditor() {
   const { genderRatioEnabled, firstPointRatio, numPlayers, linePlayerSortOrder } =
     useSettingsStore();
 
-  // Get presets for the team
   const allPresets = useLinePresetsStore((state) => state.presets);
   const setLineConfirmedForNextPoint = useLinePresetsStore(
     (state) => state.setLineConfirmedForNextPoint,
@@ -55,7 +54,6 @@ export default function LineEditor() {
   const presets = allPresets.filter((p) => p.teamId === currentTeam.id);
   const recentLines: RecentLine[] = getRecentLines(pointLines, currentPoint);
 
-  // Local selection state
   const [selectedIds, setSelectedIds] = useState<string[]>(currentLine);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [selectedRecentPointNumber, setSelectedRecentPointNumber] = useState<number | null>(null);
@@ -66,7 +64,6 @@ export default function LineEditor() {
 
   const gameActive = useIsGameActive();
 
-  // Compute the last completed point for summary
   const pointEvents = computePointByPointEvents(
     events,
     startingPossession,
@@ -79,7 +76,6 @@ export default function LineEditor() {
   const completedPoints = pointEvents.filter((p) => !p.isInProgress);
   const lastPoint = completedPoints[completedPoints.length - 1];
 
-  // Get summary data if we have a completed point
   const totalTurnovers = lastPoint
     ? lastPoint.turnovers.filter((t) => t.team === 'team1').length
     : 0;
@@ -165,7 +161,6 @@ export default function LineEditor() {
     selectedPreset?.name ??
     (selectedRecentPointNumber != null ? `Pt ${selectedRecentPointNumber}` : 'Choose line');
 
-  // Check gender ratio if enabled
   const expectedRatio =
     genderRatioEnabled && firstPointRatio ? getExpectedRatio(currentPoint, firstPointRatio) : null;
   const ratioCheck =
@@ -196,9 +191,7 @@ export default function LineEditor() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.primary }]}>
-      {/* Header - Point Summary + Confirm */}
       <View style={[styles.header, { borderBottomColor: palette.border }]}>
-        {/* Top row: always skip | title | confirm */}
         <View style={styles.headerTop}>
           <Pressable
             onPress={handleSkip}
@@ -239,7 +232,6 @@ export default function LineEditor() {
               </ThemedText>
             )}
           </View>
-          {/* Ratio inline in landscape */}
           {isLandscape && (genderRatioEnabled || showRatioWarning) && (
             <View style={styles.ratioInline}>
               {genderRatioEnabled && (
@@ -288,7 +280,6 @@ export default function LineEditor() {
           </Pressable>
         </View>
 
-        {/* Ratio info row - portrait only */}
         {!isLandscape && (genderRatioEnabled || showRatioWarning) && (
           <View style={styles.infoRow}>
             {genderRatioEnabled && (
@@ -311,7 +302,6 @@ export default function LineEditor() {
           </View>
         )}
 
-        {/* Load Line + Clear Row */}
         <View style={styles.presetsRow}>
           <Pressable
             testID="line-select-load-line"
@@ -455,7 +445,6 @@ export default function LineEditor() {
         )}
       </View>
 
-      {/* Player Grid or Empty State */}
       <View style={styles.gridContainer}>
         {activePlayers.length === 0 ? (
           <View style={styles.emptyState}>

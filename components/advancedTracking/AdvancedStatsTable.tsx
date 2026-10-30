@@ -469,7 +469,6 @@ export default function AdvancedStatsTable({
           ))}
         </View>
 
-        {/* Scrollable stats columns */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator

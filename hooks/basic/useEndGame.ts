@@ -22,7 +22,6 @@ export function useEndGame() {
   const team1Name = currentTeam.name;
 
   const confirmEndGame = () => {
-    // Build contextual message based on score state
     const isTied = team1Score === team2Score;
     const winningTeam = team1Score > team2Score ? team1Name : team2Name;
     const winnerScore = Math.max(team1Score, team2Score);
@@ -43,7 +42,6 @@ export function useEndGame() {
           onPress: async () => {
             pauseGameClock();
 
-            // Save game if stat tracking enabled
             if (statTrackingEnabled) {
               await saveCurrentGame();
             }

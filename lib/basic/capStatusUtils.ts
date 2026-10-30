@@ -1,7 +1,3 @@
-/**
- * Cap status messaging shown on the Game Status screen.
- */
-
 export interface CapStatusInput {
   isHardcap: boolean;
   isSoftCap: boolean;

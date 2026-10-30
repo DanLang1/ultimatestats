@@ -48,7 +48,6 @@ export default function HalftimeModal() {
   const receivingTeamKey = startingPossession === 'team1' ? 'team2' : 'team1';
   const receivingLabel = receivingTeamKey === 'team1' ? 'YOU RECEIVE' : 'THEY RECEIVE';
 
-  // Compute halftime stats
   const teamStats = computeTeamStats(events, startingPossession, gameTo, autoHalftimeEnabled);
   const playerStats = computePlayerStats(events, 'team1', currentTeam.roster);
   const topPerformers = playerStats.slice(0, 3);
@@ -96,7 +95,6 @@ export default function HalftimeModal() {
             styles.container,
             { backgroundColor: palette.primary, shadowColor: palette.shadow },
           ]}>
-          {/* Close button - top right */}
           <Pressable
             onPress={() => router.replace('/dashboard')}
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
@@ -140,7 +138,6 @@ export default function HalftimeModal() {
           <ScrollView
             contentContainerStyle={[styles.contentRow, !hasStats && styles.contentRowCompact]}
             showsVerticalScrollIndicator={false}>
-            {/* Score + Timer */}
             <View style={[styles.leftColumn, !hasStats && styles.leftColumnCompact]}>
               <View style={styles.scoreCompact}>
                 <View style={styles.scoreGroup}>
@@ -256,13 +253,10 @@ export default function HalftimeModal() {
               )}
             </View>
 
-            {/* Divider */}
             {hasStats && <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />}
 
-            {/* Stats & Action */}
             {hasStats && (
               <View style={styles.rightColumn}>
-                {/* 2 Stats Cards */}
                 <View style={styles.statsRowCompact}>
                   <View style={[styles.statCardCompact, { backgroundColor: palette.overlay05 }]}>
                     <ThemedText style={[styles.statValueCompact, { color: palette.textInverse }]}>
@@ -282,7 +276,6 @@ export default function HalftimeModal() {
                   </View>
                 </View>
 
-                {/* Top Performers List */}
                 <View style={styles.performersListCompact}>
                   {topPerformers.map((p, i) => (
                     <View key={p.name} style={styles.performerRowCompact}>

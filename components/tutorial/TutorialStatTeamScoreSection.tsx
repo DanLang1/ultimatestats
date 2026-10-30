@@ -88,7 +88,6 @@ export default function TutorialStatTeamScoreSection({
             paddingBottom: contentInsetBottom,
           },
         ]}>
-        {/* Team name + disc emoji */}
         <View pointerEvents="none" style={styles.teamNameRow}>
           <ThemedText
             style={{
@@ -114,7 +113,6 @@ export default function TutorialStatTeamScoreSection({
           )}
         </View>
 
-        {/* Score */}
         <View pointerEvents="none">
           <ScoreDisplay
             bgColor={backgroundColor}

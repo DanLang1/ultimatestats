@@ -51,7 +51,6 @@ export default function PartnersScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic">
-        {/* Card 1: Centered Layout */}
         <View style={styles.card}>
           <Animated.View
             entering={FadeInRight.duration(400)}

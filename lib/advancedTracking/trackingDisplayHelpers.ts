@@ -106,7 +106,7 @@ export function getLatestThrowDetailsTarget(
 
 export interface PassChainEvent {
   id: string; // The action ID
-  name: string; // The participant name
+  name: string;
 }
 
 function getPassChainActions(
@@ -137,7 +137,6 @@ function getRefName(ref: PlayerRef | undefined, participants: Participant[]): st
   return null;
 }
 
-/** Generates the pass chain sequence as an array of events for UI mapping. */
 export function getPassChainEvents(
   possession: PointPossession | null,
   participants: Participant[],
@@ -188,11 +187,9 @@ export function getPassChainEvents(
 export interface SideTimeoutState {
   /** Regular timeouts used by this side in the currently-active half. */
   regularUsedInHalf: number;
-  /** Regular timeouts allotted per half. */
   regularPerHalf: number;
   /** True when this side has already used its one-per-game floater. */
   floaterUsed: boolean;
-  /** True when floaters are enabled for this game. */
   floaterEnabled: boolean;
   /** True once the game has advanced past the halftime transition. */
   isSecondHalf: boolean;

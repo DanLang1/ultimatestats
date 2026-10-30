@@ -23,7 +23,7 @@ export interface SavedGame {
   team1Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   team2Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   importedAt?: number; // timestamp when this game was imported via sharing
-  tournamentId?: string; // optional link to a Tournament
+  tournamentId?: string;
 }
 
 export type MatchingType = 'fmp' | 'mmp';

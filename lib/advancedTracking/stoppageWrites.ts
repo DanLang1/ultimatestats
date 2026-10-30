@@ -34,7 +34,6 @@ export function applyGameClockPause(
   return pauseId;
 }
 
-/** Resumes the active game-clock pause. */
 export function applyGameClockResume(game: AdvancedTrackedGame, at: number): void {
   const pause = getActiveGameClockPause(game);
   if (pause == null) throw new Error('No active game-clock pause to resume.');

@@ -66,19 +66,15 @@ export default function TutorialStatScoreboardRoute() {
   const team1TextColor = getContrastingTextColor(TUTORIAL_STAT_TEAM1_BG);
   const team2TextColor = getContrastingTextColor(TUTORIAL_STAT_TEAM2_BG);
 
-  // Game timer (countdown from 90 min, running when point timer is running)
   const gameTimeLeft = useCountdown(TUTORIAL_STAT_GAME_TIMER, pointTimerRunning);
 
-  // Ratio label for the current point.
   const currentRatioLabel = formatRatio(
     TUTORIAL_STAT_EXPECTED_RATIO,
     getSequenceNumber(TUTORIAL_STAT_CURRENT_POINT),
   );
 
-  // Show START POINT on action bar before timer starts
   const showStartPoint = phase === 'scoreboard' && !pointTimerRunning && !hasPointStarted;
 
-  // Highlight button on action bar based on step
   let actionBarHighlight: 'start' | 'block' | null = null;
   if (step?.expectedAction === 'start-point') {
     actionBarHighlight = 'start';
@@ -86,17 +82,14 @@ export default function TutorialStatScoreboardRoute() {
     actionBarHighlight = 'block';
   }
 
-  // Get goal scorer name for stat entry badge
   const goalScorerName = goalScorerId
     ? TUTORIAL_STAT_ROSTER.find((p) => p.id === goalScorerId)?.name
     : undefined;
 
-  // Determine stat entry step
   const statEntryStep = step?.expectedAction === 'select-scorer' ? 'goal' : 'assist';
 
   return (
     <ThemedView style={styles.container}>
-      {/* Team 1 (Top) */}
       <TutorialStatTeamScoreSection
         teamName={TUTORIAL_STAT_TEAM1_NAME}
         score={team1Score}
@@ -121,7 +114,6 @@ export default function TutorialStatScoreboardRoute() {
         />
       </View>
 
-      {/* Floating Home Button */}
       <Pressable
         accessibilityLabel="Exit tutorial"
         accessibilityRole="button"
@@ -131,7 +123,6 @@ export default function TutorialStatScoreboardRoute() {
         <MaterialCommunityIcons name="home" size={homeIconSize} color={team1TextColor} />
       </Pressable>
 
-      {/* Team 2 (Bottom) */}
       <TutorialStatTeamScoreSection
         teamName={TUTORIAL_STAT_TEAM2_NAME}
         score={team2Score}
@@ -143,7 +134,6 @@ export default function TutorialStatScoreboardRoute() {
         hasPossession={possession === 'team2'}
       />
 
-      {/* Action Bar */}
       {phase === 'scoreboard' && (
         <TutorialActionBar
           showStartPoint={showStartPoint}
@@ -164,7 +154,6 @@ export default function TutorialStatScoreboardRoute() {
         />
       )}
 
-      {/* Stat Entry Overlay */}
       {phase === 'stat-entry' && (
         <TutorialStatEntry
           roster={TUTORIAL_STAT_ROSTER}

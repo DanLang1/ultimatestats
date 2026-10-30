@@ -21,15 +21,11 @@ export function resolveTeamName(
   return liveTeam?.name ?? snapshotName;
 }
 
-/**
- * Get only active players from a roster
- */
 export function getActiveRoster(roster: Player[]): Player[] {
   return roster.filter((p) => p.isActive);
 }
 
 /**
- * Get a player's name by their ID.
  * Performance: O(n) scan.
  * Fallbacks:
  * 1. Returns null if no ID provided.
@@ -49,16 +45,12 @@ export function getPlayerName(
   return roster.find((p) => p.id === id)?.name ?? `Deleted Player (${id.slice(0, 4)})`;
 }
 
-/**
- * Check if a player name already exists in the roster
- */
 export function hasPlayerWithName(roster: Player[], name: string): boolean {
   const searchName = name.trim().toLowerCase();
   return roster.some((p) => p.name.toLowerCase() === searchName);
 }
 
 /**
- * Returns true if the player has already participated in the current game.
  * Participation is inferred from recorded point lines and directly attributed stat events.
  */
 export function hasPlayerParticipatedInCurrentGame(
@@ -103,7 +95,6 @@ export function hasPlayerRecordedStatsInSavedGames(
 }
 
 /**
- * Get a player's matching type by their ID.
  * Returns null if player not found or matching type not set.
  */
 export function getPlayerMatchingType(

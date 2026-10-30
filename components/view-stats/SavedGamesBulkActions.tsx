@@ -35,7 +35,6 @@ export default function SavedGamesBulkActions({
   return (
     <View style={styles.bottomBar}>
       <View style={styles.actionsContainer}>
-        {/* Cancel Button (X) */}
         <Pressable
           style={[
             styles.cancelButton,
@@ -48,7 +47,6 @@ export default function SavedGamesBulkActions({
           <MaterialCommunityIcons name="close" size={actionIconSize} color={palette.textOnAccent} />
         </Pressable>
 
-        {/* Share Button (Pill) */}
         <Pressable
           style={[
             styles.actionButton,
@@ -67,7 +65,6 @@ export default function SavedGamesBulkActions({
           </ThemedText>
         </Pressable>
 
-        {/* Delete Button (Pill) */}
         <Pressable
           style={[
             styles.actionButton,
@@ -108,7 +105,6 @@ function createStyles(sizeClass: SizeClass) {
       borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
-      // Shadow
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 6,
@@ -122,7 +118,6 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: 20,
       paddingVertical: 12,
       borderRadius: 25,
-      // Shadow
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 6,

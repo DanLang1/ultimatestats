@@ -28,7 +28,6 @@ export default function TutorialTurnoverEntry({
   const { bottom: bottomInset, left: leftInset, right: rightInset } = useSafeAreaInsets();
   const styles = createStyles(sizeClass);
 
-  // Show only players on the current line, sorted alphabetically
   const linePlayers = roster
     .filter((p) => currentLine.includes(p.id))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -52,7 +51,6 @@ export default function TutorialTurnoverEntry({
           },
         ]}>
         <View style={styles.content}>
-          {/* Header */}
           <View style={styles.header}>
             <ThemedText style={[styles.teamName, { color: palette.modalText }]}>
               {teamName}
@@ -73,7 +71,6 @@ export default function TutorialTurnoverEntry({
             </Animated.View>
           </View>
 
-          {/* Player chips */}
           <View style={styles.chipsContainer}>
             {linePlayers.map((player) => (
               <PlayerChip

@@ -173,12 +173,10 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
       score: d.score,
     }));
 
-  // Filter out Start/End events for the event log
   const eventLog = data.filter(
     (d) => d.description && d.description !== 'Start' && d.description !== 'End',
   );
 
-  // Calculate min/max for display
   const minY = Math.min(...chartData.map((d) => d.y));
   const maxY = Math.max(...chartData.map((d) => d.y));
   const finalValue = chartData[chartData.length - 1]?.y ?? 0;
@@ -191,7 +189,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
     finalValueColor = palette.textMuted;
   }
 
-  // Calculate Y-axis domain (symmetric around 0, or at least include 0)
   const axisMin = Math.floor(Math.min(minY, 0));
   const axisMax = Math.ceil(Math.max(maxY, 0));
   const yTickValues = buildImpactTickValues(axisMin, axisMax);
@@ -218,7 +215,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
   const chartScrollWidth = Math.max(viewportWidth || 300, minChartWidth);
   const needsScroll = viewportWidth > 0 && minChartWidth > viewportWidth;
 
-  // Custom scrollbar derived values
   const maxScroll = Math.max(0, contentWidth - viewportWidth);
   const visibleRatio = contentWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1;
   const indicatorThumbWidth = Math.max(26, Math.round(viewportWidth * visibleRatio));
@@ -372,7 +368,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </View>
       </View>
 
-      {/* Current Value Display */}
       <View style={styles.valueDisplay}>
         <ThemedText
           style={[
@@ -389,7 +384,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </ThemedText>
       </View>
 
-      {/* Chart with Y-axis labels */}
       <View style={styles.chartContainer}>
         {/* Y-Axis Labels — fixed, does not scroll */}
         <View style={styles.yAxis}>
@@ -402,7 +396,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
           ))}
         </View>
 
-        {/* Scrollable chart + x-axis labels */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -412,7 +405,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
           onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
           style={styles.chartScroll}>
           <View style={{ width: chartScrollWidth }}>
-            {/* Chart */}
             <View style={{ height: chartHeight }}>
               <Svg width={chartScrollWidth} height={chartHeight}>
                 {yTickValues.map((value) => (
@@ -497,7 +489,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </ScrollView>
       </View>
 
-      {/* Custom scrollbar indicator */}
       {needsScroll && (
         <View style={[styles.indicatorWrap, { paddingLeft: yAxisWidth }]}>
           <View
@@ -515,7 +506,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </View>
       )}
 
-      {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: palette.success }]} />
@@ -531,7 +521,6 @@ export default function ImpactTimeline({ data }: ImpactTimelineProps) {
         </View>
       </View>
 
-      {/* Event Log */}
       {eventLog.length > 0 && (
         <View style={styles.eventLog}>
           <ThemedText style={[styles.eventLogTitle, { color: palette.textMuted }]}>

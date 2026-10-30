@@ -12,8 +12,6 @@ import {
 } from './statConstants';
 import { PULL_RESULT_SPECS } from './types';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 export interface AdvancedPlayerStats {
   participantId: string;
 
@@ -159,8 +157,6 @@ export const ATTRIBUTION_STAT_SPECS = {
   disc_pickup: { field: null, plusMinusWeight: 0 },
 } as const satisfies Record<AttributionType, AttributionStatSpec>;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function createEmptyStats(participantId: string): AdvancedPlayerStats {
   return {
     participantId,
@@ -217,7 +213,6 @@ function createEmptyStats(participantId: string): AdvancedPlayerStats {
   };
 }
 
-/** Find which sideId a participant belongs to for a given point. */
 function findSideForParticipant(point: AnalyticsPoint, participantId: string): string | null {
   for (const [sideId, ids] of Object.entries(point.linesBySide)) {
     if (ids.includes(participantId)) return sideId;
@@ -229,10 +224,8 @@ function buildPointById(points: AnalyticsPoint[]): Map<string, AnalyticsPoint> {
   return new Map(points.map((point) => [point.id, point]));
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
-
 /**
- * Compute stats for all participants in a game. Optionally filter to a single side.
+ * Optionally filter to a single side.
  *
  * Attribution-first: iterates `game.attributions` once, bucketing by participant and type,
  * then derives remaining stats (points played, O/D, timing) from `game.points`.
@@ -274,7 +267,6 @@ export function computeAdvancedPlayerStats(
   }
   // Also include participants from attributions who may not be in lines (e.g. defenders)
   for (const id of byParticipant.keys()) {
-    // Only add if no sideId filter, or if this participant appears in the filtered side
     if (sideId == null) {
       allParticipantIds.add(id);
     }
@@ -414,7 +406,6 @@ export function computeAdvancedPlayerStats(
 }
 
 /**
- * Select a single participant's stats from a previously computed collection.
  * Returns empty stats if the participant is not found.
  */
 export function getAdvancedPlayerStatsForParticipant(

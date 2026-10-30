@@ -85,7 +85,6 @@ export default function NumberPickerModal() {
             { backgroundColor: palette.modalBg, borderColor: palette.overlay15 },
           ]}
           onPress={(e) => e.stopPropagation()}>
-          {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTopRow}>
               <ThemedText style={[styles.title, { color: palette.modalText }]}>{label}</ThemedText>
@@ -100,9 +99,7 @@ export default function NumberPickerModal() {
             )}
           </View>
 
-          {/* Main Content */}
           <View style={styles.content}>
-            {/* Value Display */}
             <View style={[styles.valueDisplayContainer, { borderBottomColor: palette.overlay15 }]}>
               <ThemedText
                 style={[
@@ -119,7 +116,6 @@ export default function NumberPickerModal() {
               )}
             </View>
 
-            {/* Numpad */}
             {isShortLandscape ? (
               <View style={styles.numpadContainer}>
                 <View style={styles.numpadRow}>
@@ -252,7 +248,6 @@ export default function NumberPickerModal() {
             )}
           </View>
 
-          {/* Quick Options - Below main content */}
           {quickOptions && quickOptions.length > 0 && (
             <View style={[styles.quickOptionsContainer]}>
               {Array.from(new Set(quickOptions)).map((opt) => (
@@ -280,7 +275,6 @@ export default function NumberPickerModal() {
             </View>
           )}
 
-          {/* Action Buttons */}
           <View style={styles.actionRow}>
             <Pressable
               onPress={handleDismiss}

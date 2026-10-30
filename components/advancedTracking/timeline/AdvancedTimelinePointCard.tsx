@@ -73,7 +73,6 @@ export default function AdvancedTimelinePointCard({
 
   return (
     <View style={[styles.card, { backgroundColor: palette.overlay08 }]}>
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: palette.overlay10 }]}>
         <View style={styles.headerLeft}>
           <View style={[styles.pointBadge, { backgroundColor: headerColor }]}>
@@ -113,7 +112,6 @@ export default function AdvancedTimelinePointCard({
         </View>
       </View>
 
-      {/* Body - unified possession and action flow */}
       <View style={styles.body}>
         {flowItems.map((item, index) => (
           <TimelineFlowRow
@@ -172,7 +170,6 @@ export default function AdvancedTimelinePointCard({
         </Pressable>
       )}
 
-      {/* Lineup footer */}
       {(hasFocusLine || hasOpposingLine) && (
         <View style={[styles.lineupSection, { borderTopColor: palette.overlay10 }]}>
           <LineupBlock players={point.linesBySide[focusSideId] ?? []} />

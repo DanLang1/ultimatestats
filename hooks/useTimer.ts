@@ -49,7 +49,6 @@ export function useCountdownSeconds({
 }
 
 /**
- * A self-contained stopwatch hook with start/stop/reset controls.
  * Uses a timestamp reference internally to be drift-proof.
  */
 export function useStopwatch(initialElapsedMs = 0) {

@@ -77,14 +77,12 @@ export default function GameInfoScreen() {
 
   const countTimeoutsRemaining = (timeouts: boolean[]) => timeouts.filter((t) => t).length;
 
-  // Format elapsed seconds as MM:SS
   const formatElapsed = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Format compact timeout/floater string
   const formatTimeoutStats = (timeouts: boolean[], hasFloater: boolean) => {
     const toCount = countTimeoutsRemaining(timeouts);
     const toText = `${toCount} TO`;
@@ -143,7 +141,6 @@ export default function GameInfoScreen() {
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
         {isLandscape ? (
-          /* Landscape: Three-Column Hero Section */
           <View key="hero-landscape" style={styles.heroSection}>
             <View style={styles.teamColumn}>
               <ThemedText
@@ -296,9 +293,7 @@ export default function GameInfoScreen() {
             </View>
           </View>
         ) : (
-          /* Portrait: Score row on top, game status below */
           <View key="hero-portrait">
-            {/* Score Row */}
             <View style={styles.scoreRow}>
               <View style={styles.scoreTeam}>
                 <ThemedText
@@ -333,7 +328,6 @@ export default function GameInfoScreen() {
               </View>
             </View>
 
-            {/* Game Status Below */}
             <View style={styles.gameStatusSection}>
               {isHardcap ? (
                 <>
@@ -456,7 +450,6 @@ export default function GameInfoScreen() {
           </View>
         )}
 
-        {/* Gender Ratio Section */}
         {genderRatioEnabled && firstPointRatio && (
           <View style={styles.ratioSection}>
             <View style={[styles.ratioDivider, { backgroundColor: palette.overlay10 }]} />
@@ -485,7 +478,6 @@ export default function GameInfoScreen() {
 
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
-        {/* Action Section */}
         <View
           key={isLandscape ? 'actions-landscape' : 'actions-portrait'}
           style={styles.actionSection}>
@@ -539,11 +531,9 @@ export default function GameInfoScreen() {
 
         <View style={[styles.divider, { backgroundColor: palette.overlay10 }]} />
 
-        {/* Use shared HelpContent component */}
         <HelpContent showActionBarLegend={statTrackingEnabled} showCapStatusLegend={true} />
       </ScrollView>
 
-      {/* Gender Ratio Info Modal */}
       <AlertModal
         visible={showAbbaModal && genderRatioEnabled && !!firstPointRatio}
         title="Gender Ratio Info"
@@ -588,7 +578,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       paddingTop: 8,
     },
 
-    // Landscape: Three-Column Hero Section
     heroSection: {
       flexDirection: 'row',
       alignItems: 'flex-start',
@@ -598,7 +587,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       alignItems: 'center',
     },
 
-    // Portrait: Score row + game status below
     scoreRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
@@ -677,7 +665,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
     },
 
-    // Point Timer (integrated in center column)
     pointTimerContainer: {
       alignItems: 'center',
       marginTop: 12,
@@ -749,7 +736,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
       letterSpacing: 0.8,
     },
-    // Gender Ratio Section
     ratioSection: {
       alignItems: 'center',
       marginTop: 16,
@@ -778,7 +764,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       fontFamily: Fonts.extraBold,
     },
 
-    // Gender Ratio Info Modal
     ratioInfoRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

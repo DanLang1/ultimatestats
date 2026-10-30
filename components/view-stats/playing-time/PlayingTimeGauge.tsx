@@ -29,7 +29,6 @@ export default function PlayingTimeGauge({
   const size = halfSize * 2;
   const circumference = 2 * Math.PI * radius;
 
-  // Ensure percentage is between 0 and 100
   const clampedPercent = Math.min(Math.max(percentage, 0), 100);
   const strokeDashoffset = circumference - (clampedPercent / 100) * circumference;
   const centerLabelLength = centerLabel.length;

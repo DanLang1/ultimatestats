@@ -29,7 +29,6 @@ export default function HelpContent({
 
   return (
     <>
-      {/* Action Bar Legend */}
       {showActionBarLegend && (
         <>
           <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
@@ -154,7 +153,6 @@ export default function HelpContent({
         </>
       )}
 
-      {/* Cap Status Legend */}
       {showCapStatusLegend && (
         <>
           <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
@@ -219,7 +217,6 @@ export default function HelpContent({
         </>
       )}
 
-      {/* Help Section */}
       <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>HELP</ThemedText>
       <Pressable
         style={[styles.tutorialButton, { backgroundColor: palette.overlay08 }]}

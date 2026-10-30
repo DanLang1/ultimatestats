@@ -56,7 +56,6 @@ export function TournamentFilterModal({
               },
             ]}
             onPress={(e) => e.stopPropagation()}>
-            {/* Handle bar */}
             <View style={styles.handleContainer}>
               <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
             </View>
@@ -66,7 +65,6 @@ export function TournamentFilterModal({
             </ThemedText>
 
             <ScrollView bounces={false}>
-              {/* Show All option */}
               <Pressable
                 style={[styles.row, { borderBottomColor: palette.overlay10 }]}
                 onPress={() => handleSelect(null)}>
@@ -87,7 +85,6 @@ export function TournamentFilterModal({
                 )}
               </Pressable>
 
-              {/* Tournament list */}
               {tournaments.map((tournament) => {
                 const isActive = tournament.id === selectedTournamentId;
                 const count = gameCounts.get(tournament.id) ?? 0;

@@ -17,7 +17,6 @@ interface StatRingProps {
   testID?: string;
 }
 
-/** Full circle donut gauge component using react-native-svg. */
 export default function StatRing({
   percentage,
   label,
@@ -31,7 +30,6 @@ export default function StatRing({
   const styles = createStyles(sizeClass);
   const { showAlert } = useAlert();
 
-  // Clamp percentage between 0-100
   const clampedPercent = Math.max(0, Math.min(100, percentage ?? 0));
 
   // Format percentage display — rounded to avoid cramped decimals in rings
@@ -77,7 +75,6 @@ export default function StatRing({
             />
           )}
         </Svg>
-        {/* Centered percentage overlay */}
         <View style={styles.valueContainer}>
           <ThemedText
             testID={testID ? `${testID}-value` : undefined}
@@ -86,7 +83,6 @@ export default function StatRing({
           </ThemedText>
         </View>
       </View>
-      {/* Label row with info button */}
       <View style={styles.labelRow}>
         <ThemedText style={[styles.label, { color: palette.textInverse }]}>{label}</ThemedText>
         {info && (

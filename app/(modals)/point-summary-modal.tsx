@@ -36,20 +36,15 @@ function getPointOutcome(
 
   if (weStartedOnOffense) {
     if (weScored) {
-      // We held
       return turnoverCount === 0
         ? { label: 'CLEAN HOLD', isPositive: true }
         : { label: 'DIRTY HOLD', isPositive: true };
     }
-    // Opponent broke us
     return { label: 'BROKEN', isPositive: false };
   }
-  // Opponent started on offense
   if (weScored) {
-    // We broke them
     return { label: 'BREAK', isPositive: true };
   }
-  // Opponent held
   return { label: 'OPP HOLD', isPositive: false };
 }
 
@@ -72,7 +67,6 @@ export default function PointSummaryModal() {
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
 
-  // Don't show if point timer is off, no stat tracking, halftime is active, or game ended
   if (
     !pointTimerEnabled ||
     !statTrackingEnabled ||
@@ -82,7 +76,6 @@ export default function PointSummaryModal() {
     return null;
   }
 
-  // Compute the last completed point
   const pointEvents = computePointByPointEvents(
     events,
     startingPossession,
@@ -95,7 +88,6 @@ export default function PointSummaryModal() {
   const completedPoints = pointEvents.filter((p) => !p.isInProgress);
   const lastPoint = completedPoints[completedPoints.length - 1];
 
-  // If no completed points, nothing to show
   if (!lastPoint) {
     return null;
   }
@@ -103,7 +95,6 @@ export default function PointSummaryModal() {
   const turnoverSummary = getTurnoverSummary(lastPoint.turnovers, 'team1');
   const totalTurnovers = lastPoint.turnovers.filter((t) => t.team === 'team1').length;
 
-  // Calculate the point outcome
   const pointOutcome = getPointOutcome(
     lastPoint.scoringTeam,
     lastPoint.offensiveTeam,
@@ -119,7 +110,6 @@ export default function PointSummaryModal() {
     router.back();
   };
 
-  // Format duration if available
   const formatDuration = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -135,7 +125,6 @@ export default function PointSummaryModal() {
         <Animated.View
           entering={SlideInUp.duration(300)}
           style={[styles.sheet, { backgroundColor: palette.modalBg, shadowColor: palette.shadow }]}>
-          {/* Header */}
           <View style={styles.header}>
             <Animated.View entering={FadeIn.delay(100)} style={styles.headerContent}>
               <ThemedText style={[styles.title, { color: palette.modalText }]}>
@@ -162,7 +151,6 @@ export default function PointSummaryModal() {
               </View>
             </Animated.View>
 
-            {/* Close button */}
             <Pressable
               onPress={handleDismiss}
               style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
@@ -175,9 +163,7 @@ export default function PointSummaryModal() {
             </Pressable>
           </View>
 
-          {/* Summary Stats */}
           <Animated.View entering={FadeIn.delay(150)} style={styles.summaryRow}>
-            {/* Duration */}
             {lastPoint.pointDurationMs && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <MaterialCommunityIcons
@@ -191,7 +177,6 @@ export default function PointSummaryModal() {
               </View>
             )}
 
-            {/* Turnovers */}
             {totalTurnovers > 0 && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <MaterialCommunityIcons
@@ -205,7 +190,6 @@ export default function PointSummaryModal() {
               </View>
             )}
 
-            {/* Turnover breakdown */}
             {turnoverSummary.blocks > 0 && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <MaterialCommunityIcons
@@ -219,7 +203,6 @@ export default function PointSummaryModal() {
               </View>
             )}
 
-            {/* Next Point Ratio */}
             {genderRatioEnabled && firstPointRatio && (
               <View style={[styles.statCard, { backgroundColor: palette.overlay05 }]}>
                 <ThemedText style={[styles.statValue, { color: palette.modalText }]}>
@@ -229,7 +212,6 @@ export default function PointSummaryModal() {
             )}
           </Animated.View>
 
-          {/* CTA Buttons */}
           <Animated.View entering={FadeIn.delay(200)} style={styles.ctaContainer}>
             <Pressable
               onPress={handleStartNextPoint}

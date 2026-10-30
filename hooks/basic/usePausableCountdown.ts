@@ -35,7 +35,6 @@ export function usePausableCountdown({
       return;
     }
 
-    // Pause: capture remaining time and clear end time
     setTimeLeft(getSecondsUntil(endTime, Date.now()));
     setEndTime(null);
   };
@@ -44,7 +43,6 @@ export function usePausableCountdown({
     const newTime = Math.max(minSeconds, Math.min(maxSeconds, timeLeft + deltaSeconds));
     setTimeLeft(newTime);
 
-    // If timer is running, shift the end time to reflect the new duration
     if (endTime !== null) {
       const diff = newTime - getSecondsUntil(endTime, Date.now());
       setEndTime(endTime + diff * 1000);

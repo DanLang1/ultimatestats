@@ -2,10 +2,6 @@ import { isGameActive } from '@/lib/basic/gameUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 
-/**
- * Hook to determine if a game is currently in progress.
- * Pulls from both gameStore and settingsStore to check all conditions.
- */
 export function useIsGameActive(): boolean {
   const timerEndTime = useGameStore((s) => s.timerEndTime);
   const team1Score = useGameStore((s) => s.team1Score);

@@ -38,7 +38,6 @@ export function TurnoverEntryInner({
   preselectedType,
   showAddPlayer = true,
 }: TurnoverEntryInnerProps) {
-  // For opponent turnovers or preselected types, skip directly to player selection
   const shouldStartAtPlayer = isOpponentTurnover || !!preselectedType;
   const [step, setStep] = useState<EntryStep>(shouldStartAtPlayer ? 'player' : 'type');
   const [selectedType, setSelectedType] = useState<TurnoverType | null>(
@@ -52,12 +51,10 @@ export function TurnoverEntryInner({
   const styles = createStyles(sizeClass);
   const compactRosterMaxHeight = isLandscape ? 220 : 400;
 
-  // Only show active players
   const activeRoster = getActiveRoster(roster);
 
   const isFiftyFiftyMode = selectedType === 'fiftyfifty';
 
-  // Get player name for display
   const fiftyFiftyFirstPlayerName = getPlayerName(roster, fiftyFiftyFirstPlayerId);
 
   // Skip button colors - darker in light mode for visibility
@@ -80,16 +77,13 @@ export function TurnoverEntryInner({
     // For 50/50: first tap = thrower, second tap = receiver
     if (selectedType === 'fiftyfifty') {
       if (!fiftyFiftyFirstPlayerId) {
-        // First player selection (thrower)
         setFiftyFiftyFirstPlayerId(playerId);
       } else {
-        // Second player selection (receiver) - complete the entry
         onComplete(selectedType, fiftyFiftyFirstPlayerId, playerId);
       }
       return;
     }
 
-    // Normal single-player turnover
     onComplete(selectedType, playerId);
   };
 
@@ -101,7 +95,6 @@ export function TurnoverEntryInner({
     setNewPlayerName('');
     Keyboard.dismiss();
 
-    // Determine which player ID to use
     let playerIdToSelect = newPlayerId;
 
     // If player wasn't added (duplicate), find the existing player
@@ -111,9 +104,7 @@ export function TurnoverEntryInner({
       playerIdToSelect = existingPlayer?.id ?? null;
     }
 
-    // Auto-select the player (new or existing)
     if (playerIdToSelect && selectedType) {
-      // For 50/50, handle first/second player logic
       if (selectedType === 'fiftyfifty') {
         if (!fiftyFiftyFirstPlayerId) {
           setFiftyFiftyFirstPlayerId(playerIdToSelect);
@@ -121,7 +112,6 @@ export function TurnoverEntryInner({
           onComplete(selectedType, fiftyFiftyFirstPlayerId, playerIdToSelect);
         }
       } else {
-        // Normal turnover - complete with this player
         onComplete(selectedType, playerIdToSelect);
       }
     }
@@ -161,7 +151,6 @@ export function TurnoverEntryInner({
 
   const displayRoster = activeRoster;
 
-  // Render header content (team name, question, badges)
   const renderHeader = () => (
     <View style={styles.header}>
       <ThemedText style={[styles.teamName, { color: palette.modalText }]}>{teamName}</ThemedText>
@@ -186,7 +175,6 @@ export function TurnoverEntryInner({
         </Animated.View>
       )}
 
-      {/* Show first selected player for 50/50 */}
       {isFiftyFiftyMode && fiftyFiftyFirstPlayerName && (
         <Animated.View
           entering={FadeIn}
@@ -203,7 +191,6 @@ export function TurnoverEntryInner({
     </View>
   );
 
-  // Render type selection buttons
   const renderTypeButtons = () => (
     <View style={styles.typeButtons}>
       <Pressable
@@ -253,10 +240,8 @@ export function TurnoverEntryInner({
     </View>
   );
 
-  // Render cancel button (available on all steps) or unknown button (player step)
   const renderCancelButton = () => (
     <View style={styles.footer}>
-      {/* Cancel button - always visible */}
       <Pressable
         style={[
           styles.skipButton,
@@ -270,7 +255,6 @@ export function TurnoverEntryInner({
         <ThemedText style={[styles.skipText, { color: skipButtonText }]}>Cancel</ThemedText>
       </Pressable>
 
-      {/* Unknown button - shows only on player step */}
       {step === 'player' && (
         <Pressable
           style={[
@@ -288,7 +272,6 @@ export function TurnoverEntryInner({
     </View>
   );
 
-  // Compact layout for player step without add player input
   if (step === 'player' && !showAddPlayer) {
     return (
       <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
@@ -308,7 +291,6 @@ export function TurnoverEntryInner({
     );
   }
 
-  // Portrait: vertical stack layout
   if (!isLandscape) {
     return (
       <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
@@ -368,12 +350,10 @@ export function TurnoverEntryInner({
     );
   }
 
-  // Landscape: standard side-by-side layout
   return (
     <AnimatedThemedView entering={SlideInDown.duration(400)} style={styles.sheet}>
       <View style={styles.sheetContent}>
         <View style={styles.sideBySideContainer}>
-          {/* Left Column: Info, Type Selection, Actions */}
           <View style={styles.leftColumn}>
             {renderHeader()}
 
@@ -416,7 +396,6 @@ export function TurnoverEntryInner({
             {renderCancelButton()}
           </View>
 
-          {/* Right Column: Roster Selection */}
           {step === 'player' && (
             <Animated.View entering={FadeIn} style={styles.rightColumn}>
               <StatEntryRoster
@@ -442,11 +421,9 @@ function createStyles(sizeClass: SizeClass) {
     sheetContent: {
       padding: 16,
     },
-    // Compact vertical layout (no add player)
     compactContainer: {
       gap: 12,
     },
-    // Side-by-side layout (with add player)
     sideBySideContainer: {
       flexDirection: 'row',
       gap: 24,

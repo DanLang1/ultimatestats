@@ -106,7 +106,6 @@ export default function PointPresenceStrip({
         ))}
       </View>
 
-      {/* Legend — only show types that appear in this game */}
       <View style={styles.legend}>
         {legendOrder
           .filter((type) => usedTypes.has(type))

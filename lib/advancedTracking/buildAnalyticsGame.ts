@@ -380,7 +380,6 @@ type CompiledPossession = {
   attributions: AnalyticsAttribution[];
 };
 
-/** Compiles a single possession and all its actions into analytics output. */
 function compilePossessionWithActions(
   poss: PointPossession,
   possIndex: number,
@@ -399,7 +398,6 @@ function compilePossessionWithActions(
 
   const possActionIds = poss.actions.map((a) => a.id);
 
-  // Derive possession result
   const possLastAction = getLastNonStoppageAction(ctx.gameId, pointId, poss.id, poss.actions);
   let possResult: AnalyticsPossessionResult | null = null;
   let turnoverType: AnalyticsTurnoverType | undefined;
@@ -505,7 +503,6 @@ function compilePossessionWithActions(
       }
     }
 
-    // Resolve PlayerRef fields
     let actorId: string | null = null;
     let receiverId: string | null = null;
     let defenderId: string | null = null;

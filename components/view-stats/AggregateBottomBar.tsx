@@ -126,7 +126,6 @@ function createStyles(sizeClass: SizeClass) {
       paddingVertical: 12,
       borderRadius: 25,
       opacity: 0.95,
-      // Shadow
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
       shadowRadius: 6,

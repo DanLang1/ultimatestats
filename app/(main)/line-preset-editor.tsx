@@ -23,7 +23,6 @@ export default function LinePresetEditor() {
   const roster = currentTeam.roster;
   const activePlayers = roster.filter((p) => p.isActive !== false);
 
-  // If presetId is passed, initialize directly in edit mode
   const initialPreset = presetId ? (presets.find((p) => p.id === presetId) ?? null) : null;
 
   const [mode, setMode] = useState<'list' | 'edit'>(initialPreset ? 'edit' : 'list');
@@ -65,7 +64,6 @@ export default function LinePresetEditor() {
     const trimmedName = presetName.trim();
     if (!trimmedName || selectedIds.length === 0) return;
 
-    // Check for duplicate name (case-insensitive, excluding current preset if editing)
     const isDuplicate = teamPresets.some(
       (p) => p.name.toLowerCase() === trimmedName.toLowerCase() && p.id !== editingPreset?.id,
     );
@@ -109,7 +107,6 @@ export default function LinePresetEditor() {
   };
 
   const handleBack = () => {
-    // Check for unsaved changes
     const hasNameChange = editingPreset
       ? presetName.trim() !== editingPreset.name
       : presetName.trim() !== 'Line' && presetName.trim() !== '';

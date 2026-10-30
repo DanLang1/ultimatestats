@@ -42,9 +42,6 @@ function getCardPadding(variant: StatsGridVariant) {
   }
 }
 
-/**
- * Grid of stat cards displaying secondary statistics.
- */
 export default function StatsGrid({ stats, columns = 4, variant = 'card' }: StatsGridProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
