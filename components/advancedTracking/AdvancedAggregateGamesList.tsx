@@ -222,10 +222,6 @@ export default function AdvancedAggregateGamesList({
 
   return (
     <View style={styles.container}>
-      <ThemedText style={[styles.instructions, { color: palette.textMuted }]}>
-        Select an advanced team to aggregate
-      </ThemedText>
-
       <View style={styles.teamsList}>
         {groupAdvancedGamesByTeam(games).map((team) => (
           <Pressable

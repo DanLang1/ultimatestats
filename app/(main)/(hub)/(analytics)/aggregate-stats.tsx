@@ -77,7 +77,7 @@ export default function AggregateStatsScreen() {
     isAdvancedGameAggregateEligible,
   );
   const { tournaments, gameLinks, addGamesToTournament } = useTournamentStore();
-  const [aggregateMode, setAggregateMode] = useState<AggregateMode>('basic');
+  const [aggregateMode, setAggregateMode] = useState<AggregateMode>('advanced');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedAdvancedTeamId, setSelectedAdvancedTeamId] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
@@ -530,11 +530,12 @@ export default function AggregateStatsScreen() {
       <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
         {!showingAggregatedStats && (
           <View style={styles.modeSwitch}>
-            {(['basic', 'advanced'] as const).map((mode) => {
+            {(['advanced', 'basic'] as const).map((mode) => {
               const isActive = aggregateMode === mode;
               return (
                 <Pressable
                   key={mode}
+                  testID={`aggregate-mode-${mode}`}
                   onPress={() => handleSetAggregateMode(mode)}
                   style={[
                     styles.modeButton,

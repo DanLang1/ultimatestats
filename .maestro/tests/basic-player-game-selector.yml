@@ -6,6 +6,9 @@ tags:
 # Aggregate Stats (both games combined) -> player stats -> game selector: picking a game returns to the player's stats
 # with that game in the impact chart, and the player screen's back still returns to the box score.
 - runFlow: ../flows/setup-basic-saved-games.yaml
+# Aggregate Stats opens on the Advanced tab.
+- tapOn:
+    id: 'aggregate-mode-basic'
 - extendedWaitUntil:
     visible: '.*Zoboomafoo, 2 games.*'
     timeout: 5000

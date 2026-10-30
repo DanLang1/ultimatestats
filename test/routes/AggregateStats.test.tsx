@@ -59,7 +59,7 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     await arrangeGames(kind);
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
-    if (kind === 'advanced') await user.press(screen.getByText('Advanced'));
+    if (kind === 'basic') await user.press(screen.getByText('Basic'));
     expect(screen.getByText('Other Team')).toBeVisible();
     await user.press(screen.getByText('Windchill'));
     expect(screen.getByText('WINDCHILL')).toBeVisible();
@@ -109,7 +109,7 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     const { emptyTournamentId } = await arrangeGames(kind);
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
-    if (kind === 'advanced') await user.press(screen.getByText('Advanced'));
+    if (kind === 'basic') await user.press(screen.getByText('Basic'));
     await user.press(screen.getByText('Windchill'));
     await user.press(screen.getByText('vs Eagles'));
     await user.press(screen.getByText('Add to Tournament'));
@@ -131,14 +131,13 @@ describe('advanced aggregate recovery', () => {
     await AsyncStorage.clear();
   });
 
-  it('shows the advanced empty state when switching from an empty basic library', async () => {
+  it("opens on advanced and shows each mode's empty state", async () => {
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
     expect(screen.getByText('AGGREGATE STATS')).toBeVisible();
-    expect(screen.getByText('Basic')).toBeVisible();
-    expect(screen.getByText('No saved games yet')).toBeVisible();
-    await user.press(screen.getByText('Advanced'));
     expect(screen.getByText('No advanced games yet')).toBeVisible();
+    await user.press(screen.getByText('Basic'));
+    expect(screen.getByText('No saved games yet')).toBeVisible();
   });
 
   it('refuses to show combined math when a catalog game has no full record', async () => {
@@ -147,7 +146,6 @@ describe('advanced aggregate recovery', () => {
     useSavedAdvancedGamesStore.setState({ gamesById: {} });
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
-    await user.press(screen.getByText('Advanced'));
     await user.press(screen.getByText('Windchill'));
     await user.press(screen.getByText('vs Falcons'));
     await user.press(screen.getByText('View Combined (1 game)'));
