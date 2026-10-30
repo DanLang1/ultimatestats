@@ -12,12 +12,17 @@ import {
   type CorrectAdvancedPointActiveLinesInput,
 } from '@/lib/advancedTracking/advancedPointLineCorrectionUtils';
 import { supportsTimelineLineCorrection } from '@/lib/advancedTracking/trackingModeUtils';
+import { ADVANCED_TIMELINE_PATHNAME, isStatsRouteScope } from '@/lib/statsRouteScope';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { Fonts } from '@/theme/theme';
 
 export default function TimelineEditLineScreen() {
-  const { gameId, pointId } = useLocalSearchParams<{ gameId?: string; pointId?: string }>();
+  const { gameId, pointId, routeScope } = useLocalSearchParams<{
+    gameId?: string;
+    pointId?: string;
+    routeScope?: string;
+  }>();
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
@@ -31,7 +36,7 @@ export default function TimelineEditLineScreen() {
     (state) => state.correctPointActiveLines,
   );
 
-  if (gameId == null || pointId == null) {
+  if (gameId == null || pointId == null || !isStatsRouteScope(routeScope)) {
     return <Redirect href="/dashboard" />;
   }
 
@@ -63,7 +68,7 @@ export default function TimelineEditLineScreen() {
     return (
       <Redirect
         href={{
-          pathname: '/advanced-tracking/analytics/timeline/[gameId]',
+          pathname: ADVANCED_TIMELINE_PATHNAME[routeScope],
           params: { gameId },
         }}
       />

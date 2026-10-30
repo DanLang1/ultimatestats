@@ -1,41 +1,5 @@
-import { useLocalSearchParams } from 'expo-router';
+import AdvancedPlayerStatsScreen from '@/components/advancedTracking/playerStats/AdvancedPlayerStatsScreen';
 
-import AggregateAdvancedPlayerStats from '@/components/advancedTracking/playerStats/AggregateAdvancedPlayerStats';
-import MissingPlayerStatsGame from '@/components/advancedTracking/playerStats/MissingPlayerStatsGame';
-import SingleAdvancedPlayerStats from '@/components/advancedTracking/playerStats/SingleAdvancedPlayerStats';
-
-export default function AdvancedPlayerStatsScreen() {
-  const {
-    gameId,
-    participantId,
-    sideId,
-    aggregateGameIds: aggregateGameIdsParam,
-    selectedImpactGameId,
-  } = useLocalSearchParams<{
-    gameId?: string;
-    participantId?: string;
-    sideId?: string;
-    aggregateGameIds?: string;
-    selectedImpactGameId?: string;
-  }>();
-
-  if (gameId === 'aggregate') {
-    const aggregateGameIds = (aggregateGameIdsParam ?? '').split(',').filter((id) => id.length > 0);
-    return (
-      <AggregateAdvancedPlayerStats
-        gameIds={aggregateGameIds}
-        participantId={participantId}
-        sideId={sideId}
-        selectedImpactGameId={selectedImpactGameId}
-      />
-    );
-  }
-
-  if (!gameId) {
-    return <MissingPlayerStatsGame />;
-  }
-
-  return (
-    <SingleAdvancedPlayerStats gameId={gameId} participantId={participantId} sideId={sideId} />
-  );
+export default function SavedAdvancedPlayerStatsRoute() {
+  return <AdvancedPlayerStatsScreen />;
 }

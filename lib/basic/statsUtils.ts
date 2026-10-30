@@ -818,59 +818,6 @@ export function getPlayerRoleLabel(roleStats: RoleStats, isMVP = false): PlayerR
 }
 
 /**
- * Generate CSV for the current (live) game.
- * Note: Team stats require startingPossession and gameTo from the store.
- */
-export function generateCurrentGameCSV(
-  events: GameEvent[],
-  team1Name: string,
-  team2Name: string,
-  startingPossession: 'team1' | 'team2' | null,
-  gameTo: number,
-  autoHalftimeEnabled = true,
-  roster?: Player[],
-  pointLines?: PointLineRecord[],
-): string {
-  const playerStats = computePlayerStats(events, 'team1', roster);
-  const playingTimeStats = pointLines?.length
-    ? computePlayingTimeStats(pointLines, events, startingPossession, gameTo, {
-        autoHalftimeEnabled,
-      })
-    : null;
-  const playerRows = mergePlayerRows(playerStats, playingTimeStats, roster);
-
-  let csv = '# Play-by-Play\n';
-  csv += playByPlayCSV(
-    events,
-    team1Name,
-    team2Name,
-    startingPossession,
-    gameTo,
-    autoHalftimeEnabled,
-    roster,
-  );
-
-  csv += '\n\n# Turnovers\n';
-  csv += turnoversCSV(events, team1Name, team2Name, roster);
-
-  csv += '\n\n# Player Summary\n';
-  csv += playerSummaryCSV(playerRows, playingTimeStats !== null && playingTimeStats.size > 0);
-
-  csv += '\n\n# Team Stats\n';
-  csv += teamStatsCSV(computeTeamStats(events, startingPossession, gameTo, autoHalftimeEnabled));
-  csv += timingStatsCSV(
-    computeTimingStats(events, startingPossession, gameTo, autoHalftimeEnabled),
-  );
-  csv += topStatsCSV(
-    computeTimeOfPossessionStats(events, startingPossession, gameTo, autoHalftimeEnabled),
-    team1Name,
-    team2Name,
-  );
-
-  return csv;
-}
-
-/**
  * Generate CSV for a single saved game.
  */
 export function generateSavedGameCSV(game: SavedGame): string {

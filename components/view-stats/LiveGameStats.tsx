@@ -42,6 +42,7 @@ export default function LiveGameStats() {
         team2Score={team2Score}
         events={events}
         roster={currentTeam.roster}
+        routeScope="live"
         isSavedGame={false}
         startingPossession={startingPossession}
         gameTo={gameTo}
@@ -85,6 +86,7 @@ export default function LiveGameStats() {
         opponentScore={perspective.opposingScore}
         perspectiveSideId={perspective.sideId}
         participantNames={analyticsGame.participantNames}
+        routeScope="live"
       />
     </>
   );

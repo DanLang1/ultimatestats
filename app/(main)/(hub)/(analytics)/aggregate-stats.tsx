@@ -455,6 +455,7 @@ export default function AggregateStatsScreen() {
         opponentScore={0}
         perspectiveSideId={aggregatedAdvancedGame.focusSideId}
         participantNames={aggregatedAdvancedGame.participantNames}
+        routeScope="saved"
         aggregateInfo={{ gameCount: selectedAdvancedGames.length }}
         aggregateGameIds={selectedAdvancedGames.map((game) => game.id)}
         initialPullWinStats={initialPullWinStats ?? undefined}
@@ -468,6 +469,7 @@ export default function AggregateStatsScreen() {
         team2Name=""
         events={aggregatedData.events}
         roster={aggregatedData.roster}
+        routeScope="saved"
         aggregateInfo={{
           teamName: aggregatedData.teamName,
           gameCount: aggregatedData.gameCount,

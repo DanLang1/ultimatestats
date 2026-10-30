@@ -55,7 +55,7 @@ tags:
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-view-stats-midpoint
 
-# Center the player row so the persistent tab bar cannot cover the tap target
+# Center the player row so it is fully on screen before the tap
 - scrollUntilVisible:
     element:
       id: 'advanced-stats-row-joe'

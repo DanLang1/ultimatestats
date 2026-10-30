@@ -6,6 +6,8 @@ import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking
 import AdvancedPlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/player-stats';
 import AdvancedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/timeline/[gameId]';
 import TimelineEditLineScreen from '@/app/(main)/advanced-tracking/timeline-edit-line';
+import LiveAdvancedPlayerStatsScreen from '@/app/(main)/live-stats/advanced-player-stats';
+import LiveAdvancedGameTimelineScreen from '@/app/(main)/live-stats/advanced-timeline/[gameId]';
 import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import { loadAdvancedGame } from '@/lib/advancedTracking/storage';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
@@ -445,7 +447,7 @@ describe('advanced analytics routes', () => {
     });
     setMockSearchParams({ gameId: game.id });
 
-    await renderScreen(<AdvancedGameTimelineScreen />);
+    await renderScreen(<LiveAdvancedGameTimelineScreen />);
     expect(screen.getByText('In Progress')).toBeVisible();
     await user.press(screen.getByTestId('advanced-timeline-action-goal-1'));
     await user.press(screen.getByTestId('player-chip-Casey'));
@@ -477,7 +479,7 @@ describe('advanced analytics routes', () => {
     });
     setMockSearchParams({ gameId: currentGame.id });
 
-    await renderScreen(<AdvancedGameTimelineScreen />);
+    await renderScreen(<LiveAdvancedGameTimelineScreen />);
     await user.press(screen.getByTestId('advanced-point-note-1'));
 
     const input = screen.getByDisplayValue('Live timeline note.');
@@ -506,8 +508,12 @@ describe('advanced analytics routes', () => {
     await renderScreen(<AdvancedGameTimelineScreen />);
 
     await user.press(screen.getByTestId('advanced-edit-point-line-1'));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/advanced-tracking/timeline-edit-line',
+      params: { gameId: game.id, pointId: 'point-1', routeScope: 'saved' },
+    });
 
-    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1', routeScope: 'saved' });
     await renderScreen(<TimelineEditLineScreen />);
     expect(screen.getByText('Correct Final Lineup')).toBeVisible();
 
@@ -543,10 +549,14 @@ describe('advanced analytics routes', () => {
     });
     setMockSearchParams({ gameId: game.id });
 
-    await renderScreen(<AdvancedGameTimelineScreen />);
+    await renderScreen(<LiveAdvancedGameTimelineScreen />);
     await user.press(screen.getByTestId('advanced-edit-point-line-1'));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/advanced-tracking/timeline-edit-line',
+      params: { gameId: game.id, pointId: 'point-1', routeScope: 'live' },
+    });
 
-    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1', routeScope: 'live' });
     await renderScreen(<TimelineEditLineScreen />);
     await user.press(screen.getByTestId('player-chip-Casey'));
     await user.press(screen.getByTestId('player-chip-Hana'));
@@ -584,7 +594,7 @@ describe('advanced analytics routes', () => {
       gamesById: { [game.id]: game },
       summariesLoaded: true,
     });
-    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1', routeScope: 'saved' });
 
     await renderScreen(<TimelineEditLineScreen />);
 
@@ -628,7 +638,7 @@ describe('advanced analytics routes', () => {
     await renderScreen(<AdvancedGameTimelineScreen />);
 
     expect(screen.getByTestId('advanced-edit-point-line-1')).toBeVisible();
-    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1', routeScope: 'saved' });
     await renderScreen(<TimelineEditLineScreen />);
     expect(screen.getByText('Correct Final Lineup')).toBeVisible();
   });
@@ -645,7 +655,7 @@ describe('advanced analytics routes', () => {
       gamesById: { [game.id]: game },
       summariesLoaded: true,
     });
-    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1', routeScope: 'saved' });
 
     await renderScreen(<TimelineEditLineScreen />);
 
@@ -657,6 +667,44 @@ describe('advanced analytics routes', () => {
       },
       { relativeToDirectory: undefined, withAnchor: undefined },
     );
+  });
+
+  it('returns to the live timeline when opened from live stats', async () => {
+    const game = makeEditableTimelineGame();
+    game.status = 'terminated';
+    game.endReason = 'manual';
+    const lastAction = game.points[0].possessions[0].actions.at(-1)!;
+    if (lastAction.kind !== 'throw') throw new Error('Expected a throw fixture.');
+    lastAction.result = 'complete';
+    useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1', routeScope: 'live' });
+
+    await renderScreen(<TimelineEditLineScreen />);
+
+    expect(router.replace).toHaveBeenCalledWith(
+      { pathname: '/live-stats/advanced-timeline/[gameId]', params: { gameId: game.id } },
+      { relativeToDirectory: undefined, withAnchor: undefined },
+    );
+  });
+
+  it('leaves the line editor for the dashboard without a route scope', async () => {
+    const game = makeEditableTimelineGame();
+    useSavedAdvancedGamesStore.setState({
+      gamesById: { [game.id]: game },
+      summariesLoaded: true,
+    });
+    setMockSearchParams({ gameId: game.id, pointId: 'point-1' });
+
+    await renderScreen(<TimelineEditLineScreen />);
+
+    expect(router.replace).toHaveBeenCalledWith('/dashboard', {
+      relativeToDirectory: undefined,
+      withAnchor: undefined,
+    });
   });
 
   it('renders a stored timeline when its touch correction history is invalid', async () => {
@@ -684,7 +732,10 @@ describe('advanced analytics routes', () => {
     expect(screen.queryByTestId('advanced-timeline-action-goal-1')).not.toBeOnTheScreen();
   });
 
-  it('renders classified throw details on the advanced player page', async () => {
+  it.each([
+    ['saved', AdvancedPlayerStatsScreen],
+    ['live', LiveAdvancedPlayerStatsScreen],
+  ])('renders classified throw details on the %s advanced player page', async (_scope, Screen) => {
     const game = makeEditableTimelineGame();
     const goalAction = game.points[0].possessions[0].actions.at(-1)!;
     if (goalAction.kind !== 'throw') throw new Error('Expected goal throw fixture.');
@@ -699,7 +750,7 @@ describe('advanced analytics routes', () => {
       sideId: 'windchill',
     });
 
-    await renderScreen(<AdvancedPlayerStatsScreen />);
+    await renderScreen(<Screen />);
 
     expect(screen.getByText('PLAYER STATS')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();

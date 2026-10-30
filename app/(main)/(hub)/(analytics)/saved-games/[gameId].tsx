@@ -326,6 +326,7 @@ export default function SavedGameStatsScreen() {
             team2Score={selectedGame.team2Score}
             events={selectedGame.events}
             roster={selectedGame.team1.roster}
+            routeScope="saved"
             isSavedGame
             startingPossession={selectedGame.startingPossession}
             gameTo={selectedGame.gameTo}

@@ -14,6 +14,7 @@ import {
 } from '@/lib/basic/playingTimeStatsUtils';
 import { computePlayerStats, PlayerStats } from '@/lib/basic/statsUtils';
 import { getPlayerName } from '@/lib/playerUtils';
+import { BASIC_PLAYER_STATS_PATHNAME, type StatsRouteScope } from '@/lib/statsRouteScope';
 import { Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { GameEvent } from '@/store/basic/gameStore.types';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
@@ -36,6 +37,7 @@ interface StatsTableProps {
   playerStats: ReturnType<typeof computePlayerStats>;
   events: GameEvent[];
   team: 'team1' | 'team2';
+  routeScope: StatsRouteScope;
   roster?: Player[];
   games?: SavedGame[];
   pointLines?: PointLineRecord[];
@@ -48,6 +50,7 @@ export default function StatsTable({
   playerStats,
   events,
   team,
+  routeScope,
   roster,
   games,
   pointLines,
@@ -104,7 +107,7 @@ export default function StatsTable({
       gameTo,
       autoHalftimeEnabled,
     );
-    router.push('/player-stats');
+    router.push(BASIC_PLAYER_STATS_PATHNAME[routeScope]);
   };
 
   // Merge in players who have playing time but no stat events
@@ -342,6 +345,7 @@ export default function StatsTable({
             return (
               <TouchableOpacity
                 key={player.id}
+                testID={`stats-row-${player.id}`}
                 style={[
                   styles.tableRow,
                   { borderBottomColor: palette.overlay10 },
@@ -467,6 +471,7 @@ export default function StatsTable({
               return (
                 <TouchableOpacity
                   key={player.id}
+                  testID={`stats-row-${player.id}`}
                   style={[
                     styles.portraitTableRow,
                     { borderBottomColor: palette.overlay10 },

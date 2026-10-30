@@ -172,7 +172,7 @@ describe('modal routes', () => {
     await renderScreen(<EditPointLineModal />);
 
     expect(screen.queryByTestId('edit-point-line-modal')).not.toBeOnTheScreen();
-    expect(router.replace).toHaveBeenCalledWith('/game-timeline', {
+    expect(router.replace).toHaveBeenCalledWith('/live-stats/timeline', {
       relativeToDirectory: undefined,
       withAnchor: undefined,
     });

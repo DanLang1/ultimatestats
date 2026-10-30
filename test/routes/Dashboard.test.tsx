@@ -12,7 +12,7 @@ import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { arrangeAdvancedGame, testTeam } from '@/test/fixtures/domain';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
-import { navigation, resetMockRouter } from '@/test/mocks/expoRouter';
+import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
 
 function arrangeDashboard() {
@@ -87,14 +87,12 @@ describe('<DashboardScreen />', () => {
 
     expect(screen.getByText('IN PROGRESS')).toBeVisible();
     expect(screen.getByText('Return to the live scoreboard')).toBeVisible();
-    expect(screen.getByText('Game Timeline')).toBeVisible();
+
+    await user.press(screen.getByText('Game Timeline'));
+    expect(router.push).toHaveBeenCalledWith('/live-stats/timeline');
 
     await user.press(screen.getByText('View Stats'));
-    expect(navigation.navigate).toHaveBeenCalledWith('(analytics)', {
-      screen: 'live-stats',
-      initial: false,
-      pop: true,
-    });
+    expect(router.push).toHaveBeenCalledWith('/live-stats');
 
     await user.press(screen.getByText('Resume Game'));
 

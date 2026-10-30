@@ -9,7 +9,6 @@ import FlashingIcon from '@/components/ui/FlashingIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { useGameTimer } from '@/hooks/basic/useGameTimer';
 import { getSizeClassValue, SizeClass, useLayout } from '@/hooks/useLayout';
-import { useOpenLiveStats } from '@/hooks/useOpenLiveStats';
 import { formatRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { formatTimerSeconds } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -25,7 +24,6 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
   const { isSoftCap, softCapPending, events, statTrackingEnabled, currentPoint } = useGameStore();
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
-  const openLiveStats = useOpenLiveStats();
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
@@ -96,7 +94,7 @@ export default function SettingsBar({ onUndo }: SettingsBarProps) {
       {/* Stats - only show when stat tracking enabled */}
       {statTrackingEnabled && (
         <Pressable
-          onPress={openLiveStats}
+          onPress={() => router.push('/live-stats')}
           style={styles.iconButton}
           accessibilityLabel="View stats"
           accessibilityRole="button"

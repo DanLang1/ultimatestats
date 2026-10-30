@@ -3,17 +3,18 @@ name: Basic Scoreboard Live Stats
 tags:
   - basic
 ---
-# The scoreboard's stats button returns to the Stats tab's existing live-stats screen, closing
-# anything left open over it; back from live stats lands on the Stats list's pinned live game.
+# Live stats opens over the scoreboard without the hub tab bar, and its timeline opens over live
+# stats; back retraces both steps to the scoreboard.
 - runFlow: ../flows/setup-basic-game.yaml
 
-# Open live stats, then leave the timeline open in the Stats tab.
 - tapOn:
     id: 'scoreboard-view-stats'
 - extendedWaitUntil:
     visible: 'CURRENT GAME'
     timeout: 5000
-# maestro-runner finds header-action-timeline here, but its id tap never opens the timeline on
+- assertNotVisible:
+    id: 'hub-tab-stats'
+# maestro-runner finds header-action-timeline here, but its id tap never opened the timeline on
 # this scoreboard path (it works from the tracker and by hand). A tap at the button's position does.
 - tapOn:
     point: '79%,10%'
@@ -21,29 +22,34 @@ tags:
     visible: 'GAME TIMELINE'
     timeout: 5000
 
-# Back at the game, the stats button lands on live stats instead of the timeline.
 - tapOn:
-    id: 'hub-tab-game'
-- extendedWaitUntil:
-    visible: 'Score for Zoboomafoo'
-    timeout: 5000
-- tapOn:
-    id: 'scoreboard-view-stats'
+    id: 'game-timeline-back'
 - extendedWaitUntil:
     visible: 'CURRENT GAME'
     timeout: 5000
-- assertNotVisible: 'GAME TIMELINE'
-
-# Only the Stats list is left under live stats, with the game pinned at the top.
 - tapOn:
     id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'Score for Zoboomafoo'
+    timeout: 5000
+- assertNotVisible: 'CURRENT GAME'
+
+# From the Stats list's pinned live game, back returns to the list.
+- tapOn:
+    id: 'scoreboard-home-button'
+- tapOn:
+    id: 'hub-tab-stats'
 - extendedWaitUntil:
     visible:
       id: 'stats-live-game'
     timeout: 5000
-- assertVisible: 'SAVED GAMES'
 - tapOn:
     id: 'stats-live-game'
 - extendedWaitUntil:
     visible: 'CURRENT GAME'
+    timeout: 5000
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'SAVED GAMES'
     timeout: 5000

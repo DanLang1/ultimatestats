@@ -3,11 +3,13 @@ import { act, screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import CreateTournamentScreen from '@/app/(main)/(hub)/(analytics)/create-tournament';
-import GameTimelineScreen from '@/app/(main)/(hub)/(analytics)/game-timeline';
-import LiveStatsScreen from '@/app/(main)/(hub)/(analytics)/live-stats';
+import SavedGameTimelineScreen from '@/app/(main)/(hub)/(analytics)/game-timeline';
 import PlayerStatsScreen from '@/app/(main)/(hub)/(analytics)/player-stats';
 import SavedGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]';
 import StatsScreen from '@/app/(main)/(hub)/(analytics)/stats';
+import LiveStatsScreen from '@/app/(main)/live-stats';
+import LivePlayerStatsScreen from '@/app/(main)/live-stats/player-stats';
+import LiveGameTimelineScreen from '@/app/(main)/live-stats/timeline';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { GameEvent, PointLineRecord } from '@/lib/storage/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
@@ -83,6 +85,7 @@ describe('basic analytics routes', () => {
         });
       },
       liveRowText: /LIVE\s*Point 2\s*Windchill\s*1\s*Rivals\s*0/,
+      liveTimelineHref: () => '/live-stats/timeline',
       expectLiveStats: () => {
         expect(screen.getByText('Windchill')).toBeVisible();
         expect(screen.getByText('Rivals')).toBeVisible();
@@ -105,6 +108,10 @@ describe('basic analytics routes', () => {
         useGameSessionStore.getState().setActiveGameType('advanced');
       },
       liveRowText: /LIVE\s*Point 2\s*Focus\s*0\s*Opponent\s*1/,
+      liveTimelineHref: () => ({
+        pathname: '/live-stats/advanced-timeline/[gameId]',
+        params: { gameId: useAdvancedTrackingStore.getState().currentGameId },
+      }),
       expectLiveStats: () =>
         expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('0 - 1'),
     },
@@ -127,13 +134,16 @@ describe('basic analytics routes', () => {
   );
 
   it.each(liveGameCases)(
-    'renders live stats for the $kind game',
-    async ({ arrange, expectLiveStats }) => {
+    'renders live stats for the $kind game and opens its live timeline',
+    async ({ arrange, expectLiveStats, liveTimelineHref }) => {
       arrange();
       await renderScreen(<LiveStatsScreen />);
 
       expect(screen.getByText('CURRENT GAME')).toBeVisible();
       expectLiveStats();
+
+      await userEvent.setup().press(screen.getByTestId('header-action-timeline'));
+      expect(router.push).toHaveBeenCalledWith(liveTimelineHref());
     },
   );
 
@@ -254,7 +264,7 @@ describe('basic analytics routes', () => {
       ],
     });
 
-    await renderScreen(<GameTimelineScreen />);
+    await renderScreen(<LiveGameTimelineScreen />);
 
     await user.press(screen.getByLabelText('Edit point 1 line'));
 
@@ -282,13 +292,16 @@ describe('basic analytics routes', () => {
     });
     setMockSearchParams({ gameId: game.id });
 
-    await renderScreen(<GameTimelineScreen />);
+    await renderScreen(<SavedGameTimelineScreen />);
 
     expect(screen.getByText('GAME TIMELINE')).toBeVisible();
     expect(screen.queryByLabelText('Edit point 1 line')).not.toBeOnTheScreen();
   });
 
-  it('renders player analytics from the real player-stats store', async () => {
+  it.each([
+    ['saved', PlayerStatsScreen],
+    ['live', LivePlayerStatsScreen],
+  ])('renders %s player analytics from the real player-stats store', async (_scope, Screen) => {
     const game = createSavedBasicGame();
     usePlayerStatsStore
       .getState()
@@ -303,7 +316,7 @@ describe('basic analytics routes', () => {
         game.gameTo,
       );
 
-    await renderScreen(<PlayerStatsScreen />);
+    await renderScreen(<Screen />);
 
     expect(screen.getByText('PLAYER STATS')).toBeVisible();
     expect(screen.getByText('Alex')).toBeVisible();
@@ -317,12 +330,16 @@ describe('basic analytics routes', () => {
     useGameStore.setState({ savedGames: [game], savedTeams: [testTeam] });
     setMockSearchParams({ gameId: game.id });
 
+    const user = userEvent.setup();
     await renderScreen(<SavedGameScreen />);
 
     expect(screen.getByText('SAVED GAME')).toBeVisible();
     expect(screen.getByText('PLAYED AT')).toBeVisible();
     expect(screen.getByText('Windchill')).toBeVisible();
     expect(screen.getByText('Rivals')).toBeVisible();
+    // Saved games keep player analytics in the Stats tab.
+    await user.press(screen.getByTestId('stats-row-player-alex'));
+    expect(router.push).toHaveBeenCalledWith('/player-stats');
   });
 });
 
@@ -381,7 +398,7 @@ it('sorts live player stats and opens analytics for a player with only line part
   await user.press(screen.getByText('PP'));
   expectNameOrder(['Blair', 'Casey', 'Alex']);
   await user.press(screen.getByText('Casey'));
-  expect(router.push).toHaveBeenCalledWith('/player-stats');
+  expect(router.push).toHaveBeenCalledWith('/live-stats/player-stats');
   expect(usePlayerStatsStore.getState()).toMatchObject({
     playerId: 'player-casey',
     team: 'team1',
@@ -460,7 +477,8 @@ describe('basic timeline editing', () => {
         setMockSearchParams({ gameId });
       }
       const user = userEvent.setup();
-      await renderScreen(<GameTimelineScreen />);
+      const TimelineScreen = source === 'saved' ? SavedGameTimelineScreen : LiveGameTimelineScreen;
+      await renderScreen(<TimelineScreen />);
       expect(screen.getByText('Thr:')).toBeVisible();
       expect(screen.getByText('Drop:')).toBeVisible();
       expect(screen.getByText('OPP TURN')).toBeVisible();
@@ -555,7 +573,7 @@ describe('basic timeline editing', () => {
         },
       ],
     });
-    await renderScreen(<GameTimelineScreen />);
+    await renderScreen(<LiveGameTimelineScreen />);
     const user = userEvent.setup();
     await user.press(screen.getByText('DROP'));
     await user.longPress(screen.getByText('DROP'));

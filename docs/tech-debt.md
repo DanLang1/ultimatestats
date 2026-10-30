@@ -29,21 +29,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `lib/sharing/serialize.ts`
   `lib/sharing/validate.ts`
 
-## P3 - Live Stats Back Behavior
-
-- Live stats opened from the scoreboard or Dashboard sits on top of the Stats list, so back lands
-  on the list instead of where the user came from. From the advanced tracker menu, back returns to
-  the tracker, so the two game modes disagree.
-- Option: move `live-stats` outside the hub tabs so it opens over the current screen and back
-  returns to its opener everywhere. `router.push('/live-stats')` would then work from any screen,
-  so `useOpenLiveStats` (an expo-router workaround) could be deleted. Check first how its Timeline
-  action opens `/game-timeline`, which lives in the Stats tab. Pushing it from outside the tabs may
-  stack a second hub.
-- References:
-  `app/(main)/(hub)/(analytics)/live-stats.tsx`
-  `hooks/useOpenLiveStats.ts`
-  `components/advancedTracking/TrackerHomeMenu.tsx`
-
 ## P3 - Advanced Tracker Tablet Landscape Polish
 
 - Tablet landscape puts the scorecard and last-action card side by side in one header row above a
@@ -155,14 +140,14 @@ rewrite it to describe only the remaining problem as it exists now.
 
 ## P3 - Advanced Screen Duplication and Prop Drilling
 
-- The timeline route computes touch/turnover/line edit permissions inline and drills them with side
+- The timeline screen computes touch/turnover/line edit permissions inline and drills them with side
   context through `AdvancedEventTimeline` → `AdvancedTimelinePointCard` → `TimelineFlowRow`.
 - The two-sided line-draft flow (side index, drafts, continuation menu, confirm/back) is copied in
   `tracker-injury-sub.tsx`, `AdvancedActiveLineCorrectionScreen.tsx`, and a variant in
   `tracker-line-select.tsx`.
 - Cleanup: a lib query for timeline edit capabilities and a `useTwoSideLineDraft` hook.
 - References:
-  `app/(main)/(hub)/(analytics)/advanced-tracking/analytics/timeline/[gameId].tsx`
+  `components/advancedTracking/timeline/AdvancedGameTimelineScreen.tsx`
   `app/(main)/advanced-tracking/tracker-injury-sub.tsx`
   `components/advancedTracking/AdvancedActiveLineCorrectionScreen.tsx`
 

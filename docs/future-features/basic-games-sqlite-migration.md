@@ -139,7 +139,7 @@ Likely touch points:
 - `app/(main)/(hub)/(analytics)/stats.tsx`
 - `app/(main)/(hub)/(analytics)/aggregate-stats.tsx`
 - `app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`
-- `app/(main)/(hub)/(analytics)/game-timeline.tsx`
+- `components/basic/timeline/GameTimelineScreen.tsx`
 - `app/(main)/import.tsx`
 - `components/view-stats/SavedGamesList.tsx`
 - `components/view-stats/AggregateGamesList.tsx`

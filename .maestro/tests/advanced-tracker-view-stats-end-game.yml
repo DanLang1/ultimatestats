@@ -3,9 +3,8 @@ name: Advanced Tracker View Stats Then End Game
 tags:
   - advanced
 ---
-# Regression for Sentry REACT-NATIVE-13: opening stats from the tracker menu and returning
-# through Home → Resume Game or the Game tab used to stack a second tracker. After ending the
-# game, swiping back revealed the stale tracker, and ending that finished game again failed to save.
+# Regression for Sentry REACT-NATIVE-13: back from tracker-menu stats returns to the same tracker,
+# and after ending the game, swiping back reveals no stale tracker and the game saves once.
 - runFlow:
     file: ../flows/setup-game.yaml
     env:
@@ -19,27 +18,12 @@ tags:
     id: 'tracker-menu-view-stats'
 - extendedWaitUntil:
     visible:
-      id: 'hub-tab-home'
+      id: 'advanced-stats-summary-card'
     timeout: 5000
-- tapOn:
+- assertNotVisible:
     id: 'hub-tab-home'
 - tapOn:
-    id: 'dashboard-resume-game-button'
-- extendedWaitUntil:
-    visible:
-      id: 'between-point-start-next'
-    timeout: 5000
-
-- tapOn:
-    id: 'tracker-menu-button'
-- tapOn:
-    id: 'tracker-menu-view-stats'
-- extendedWaitUntil:
-    visible:
-      id: 'hub-tab-game'
-    timeout: 5000
-- tapOn:
-    id: 'hub-tab-game'
+    id: 'screen-header-back'
 - extendedWaitUntil:
     visible:
       id: 'between-point-start-next'

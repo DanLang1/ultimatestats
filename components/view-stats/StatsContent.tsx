@@ -8,6 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { computePlayerStats } from '@/lib/basic/statsUtils';
 import { ensureContrast } from '@/lib/colorUtils';
+import type { StatsRouteScope } from '@/lib/statsRouteScope';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 import { Fonts } from '@/theme/theme';
 
@@ -21,6 +22,7 @@ interface StatsContentProps {
   team2Score?: number;
   events: GameEvent[];
   roster?: Player[];
+  routeScope: StatsRouteScope;
   isSavedGame?: boolean;
   aggregateInfo?: { teamName: string; gameCount: number };
   startingPossession?: 'team1' | 'team2' | null;
@@ -39,6 +41,7 @@ export default function StatsContent({
   team2Score,
   events,
   roster,
+  routeScope,
   isSavedGame,
   aggregateInfo,
   startingPossession = null,
@@ -188,6 +191,7 @@ export default function StatsContent({
           playerStats={playerStats}
           events={events}
           team="team1"
+          routeScope={routeScope}
           roster={roster}
           games={games}
           pointLines={pointLines}

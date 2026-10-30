@@ -62,6 +62,7 @@ function renderStats(
       opponentScore={0}
       perspectiveSideId={sideId}
       participantNames={game.participantNames}
+      routeScope="saved"
       aggregateInfo={gameCount == null ? undefined : { gameCount }}
     />,
   );

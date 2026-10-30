@@ -12,7 +12,6 @@ import {
   getImpactStats,
   getSelectablePlayerStatGames,
   generateAggregateCSV,
-  generateCurrentGameCSV,
   generateSavedGameCSV,
   getPlayerRoleLabel,
   getRoleStats,
@@ -629,11 +628,20 @@ describe('statsUtils', () => {
     });
   });
 
-  describe('generateCurrentGameCSV', () => {
+  describe('generateSavedGameCSV', () => {
     it('generates a string with expected headers', () => {
       const events: GameEvent[] = [goal('team1', 'Alice', 'Bob')];
 
-      const csv = generateCurrentGameCSV(events, 'My Team', 'Opponent', 'team1', 15);
+      const csv = generateSavedGameCSV(
+        makeSavedGame({
+          id: 'g1',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events,
+          team1Score: 1,
+          team2Score: 0,
+        }),
+      );
 
       expect(csv).toContain('# Play-by-Play');
       expect(csv).toContain('# Player Summary');
@@ -651,15 +659,17 @@ describe('statsUtils', () => {
         },
       ];
 
-      const csv = generateCurrentGameCSV(
-        events,
-        'My Team',
-        'Opponent',
-        'team1',
-        15,
-        undefined,
-        undefined,
-        pointLines,
+      const csv = generateSavedGameCSV(
+        makeSavedGame({
+          id: 'g1',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events,
+          pointLines,
+          roster: ['Alice', 'Bob', 'Charlie'].map(makePlayer),
+          team1Score: 0,
+          team2Score: 0,
+        }),
       );
 
       expect(csv).toContain(
@@ -684,15 +694,17 @@ describe('statsUtils', () => {
         { pointNumber: 4, playerIds: ['Alice'], timestamp: 4 },
       ];
 
-      const csv = generateCurrentGameCSV(
-        events,
-        'My Team',
-        'Opponent',
-        'team1',
-        15,
-        undefined,
-        undefined,
-        pointLines,
+      const csv = generateSavedGameCSV(
+        makeSavedGame({
+          id: 'g1',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events,
+          pointLines,
+          roster: ['Alice', 'Bob'].map(makePlayer),
+          team1Score: 0,
+          team2Score: 0,
+        }),
       );
 
       // O-points=2, O-line holds=1 -> 50%
@@ -710,15 +722,19 @@ describe('statsUtils', () => {
         { pointNumber: 2, playerIds: ['DefenseOnly'], timestamp: 2 },
       ];
 
-      const csv = generateCurrentGameCSV(
-        events,
-        'My Team',
-        'Opponent',
-        'team1',
-        15,
-        undefined,
-        undefined,
-        pointLines,
+      const csv = generateSavedGameCSV(
+        makeSavedGame({
+          id: 'g1',
+          createdAt: 1,
+          startingPossession: 'team1',
+          events,
+          pointLines,
+          roster: ['OffenseOnly', 'OffenseOnlyAssist', 'DefenseOnly', 'DefenseOnlyAssist'].map(
+            makePlayer,
+          ),
+          team1Score: 0,
+          team2Score: 0,
+        }),
       );
 
       expect(csv).toContain('OffenseOnly,1,0,0,0,0,1,1,1,0,1,0,-,100%,-');

@@ -21,6 +21,7 @@ import {
 } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { computeAdvancedGameStats } from '@/lib/advancedTracking/advancedGameStats';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
+import { ADVANCED_PLAYER_STATS_PATHNAME, type StatsRouteScope } from '@/lib/statsRouteScope';
 import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
@@ -35,6 +36,7 @@ interface AdvancedStatsContentProps {
   opponentScore: number;
   perspectiveSideId: string;
   participantNames: Map<string, string>;
+  routeScope: StatsRouteScope;
   aggregateInfo?: { gameCount: number };
   aggregateGameIds?: string[];
   initialPullWinStats?: AdvancedInitialPullWinStats;
@@ -50,6 +52,7 @@ export default function AdvancedStatsContent({
   opponentScore,
   perspectiveSideId,
   participantNames,
+  routeScope,
   aggregateInfo,
   aggregateGameIds,
   initialPullWinStats,
@@ -271,7 +274,7 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
             aggregateInfo && aggregateGameIds
               ? (participantId) =>
                   router.push({
-                    pathname: '/advanced-tracking/analytics/player-stats',
+                    pathname: ADVANCED_PLAYER_STATS_PATHNAME[routeScope],
                     params: {
                       gameId: 'aggregate',
                       participantId,
@@ -281,7 +284,7 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
                   })
               : (participantId) =>
                   router.push({
-                    pathname: '/advanced-tracking/analytics/player-stats',
+                    pathname: ADVANCED_PLAYER_STATS_PATHNAME[routeScope],
                     params: { gameId, participantId, sideId: perspectiveSideId },
                   })
           }

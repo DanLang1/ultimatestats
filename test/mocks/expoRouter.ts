@@ -9,14 +9,6 @@ export const router = {
   dismissTo: jest.fn(),
 };
 
-export const navigation = {
-  navigate: jest.fn(),
-};
-
-export function useNavigation() {
-  return navigation;
-}
-
 type RedirectProps = {
   href: unknown;
   relativeToDirectory?: boolean;

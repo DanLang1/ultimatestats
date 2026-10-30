@@ -14,7 +14,6 @@ import { resumeGameSession, useActiveGameSession } from '@/hooks/useActiveGameSe
 import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
-import { useOpenLiveStats } from '@/hooks/useOpenLiveStats';
 import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { APP_STORE_URL, DISCORD_URL, PLAY_STORE_URL } from '@/lib/constants';
@@ -63,7 +62,6 @@ export default function DashboardScreen() {
     startScrimmage,
   } = useNewGameLauncher();
   const activeSession = useActiveGameSession();
-  const openLiveStats = useOpenLiveStats();
   const { hasNewVersion } = useVersionCheck();
   const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
   const {
@@ -164,14 +162,14 @@ export default function DashboardScreen() {
                       icon: 'timeline-clock-outline' as const,
                       label: 'Game Timeline',
                       description: 'View play-by-play events',
-                      onPress: () => router.push('/game-timeline'),
+                      onPress: () => router.push('/live-stats/timeline'),
                       disabled: !hasActiveBasicGame || !statTrackingEnabled,
                     },
                     {
                       icon: 'chart-bar' as const,
                       label: 'View Stats',
                       description: 'Live player and team stats',
-                      onPress: openLiveStats,
+                      onPress: () => router.push('/live-stats'),
                       disabled: !hasActiveBasicGame || !statTrackingEnabled,
                     },
                   ]),

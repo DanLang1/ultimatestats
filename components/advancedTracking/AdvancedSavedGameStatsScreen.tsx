@@ -408,6 +408,7 @@ export default function AdvancedSavedGameStatsScreen({
           opponentScore={perspective.opposingScore}
           perspectiveSideId={perspective.sideId}
           participantNames={analyticsGame.participantNames}
+          routeScope="saved"
         />
       </ScrollView>
 

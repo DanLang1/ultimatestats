@@ -76,7 +76,10 @@ describe('AdvancedStatsContent', () => {
     jest.clearAllMocks();
   });
 
-  it('passes the selected side to player detail navigation', async () => {
+  it.each([
+    ['saved', '/advanced-tracking/analytics/player-stats'],
+    ['live', '/live-stats/advanced-player-stats'],
+  ] as const)('opens %s player detail for the selected side', async (routeScope, pathname) => {
     const analyticsGame = buildAnalyticsGame(game);
     await renderScreen(
       <AdvancedStatsContent
@@ -88,13 +91,14 @@ describe('AdvancedStatsContent', () => {
         opponentScore={0}
         perspectiveSideId={LIGHT}
         participantNames={analyticsGame.participantNames}
+        routeScope={routeScope}
       />,
     );
 
     await userEvent.press(screen.getByTestId('advanced-stats-row-joe'));
 
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/advanced-tracking/analytics/player-stats',
+      pathname,
       params: {
         gameId: game.id,
         participantId: 'joe',
@@ -115,6 +119,7 @@ describe('AdvancedStatsContent', () => {
         opponentScore={0}
         perspectiveSideId={LIGHT}
         participantNames={analyticsGame.participantNames}
+        routeScope="saved"
       />,
     );
 
@@ -205,6 +210,7 @@ describe('AdvancedStatsContent', () => {
         opponentScore={0}
         perspectiveSideId={LIGHT}
         participantNames={emptyGame.participantNames}
+        routeScope="saved"
       />,
     );
 
@@ -242,6 +248,7 @@ describe('AdvancedStatsContent', () => {
         opponentScore={0}
         perspectiveSideId={LIGHT}
         participantNames={analyticsGame.participantNames}
+        routeScope="saved"
       />,
     );
 
@@ -266,6 +273,7 @@ describe('AdvancedStatsContent', () => {
         opponentScore={0}
         perspectiveSideId={LIGHT}
         participantNames={analyticsGame.participantNames}
+        routeScope="saved"
       />,
     );
 

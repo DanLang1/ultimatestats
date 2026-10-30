@@ -50,7 +50,7 @@ export default function EditPointLineModal() {
 
   if (!editablePoint) {
     return savedGameId === null ? (
-      <Redirect href="/game-timeline" />
+      <Redirect href="/live-stats/timeline" />
     ) : (
       <Redirect href={{ pathname: '/game-timeline', params: { gameId: savedGameId } }} />
     );
