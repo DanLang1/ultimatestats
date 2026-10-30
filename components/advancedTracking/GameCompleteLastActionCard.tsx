@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { StyleSheet, View } from 'react-native';
 
 import { getPointOutcomeLabel } from '@/components/advancedTracking/betweenPointUtils';

@@ -1,5 +1,4 @@
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
@@ -57,9 +56,9 @@ export default function HelpContent({
             </View>
             <View style={styles.legendItem}>
               <View style={styles.legendIconContainer}>
-                <FontAwesome5
-                  name="hands-wash"
-                  size={metrics.legendDropIconSize}
+                <MaterialCommunityIcons
+                  name="thumb-down-outline"
+                  size={metrics.legendIconSize}
                   color={palette.danger}
                 />
               </View>
@@ -468,7 +467,6 @@ function createStyles(sizeClass: SizeClass) {
 function createMetrics(sizeClass: SizeClass) {
   return {
     legendIconSize: scaleBySizeClass(20, sizeClass),
-    legendDropIconSize: scaleBySizeClass(16, sizeClass),
     buttonIconSize: scaleBySizeClass(24, sizeClass),
   };
 }

@@ -1,5 +1,4 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { Image } from 'expo-image';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ChangelogCard } from '@/components/about/ChangelogCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { DiscordIcon } from '@/components/ui/DiscordIcon';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -110,7 +110,7 @@ export default function AboutScreen() {
               { backgroundColor: palette.overlay08 },
               pressed && styles.linkPressed,
             ]}>
-            <MaterialIcons name="discord" size={metrics.linkIconSize} color={palette.accent} />
+            <DiscordIcon size={metrics.linkIconSize} color={palette.discordBg} />
             <View style={styles.linkText}>
               <ThemedText style={[styles.linkTitle, { color: palette.textInverse }]}>
                 Join the Discord

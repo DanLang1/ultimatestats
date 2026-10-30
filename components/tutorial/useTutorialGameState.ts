@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { MaterialDesignIconsIconName } from '@react-native-vector-icons/material-design-icons/static';
 import { useEffect, useRef, useState } from 'react';
 
 import { EventToastData } from '@/components/toast/EventToast';
@@ -69,7 +69,7 @@ export default function useTutorialGameState(onComplete?: () => void) {
     visible: false,
     message: '',
     tone: 'success',
-    icon: { library: 'material', name: 'check-circle' },
+    icon: { name: 'check-circle' },
   });
   const [toastInstanceId, setToastInstanceId] = useState(0);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -130,10 +130,10 @@ export default function useTutorialGameState(onComplete?: () => void) {
   const showToast = (
     message: string,
     tone: EventToastData['tone'],
-    iconName: keyof typeof MaterialCommunityIcons.glyphMap,
+    iconName: MaterialDesignIconsIconName,
   ) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ visible: true, message, tone, icon: { library: 'material', name: iconName } });
+    setToast({ visible: true, message, tone, icon: { name: iconName } });
     setToastInstanceId((prev) => prev + 1);
     toastTimerRef.current = setTimeout(() => {
       setToast((prev) => ({ ...prev, visible: false }));

@@ -1,6 +1,7 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { captureException } from '@sentry/react-native';
 import { router, Stack } from 'expo-router';
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -8,6 +9,7 @@ import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { DiscordIcon } from '@/components/ui/DiscordIcon';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { resumeGameSession, useActiveGameSession } from '@/hooks/useActiveGameSession';
@@ -26,7 +28,7 @@ import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
 interface MenuItem {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
   label: string;
   description: string;
   onPress: () => void;
@@ -395,7 +397,7 @@ export default function DashboardScreen() {
             { backgroundColor: palette.discordBg },
             pressed && styles.menuItemPressed,
           ]}>
-          <MaterialIcons name="discord" size={metrics.bannerIconSize} color={palette.discordText} />
+          <DiscordIcon size={metrics.bannerIconSize} color={palette.discordText} />
           <View style={styles.discordText}>
             <ThemedText style={[styles.discordTitle, { color: palette.discordText }]}>
               Join the Discord

@@ -1,4 +1,4 @@
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -354,15 +354,15 @@ export default function AggregateStatsScreen() {
       onPress: handleExportCSV,
       visible: showingAggregatedStats,
       inlineIcon: (
-        <FontAwesome6
-          name="file-csv"
+        <MaterialCommunityIcons
+          name="file-delimited-outline"
           size={scaleBySizeClass(20, sizeClass)}
           color={palette.accent}
         />
       ),
       menuIcon: (
-        <FontAwesome6
-          name="file-csv"
+        <MaterialCommunityIcons
+          name="file-delimited-outline"
           size={scaleBySizeClass(18, sizeClass)}
           color={palette.accent}
         />
@@ -396,8 +396,8 @@ export default function AggregateStatsScreen() {
 
     mainContent = (
       <View style={styles.statusState}>
-        <FontAwesome6
-          name="triangle-exclamation"
+        <MaterialCommunityIcons
+          name="alert"
           size={scaleBySizeClass(28, sizeClass)}
           color={palette.accent}
         />

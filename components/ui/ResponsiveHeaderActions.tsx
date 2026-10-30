@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import React, { useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,7 +21,7 @@ export type ResponsiveHeaderAction = {
   onPress: () => void;
   inlineIcon: React.ReactNode;
   menuIcon?: React.ReactNode;
-  advancedMenuIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  advancedMenuIcon?: MaterialDesignIconsIconName;
   advancedMenuTone?: BottomSheetActionRowTone;
   visible?: boolean;
   disabled?: boolean;

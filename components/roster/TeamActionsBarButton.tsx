@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -7,7 +9,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
 interface TeamActionsBarButtonProps {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
   label: string;
   onPress: () => void;
   variant?: 'default' | 'danger';

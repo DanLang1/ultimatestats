@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { MaterialDesignIconsIconName } from '@react-native-vector-icons/material-design-icons/static';
 
 import {
   isDroppedPull,
@@ -19,7 +19,7 @@ import {
 export interface BetweenPointMetric {
   label: string;
   value: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
 }
 
 export function getPointDetails(actions: PossessionAction[], focusSideId: string) {

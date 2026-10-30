@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';

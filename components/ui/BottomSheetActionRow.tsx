@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -10,11 +12,11 @@ export type BottomSheetActionRowTone = 'accent' | 'danger' | 'success' | 'warnin
 
 interface BottomSheetActionRowProps {
   testID: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
   label: string;
   description?: string;
   badge?: string;
-  trailingIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  trailingIcon?: MaterialDesignIconsIconName;
   tone?: BottomSheetActionRowTone;
   disabled?: boolean;
   onPress: () => void;

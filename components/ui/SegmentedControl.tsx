@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import React, { useEffect, useState } from 'react';
 import { type FocusEvent, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -18,7 +20,7 @@ interface SegmentOption<T extends string = string> {
   testID?: string;
   activeColor?: string;
   activeTextColor?: string;
-  actionIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  actionIcon?: MaterialDesignIconsIconName;
   actionTestID?: string;
   onAction?: () => void;
   isEditing?: boolean;

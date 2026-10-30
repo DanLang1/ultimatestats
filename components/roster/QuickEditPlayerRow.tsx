@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 

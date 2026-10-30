@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import {
@@ -18,7 +20,7 @@ import { Fonts } from '@/theme/theme';
 const AnimatedPressable = createAnimatedComponent(Pressable);
 
 interface EditableSettingCardProps {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
   label: string;
   children: React.ReactNode;
   onPress?: () => void;

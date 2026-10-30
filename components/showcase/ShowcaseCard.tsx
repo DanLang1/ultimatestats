@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';

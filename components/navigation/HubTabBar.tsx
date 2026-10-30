@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { router, usePathname, useSegments, type Href } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -22,11 +24,11 @@ const HUB_TAB_DISPLAY_ORDER: readonly HubTabRouteName[] = [
 ];
 
 type TabConfig = {
-  activeIcon: keyof typeof MaterialCommunityIcons.glyphMap;
+  activeIcon: MaterialDesignIconsIconName;
   activePathnames: readonly string[];
   activePathPrefixes?: readonly string[];
   href: Href;
-  inactiveIcon: keyof typeof MaterialCommunityIcons.glyphMap;
+  inactiveIcon: MaterialDesignIconsIconName;
   label: string;
 };
 

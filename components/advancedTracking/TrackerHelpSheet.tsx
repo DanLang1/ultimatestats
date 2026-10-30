@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -18,7 +20,7 @@ interface TrackerHelpSheetProps {
 interface HelpRow {
   event: string;
   instruction: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
 }
 
 const helpRows: HelpRow[] = [
@@ -52,7 +54,7 @@ const helpRows: HelpRow[] = [
 interface TutorialRow {
   variant: TutorialAdvancedVariant;
   label: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: MaterialDesignIconsIconName;
 }
 
 const tutorialRows: TutorialRow[] = [

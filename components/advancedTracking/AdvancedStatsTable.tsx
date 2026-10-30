@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -239,7 +241,7 @@ export default function AdvancedStatsTable({
   const renderSortIcon = (key: SortKey) => {
     const isActive = sortConfig.key === key;
 
-    let icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    let icon: MaterialDesignIconsIconName;
     if (!isActive) {
       icon = 'unfold-more-horizontal';
     } else {

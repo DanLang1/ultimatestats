@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router, Stack } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 

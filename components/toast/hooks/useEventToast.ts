@@ -1,5 +1,4 @@
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { MaterialDesignIconsIconName } from '@react-native-vector-icons/material-design-icons/static';
 import { useEffect, useState } from 'react';
 
 import { EVENT_RECORDED_TOAST_DURATION_MS } from '@/lib/constants';
@@ -7,9 +6,7 @@ import { getPlayerName as getPlayerNameFromRoster, UNKNOWN_PLAYER_ID } from '@/l
 import { Player } from '@/lib/storage';
 import { EventToastSignal, GameEvent, TurnoverEvent } from '@/store/basic/gameStore.types';
 
-export type EventIconInfo =
-  | { library: 'material'; name: keyof typeof MaterialCommunityIcons.glyphMap }
-  | { library: 'fontawesome5'; name: keyof typeof FontAwesome5.glyphMap };
+export type EventIconInfo = { name: MaterialDesignIconsIconName };
 
 type EventToastState = {
   visible: boolean;
@@ -76,23 +73,23 @@ function getTurnoverTone(event: TurnoverEvent): 'success' | 'danger' {
   return isOurTeamBlock || isOpponentThrowaway ? 'success' : 'danger';
 }
 
-const DEFAULT_ICON: EventIconInfo = { library: 'material', name: 'swap-horizontal' };
+const DEFAULT_ICON: EventIconInfo = { name: 'swap-horizontal' };
 
 function getTurnoverIcon(event: TurnoverEvent): EventIconInfo {
   if (event.team === 'team2') {
-    if (event.subtype === 'block') return { library: 'material', name: 'hand-front-left-outline' };
-    return { library: 'material', name: 'gift-outline' };
+    if (event.subtype === 'block') return { name: 'hand-front-left-outline' };
+    return { name: 'gift-outline' };
   }
 
   switch (event.subtype) {
     case 'block':
-      return { library: 'material', name: 'hand-back-left-outline' };
+      return { name: 'hand-back-left-outline' };
     case 'drop':
-      return { library: 'fontawesome5', name: 'hands-wash' };
+      return { name: 'thumb-down-outline' };
     case 'throwaway':
-      return { library: 'material', name: 'trash-can-outline' };
+      return { name: 'trash-can-outline' };
     case 'fiftyfifty':
-      return { library: 'material', name: 'scale-balance' };
+      return { name: 'scale-balance' };
     default:
       return DEFAULT_ICON;
   }
@@ -184,12 +181,12 @@ export function useEventToast({
     } else if (eventToastSignal.kind === 'undo') {
       message = getUndoMessage(eventToastSignal.event, roster, team2Name);
       tone = 'neutral';
-      icon = { library: 'material', name: 'undo-variant' };
+      icon = { name: 'undo-variant' };
     } else {
       // opponentGoal
       message = `${team2Name} scored`;
       tone = 'danger';
-      icon = { library: 'material', name: 'bullseye-arrow' };
+      icon = { name: 'bullseye-arrow' };
     }
 
     // The signal is an external store event; consume it synchronously so feedback is not lost.

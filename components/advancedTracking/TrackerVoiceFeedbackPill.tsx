@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -64,7 +66,7 @@ function getFeedbackColor(
 function getFeedbackIcon(
   kind: VoiceStatCommandsControls['feedback']['kind'],
   isListening: boolean,
-): keyof typeof MaterialCommunityIcons.glyphMap {
+): MaterialDesignIconsIconName {
   if (kind === 'issue') return 'alert-circle';
   if (kind === 'recorded') return 'check-circle';
   if (isListening) return 'microphone';

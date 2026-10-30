@@ -1,9 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { DiscordIcon } from '@/components/ui/DiscordIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import { DISCORD_URL } from '@/lib/constants';
@@ -91,11 +91,7 @@ export function ErrorFallback({ error, actionLabel, onAction }: ErrorFallbackPro
               { backgroundColor: palette.overlay08 },
               pressed && styles.buttonPressed,
             ]}>
-            <MaterialIcons
-              name="discord"
-              size={scaleBySizeClass(20, sizeClass)}
-              color={palette.accent}
-            />
+            <DiscordIcon size={scaleBySizeClass(20, sizeClass)} color={palette.discordBg} />
             <ThemedText
               style={[
                 styles.buttonText,

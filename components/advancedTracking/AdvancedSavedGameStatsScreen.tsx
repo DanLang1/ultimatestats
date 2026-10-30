@@ -1,9 +1,8 @@
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerChangeEvent,
 } from '@react-native-community/datetimepicker';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -218,15 +217,15 @@ export default function AdvancedSavedGameStatsScreen({
       onPress: handleExportCSV,
       advancedMenuIcon: 'file-delimited-outline',
       inlineIcon: (
-        <FontAwesome6
-          name="file-csv"
+        <MaterialCommunityIcons
+          name="file-delimited-outline"
           size={scaleBySizeClass(20, sizeClass)}
           color={palette.accent}
         />
       ),
       menuIcon: (
-        <FontAwesome6
-          name="file-csv"
+        <MaterialCommunityIcons
+          name="file-delimited-outline"
           size={scaleBySizeClass(18, sizeClass)}
           color={palette.accent}
         />

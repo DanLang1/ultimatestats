@@ -1,5 +1,6 @@
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -173,7 +174,7 @@ export function ScoreboardActionBar({
 
   const barBackgroundColor = palette.glassBg;
 
-  let dragHandleIcon: keyof typeof MaterialCommunityIcons.glyphMap;
+  let dragHandleIcon: MaterialDesignIconsIconName;
   if (pendingTimeoutModal) {
     dragHandleIcon = 'arrow-expand';
   } else {
@@ -203,7 +204,11 @@ export function ScoreboardActionBar({
           label: 'DROP',
           action: { type: 'drop' as const },
           renderIcon: () => (
-            <FontAwesome5 name="hands-wash" size={iconSize} color={palette.danger} />
+            <MaterialCommunityIcons
+              name="thumb-down-outline"
+              size={iconSize}
+              color={palette.danger}
+            />
           ),
         },
         {

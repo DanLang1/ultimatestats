@@ -1,4 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons, {
+  type MaterialDesignIconsIconName,
+} from '@react-native-vector-icons/material-design-icons/static';
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -19,7 +21,7 @@ type GameCompleteAction = {
 
 interface GameCompleteContentProps {
   headerTitle: string;
-  heroIcon: keyof typeof MaterialCommunityIcons.glyphMap;
+  heroIcon: MaterialDesignIconsIconName;
   heroIconColor: string;
   eyebrow: string;
   heroTitle: string;

@@ -158,6 +158,7 @@ export default {
         ],
       },
     ],
+    '@react-native-vector-icons/material-design-icons',
     'expo-image',
     'expo-sharing',
     'expo-web-browser',

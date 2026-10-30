@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { StyleSheet, ViewStyle } from 'react-native';
 import Animated, { ReduceMotion } from 'react-native-reanimated';
 

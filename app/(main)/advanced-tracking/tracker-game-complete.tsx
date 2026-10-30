@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { MaterialDesignIconsIconName } from '@react-native-vector-icons/material-design-icons/static';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 
@@ -64,7 +64,7 @@ export default function TrackerGameCompleteScreen() {
     heroTitle = "It's a Tie";
   }
 
-  let heroIcon: keyof typeof MaterialCommunityIcons.glyphMap = 'trophy';
+  let heroIcon: MaterialDesignIconsIconName = 'trophy';
   if (isEarlyEndFlow) {
     heroIcon = 'stop-circle-outline';
   } else if (isTie) {

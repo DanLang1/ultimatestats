@@ -1,10 +1,10 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
+import { DiscordIcon } from '@/components/ui/DiscordIcon';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { DISCORD_URL } from '@/lib/constants';
@@ -74,11 +74,7 @@ export default function NotFoundScreen() {
               { backgroundColor: palette.overlay08 },
               pressed && styles.buttonPressed,
             ]}>
-            <MaterialIcons
-              name="discord"
-              size={scaleBySizeClass(20, sizeClass)}
-              color={palette.accent}
-            />
+            <DiscordIcon size={scaleBySizeClass(20, sizeClass)} color={palette.discordBg} />
             <ThemedText style={[styles.secondaryButtonText, { color: palette.accent }]}>
               Report Issue
             </ThemedText>
