@@ -155,14 +155,18 @@ describe('basic analytics routes', () => {
     expect(screen.queryByTestId('stats-live-game')).not.toBeOnTheScreen();
   });
 
-  it('creates a tournament through the real persisted store action', async () => {
+  it('creates a tournament with the games selected in the tournament picker', async () => {
+    setMockSearchParams({ gameKind: 'advanced', gameIds: 'first,second' });
     const user = userEvent.setup();
     await renderScreen(<CreateTournamentScreen />);
 
     await user.type(screen.getByPlaceholderText('Tournament name'), 'Windy City Invite');
     await user.press(screen.getByText('Create Tournament'));
 
-    expect(useTournamentStore.getState().tournaments[0]?.name).toBe('Windy City Invite');
+    const { tournaments, getTournamentIdForGame } = useTournamentStore.getState();
+    expect(tournaments[0]?.name).toBe('Windy City Invite');
+    expect(getTournamentIdForGame('advanced', 'first')).toBe(tournaments[0]?.id);
+    expect(getTournamentIdForGame('advanced', 'second')).toBe(tournaments[0]?.id);
     expect(router.back).toHaveBeenCalledTimes(1);
   });
 

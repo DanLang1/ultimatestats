@@ -14,10 +14,10 @@ tags:
     timeout: 5000
 - tapOn: '.*Zoboomafoo, 2 games.*'
 - extendedWaitUntil:
-    visible: 'Select All'
+    visible: 'Select all'
     timeout: 5000
-- tapOn: 'Select All'
-- tapOn: '.*View Combined \(2 games\)'
+- tapOn: 'Select all'
+- tapOn: 'View stats'
 
 # Rows are wider than the screen, so tap near the leading name cell.
 - scrollUntilVisible:

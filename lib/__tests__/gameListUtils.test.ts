@@ -5,10 +5,15 @@ import {
   advancedGameSummaryToListItem,
   advancedGameToListItem,
   basicGameToListItem,
-  formatAggregateTeamMeta,
+  formatGameRowAccessibilityLabel,
+  formatPointDifferential,
+  formatRecord,
+  GameListItem,
   groupAdvancedGamesByTeam,
+  groupBasicGamesByTeam,
+  groupGamesByTournament,
 } from '../gameListUtils';
-import type { SavedGame, SavedTeam } from '../storage';
+import type { SavedGame, SavedTeam, Tournament } from '../storage';
 
 // ── basicGameToListItem ────────────────────────────────────────────────────────
 
@@ -236,33 +241,157 @@ describe('advancedGameSummaryToListItem', () => {
   });
 });
 
-describe('formatAggregateTeamMeta', () => {
-  it('pluralizes games and points independently', () => {
-    expect(formatAggregateTeamMeta(1, 1)).toBe('1 game • 1 point tracked');
-    expect(formatAggregateTeamMeta(2, 5)).toBe('2 games • 5 points tracked');
+describe('groupAdvancedGamesByTeam', () => {
+  it('groups by source team when known, newest game first, and sorts by game count', () => {
+    const groups = groupAdvancedGamesByTeam(
+      [
+        { ...advancedSummary, id: 'a', focusSourceTeamId: 'team-b', myTeamName: 'B' },
+        { ...advancedSummary, id: 'b', focusSourceTeamId: 'team-a', myTeamName: 'A' },
+        {
+          ...advancedSummary,
+          id: 'c',
+          focusSourceTeamId: 'team-a',
+          myTeamName: 'A',
+          sortTimestamp: 9,
+        },
+      ],
+      [],
+    );
+
+    expect(groups.map((group) => [group.id, group.name, group.games.map((g) => g.id)])).toEqual([
+      ['team-a', 'A', ['b', 'c']],
+      ['team-b', 'B', ['a']],
+    ]);
   });
 });
 
-describe('groupAdvancedGamesByTeam', () => {
-  it('totals points played, not points scored, per focus team', () => {
-    const groups = groupAdvancedGamesByTeam([
-      advancedSummary,
-      { ...advancedSummary, id: 'summary2', myScore: 1, opponentScore: 0, pointsTracked: 1 },
-    ]);
+describe('advancedGameSummaryToTeamListItem', () => {
+  const renamedTeams: SavedTeam[] = [{ id: 'team-a', name: 'New Name', roster: [] }];
 
-    expect(groups).toEqual([{ id: ZOO, name: 'Zoo', gameCount: 2, totalPoints: 23 }]);
+  it("names a renamed team's games by the live saved-team name so they share one record", () => {
+    const groups = groupAdvancedGamesByTeam(
+      [
+        { ...advancedSummary, id: 'old', focusSourceTeamId: 'team-a', myTeamName: 'Old Name' },
+        { ...advancedSummary, id: 'new', focusSourceTeamId: 'team-a', myTeamName: 'New Name' },
+      ],
+      renamedTeams,
+    );
+
+    expect(groups[0].name).toBe('New Name');
+    expect(formatRecord(groups[0].games)).toBe('2–0');
+  });
+});
+
+describe('formatRecord', () => {
+  const scrimmage: GameListItem = {
+    kind: 'advanced',
+    gameType: 'scrimmage',
+    id: 's',
+    timestamp: 1,
+    myTeamName: 'Light',
+    opponentName: 'Dark',
+    myScore: 5,
+    opponentScore: 3,
+  };
+
+  it('adds ties and counts scrimmages separately', () => {
+    expect(formatRecord([listItem('w', 1, 2, 1), listItem('l', 2, 1, 2)])).toBe('1–1');
+    expect(formatRecord([listItem('w', 1, 2, 1), listItem('t', 2, 2, 2)])).toBe('1–0–1');
+    expect(formatRecord([listItem('w', 1, 2, 1), scrimmage])).toBe('1–0 · 1 scrim');
+    expect(formatRecord([scrimmage, { ...scrimmage, id: 's2' }])).toBe('2 scrims');
   });
 
-  it('groups by source team when known and sorts by game count', () => {
-    const groups = groupAdvancedGamesByTeam([
-      { ...advancedSummary, id: 'a', focusSourceTeamId: 'team-b', myTeamName: 'B' },
-      { ...advancedSummary, id: 'b', focusSourceTeamId: 'team-a', myTeamName: 'A' },
-      { ...advancedSummary, id: 'c', focusSourceTeamId: 'team-a', myTeamName: 'A' },
-    ]);
+  it('is null when the games mix tracked teams', () => {
+    expect(
+      formatRecord([listItem('a', 1), { ...listItem('b', 2), myTeamName: 'Other' }]),
+    ).toBeNull();
+  });
+});
 
-    expect(groups.map((group) => [group.id, group.gameCount])).toEqual([
-      ['team-a', 2],
-      ['team-b', 1],
+describe('groupBasicGamesByTeam', () => {
+  it('groups by team ID under the saved team name', () => {
+    const groups = groupBasicGamesByTeam(
+      [
+        baseBasicGame,
+        { ...baseBasicGame, id: 'basic2', team1: { ...baseBasicGame.team1, name: 'Old' } },
+      ],
+      savedTeams,
+    );
+
+    expect(groups.map((group) => [group.id, group.name, group.games.length])).toEqual([
+      ['team1', 'Saved Name', 2],
     ]);
+  });
+});
+
+function listItem(id: string, timestamp: number, myScore = 1, opponentScore = 0): GameListItem {
+  return {
+    kind: 'basic',
+    id,
+    timestamp,
+    myTeamName: 'Zoo',
+    opponentName: 'Rivals',
+    myScore,
+    opponentScore,
+  };
+}
+
+function tournament(id: string): Tournament {
+  return {
+    id,
+    schemaVersion: 1,
+    kind: 'basic',
+    name: id,
+    startDate: '2026-01-01',
+    endDate: '2026-01-01',
+    createdAt: 0,
+    updatedAt: 0,
+  };
+}
+
+describe('groupGamesByTournament', () => {
+  it('orders tournaments by their newest game and lists unlinked games last, newest first', () => {
+    const sections = groupGamesByTournament(
+      [
+        listItem('a1', 1),
+        listItem('none1', 2),
+        listItem('b1', 3),
+        listItem('a2', 4),
+        listItem('none2', 5),
+      ],
+      [tournament('b'), tournament('a')],
+      new Map([
+        ['a1', 'a'],
+        ['a2', 'a'],
+        ['b1', 'b'],
+      ]),
+    );
+
+    expect(
+      sections.map((section) => [section.tournament?.id ?? null, section.games.map((g) => g.id)]),
+    ).toEqual([
+      ['a', ['a2', 'a1']],
+      ['b', ['b1']],
+      [null, ['none2', 'none1']],
+    ]);
+  });
+});
+
+describe('formatPointDifferential', () => {
+  it('signs the net margin with a real minus sign', () => {
+    expect(formatPointDifferential([listItem('a', 1, 15, 10), listItem('b', 2, 12, 9)])).toBe('+8');
+    expect(formatPointDifferential([listItem('a', 1, 10, 15)])).toBe('\u22125');
+    expect(formatPointDifferential([listItem('a', 1, 15, 10), listItem('b', 2, 10, 15)])).toBe('0');
+  });
+});
+
+describe('formatGameRowAccessibilityLabel', () => {
+  it('names the winner and adds the date only when the row shows one', () => {
+    expect(formatGameRowAccessibilityLabel(listItem('a', 1, 10, 13), 'Oct 3')).toBe(
+      'Zoo versus Rivals, 10 to 13, Rivals by 3, Oct 3',
+    );
+    expect(formatGameRowAccessibilityLabel(listItem('a', 1, 9, 9), null)).toBe(
+      'Zoo versus Rivals, 9 to 9, Tied',
+    );
   });
 });

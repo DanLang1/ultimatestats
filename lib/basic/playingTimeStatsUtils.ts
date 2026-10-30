@@ -46,8 +46,7 @@ export function computePlayingTimeStats(
     return statsMap;
   }
 
-  // Get all players who appeared in each point (including mid-point subs)
-  const finalLines = getAllPlayersByPoint(pointLines);
+  const playersByPoint = getAllPlayersByPoint(pointLines);
 
   const pointEvents = computePointByPointEvents(
     events,
@@ -68,7 +67,7 @@ export function computePlayingTimeStats(
   for (const point of pointEvents) {
     if (point.isInProgress) continue;
 
-    const lineForPoint = finalLines.get(point.pointNumber);
+    const lineForPoint = playersByPoint.get(point.pointNumber);
     if (!lineForPoint) continue;
 
     const isOLine = point.offensiveTeam === 'team1';

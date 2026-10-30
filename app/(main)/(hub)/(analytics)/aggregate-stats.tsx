@@ -37,6 +37,11 @@ import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary';
 import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
+import {
+  advancedGameSummaryToTeamListItem,
+  basicGameToListItem,
+  GameListItem,
+} from '@/lib/gameListUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { reportError } from '@/lib/sentry';
 import { shareCsvExport } from '@/lib/shareCsvExport';
@@ -82,16 +87,20 @@ export default function AggregateStatsScreen() {
   const [selectedAdvancedTeamId, setSelectedAdvancedTeamId] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
   const [showingAggregatedStats, setShowingAggregatedStats] = useState(false);
-  const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
   const [showTournamentPicker, setShowTournamentPicker] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
-  const compatibleTournaments = tournaments.filter(
-    (tournament) => tournament.kind === null || tournament.kind === aggregateMode,
-  );
   const tournamentIdsByBasicGame = getTournamentIdsByGame(gameLinks, 'basic');
   const tournamentIdsByAdvancedGame = getTournamentIdsByGame(gameLinks, 'advanced');
+  const selectedGameItems: GameListItem[] =
+    aggregateMode === 'advanced'
+      ? aggregateEligibleAdvancedGameSummaries
+          .filter((game) => selectedGameIds.has(game.id))
+          .map((game) => advancedGameSummaryToTeamListItem(game, savedTeams))
+      : savedGames
+          .filter((game) => selectedGameIds.has(game.id))
+          .map((game) => basicGameToListItem(game, savedTeams));
 
   let aggregatedData: {
     teamName: string;
@@ -171,14 +180,12 @@ export default function AggregateStatsScreen() {
     setSelectedTeam(teamId);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
-    setTournamentFilter(null);
   };
 
   const handleSelectAdvancedTeam = (teamId: string) => {
     setSelectedAdvancedTeamId(teamId);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
-    setTournamentFilter(null);
   };
 
   const handleSetAggregateMode = (mode: AggregateMode) => {
@@ -187,14 +194,12 @@ export default function AggregateStatsScreen() {
     setSelectedAdvancedTeamId(null);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
-    setTournamentFilter(null);
   };
 
   const handleBackToTeams = () => {
     setSelectedTeam(null);
     setSelectedGameIds(new Set());
     setShowingAggregatedStats(false);
-    setTournamentFilter(null);
   };
 
   const handleTournamentSelected = async (tournamentId: string) => {
@@ -227,53 +232,16 @@ export default function AggregateStatsScreen() {
     });
   };
 
-  const handleSelectAllGames = (gameIds: string[]) => {
+  const handleSelectGames = (gameIds: string[]) => {
     setSelectedGameIds((prev) => new Set([...prev, ...gameIds]));
   };
 
-  const handleDeselectAllGames = () => {
-    setSelectedGameIds(new Set());
-  };
-
-  const getBasicTournamentGameIds = (tournamentId: string) => {
-    if (!selectedTeam) return [];
-
-    return savedGames
-      .filter(
-        (game) =>
-          game.team1.id === selectedTeam && tournamentIdsByBasicGame.get(game.id) === tournamentId,
-      )
-      .map((game) => game.id);
-  };
-
-  const getAdvancedTournamentGameIds = (tournamentId: string) => {
-    if (!selectedAdvancedTeamId) return [];
-
-    return aggregateEligibleAdvancedGameSummaries
-      .filter((game) => {
-        const teamId = game.focusSourceTeamId ?? game.focusSideId;
-        return (
-          teamId === selectedAdvancedTeamId &&
-          tournamentIdsByAdvancedGame.get(game.id) === tournamentId
-        );
-      })
-      .map((game) => game.id);
-  };
-
-  const handleSetTournamentFilter = (tournamentId: string | null) => {
-    setTournamentFilter(tournamentId);
-
-    if (!tournamentId) {
-      setSelectedGameIds(new Set());
-      return;
-    }
-
-    if (aggregateMode === 'advanced') {
-      setSelectedGameIds(new Set(getAdvancedTournamentGameIds(tournamentId)));
-      return;
-    }
-
-    setSelectedGameIds(new Set(getBasicTournamentGameIds(tournamentId)));
+  const handleDeselectGames = (gameIds: string[]) => {
+    setSelectedGameIds((prev) => {
+      const next = new Set(prev);
+      for (const gameId of gameIds) next.delete(gameId);
+      return next;
+    });
   };
 
   const handleShareGames = () => {
@@ -363,7 +331,9 @@ export default function AggregateStatsScreen() {
       const gameForSide = aggregateEligibleAdvancedGameSummaries.find(
         (game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedAdvancedTeamId,
       );
-      const sideName = gameForSide ? gameForSide.myTeamName : 'Advanced Team';
+      const sideName = gameForSide
+        ? advancedGameSummaryToTeamListItem(gameForSide, savedTeams).myTeamName
+        : 'Advanced Team';
       return sideName.toUpperCase();
     }
     if (!selectedTeam) return 'AGGREGATE STATS';
@@ -488,13 +458,10 @@ export default function AggregateStatsScreen() {
         selectedGameIds={selectedGameIds}
         onSelectTeam={handleSelectAdvancedTeam}
         onToggleGameSelection={handleToggleGameSelection}
-        onSelectAllGames={handleSelectAllGames}
-        onDeselectAllGames={handleDeselectAllGames}
-        tournaments={compatibleTournaments}
+        onSelectGames={handleSelectGames}
+        onDeselectGames={handleDeselectGames}
+        tournaments={tournaments}
         tournamentIdsByGame={tournamentIdsByAdvancedGame}
-        tournamentFilter={tournamentFilter}
-        onSetTournamentFilter={handleSetTournamentFilter}
-        onCreateTournament={() => router.push('/create-tournament')}
       />
     );
   } else {
@@ -505,13 +472,10 @@ export default function AggregateStatsScreen() {
         selectedGameIds={selectedGameIds}
         onSelectTeam={handleSelectTeam}
         onToggleGameSelection={handleToggleGameSelection}
-        onSelectAllGames={handleSelectAllGames}
-        onDeselectAllGames={handleDeselectAllGames}
-        tournaments={compatibleTournaments}
+        onSelectGames={handleSelectGames}
+        onDeselectGames={handleDeselectGames}
+        tournaments={tournaments}
         tournamentIdsByGame={tournamentIdsByBasicGame}
-        tournamentFilter={tournamentFilter}
-        onSetTournamentFilter={handleSetTournamentFilter}
-        onCreateTournament={() => router.push('/create-tournament')}
       />
     );
   }
@@ -531,32 +495,29 @@ export default function AggregateStatsScreen() {
 
       <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
         {!showingAggregatedStats && (
-          <View style={styles.modeSwitch}>
+          <View
+            accessibilityRole="tablist"
+            style={[styles.modeSwitch, { backgroundColor: palette.overlay05 }]}>
             {(['advanced', 'basic'] as const).map((mode) => {
               const isActive = aggregateMode === mode;
               return (
                 <Pressable
                   key={mode}
                   testID={`aggregate-mode-${mode}`}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isActive }}
                   onPress={() => handleSetAggregateMode(mode)}
                   style={[
                     styles.modeButton,
-                    { backgroundColor: isActive ? palette.accent : palette.overlay05 },
+                    isActive && { backgroundColor: palette.segmentActive },
                   ]}>
-                  <View style={styles.modeButtonContent}>
-                    <FontAwesome6
-                      name={mode === 'basic' ? 'chart-simple' : 'chart-line'}
-                      size={scaleBySizeClass(14, sizeClass)}
-                      color={isActive ? palette.textOnAccent : palette.textMuted}
-                    />
-                    <ThemedText
-                      style={[
-                        styles.modeButtonText,
-                        { color: isActive ? palette.textOnAccent : palette.textMuted },
-                      ]}>
-                      {mode === 'basic' ? 'Basic' : 'Advanced'}
-                    </ThemedText>
-                  </View>
+                  <ThemedText
+                    style={[
+                      styles.modeButtonText,
+                      { color: isActive ? palette.textInverse : palette.textMuted },
+                    ]}>
+                    {mode === 'basic' ? 'Basic' : 'Advanced'}
+                  </ThemedText>
                 </Pressable>
               );
             })}
@@ -572,17 +533,17 @@ export default function AggregateStatsScreen() {
             (aggregateMode === 'advanced' && !!selectedAdvancedTeamId)) &&
           !showingAggregatedStats
         }
-        selectedCount={selectedGameIds.size}
-        onViewAggregated={() => setShowingAggregatedStats(true)}
-        showAddToTournament={!tournamentFilter && selectedGameIds.size > 0}
+        selectedGames={selectedGameItems}
+        onViewStats={() => setShowingAggregatedStats(true)}
         onAddToTournament={() => setShowTournamentPicker(true)}
-        showShare={aggregateMode === 'basic' && selectedGameIds.size > 0}
+        showShare={aggregateMode === 'basic'}
         onShare={handleShareGames}
       />
 
       <TournamentPickerModal
         visible={showTournamentPicker}
         gameKind={aggregateMode}
+        gameIds={[...selectedGameIds]}
         onSelect={handleTournamentSelected}
         onClose={() => setShowTournamentPicker(false)}
       />
@@ -606,23 +567,19 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     scrollContent: {
       padding: isLandscape ? 14 : 24,
       paddingTop: isLandscape ? 8 : 16,
-      paddingBottom: 100,
     },
     modeSwitch: {
       flexDirection: 'row',
-      gap: 8,
+      borderRadius: 10,
+      padding: 3,
       marginBottom: 16,
     },
     modeButton: {
       flex: 1,
-      borderRadius: 8,
-      paddingVertical: 10,
+      // Outer radius 10 minus the track's 3pt padding.
+      borderRadius: 7,
+      paddingVertical: 8,
       alignItems: 'center',
-    },
-    modeButtonContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
     },
     modeButtonText: {
       fontSize: scaleBySizeClass(13, sizeClass),

@@ -55,45 +55,40 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     await AsyncStorage.clear();
   });
 
-  it('groups teams, toggles game selection, filters tournaments and returns from combined stats', async () => {
+  it('groups teams, selects games by row and tournament section, and returns from combined stats', async () => {
     await arrangeGames(kind);
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
     if (kind === 'basic') await user.press(screen.getByText('Basic'));
-    expect(screen.getByText('Other Team')).toBeVisible();
-    await user.press(screen.getByText('Windchill'));
+    expect(screen.getByLabelText(/^Other Team, 1 game,/)).toBeVisible();
+    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
     expect(screen.getByText('WINDCHILL')).toBeVisible();
-    expect(screen.getByText('vs Falcons')).toBeVisible();
-    expect(screen.getByText('vs Eagles')).toBeVisible();
+    expect(screen.getByLabelText(/versus Falcons/)).toBeVisible();
+    expect(screen.getByLabelText(/versus Eagles/)).toBeVisible();
+    expect(screen.queryByText(/Empty Invite/)).not.toBeOnTheScreen();
 
-    await user.press(screen.getByText('Select All'));
-    expect(screen.getByText('View Combined (2 games)')).toBeVisible();
-    await user.press(screen.getByText('Deselect All'));
-    expect(screen.queryByText('View Combined (2 games)')).not.toBeOnTheScreen();
-    await user.press(screen.getByText('vs Eagles'));
-    expect(screen.getByText('View Combined (1 game)')).toBeVisible();
-    await user.press(screen.getByText('vs Eagles'));
-    expect(screen.queryByText('View Combined (1 game)')).not.toBeOnTheScreen();
+    await user.press(screen.getByText('Select all'));
+    expect(screen.getByText('2 selected · 2–0')).toBeVisible();
+    await user.press(screen.getByText('Deselect all'));
+    expect(screen.queryByText(/^2 selected/)).not.toBeOnTheScreen();
+    await user.press(screen.getByLabelText(/versus Eagles/));
+    expect(screen.getByText(/^1 selected/)).toBeVisible();
+    await user.press(screen.getByLabelText(/versus Eagles/));
+    expect(screen.queryByText(/^1 selected/)).not.toBeOnTheScreen();
 
-    await user.press(screen.getByText('Windy City'));
-    expect(screen.getByText('View Combined (1 game)')).toBeVisible();
-    expect(screen.queryByText('vs Eagles')).not.toBeOnTheScreen();
-    await user.press(screen.getByText('Show All'));
-    expect(screen.getByText('vs Eagles')).toBeVisible();
-    expect(screen.queryByText('View Combined (1 game)')).not.toBeOnTheScreen();
-    await user.press(screen.getByText('Empty Invite'));
-    expect(
-      screen.getByText(
-        kind === 'advanced'
-          ? 'No advanced games in this tournament'
-          : 'No games in this tournament',
-      ),
-    ).toBeVisible();
-    await user.press(screen.getByText('Empty Invite'));
-    expect(screen.getByText('vs Falcons')).toBeVisible();
+    await user.press(screen.getByLabelText('Select games in Windy City'));
+    expect(screen.getByText(/^1 selected/)).toBeVisible();
+    expect(screen.getByLabelText(/versus Falcons/)).toBeSelected();
+    expect(screen.getByLabelText(/versus Eagles/)).not.toBeSelected();
+    await user.press(screen.getByLabelText('Select games with no tournament'));
+    expect(screen.getByText(/^2 selected/)).toBeVisible();
+    expect(screen.getByText('Deselect all')).toBeVisible();
+    await user.press(screen.getByLabelText('Deselect games in Windy City'));
+    expect(screen.getByText(/^1 selected/)).toBeVisible();
+    expect(screen.getByLabelText(/versus Eagles/)).toBeSelected();
 
-    await user.press(screen.getByText('Select All'));
-    await user.press(screen.getByText('View Combined (2 games)'));
+    await user.press(screen.getByText('Select all'));
+    await user.press(screen.getByText('View stats'));
     expect(screen.getByText('COMBINED STATS')).toBeVisible();
     expect(screen.getByText('Windchill')).toBeVisible();
     await user.press(screen.getByTestId('screen-header-back'));
@@ -110,17 +105,54 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
     if (kind === 'basic') await user.press(screen.getByText('Basic'));
-    await user.press(screen.getByText('Windchill'));
-    await user.press(screen.getByText('vs Eagles'));
-    await user.press(screen.getByText('Add to Tournament'));
+    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
+    await user.press(screen.getByLabelText(/versus Eagles/));
+    await user.press(screen.getByText('Add to tournament'));
     expect(screen.getByText('Select Tournament')).toBeVisible();
-    await user.press(screen.getAllByText('Empty Invite').at(-1)!);
+    await user.press(screen.getByText('Empty Invite'));
     expect(useTournamentStore.getState().getTournamentIdForGame(kind, 'second')).toBe(
       emptyTournamentId,
     );
-    expect(screen.queryByText('View Combined (1 game)')).not.toBeOnTheScreen();
-    await user.press(screen.getByText('Create'));
-    expect(router.push).toHaveBeenCalledWith('/create-tournament');
+    expect(screen.queryByText(/^1 selected/)).not.toBeOnTheScreen();
+    expect(screen.getByLabelText('Select games in Empty Invite')).toBeVisible();
+  });
+
+  it('confirms a tournament delete inside the picker sheet', async () => {
+    const { emptyTournamentId } = await arrangeGames(kind);
+    const user = userEvent.setup();
+    await renderScreen(<AggregateStatsScreen />);
+    if (kind === 'basic') await user.press(screen.getByText('Basic'));
+    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
+    await user.press(screen.getByLabelText(/versus Eagles/));
+    await user.press(screen.getByText('Add to tournament'));
+
+    await user.press(screen.getByLabelText('Delete Empty Invite'));
+    expect(screen.getByText('Delete Empty Invite?')).toBeVisible();
+    await user.press(screen.getByText('Cancel'));
+    expect(screen.getByText('Select Tournament')).toBeVisible();
+
+    await user.press(screen.getByLabelText('Delete Empty Invite'));
+    await user.press(screen.getByText('Delete tournament'));
+    expect(
+      useTournamentStore.getState().tournaments.some(({ id }) => id === emptyTournamentId),
+    ).toBe(false);
+    expect(screen.getByText('Select Tournament')).toBeVisible();
+  });
+
+  it('hands the selected games to a tournament created from the picker', async () => {
+    await arrangeGames(kind);
+    const user = userEvent.setup();
+    await renderScreen(<AggregateStatsScreen />);
+    if (kind === 'basic') await user.press(screen.getByText('Basic'));
+    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
+    await user.press(screen.getByText('Select all'));
+    await user.press(screen.getByText('Add to tournament'));
+    await user.press(screen.getByText('Create New Tournament'));
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/create-tournament',
+      params: { gameKind: kind, gameIds: expect.stringMatching(/^(first,second|second,first)$/) },
+    });
   });
 });
 
@@ -146,12 +178,12 @@ describe('advanced aggregate recovery', () => {
     useSavedAdvancedGamesStore.setState({ gamesById: {} });
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
-    await user.press(screen.getByText('Windchill'));
-    await user.press(screen.getByText('vs Falcons'));
-    await user.press(screen.getByText('View Combined (1 game)'));
+    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
+    await user.press(screen.getByLabelText(/versus Falcons/));
+    await user.press(screen.getByText('View stats'));
     expect(await screen.findByText('Combined stats unavailable')).toBeVisible();
     expect(screen.getByText('Some selected advanced games could not be loaded.')).toBeVisible();
     await user.press(screen.getByText('Back to Games'));
-    expect(screen.getByText('vs Falcons')).toBeVisible();
+    expect(screen.getByLabelText(/versus Falcons/)).toBeVisible();
   });
 });

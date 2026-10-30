@@ -2,7 +2,7 @@ import DateTimePicker, {
   DateTimePickerAndroid,
   DateTimePickerChangeEvent,
 } from '@react-native-community/datetimepicker';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -14,6 +14,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_TOURNAMENT_NAME_LENGTH } from '@/lib/constants';
 import { formatDateForDisplay, toISODate } from '@/lib/dateUtils';
+import { TournamentKind } from '@/lib/storage/types';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 
@@ -21,7 +22,12 @@ export default function CreateTournamentScreen() {
   const { palette, themeMode } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { addTournament, tournaments } = useTournamentStore();
+  const { addTournament, addGamesToTournament, tournaments } = useTournamentStore();
+  // The tournament picker opens this screen with the games the new tournament should start with.
+  const { gameKind, gameIds } = useLocalSearchParams<{
+    gameKind: TournamentKind;
+    gameIds: string;
+  }>();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -75,7 +81,9 @@ export default function CreateTournamentScreen() {
 
   const handleSave = async () => {
     if (!trimmedName || isDuplicate) return;
-    await addTournament(trimmedName, toISODate(startDate), toISODate(endDate));
+    const tournamentId = await addTournament(trimmedName, toISODate(startDate), toISODate(endDate));
+    const didAdd = await addGamesToTournament(tournamentId, gameKind, gameIds.split(','));
+    if (!didAdd) throw new Error(`New tournament ${tournamentId} rejected its ${gameKind} games`);
     router.back();
   };
 

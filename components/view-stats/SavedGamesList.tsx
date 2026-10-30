@@ -13,7 +13,8 @@ import {
 } from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { GameKind, GameListItem, getGameResult, isScrimmage } from '@/lib/gameListUtils';
+import { formatDayTitle } from '@/lib/dateUtils';
+import { formatRecord, GameKind, GameListItem } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -41,15 +42,6 @@ interface SavedGameGroup {
   /** Null when the list is not sorted by date, so the games share one ungrouped section. */
   title: string | null;
   games: GameListItem[];
-}
-
-function formatDayTitle(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 function formatTime(timestamp: number): string {
@@ -85,37 +77,6 @@ function groupGames(games: GameListItem[], isGroupedByDay: boolean): SavedGameGr
   if (games.length === 0) return [];
   if (isGroupedByDay) return groupGamesByDay(games);
   return [{ key: 'all', title: null, games }];
-}
-
-/**
- * Win–loss(–tie) record for a day; scrimmages are counted separately since they have no result.
- * Null when the day mixes tracked teams, since one combined record would credit neither.
- */
-function formatRecord(games: GameListItem[]): string | null {
-  // Scrimmage sides are labels like "Light", not tracked teams, so they don't count as a mix.
-  const trackedTeams = new Set(
-    games.filter((game) => !isScrimmage(game)).map((game) => game.myTeamName),
-  );
-  if (trackedTeams.size > 1) return null;
-
-  let wins = 0;
-  let losses = 0;
-  let ties = 0;
-  let scrimmages = 0;
-  for (const game of games) {
-    if (isScrimmage(game)) {
-      scrimmages++;
-      continue;
-    }
-    const result = getGameResult(game);
-    if (result === 'win') wins++;
-    else if (result === 'loss') losses++;
-    else ties++;
-  }
-  const scrimmageLabel = `${scrimmages} ${scrimmages === 1 ? 'scrim' : 'scrims'}`;
-  if (wins + losses + ties === 0) return scrimmageLabel;
-  const record = ties > 0 ? `${wins}–${losses}–${ties}` : `${wins}–${losses}`;
-  return scrimmages > 0 ? `${record} · ${scrimmageLabel}` : record;
 }
 
 export default function SavedGamesList({

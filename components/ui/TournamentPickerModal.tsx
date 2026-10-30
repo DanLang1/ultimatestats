@@ -1,13 +1,13 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatISODateForDisplay } from '@/lib/dateUtils';
+import { formatTournamentDateRange } from '@/lib/dateUtils';
 import { reportError } from '@/lib/sentry';
 import { Tournament, TournamentKind } from '@/lib/storage/types';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -18,11 +18,14 @@ interface TournamentPickerModalProps {
   gameKind: TournamentKind;
   onSelect: (tournamentId: string) => void;
   onClose: () => void;
+  /** Games a newly created tournament should start with. */
+  gameIds: string[];
 }
 
 export function TournamentPickerModal({
   visible,
   gameKind,
+  gameIds,
   onSelect,
   onClose,
 }: TournamentPickerModalProps) {
@@ -30,45 +33,46 @@ export function TournamentPickerModal({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const insets = useSafeAreaInsets();
-  const { showAlert } = useAlert();
   const { tournaments, deleteTournament } = useTournamentStore();
+  // The alert provider's modal can't present over this one, so delete is confirmed in the sheet.
+  const [pendingDelete, setPendingDelete] = useState<Tournament | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const compatibleTournaments = tournaments.filter((tournament) => {
     return tournament.kind === null || tournament.kind === gameKind;
   });
 
-  const handleSelectTournament = (tournament: Tournament) => {
-    onSelect(tournament.id);
+  const handleClose = () => {
+    setPendingDelete(null);
+    setDeleteError(null);
     onClose();
   };
 
-  const handleDeleteTournament = (tournament: Tournament) => {
-    showAlert({
-      title: 'Delete Tournament?',
-      message: `Are you sure you want to delete "${tournament.name}"? Games will not be deleted.`,
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteTournament(tournament.id);
-            } catch (error) {
-              reportError('tournament-delete', error);
-              showAlert({
-                title: 'Delete failed',
-                message: 'Could not delete the tournament. Please try again.',
-              });
-            }
-          },
-        },
-      ],
-    });
+  const handleSelectTournament = (tournament: Tournament) => {
+    onSelect(tournament.id);
+    handleClose();
+  };
+
+  const handleCancelDelete = () => {
+    setPendingDelete(null);
+    setDeleteError(null);
+  };
+
+  const handleConfirmDelete = async (tournament: Tournament) => {
+    try {
+      await deleteTournament(tournament.id);
+      handleCancelDelete();
+    } catch (error) {
+      reportError('tournament-delete', error);
+      setDeleteError('Could not delete the tournament. Try again.');
+    }
   };
 
   const handleCreateNew = () => {
-    onClose();
-    router.push('/create-tournament');
+    handleClose();
+    router.push({
+      pathname: '/create-tournament',
+      params: { gameKind, gameIds: gameIds.join(',') },
+    });
   };
 
   const iconSize = scaleBySizeClass(20, sizeClass);
@@ -79,11 +83,11 @@ export function TournamentPickerModal({
       transparent
       animationType="fade"
       supportedOrientations={['portrait', 'landscape']}
-      onRequestClose={onClose}>
+      onRequestClose={handleClose}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <Pressable
           style={[styles.overlay, { backgroundColor: palette.overlayDark40 }]}
-          onPress={onClose}>
+          onPress={handleClose}>
           <Pressable
             style={[
               styles.bottomSheet,
@@ -97,64 +101,101 @@ export function TournamentPickerModal({
               <View style={[styles.handleBar, { backgroundColor: palette.overlay15 }]} />
             </View>
 
-            <ThemedText style={[styles.title, { color: palette.modalText }]}>
-              Select Tournament
-            </ThemedText>
-
-            <ScrollView bounces={false}>
-              <Pressable
-                style={[styles.row, { borderBottomColor: palette.overlay10 }]}
-                onPress={handleCreateNew}>
-                <MaterialCommunityIcons name="plus" size={iconSize} color={palette.accent} />
-                <ThemedText style={[styles.rowText, { color: palette.accent }]}>
-                  Create New Tournament
+            {pendingDelete ? (
+              <View style={styles.confirmContainer}>
+                <MaterialCommunityIcons
+                  name="alert-circle-outline"
+                  size={scaleBySizeClass(44, sizeClass)}
+                  color={palette.danger}
+                />
+                <ThemedText style={[styles.confirmTitle, { color: palette.modalText }]}>
+                  Delete {pendingDelete.name}?
                 </ThemedText>
-              </Pressable>
-
-              {compatibleTournaments.map((tournament) => (
-                <Pressable
-                  key={tournament.id}
-                  style={[styles.row, { borderBottomColor: palette.overlay10 }]}
-                  onPress={() => handleSelectTournament(tournament)}>
-                  <MaterialCommunityIcons
-                    name="trophy-outline"
-                    size={iconSize}
-                    color={palette.modalTextMuted}
-                  />
-                  <View style={styles.tournamentInfo}>
-                    <ThemedText style={[styles.rowText, { color: palette.modalText }]}>
-                      {tournament.name}
+                <ThemedText style={[styles.confirmMessage, { color: palette.modalTextMuted }]}>
+                  {deleteError ?? 'Its games stay saved.'}
+                </ThemedText>
+                <View style={styles.confirmButtons}>
+                  <Pressable
+                    style={[
+                      styles.confirmButton,
+                      { backgroundColor: palette.overlay10, borderColor: palette.overlay20 },
+                      styles.confirmCancelButton,
+                    ]}
+                    onPress={handleCancelDelete}>
+                    <ThemedText style={[styles.confirmButtonText, { color: palette.modalText }]}>
+                      Cancel
                     </ThemedText>
-                    <ThemedText style={[styles.dateText, { color: palette.modalTextMuted }]}>
-                      {formatDateRange(tournament.startDate, tournament.endDate)}
-                    </ThemedText>
-                  </View>
-                  <Pressable hitSlop={8} onPress={() => handleDeleteTournament(tournament)}>
-                    <MaterialCommunityIcons
-                      name="delete-outline"
-                      size={scaleBySizeClass(18, sizeClass)}
-                      color={palette.modalTextMuted}
-                    />
                   </Pressable>
-                </Pressable>
-              ))}
-
-              {compatibleTournaments.length === 0 && (
-                <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
-                  No tournaments yet
+                  <Pressable
+                    style={[styles.confirmButton, { backgroundColor: palette.danger }]}
+                    onPress={() => handleConfirmDelete(pendingDelete)}>
+                    <ThemedText style={[styles.confirmButtonText, { color: palette.textOnAccent }]}>
+                      Delete tournament
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <>
+                <ThemedText style={[styles.title, { color: palette.modalText }]}>
+                  Select Tournament
                 </ThemedText>
-              )}
-            </ScrollView>
+
+                <ScrollView bounces={false}>
+                  <Pressable
+                    style={[styles.row, { borderBottomColor: palette.overlay10 }]}
+                    onPress={handleCreateNew}>
+                    <MaterialCommunityIcons name="plus" size={iconSize} color={palette.accent} />
+                    <ThemedText style={[styles.rowText, { color: palette.accent }]}>
+                      Create New Tournament
+                    </ThemedText>
+                  </Pressable>
+
+                  {compatibleTournaments.map((tournament) => (
+                    <Pressable
+                      key={tournament.id}
+                      style={[styles.row, { borderBottomColor: palette.overlay10 }]}
+                      onPress={() => handleSelectTournament(tournament)}>
+                      <MaterialCommunityIcons
+                        name="trophy-outline"
+                        size={iconSize}
+                        color={palette.modalTextMuted}
+                      />
+                      <View style={styles.tournamentInfo}>
+                        <ThemedText style={[styles.rowText, { color: palette.modalText }]}>
+                          {tournament.name}
+                        </ThemedText>
+                        <ThemedText style={[styles.dateText, { color: palette.modalTextMuted }]}>
+                          {formatTournamentDateRange(tournament.startDate, tournament.endDate)}
+                        </ThemedText>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Delete ${tournament.name}`}
+                        hitSlop={8}
+                        onPress={() => setPendingDelete(tournament)}>
+                        <MaterialCommunityIcons
+                          name="delete-outline"
+                          size={scaleBySizeClass(18, sizeClass)}
+                          color={palette.modalTextMuted}
+                        />
+                      </Pressable>
+                    </Pressable>
+                  ))}
+
+                  {compatibleTournaments.length === 0 && (
+                    <ThemedText style={[styles.emptyText, { color: palette.modalTextMuted }]}>
+                      No tournaments yet
+                    </ThemedText>
+                  )}
+                </ScrollView>
+              </>
+            )}
           </Pressable>
         </Pressable>
       </SafeAreaView>
     </Modal>
   );
-}
-
-function formatDateRange(start: string, end: string): string {
-  if (start === end) return formatISODateForDisplay(start);
-  return `${formatISODateForDisplay(start)} – ${formatISODateForDisplay(end)}`;
 }
 
 function createStyles(sizeClass: SizeClass) {
@@ -207,6 +248,43 @@ function createStyles(sizeClass: SizeClass) {
     dateText: {
       fontSize: scaleBySizeClass(13, sizeClass),
       marginTop: 2,
+    },
+    confirmContainer: {
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+    },
+    confirmTitle: {
+      fontSize: scaleBySizeClass(18, sizeClass),
+      fontFamily: Fonts.bold,
+      marginTop: 12,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    confirmMessage: {
+      fontSize: scaleBySizeClass(14, sizeClass),
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: scaleBySizeClass(20, sizeClass),
+    },
+    confirmButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      width: '100%',
+    },
+    confirmButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    confirmCancelButton: {
+      borderWidth: 1,
+    },
+    confirmButtonText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
     },
     emptyText: {
       fontSize: scaleBySizeClass(14, sizeClass),

@@ -4,85 +4,87 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { formatPointDifferential, formatRecord, GameListItem } from '@/lib/gameListUtils';
 import { Fonts } from '@/theme/theme';
 
 interface AggregateBottomBarProps {
-  selectedCount: number;
-  onViewAggregated: () => void;
-  onAddToTournament?: () => void;
-  showAddToTournament?: boolean;
-  onShare?: () => void;
-  showShare?: boolean;
+  selectedGames: GameListItem[];
+  onViewStats: () => void;
+  onAddToTournament: () => void;
+  showShare: boolean;
+  onShare: () => void;
   isVisible: boolean;
 }
 
+/** Docked under the game picker: the selection's record, then the actions on it. */
 export default function AggregateBottomBar({
-  selectedCount,
-  onViewAggregated,
+  selectedGames,
+  onViewStats,
   onAddToTournament,
-  showAddToTournament = false,
+  showShare,
   onShare,
-  showShare = false,
   isVisible,
 }: AggregateBottomBarProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
-  const actionIconSize = scaleBySizeClass(20, sizeClass);
-  const singleRow = isLandscape || sizeClass !== 'small';
+  const styles = createStyles(isLandscape, sizeClass);
 
-  if (!isVisible || selectedCount === 0) return null;
+  if (!isVisible || selectedGames.length === 0) return null;
 
-  const tournamentButton = showAddToTournament && onAddToTournament && (
-    <Pressable
-      style={[
-        styles.actionButton,
-        { backgroundColor: palette.accent, shadowColor: palette.shadow },
-      ]}
-      onPress={onAddToTournament}>
-      <MaterialCommunityIcons
-        name="trophy-outline"
-        size={actionIconSize}
-        color={palette.textOnAccent}
-      />
-      <ThemedText style={[styles.actionText, { color: palette.textOnAccent }]}>
-        Add to Tournament
-      </ThemedText>
-    </Pressable>
-  );
+  const record = formatRecord(selectedGames);
+  const selectionSummary = `${selectedGames.length} selected${record != null ? ` · ${record}` : ''}`;
 
   return (
-    <View style={styles.bottomBar}>
-      {!singleRow && tournamentButton}
-      <View style={styles.bottomRow}>
-        {showShare && onShare && (
+    <View
+      style={[styles.bar, { backgroundColor: palette.primary, borderTopColor: palette.overlay08 }]}>
+      <View style={styles.summaryRow}>
+        <ThemedText style={[styles.summaryText, { color: palette.textInverse }]} numberOfLines={1}>
+          {selectionSummary}
+        </ThemedText>
+        <ThemedText style={[styles.diffText, { color: palette.textMuted }]} numberOfLines={1}>
+          {`· ${formatPointDifferential(selectedGames)} point diff`}
+        </ThemedText>
+        {showShare && (
           <Pressable
-            style={[
-              styles.iconButton,
-              { backgroundColor: palette.accent, shadowColor: palette.shadow },
-            ]}
-            onPress={onShare}>
+            accessibilityRole="button"
+            accessibilityLabel="Share games"
+            hitSlop={12}
+            onPress={onShare}
+            style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}>
             <MaterialCommunityIcons
               name="share-variant"
-              size={actionIconSize}
-              color={palette.textOnAccent}
+              size={scaleBySizeClass(20, sizeClass)}
+              color={palette.accent}
             />
           </Pressable>
         )}
-        {singleRow && tournamentButton}
+      </View>
+
+      <View style={styles.actionRow}>
         <Pressable
-          style={[
+          accessibilityRole="button"
+          onPress={onAddToTournament}
+          style={({ pressed }) => [
             styles.actionButton,
-            { backgroundColor: palette.accent, shadowColor: palette.shadow },
-          ]}
-          onPress={onViewAggregated}>
-          <MaterialCommunityIcons
-            name="chart-box"
-            size={actionIconSize}
-            color={palette.textOnAccent}
-          />
-          <ThemedText style={[styles.actionText, { color: palette.textOnAccent }]}>
-            View Combined ({selectedCount} game{selectedCount !== 1 ? 's' : ''})
+            { backgroundColor: palette.accentOverlay15 },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText style={[styles.actionText, { color: palette.accent }]} numberOfLines={1}>
+            Add to tournament
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onViewStats}
+          style={({ pressed }) => [
+            styles.actionButton,
+            { backgroundColor: palette.accent },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText
+            style={[styles.actionText, { color: palette.textOnAccent }]}
+            numberOfLines={1}>
+            View stats
           </ThemedText>
         </Pressable>
       </View>
@@ -90,51 +92,53 @@ export default function AggregateBottomBar({
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
+function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
   return StyleSheet.create({
-    bottomBar: {
-      position: 'absolute',
-      bottom: 32,
-      right: 24,
-      alignItems: 'flex-end',
-      gap: 10,
-      pointerEvents: 'box-none',
+    bar: {
+      gap: scaleBySizeClass(10, sizeClass),
+      borderTopWidth: 1,
+      paddingVertical: scaleBySizeClass(10, sizeClass),
+      // Matches the aggregate screen's content padding so the bar lines up with the list.
+      paddingHorizontal: isLandscape ? 14 : 24,
     },
-    bottomRow: {
+    summaryRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      gap: scaleBySizeClass(6, sizeClass),
     },
-    iconButton: {
-      width: scaleBySizeClass(44, sizeClass),
-      height: scaleBySizeClass(44, sizeClass),
-      borderRadius: 22,
-      alignItems: 'center',
-      justifyContent: 'center',
-      opacity: 0.95,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 6,
-      elevation: 8,
+    summaryText: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+      fontVariant: ['tabular-nums'],
+    },
+    // Takes the leftover width so the point diff truncates before the record.
+    diffText: {
+      flex: 1,
+      fontSize: scaleBySizeClass(14, sizeClass),
+      fontVariant: ['tabular-nums'],
+    },
+    shareButton: {
+      paddingLeft: scaleBySizeClass(8, sizeClass),
+    },
+    // Paired actions share one width.
+    actionRow: {
+      flexDirection: 'row',
+      gap: scaleBySizeClass(8, sizeClass),
     },
     actionButton: {
-      flexDirection: 'row',
+      flex: 1,
+      height: scaleBySizeClass(44, sizeClass),
+      borderRadius: 10,
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      borderRadius: 25,
-      opacity: 0.95,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 6,
-      elevation: 8,
     },
     actionText: {
       fontSize: scaleBySizeClass(15, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: 0.3,
+      fontFamily: Fonts.semiBold,
+    },
+    pressed: {
+      opacity: 0.7,
     },
   });
 }
