@@ -18,6 +18,12 @@ import { TournamentKind } from '@/lib/storage/types';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 
+function getStartOfToday(): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
 export default function CreateTournamentScreen() {
   const { palette, themeMode } = useTheme();
   const { sizeClass } = useLayout();
@@ -29,12 +35,9 @@ export default function CreateTournamentScreen() {
     gameIds: string;
   }>();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
+  const [startDate, setStartDate] = useState(getStartOfToday);
+  const [endDate, setEndDate] = useState(getStartOfToday);
   const trimmedName = name.trim();
   const isDuplicate = tournaments.some((t) => t.name.toLowerCase() === trimmedName.toLowerCase());
   const isSaveDisabled = !trimmedName || isDuplicate;

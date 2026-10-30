@@ -51,6 +51,7 @@ Maestro 2.5.1 rows used `--shard-split`; maestro-runner 1.1.28 rows used `--para
 | 2026-10-21 | maestro-runner | 1      | 70    | 20m50s    | 1.6x    | 0–1    |
 | 2026-10-21 | maestro-runner | 3      | 70    | 7m54s     | 4.3x    | 2      |
 | 2026-10-21 | maestro-runner | 3      | 70    | 8m03s     | 4.2x    | 3      |
+| 2026-10-30 | maestro-runner | 3      | 73    | 8m10s     | 4.1x    | 0      |
 
 With Maestro, each added shard returns less: 2 shards run at about 80% per-device efficiency, 3 at
 about 65%, and flakes grow with load. maestro-runner's shared queue keeps 3 simulators at about 87%
@@ -68,8 +69,10 @@ Group failures before reading individual flows:
 - **Different results on different devices**: compare device size and dev-client build dates
   before suspecting app code.
 
-Rerun each remaining failure alone with `npx maestro-runner --platform ios --device <udid> test <flow>`
-on one simulator; only failures that reproduce alone are real. Read the failing command and `bounds`
+Rerun each remaining failure alone with
+`npx maestro-runner --platform ios --device <udid> --output .maestro/test-output/reports test <flow>`
+on one simulator; only failures that reproduce alone are real. Without `--output`, maestro-runner
+writes reports to an untracked `reports/` folder in the repo root. Read the failing command and `bounds`
 in `maestro-runner.log` next to the screenshot. Under load, a menu item missing right after the menu
 opens has been a load flake in both runners. Patterns seen so far:
 

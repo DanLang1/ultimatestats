@@ -14,10 +14,8 @@ tags:
     timeout: 5000
 - assertNotVisible:
     id: 'hub-tab-stats'
-# maestro-runner finds header-action-timeline here, but its id tap never opened the timeline on
-# this scoreboard path (it works from the tracker and by hand). A tap at the button's position does.
 - tapOn:
-    point: '79%,10%'
+    id: 'header-action-timeline'
 - extendedWaitUntil:
     visible: 'GAME TIMELINE'
     timeout: 5000

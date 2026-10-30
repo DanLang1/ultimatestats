@@ -207,9 +207,9 @@ export function getAdvancedLineCorrectionRestrictions(
     game.sides.map((side) => [
       side.id,
       new Set(
-        (point.subs ?? [])
-          .filter((sub) => sub.sideId === side.id)
-          .flatMap((sub) => [...sub.inIds, ...sub.outIds]),
+        (point.subs ?? []).flatMap((sub) =>
+          sub.sideId === side.id ? [...sub.inIds, ...sub.outIds] : [],
+        ),
       ),
     ]),
   );

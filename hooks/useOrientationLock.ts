@@ -1,14 +1,11 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 
 import { OrientationMode } from '@/store/settingsStore';
 
 export function useOrientationLock(mode: OrientationMode) {
   useEffect(() => {
     const applyOrientation = async () => {
-      if (Platform.OS === 'web') return;
-
       try {
         if (mode === 'portrait') {
           await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);

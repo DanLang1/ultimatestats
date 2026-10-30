@@ -69,6 +69,8 @@ export default function AdvancedSavedGameStatsScreen({
   );
   const [selectedSideId, setSelectedSideId] = useState<string | null>(null);
   const [showGameNote, setShowGameNote] = useState(false);
+  // Upper bound for the iOS picker; the change handler still rejects future dates.
+  const [latestPlayedAtDate] = useState(() => new Date());
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
   const handleBack = () => {
@@ -311,7 +313,7 @@ export default function AdvancedSavedGameStatsScreen({
                 value={new Date(timestamp)}
                 mode="datetime"
                 display="compact"
-                maximumDate={new Date()}
+                maximumDate={latestPlayedAtDate}
                 minimumDate={MIN_PLAYED_AT_DATE}
                 onValueChange={handleDateChange}
                 themeVariant={themeMode}

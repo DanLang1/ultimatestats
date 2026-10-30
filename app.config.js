@@ -116,10 +116,6 @@ export default {
       },
     ],
   },
-  web: {
-    output: 'static',
-    favicon: './assets/images/icon.png',
-  },
   plugins: [
     'expo-router',
     [

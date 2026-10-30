@@ -46,6 +46,8 @@ export default function SavedGameStatsScreen() {
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
+  // Upper bound for the iOS picker; the change handler still rejects future dates.
+  const [latestPlayedAtDate] = useState(() => new Date());
 
   const selectedGame = gameId ? (savedGames.find((game) => game.id === gameId) ?? null) : null;
 
@@ -98,6 +100,7 @@ export default function SavedGameStatsScreen() {
 
   const handleDateChange = async (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
     if (!selectedGame) return;
+    // oxlint-disable-next-line react/purity -- false positive: runs in an event handler, not render (oxc-project/oxc#27309, fixed after oxlint 1.90). Remove on the next oxlint upgrade.
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
     await updateSavedGamePlayedAt(selectedGame.id, selectedValue.getTime());
@@ -125,6 +128,7 @@ export default function SavedGameStatsScreen() {
 
   const handleOpenAndroidDatePicker = () => {
     if (!selectedGame) return;
+    // oxlint-disable-next-line react/purity -- false positive: runs in an event handler, not render (oxc-project/oxc#27309, fixed after oxlint 1.90). Remove on the next oxlint upgrade.
     const now = new Date();
     DateTimePickerAndroid.open({
       value: new Date(getGameDisplayTimestamp(selectedGame)),
@@ -277,7 +281,7 @@ export default function SavedGameStatsScreen() {
                   value={new Date(getGameDisplayTimestamp(selectedGame))}
                   mode="datetime"
                   display="compact"
-                  maximumDate={new Date()}
+                  maximumDate={latestPlayedAtDate}
                   minimumDate={MIN_PLAYED_AT_DATE}
                   onValueChange={handleDateChange}
                   themeVariant={themeMode}
