@@ -1,7 +1,4 @@
-import DateTimePicker, {
-  DateTimePickerAndroid,
-  DateTimePickerChangeEvent,
-} from '@react-native-community/datetimepicker';
+import { DateTimePicker, type DateTimePickerChangeEvent } from '@expo/ui/community/datetime-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -9,6 +6,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { AndroidPickerDialog } from '@/components/ui/AndroidPickerDialog';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -38,6 +36,7 @@ export default function CreateTournamentScreen() {
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState(getStartOfToday);
   const [endDate, setEndDate] = useState(getStartOfToday);
+  const [androidPickerField, setAndroidPickerField] = useState<'start' | 'end' | null>(null);
   const trimmedName = name.trim();
   const isDuplicate = tournaments.some((t) => t.name.toLowerCase() === trimmedName.toLowerCase());
   const isSaveDisabled = !trimmedName || isDuplicate;
@@ -56,31 +55,7 @@ export default function CreateTournamentScreen() {
     setEndDate(selected);
   };
 
-  const handleOpenAndroidStartPicker = () => {
-    DateTimePickerAndroid.open({
-      value: startDate,
-      mode: 'date',
-      onValueChange: (_event, date) => {
-        date.setHours(0, 0, 0, 0);
-        setStartDate(date);
-        if (date > endDate) {
-          setEndDate(date);
-        }
-      },
-    });
-  };
-
-  const handleOpenAndroidEndPicker = () => {
-    DateTimePickerAndroid.open({
-      value: endDate,
-      mode: 'date',
-      minimumDate: startDate,
-      onValueChange: (_event, date) => {
-        date.setHours(0, 0, 0, 0);
-        setEndDate(date);
-      },
-    });
-  };
+  const closeAndroidPicker = () => setAndroidPickerField(null);
 
   const handleSave = async () => {
     if (!trimmedName || isDuplicate) return;
@@ -137,6 +112,7 @@ export default function CreateTournamentScreen() {
                   value={startDate}
                   mode="date"
                   display="compact"
+                  style={styles.datePicker}
                   onValueChange={handleStartDateChange}
                   themeVariant={themeMode}
                   accentColor={palette.accent}
@@ -149,7 +125,7 @@ export default function CreateTournamentScreen() {
                   { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
                   pressed && styles.dateCardPressed,
                 ]}
-                onPress={handleOpenAndroidStartPicker}>
+                onPress={() => setAndroidPickerField('start')}>
                 <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
                   {formatDateForDisplay(startDate)}
                 </ThemedText>
@@ -169,6 +145,7 @@ export default function CreateTournamentScreen() {
                   value={endDate}
                   mode="date"
                   display="compact"
+                  style={styles.datePicker}
                   minimumDate={startDate}
                   onValueChange={handleEndDateChange}
                   themeVariant={themeMode}
@@ -182,13 +159,39 @@ export default function CreateTournamentScreen() {
                   { backgroundColor: palette.overlay05, borderColor: palette.overlay10 },
                   pressed && styles.dateCardPressed,
                 ]}
-                onPress={handleOpenAndroidEndPicker}>
+                onPress={() => setAndroidPickerField('end')}>
                 <ThemedText style={[styles.dateValue, { color: palette.textInverse }]}>
                   {formatDateForDisplay(endDate)}
                 </ThemedText>
               </Pressable>
             )}
           </View>
+
+          {androidPickerField === 'start' && (
+            <AndroidPickerDialog
+              value={startDate}
+              mode="date"
+              accentColor={palette.accent}
+              onValueChange={(event, date) => {
+                closeAndroidPicker();
+                handleStartDateChange(event, date);
+              }}
+              onDismiss={closeAndroidPicker}
+            />
+          )}
+          {androidPickerField === 'end' && (
+            <AndroidPickerDialog
+              value={endDate}
+              mode="date"
+              minimumDate={startDate}
+              accentColor={palette.accent}
+              onValueChange={(event, date) => {
+                closeAndroidPicker();
+                handleEndDateChange(event, date);
+              }}
+              onDismiss={closeAndroidPicker}
+            />
+          )}
 
           <Pressable
             style={[
@@ -244,6 +247,10 @@ function createStyles(sizeClass: SizeClass) {
       padding: 14,
       flexDirection: 'row',
       alignItems: 'center',
+    },
+    // The SwiftUI host only sizes its own height, so it needs a width from the row.
+    datePicker: {
+      flex: 1,
     },
     dateCardPressed: {
       opacity: 0.7,

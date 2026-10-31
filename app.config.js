@@ -158,7 +158,6 @@ export default {
     'expo-image',
     'expo-sharing',
     'expo-web-browser',
-    '@react-native-community/datetimepicker',
     'expo-sqlite',
     'expo-status-bar',
     [

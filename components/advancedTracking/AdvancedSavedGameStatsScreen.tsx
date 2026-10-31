@@ -1,7 +1,4 @@
-import DateTimePicker, {
-  DateTimePickerAndroid,
-  DateTimePickerChangeEvent,
-} from '@react-native-community/datetimepicker';
+import { DateTimePicker, type DateTimePickerChangeEvent } from '@expo/ui/community/datetime-picker';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
@@ -16,6 +13,7 @@ import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsCon
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { AndroidDateTimeDialog } from '@/components/ui/AndroidDateTimeDialog';
 import {
   ResponsiveHeaderAction,
   ResponsiveHeaderActions,
@@ -69,8 +67,9 @@ export default function AdvancedSavedGameStatsScreen({
   );
   const [selectedSideId, setSelectedSideId] = useState<string | null>(null);
   const [showGameNote, setShowGameNote] = useState(false);
-  // Upper bound for the iOS picker; the change handler still rejects future dates.
+  // Upper bound for the date picker; the change handler still rejects future dates.
   const [latestPlayedAtDate] = useState(() => new Date());
+  const [isAndroidDatePickerOpen, setIsAndroidDatePickerOpen] = useState(false);
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
   const handleBack = () => {
@@ -124,28 +123,6 @@ export default function AdvancedSavedGameStatsScreen({
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
     await handleUpdatePlayedAt(selectedValue.getTime());
-  };
-
-  const handleOpenAndroidDatePicker = () => {
-    const now = new Date();
-    DateTimePickerAndroid.open({
-      value: new Date(timestamp),
-      mode: 'date',
-      maximumDate: now,
-      minimumDate: MIN_PLAYED_AT_DATE,
-      onValueChange: (_event, date) => {
-        DateTimePickerAndroid.open({
-          value: date,
-          mode: 'time',
-          is24Hour: false,
-          onValueChange: async (_timeEvent, finalDate) => {
-            if (finalDate.getTime() <= now.getTime()) {
-              await handleUpdatePlayedAt(finalDate.getTime());
-            }
-          },
-        });
-      },
-    });
   };
 
   const handleExportCSV = () =>
@@ -345,7 +322,7 @@ export default function AdvancedSavedGameStatsScreen({
               { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
               pressed && styles.dateCardPressed,
             ]}
-            onPress={handleOpenAndroidDatePicker}>
+            onPress={() => setIsAndroidDatePickerOpen(true)}>
             <View style={styles.dateCardContent}>
               <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
                 PLAYED AT
@@ -379,6 +356,16 @@ export default function AdvancedSavedGameStatsScreen({
               />
             </View>
           </Pressable>
+        )}
+        {isAndroidDatePickerOpen && (
+          <AndroidDateTimeDialog
+            value={new Date(timestamp)}
+            minimumDate={MIN_PLAYED_AT_DATE}
+            maximumDate={latestPlayedAtDate}
+            accentColor={palette.accent}
+            onValueChange={handleDateChange}
+            onClose={() => setIsAndroidDatePickerOpen(false)}
+          />
         )}
 
         {canSelectEitherSide && (

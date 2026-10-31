@@ -1,7 +1,4 @@
-import DateTimePicker, {
-  DateTimePickerAndroid,
-  DateTimePickerChangeEvent,
-} from '@react-native-community/datetimepicker';
+import { DateTimePicker, type DateTimePickerChangeEvent } from '@expo/ui/community/datetime-picker';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -10,6 +7,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
+import { AndroidDateTimeDialog } from '@/components/ui/AndroidDateTimeDialog';
 import {
   ResponsiveHeaderAction,
   ResponsiveHeaderActions,
@@ -46,8 +44,9 @@ export default function SavedGameStatsScreen() {
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
-  // Upper bound for the iOS picker; the change handler still rejects future dates.
+  // Upper bound for the date picker; the change handler still rejects future dates.
   const [latestPlayedAtDate] = useState(() => new Date());
+  const [isAndroidDatePickerOpen, setIsAndroidDatePickerOpen] = useState(false);
 
   const selectedGame = gameId ? (savedGames.find((game) => game.id === gameId) ?? null) : null;
 
@@ -123,30 +122,6 @@ export default function SavedGameStatsScreen() {
           },
         },
       ],
-    });
-  };
-
-  const handleOpenAndroidDatePicker = () => {
-    if (!selectedGame) return;
-    // oxlint-disable-next-line react/purity -- false positive: runs in an event handler, not render (oxc-project/oxc#27309, fixed after oxlint 1.90). Remove on the next oxlint upgrade.
-    const now = new Date();
-    DateTimePickerAndroid.open({
-      value: new Date(getGameDisplayTimestamp(selectedGame)),
-      mode: 'date',
-      maximumDate: now,
-      minimumDate: MIN_PLAYED_AT_DATE,
-      onValueChange: (_event, date) => {
-        DateTimePickerAndroid.open({
-          value: date,
-          mode: 'time',
-          is24Hour: false,
-          onValueChange: async (_timeEvent, finalDate) => {
-            if (finalDate.getTime() <= now.getTime()) {
-              await updateSavedGamePlayedAt(selectedGame.id, finalDate.getTime());
-            }
-          },
-        });
-      },
     });
   };
 
@@ -301,7 +276,7 @@ export default function SavedGameStatsScreen() {
                 { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
                 pressed && styles.dateCardPressed,
               ]}
-              onPress={handleOpenAndroidDatePicker}>
+              onPress={() => setIsAndroidDatePickerOpen(true)}>
               <View style={styles.dateCardContent}>
                 <ThemedText style={[styles.dateLabel, { color: palette.textMuted }]}>
                   PLAYED AT
@@ -321,6 +296,16 @@ export default function SavedGameStatsScreen() {
                 color={palette.textMuted}
               />
             </Pressable>
+          )}
+          {isAndroidDatePickerOpen && (
+            <AndroidDateTimeDialog
+              value={new Date(getGameDisplayTimestamp(selectedGame))}
+              minimumDate={MIN_PLAYED_AT_DATE}
+              maximumDate={latestPlayedAtDate}
+              accentColor={palette.accent}
+              onValueChange={handleDateChange}
+              onClose={() => setIsAndroidDatePickerOpen(false)}
+            />
           )}
           <StatsContent
             team1Name={gameTeamName ?? selectedGame.team1.name}

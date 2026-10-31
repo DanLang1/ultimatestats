@@ -1,5 +1,5 @@
+import type { DateTimePickerProps } from '@expo/ui/community/datetime-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { act, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { File } from 'expo-file-system';
 import { router } from 'expo-router';
@@ -37,6 +37,13 @@ jest.mock('expo-file-system', () => ({
     delete() {
       this.exists = false;
     }
+  },
+}));
+const mockPickerRenders: DateTimePickerProps[] = [];
+jest.mock('@expo/ui/community/datetime-picker', () => ({
+  DateTimePicker: (props: DateTimePickerProps) => {
+    mockPickerRenders.push(props);
+    return null;
   },
 }));
 jest.mock('expo-sharing', () => ({
@@ -247,16 +254,18 @@ it.each(['basic', 'advanced'] as const)(
   'persists an Android played-at correction for a %s game and rejects a future time',
   async (kind) => {
     jest.replaceProperty(Platform, 'OS', 'android');
-    const open = jest.spyOn(DateTimePickerAndroid, 'open').mockImplementation(() => {});
+    mockPickerRenders.length = 0;
+    const latestDialog = (mode: 'date' | 'time') =>
+      mockPickerRenders.findLast(
+        (props) => props.presentation === 'dialog' && props.mode === mode,
+      )!;
     const id = await arrangeDetail(kind);
     const user = userEvent.setup();
     const past = new Date('2026-01-02T12:30:00.000Z');
     const event = { nativeEvent: { timestamp: past.getTime(), utcOffset: 0 } };
     await user.press(screen.getByText('PLAYED AT'));
-    expect(open.mock.calls[0][0].mode).toBe('date');
-    await act(async () => open.mock.calls[0][0].onValueChange!(event, past));
-    expect(open.mock.calls[1][0].mode).toBe('time');
-    await act(async () => open.mock.calls[1][0].onValueChange!(event, past));
+    await act(async () => latestDialog('date').onValueChange!(event, past));
+    await act(async () => latestDialog('time').onValueChange!(event, past));
     const readPlayedAt = async () =>
       kind === 'basic'
         ? useGameStore.getState().savedGames.find((game) => game.id === id)?.playedAt
@@ -264,11 +273,16 @@ it.each(['basic', 'advanced'] as const)(
             (await useSavedAdvancedGamesStore.getState().loadGame(id))!.metadata!.date!,
           ).getTime();
     expect(await readPlayedAt()).toBe(past.getTime());
+    // Cancelling the time step closes the dialog; the next press starts again at the date step.
     await user.press(screen.getByText('PLAYED AT'));
-    await act(async () => open.mock.calls[2][0].onValueChange!(event, past));
+    await act(async () => latestDialog('date').onValueChange!(event, past));
+    await act(async () => latestDialog('time').onDismiss!());
+    mockPickerRenders.length = 0;
+    await user.press(screen.getByText('PLAYED AT'));
+    await act(async () => latestDialog('date').onValueChange!(event, past));
     const future = new Date(Date.now() + 86_400_000);
     await act(async () =>
-      open.mock.calls[3][0].onValueChange!(
+      latestDialog('time').onValueChange!(
         { nativeEvent: { timestamp: future.getTime(), utcOffset: 0 } },
         future,
       ),
