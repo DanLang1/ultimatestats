@@ -128,6 +128,7 @@ export function ShareConfirmModalContent({
               pressed && !isLoading && styles.buttonPressed,
               isLoading && { opacity: 0.5 },
             ]}
+            testID="share-confirm-cancel"
             onPress={handleCancel}
             disabled={isLoading}>
             <ThemedText style={[styles.buttonText, { color: palette.modalText }]}>

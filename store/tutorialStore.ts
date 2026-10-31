@@ -11,7 +11,6 @@ interface TutorialState {
   hasSeenAdvancedTutorial: boolean;
   hasSeenAdvancedVoiceHint: boolean;
   shouldShowStatsTutorialOnNextGameStart: boolean;
-  hasSeenLongPressSelectHint: boolean;
 
   // Runtime
   hasHydrated: boolean;
@@ -23,7 +22,6 @@ interface TutorialState {
   resetStatsTutorial: () => void;
   completeAdvancedTutorial: () => void;
   dismissAdvancedVoiceHint: () => void;
-  dismissLongPressSelectHint: () => void;
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
@@ -35,7 +33,6 @@ export const useTutorialStore = create<TutorialState>()(
       hasSeenAdvancedTutorial: false,
       hasSeenAdvancedVoiceHint: false,
       shouldShowStatsTutorialOnNextGameStart: false,
-      hasSeenLongPressSelectHint: false,
       hasHydrated: false,
 
       completeTutorial: () => set({ hasSeenOnboarding: true }),
@@ -70,8 +67,6 @@ export const useTutorialStore = create<TutorialState>()(
 
       dismissAdvancedVoiceHint: () => set({ hasSeenAdvancedVoiceHint: true }),
 
-      dismissLongPressSelectHint: () => set({ hasSeenLongPressSelectHint: true }),
-
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
@@ -83,7 +78,6 @@ export const useTutorialStore = create<TutorialState>()(
         hasSeenAdvancedTutorial: state.hasSeenAdvancedTutorial,
         hasSeenAdvancedVoiceHint: state.hasSeenAdvancedVoiceHint,
         shouldShowStatsTutorialOnNextGameStart: state.shouldShowStatsTutorialOnNextGameStart,
-        hasSeenLongPressSelectHint: state.hasSeenLongPressSelectHint,
       }),
       onRehydrateStorage: (state) => (_rehydratedState, error) => {
         reportHydrationError('tutorial', error);

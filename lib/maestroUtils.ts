@@ -417,7 +417,6 @@ export async function seedMaestroOnboardingPrerequisites() {
     hasSeenAdvancedTutorial: false,
     hasSeenAdvancedVoiceHint: false,
     shouldShowStatsTutorialOnNextGameStart: false,
-    hasSeenLongPressSelectHint: false,
     hasHydrated: true,
   });
 }

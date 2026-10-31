@@ -1,4 +1,3 @@
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { router, Stack } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
@@ -229,26 +228,13 @@ export default function StatsScreen() {
     handleExitSelectionMode();
   };
 
-  const selectIconColor = selectionMode ? palette.accent : palette.textMuted;
   const headerActions: ResponsiveHeaderAction[] = [
     {
       key: 'select',
       label: selectionMode ? 'Cancel' : 'Select',
+      accessibilityLabel: selectionMode ? 'Cancel selection' : 'Select games',
       onPress: handleToggleSelectionMode,
-      inlineIcon: (
-        <MaterialCommunityIcons
-          name="checkbox-multiple-outline"
-          size={scaleBySizeClass(22, sizeClass)}
-          color={selectIconColor}
-        />
-      ),
-      menuIcon: (
-        <MaterialCommunityIcons
-          name="checkbox-multiple-outline"
-          size={scaleBySizeClass(20, sizeClass)}
-          color={selectIconColor}
-        />
-      ),
+      inlineStyle: 'text',
     },
   ];
 

@@ -16,7 +16,6 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatDayTitle } from '@/lib/dateUtils';
 import { formatRecord, GameKind, GameListItem, isScrimmage } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
-import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
 interface SavedGamesListProps {
@@ -94,7 +93,6 @@ export default function SavedGamesList({
   summaryAction,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
-  const { hasSeenLongPressSelectHint, dismissLongPressSelectHint } = useTutorialStore();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
@@ -340,7 +338,6 @@ export default function SavedGamesList({
                       }}
                       onLongPress={() => {
                         if (!selectionMode) {
-                          dismissLongPressSelectHint();
                           onEnterSelectionWithGame?.(game.id);
                         }
                       }}
@@ -352,19 +349,6 @@ export default function SavedGamesList({
           );
         })}
       </View>
-
-      {!hasSeenLongPressSelectHint && filteredAndSortedGames.length > 0 && (
-        <View style={styles.longPressHint}>
-          <MaterialCommunityIcons
-            name="gesture-tap-hold"
-            size={scaleBySizeClass(14, sizeClass)}
-            color={palette.textMuted}
-          />
-          <ThemedText style={[styles.longPressHintText, { color: palette.textMuted }]}>
-            Long press a game to select. Also toggleable from top right.
-          </ThemedText>
-        </View>
-      )}
 
       {filteredAndSortedGames.length === 0 &&
         effectiveTournamentFilter &&
@@ -524,16 +508,6 @@ function createStyles(sizeClass: SizeClass) {
     groupSurface: {
       borderRadius: 14,
       overflow: 'hidden',
-    },
-    longPressHint: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 8,
-    },
-    longPressHintText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
     },
   });
 }

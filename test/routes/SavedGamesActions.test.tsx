@@ -8,7 +8,6 @@ import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
-import { useTutorialStore } from '@/store/tutorialStore';
 import { createDeferred } from '@/test/deferred';
 import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
 import { createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
@@ -123,7 +122,7 @@ it('caps advanced game shares at four while basic shares allow more', async () =
   await user.press(screen.getByText('Advanced Rival E'));
   await user.press(screen.getByText('Share (4)'));
   expect(screen.getByText('Share Data?')).toBeVisible();
-  await user.press(screen.getByText('Cancel'));
+  await user.press(screen.getByTestId('share-confirm-cancel'));
 
   for (const label of rivals.slice(0, 4)) await user.press(screen.getByText(`Advanced ${label}`));
   for (const label of rivals) await user.press(screen.getByText(`Basic ${label}`));
@@ -175,7 +174,7 @@ it('cancels sharing without losing selection and clears selection when search ch
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
   await user.press(screen.getByText('Share (1)'));
-  await user.press(screen.getByText('Cancel'));
+  await user.press(screen.getByTestId('share-confirm-cancel'));
   expect(screen.getByText('Share (1)')).toBeVisible();
   await user.type(screen.getByPlaceholderText('Search teams or dates...'), 'Second');
   expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
@@ -212,7 +211,7 @@ it('waits for upload and clipboard completion before showing share results', asy
   await user.press(screen.getByText('Share (1)'));
   expect(screen.getByText(/names, lines, and stats/)).toBeVisible();
   await user.press(screen.getByText('Proceed'));
-  await user.press(screen.getByText('Cancel'));
+  await user.press(screen.getByTestId('share-confirm-cancel'));
   expect(screen.getByText('Share Data?')).toBeVisible();
   expect(screen.queryByText('Share Link Ready')).not.toBeOnTheScreen();
   await act(async () => upload.resolve(new Response(null, { status: 201 })));
@@ -355,7 +354,7 @@ it.each([
   }
 });
 
-it('enters bulk selection by long press, dismisses its hint, and excludes the other tracking kind', async () => {
+it('enters bulk selection by long press and excludes the other tracking kind', async () => {
   for (const gameType of ['game', 'scrimmage'] as const) {
     await useSavedAdvancedGamesStore.getState().saveGame(
       createAdvancedGameScenario({
@@ -375,11 +374,10 @@ it('enters bulk selection by long press, dismisses its hint, and excludes the ot
   expect(screen.getByText('Scrimmage')).toBeVisible();
   expect(screen.getByText('Basic')).toBeVisible();
   expect(screen.queryByText(/Advanced/)).not.toBeOnTheScreen();
-  expect(screen.getByText(/Long press a game to select/)).toBeVisible();
+  expect(screen.getByTestId('header-action-select')).toHaveTextContent('Select');
   await user.longPress(screen.getByText('Rivals'), { duration: 400 });
   expect(screen.getByText('Share (1)')).toBeVisible();
-  expect(screen.queryByText(/Long press a game to select/)).not.toBeOnTheScreen();
-  expect(useTutorialStore.getState().hasSeenLongPressSelectHint).toBe(true);
+  expect(screen.getByTestId('header-action-select')).toHaveTextContent('Cancel');
   for (const advancedRowOpponent of screen.getAllByText('Dark')) {
     await user.press(advancedRowOpponent);
   }
@@ -387,4 +385,9 @@ it('enters bulk selection by long press, dismisses its hint, and excludes the ot
   expect(router.push).not.toHaveBeenCalled();
   await user.press(screen.getByText('Rivals'));
   expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+  await user.press(screen.getByText('Rivals'));
+  expect(screen.getByText('Share (1)')).toBeVisible();
+  await user.press(screen.getByTestId('header-action-select'));
+  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+  expect(screen.getByTestId('header-action-select')).toHaveTextContent('Select');
 });
