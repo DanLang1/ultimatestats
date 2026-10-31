@@ -315,6 +315,7 @@ it('finds games by the weekday shown in day headings and dates rows with the yea
   arrangeSortableGames();
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
+  expect(screen.queryByText(/\d{1,2}:\d{2}/)).not.toBeOnTheScreen();
   const hybridWeekday = new Date(Date.UTC(2026, 0, 3)).toLocaleDateString(undefined, {
     weekday: 'short',
   });
@@ -326,7 +327,7 @@ it('finds games by the weekday shown in day headings and dates rows with the yea
   await user.clear(screen.getByPlaceholderText('Search teams or dates...'));
   await user.press(screen.getByTestId('saved-games-sort'));
   await user.press(screen.getByTestId('saved-games-sort-option-team-asc'));
-  expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}, \d{4}$/)).toHaveLength(3);
+  expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}, \d{4} · Basic$/)).toHaveLength(3);
   await user.type(screen.getByPlaceholderText('Search teams or dates...'), 'missing');
   expect(screen.getByText('No games match "missing"')).toBeVisible();
 });
@@ -371,15 +372,17 @@ it('enters bulk selection by long press, dismisses its hint, and excludes the ot
   useGameStore.setState({ savedGames: [createSavedBasicGame()] });
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
-  expect(screen.getByText(/ · Scrimmage$/)).toBeVisible();
-  expect(screen.getByText(/ · Advanced$/)).toBeVisible();
+  expect(screen.getByText('Scrimmage')).toBeVisible();
+  expect(screen.getByText('Basic')).toBeVisible();
+  expect(screen.queryByText(/Advanced/)).not.toBeOnTheScreen();
   expect(screen.getByText(/Long press a game to select/)).toBeVisible();
   await user.longPress(screen.getByText('Rivals'), { duration: 400 });
   expect(screen.getByText('Share (1)')).toBeVisible();
   expect(screen.queryByText(/Long press a game to select/)).not.toBeOnTheScreen();
   expect(useTutorialStore.getState().hasSeenLongPressSelectHint).toBe(true);
-  await user.press(screen.getByText(/ · Advanced$/));
-  await user.press(screen.getByText(/ · Scrimmage$/));
+  for (const advancedRowOpponent of screen.getAllByText('Dark')) {
+    await user.press(advancedRowOpponent);
+  }
   expect(screen.getByText('Share (1)')).toBeVisible();
   expect(router.push).not.toHaveBeenCalled();
   await user.press(screen.getByText('Rivals'));

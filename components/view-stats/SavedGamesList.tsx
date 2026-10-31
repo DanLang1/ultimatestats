@@ -14,7 +14,7 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatDayTitle } from '@/lib/dateUtils';
-import { formatRecord, GameKind, GameListItem } from '@/lib/gameListUtils';
+import { formatRecord, GameKind, GameListItem, isScrimmage } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
@@ -44,10 +44,6 @@ interface SavedGameGroup {
   games: GameListItem[];
 }
 
-function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-}
-
 /** Outside day groups, the year tells games from different seasons apart. */
 function formatShortDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString(undefined, {
@@ -55,6 +51,12 @@ function formatShortDate(timestamp: number): string {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+/** Advanced is the default mode, so only basic games and scrimmages are labeled. */
+function getGameModeLabel(game: GameListItem): string | null {
+  if (game.kind === 'basic') return 'Basic';
+  return isScrimmage(game) ? 'Scrimmage' : null;
 }
 
 /** Groups consecutive games that share a calendar day, preserving the sorted order. */
@@ -136,8 +138,8 @@ export default function SavedGamesList({
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
       const t1 = game.myTeamName.toLowerCase();
       const t2 = game.opponentName.toLowerCase();
-      // Matches the day heading and time the list shows, e.g. "Thu, Oct 29, 2026 5:44 PM".
-      const date = `${formatDayTitle(game.timestamp)} ${formatTime(game.timestamp)}`.toLowerCase();
+      // Matches the day heading the list shows, e.g. "Thu, Oct 29, 2026".
+      const date = formatDayTitle(game.timestamp).toLowerCase();
       return t1.includes(query) || t2.includes(query) || date.includes(query);
     });
   }
@@ -312,19 +314,19 @@ export default function SavedGamesList({
               <View style={[styles.groupSurface, { backgroundColor: palette.overlay05 }]}>
                 {group.games.map((game, index) => {
                   const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
-                  const whenLabel = isGroupedByDay
-                    ? formatTime(game.timestamp)
-                    : formatShortDate(game.timestamp);
-                  const detailParts = [whenLabel];
-                  if (game.kind === 'advanced') {
-                    detailParts.push(game.gameType === 'scrimmage' ? 'Scrimmage' : 'Advanced');
+                  // Day headers already carry the date, so rows only repeat it when ungrouped.
+                  const detailParts = isGroupedByDay ? [] : [formatShortDate(game.timestamp)];
+                  const modeLabel = getGameModeLabel(game);
+                  if (modeLabel != null) {
+                    detailParts.push(modeLabel);
                   }
+                  const detailLabel = detailParts.length > 0 ? detailParts.join(' · ') : null;
 
                   return (
                     <SavedGameResultRow
                       key={game.id}
                       game={game}
-                      detailLabel={detailParts.join(' · ')}
+                      detailLabel={detailLabel}
                       showDivider={index < group.games.length - 1}
                       selectionMode={selectionMode}
                       isSelectable={isSelectable}

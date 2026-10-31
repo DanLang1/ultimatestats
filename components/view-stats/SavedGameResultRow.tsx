@@ -19,8 +19,8 @@ type RowResult = GameResult | 'scrimmage';
 
 interface SavedGameResultRowProps {
   game: GameListItem;
-  /** Supporting line under the matchup, e.g. "8:58 AM · Advanced". */
-  detailLabel: string;
+  /** Supporting line under the matchup, e.g. "Oct 3, 2026 · Basic"; null hides the line. */
+  detailLabel: string | null;
   showDivider: boolean;
   selectionMode: boolean;
   isSelectable: boolean;
@@ -94,9 +94,11 @@ export default function SavedGameResultRow({
             {game.opponentName}
           </ThemedText>
         </ThemedText>
-        <ThemedText style={[styles.detailText, { color: palette.textMuted }]} numberOfLines={1}>
-          {detailLabel}
-        </ThemedText>
+        {detailLabel != null && (
+          <ThemedText style={[styles.detailText, { color: palette.textMuted }]} numberOfLines={1}>
+            {detailLabel}
+          </ThemedText>
+        )}
       </View>
 
       <View style={styles.scoreColumn}>
