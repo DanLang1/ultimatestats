@@ -187,3 +187,34 @@ describe('advanced aggregate recovery', () => {
     expect(screen.getByLabelText(/versus Falcons/)).toBeVisible();
   });
 });
+
+describe('advanced combined stats', () => {
+  beforeEach(async () => {
+    resetAllStores();
+    resetMockRouter();
+    await AsyncStorage.clear();
+  });
+
+  it('shows the record and per-game margins, and opens a player across the combined games', async () => {
+    await arrangeGames('advanced');
+    const user = userEvent.setup();
+    await renderScreen(<AggregateStatsScreen />);
+    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
+    await user.press(screen.getByText('Select all'));
+    await user.press(screen.getByText('View stats'));
+
+    expect(screen.getByTestId('advanced-stats-combined-record')).toHaveTextContent('2–0');
+    expect(screen.getByTestId('game-margins-section')).toBeVisible();
+
+    await user.press(screen.getByTestId('advanced-stats-row-blair'));
+    expect(router.push).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({
+          gameId: 'aggregate',
+          // Both combined games, in either order.
+          aggregateGameIds: expect.stringMatching(/^(first,second|second,first)$/),
+        }),
+      }),
+    );
+  });
+});

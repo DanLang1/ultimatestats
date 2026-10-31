@@ -125,24 +125,54 @@ export function formatRecord(games: GameListItem[]): string | null {
   );
   if (trackedTeams.size > 1) return null;
 
+  const scrimmages = games.filter(isScrimmage).length;
+  const scrimmageLabel = formatScrimmageCount(scrimmages);
+  const record = formatWinLossRecord(games);
+  if (record == null) return scrimmageLabel;
+  return scrimmages > 0 ? `${record} · ${scrimmageLabel}` : record;
+}
+
+/** "1 scrim" or "3 scrims". */
+function formatScrimmageCount(count: number): string {
+  return `${count} ${count === 1 ? 'scrim' : 'scrims'}`;
+}
+
+/** Wins–losses, plus ties when there are any; null when every game is a scrimmage. */
+function formatWinLossRecord(games: GameListItem[]): string | null {
   let wins = 0;
   let losses = 0;
   let ties = 0;
-  let scrimmages = 0;
   for (const game of games) {
-    if (isScrimmage(game)) {
-      scrimmages++;
-      continue;
-    }
+    if (isScrimmage(game)) continue;
     const result = getGameResult(game);
     if (result === 'win') wins++;
     else if (result === 'loss') losses++;
     else ties++;
   }
-  const scrimmageLabel = `${scrimmages} ${scrimmages === 1 ? 'scrim' : 'scrims'}`;
-  if (wins + losses + ties === 0) return scrimmageLabel;
-  const record = ties > 0 ? `${wins}–${losses}–${ties}` : `${wins}–${losses}`;
-  return scrimmages > 0 ? `${record} · ${scrimmageLabel}` : record;
+  if (wins + losses + ties === 0) return null;
+  return ties > 0 ? `${wins}–${losses}–${ties}` : `${wins}–${losses}`;
+}
+
+export interface PointTotals {
+  pointsFor: number;
+  pointsAgainst: number;
+}
+
+/** Points scored and allowed by the tracked side. Scrimmages are skipped. */
+export function getPointTotals(games: GameListItem[]): PointTotals {
+  const results = games.filter((game) => !isScrimmage(game));
+  return {
+    pointsFor: results.reduce((sum, game) => sum + game.myScore, 0),
+    pointsAgainst: results.reduce((sum, game) => sum + game.opponentScore, 0),
+  };
+}
+
+/** Each game's final margin for the tracked side, oldest game first. Scrimmages are skipped. */
+export function getMarginsOldestFirst(games: GameListItem[]): number[] {
+  return games
+    .filter((game) => !isScrimmage(game))
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((game) => game.myScore - game.opponentScore);
 }
 
 /**
@@ -150,9 +180,8 @@ export function formatRecord(games: GameListItem[]): string | null {
  * skipped because neither side is the opponent.
  */
 export function formatPointDifferential(games: GameListItem[]): string {
-  const differential = games
-    .filter((game) => !isScrimmage(game))
-    .reduce((sum, game) => sum + game.myScore - game.opponentScore, 0);
+  const { pointsFor, pointsAgainst } = getPointTotals(games);
+  const differential = pointsFor - pointsAgainst;
   if (differential > 0) return `+${differential}`;
   // A real minus sign, which matches the plus sign's width.
   if (differential < 0) return `\u2212${-differential}`;

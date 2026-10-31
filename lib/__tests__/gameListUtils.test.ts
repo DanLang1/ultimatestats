@@ -8,6 +8,8 @@ import {
   formatGameRowAccessibilityLabel,
   formatPointDifferential,
   formatRecord,
+  getMarginsOldestFirst,
+  getPointTotals,
   GameListItem,
   groupAdvancedGamesByTeam,
   groupBasicGamesByTeam,
@@ -305,6 +307,33 @@ describe('formatRecord', () => {
     expect(
       formatRecord([listItem('a', 1), { ...listItem('b', 2), myTeamName: 'Other' }]),
     ).toBeNull();
+  });
+});
+
+describe('getPointTotals', () => {
+  it('sums both sides and skips scrimmages', () => {
+    const scrimmage: GameListItem = {
+      ...listItem('s', 3, 9, 1),
+      kind: 'advanced',
+      gameType: 'scrimmage',
+    };
+    expect(getPointTotals([listItem('a', 1, 15, 10), listItem('b', 2, 8, 15), scrimmage])).toEqual({
+      pointsFor: 23,
+      pointsAgainst: 25,
+    });
+  });
+});
+
+describe('getMarginsOldestFirst', () => {
+  it('orders margins by game time and skips scrimmages', () => {
+    const scrimmage: GameListItem = {
+      ...listItem('s', 2, 9, 1),
+      kind: 'advanced',
+      gameType: 'scrimmage',
+    };
+    expect(
+      getMarginsOldestFirst([listItem('late', 3, 8, 15), scrimmage, listItem('early', 1, 15, 10)]),
+    ).toEqual([5, -7]);
   });
 });
 

@@ -2,8 +2,10 @@ import { screen, within } from '@testing-library/react-native';
 
 import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
+import { getAnalyticsSidePerspective } from '@/lib/advancedTracking/analyticsPerspectiveUtils';
 import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
+import type { GameListItem } from '@/lib/gameListUtils';
 import {
   ADVANCED_TEST_FOCUS_SIDE_ID,
   ADVANCED_TEST_OPPONENT_SIDE_ID,
@@ -47,10 +49,24 @@ function opponentRedZoneGame(result: 'goal' | 'throwaway') {
   return buildAnalyticsGame(game);
 }
 
+function toListItem(game: AnalyticsGame, index: number): GameListItem {
+  const perspective = getAnalyticsSidePerspective(game);
+  return {
+    kind: 'advanced',
+    gameType: game.gameType,
+    id: `game-${index}`,
+    timestamp: index,
+    myTeamName: perspective.sideName,
+    opponentName: perspective.opposingSideName,
+    myScore: perspective.score,
+    opponentScore: perspective.opposingScore,
+  };
+}
+
 function renderStats(
   game: AnalyticsGame,
   sideId = ADVANCED_TEST_FOCUS_SIDE_ID,
-  gameCount?: number,
+  combinedGames?: AnalyticsGame[],
 ) {
   return renderScreen(
     <AdvancedStatsContent
@@ -63,7 +79,7 @@ function renderStats(
       perspectiveSideId={sideId}
       participantNames={game.participantNames}
       routeScope="saved"
-      aggregateInfo={gameCount == null ? undefined : { gameCount }}
+      aggregateInfo={combinedGames && { games: combinedGames.map(toListItem) }}
     />,
   );
 }
@@ -92,12 +108,10 @@ describe('Red Zone team stats display', () => {
   });
 
   it('shows defensive results from opponent marked possessions', async () => {
-    const aggregate = aggregateAnalyticsGames([
-      opponentRedZoneGame('goal'),
-      opponentRedZoneGame('throwaway'),
-    ]);
+    const games = [opponentRedZoneGame('goal'), opponentRedZoneGame('throwaway')];
+    const aggregate = aggregateAnalyticsGames(games);
     if (aggregate == null) throw new Error('Expected defensive aggregate fixture');
-    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, 2);
+    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, games);
     const section = within(screen.getByTestId('advanced-red-zone-defense-card'));
     expect(within(section.getByText('Stop Rate').parent!).getByText('50%')).toBeTruthy();
     expect(within(section.getByText('Stop Rate').parent!).getByText('1/2')).toBeTruthy();
@@ -109,12 +123,10 @@ describe('Red Zone team stats display', () => {
   });
 
   it('groups offensive and defensive results in one red zone card', async () => {
-    const aggregate = aggregateAnalyticsGames([
-      redZoneGame('goal'),
-      opponentRedZoneGame('throwaway'),
-    ]);
+    const games = [redZoneGame('goal'), opponentRedZoneGame('throwaway')];
+    const aggregate = aggregateAnalyticsGames(games);
     if (aggregate == null) throw new Error('Expected combined red zone fixture');
-    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, 2);
+    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, games);
 
     const summaryCard = within(screen.getByTestId('advanced-red-zone-summary-card'));
     expect(summaryCard.getByTestId('advanced-red-zone-card')).toBeTruthy();
@@ -145,13 +157,10 @@ describe('Red Zone team stats display', () => {
   );
 
   it('pools resolved outcomes and timing while counting active aggregate entries', async () => {
-    const aggregate = aggregateAnalyticsGames([
-      redZoneGame('goal'),
-      redZoneGame('throwaway'),
-      redZoneGame('in_progress'),
-    ]);
+    const games = [redZoneGame('goal'), redZoneGame('throwaway'), redZoneGame('in_progress')];
+    const aggregate = aggregateAnalyticsGames(games);
     if (aggregate == null) throw new Error('Expected aggregate fixture');
-    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, 3);
+    await renderStats(aggregate, ADVANCED_TEST_FOCUS_SIDE_ID, games);
     expectRedZoneStat('Conversion', '50%', '1/2');
     expect(screen.queryByText('Opportunities')).toBeNull();
     expectRedZoneStat('Red Zone Turn', '1');

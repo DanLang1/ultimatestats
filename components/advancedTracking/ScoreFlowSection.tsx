@@ -1,13 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
 import ScoreFlowChart from '@/components/advancedTracking/ScoreFlowChart';
-import { ThemedText } from '@/components/ThemedText';
+import ChartLegend, { type ChartLegendItem } from '@/components/view-stats/ChartLegend';
+import ChartStatRow, { type ChartStat } from '@/components/view-stats/ChartStatRow';
 import { useTheme } from '@/context/ThemeContext';
-import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
 import { computeScoreFlow } from '@/lib/advancedTracking/scoreFlowUtils';
 import { pluralize } from '@/lib/utils';
-import { Fonts } from '@/theme/theme';
 
 interface ScoreFlowSectionProps {
   game: AnalyticsGame;
@@ -17,14 +16,12 @@ interface ScoreFlowSectionProps {
 /** How a single game's score unfolded: the margin chart and its key numbers. */
 export default function ScoreFlowSection({ game, perspectiveSideId }: ScoreFlowSectionProps) {
   const { palette } = useTheme();
-  const { sizeClass } = useLayout();
-  const styles = createStyles(sizeClass);
 
   const flow = computeScoreFlow(game, perspectiveSideId);
   if (flow.steps.length === 0) return null;
 
   // A zero says nothing the chart doesn't already show, so only stats with a value appear.
-  const stats: { label: string; display: string }[] = [];
+  const stats: ChartStat[] = [];
   if (flow.halftime) {
     const { myScore, opponentScore } = flow.halftime;
     stats.push({ label: 'Halftime', display: `${myScore}\u2009–\u2009${opponentScore}` });
@@ -44,7 +41,7 @@ export default function ScoreFlowSection({ game, perspectiveSideId }: ScoreFlowS
   const isScrimmage = game.gameType === 'scrimmage';
   const hasBreaks = flow.steps.some((step) => step.outcome === 'break');
   const hasBrokens = flow.steps.some((step) => step.outcome === 'broken');
-  const legend: { label: string; color: string }[] = [];
+  const legend: ChartLegendItem[] = [];
   if (isScrimmage && (hasBreaks || hasBrokens)) {
     legend.push({ label: 'Break', color: palette.textMuted });
   } else {
@@ -52,6 +49,7 @@ export default function ScoreFlowSection({ game, perspectiveSideId }: ScoreFlowS
     if (hasBrokens) legend.push({ label: 'Broken', color: palette.danger });
   }
   const hasLegend = legend.length > 0;
+
   return (
     <View testID="score-flow-section" style={styles.container}>
       <ScoreFlowChart
@@ -59,73 +57,15 @@ export default function ScoreFlowSection({ game, perspectiveSideId }: ScoreFlowS
         isNeutral={isScrimmage}
         accessibilityLabel="Score margin by point"
       />
-      {hasLegend && (
-        <View style={styles.legendRow}>
-          {legend.map((item) => (
-            <View key={item.label} style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-              <ThemedText style={[styles.legendLabel, { color: palette.textMuted }]}>
-                {item.label}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      )}
-      {hasStats && (
-        <View style={styles.statsRow}>
-          {stats.map((stat) => (
-            <View key={stat.label} style={styles.stat}>
-              <ThemedText style={[styles.statValue, { color: palette.textInverse }]}>
-                {stat.display}
-              </ThemedText>
-              <ThemedText style={[styles.statLabel, { color: palette.textMuted }]}>
-                {stat.label}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      )}
+      {hasLegend && <ChartLegend items={legend} swatch="dot" />}
+      {hasStats && <ChartStatRow stats={stats} />}
     </View>
   );
 }
 
-function createStyles(sizeClass: SizeClass) {
-  return StyleSheet.create({
-    container: {
-      marginTop: 16,
-      gap: 8,
-    },
-    legendRow: {
-      flexDirection: 'row',
-      gap: 16,
-    },
-    legendItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    legendDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
-    },
-    legendLabel: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-    },
-    statsRow: {
-      flexDirection: 'row',
-      marginTop: 12,
-    },
-    stat: {
-      flex: 1,
-    },
-    statValue: {
-      fontSize: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.bold,
-      fontVariant: ['tabular-nums'],
-    },
-    statLabel: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 16,
+    gap: 8,
+  },
+});

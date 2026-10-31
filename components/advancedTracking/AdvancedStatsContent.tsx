@@ -8,6 +8,8 @@ import AdvancedPossessionFlowCard from '@/components/advancedTracking/AdvancedPo
 import AdvancedPullingCard from '@/components/advancedTracking/AdvancedPullingCard';
 import AdvancedRedZoneCard from '@/components/advancedTracking/AdvancedRedZoneCard';
 import AdvancedThrowTypesCard from '@/components/advancedTracking/AdvancedThrowTypesCard';
+import CombinedGamesHeader from '@/components/advancedTracking/CombinedGamesHeader';
+import GameMarginsSection from '@/components/advancedTracking/GameMarginsSection';
 import OpeningSetupStats from '@/components/advancedTracking/OpeningSetupStats';
 import ScoreFlowSection from '@/components/advancedTracking/ScoreFlowSection';
 import { ThemedText } from '@/components/ThemedText';
@@ -22,6 +24,7 @@ import {
 } from '@/lib/advancedTracking/advancedAggregateStatsUtils';
 import { computeAdvancedGameStats } from '@/lib/advancedTracking/advancedGameStats';
 import { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
+import { GameListItem } from '@/lib/gameListUtils';
 import { ADVANCED_PLAYER_STATS_PATHNAME, type StatsRouteScope } from '@/lib/statsRouteScope';
 import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
@@ -38,8 +41,8 @@ interface AdvancedStatsContentProps {
   perspectiveSideId: string;
   participantNames: Map<string, string>;
   routeScope: StatsRouteScope;
-  aggregateInfo?: { gameCount: number };
-  aggregateGameIds?: string[];
+  /** The combined games, for a stats view that merges several games into one. */
+  aggregateInfo?: { games: GameListItem[] };
   initialPullWinStats?: AdvancedInitialPullWinStats;
   flipStats?: AdvancedFlipStats;
 }
@@ -55,7 +58,6 @@ export default function AdvancedStatsContent({
   participantNames,
   routeScope,
   aggregateInfo,
-  aggregateGameIds,
   initialPullWinStats,
   flipStats,
 }: AdvancedStatsContentProps) {
@@ -80,35 +82,10 @@ export default function AdvancedStatsContent({
           { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
         ]}>
         {aggregateInfo ? (
-          <View style={styles.matchupRow}>
-            <View style={styles.teamBlock}>
-              <ThemedText
-                testID="advanced-stats-team-name"
-                style={[styles.teamName, styles.teamNameLeft, { color: palette.textInverse }]}
-                numberOfLines={2}>
-                {myTeamName}
-              </ThemedText>
-            </View>
-            <View style={styles.summaryCenter}>
-              <View
-                style={[
-                  styles.summaryBadge,
-                  { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
-                ]}>
-                <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
-                  {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
-                </ThemedText>
-              </View>
-            </View>
-            <View style={[styles.teamBlock, styles.teamBlockRight]}>
-              <ThemedText
-                testID="advanced-stats-opponent-name"
-                style={[styles.teamName, styles.teamNameRight, { color: palette.textMuted }]}
-                numberOfLines={2}>
-                {opponentName}
-              </ThemedText>
-            </View>
-          </View>
+          <>
+            <CombinedGamesHeader myTeamName={myTeamName} games={aggregateInfo.games} />
+            <GameMarginsSection games={aggregateInfo.games} />
+          </>
         ) : (
           <>
             <AdvancedGameScoreHeader
@@ -266,14 +243,14 @@ Formula: Scoring possessions on D-points ÷ possessions on D-points`}
           playerStats={playerStats}
           participantNames={participantNames}
           onPlayerPress={
-            aggregateInfo && aggregateGameIds
+            aggregateInfo
               ? (participantId) =>
                   router.push({
                     pathname: ADVANCED_PLAYER_STATS_PATHNAME[routeScope],
                     params: {
                       gameId: 'aggregate',
                       participantId,
-                      aggregateGameIds: aggregateGameIds.join(','),
+                      aggregateGameIds: aggregateInfo.games.map((item) => item.id).join(','),
                       sideId: perspectiveSideId,
                     },
                   })
@@ -296,44 +273,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       padding: 20,
       marginBottom: 16,
       borderWidth: 1,
-    },
-    matchupRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 16,
-    },
-    teamBlock: {
-      flex: 1,
-      alignItems: 'flex-start',
-    },
-    teamBlockRight: {
-      alignItems: 'flex-end',
-    },
-    teamName: {
-      fontSize: scaleBySizeClass(isLandscape ? 24 : 18, sizeClass),
-      fontFamily: Fonts.bold,
-      lineHeight: scaleBySizeClass(isLandscape ? 28 : 22, sizeClass),
-    },
-    teamNameLeft: {
-      textAlign: 'left',
-    },
-    teamNameRight: {
-      textAlign: 'right',
-    },
-    summaryCenter: {
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    summaryBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-      borderWidth: 1,
-    },
-    summaryBadgeText: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     topPerformersSection: {
       marginTop: 16,

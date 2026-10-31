@@ -5,11 +5,10 @@ import Svg, { Circle, ClipPath, Defs, Line, Path, Rect } from 'react-native-svg'
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 import type { ScoreFlowStep } from '@/lib/advancedTracking/scoreFlowUtils';
+import { getMarginRange } from '@/lib/marginChartUtils';
 
 const CHART_HEIGHT = 96;
 const VERTICAL_PADDING = 14;
-/** Keeps a one- or two-point game from stretching each point to half the chart. */
-const MIN_MARGIN_SPAN = 3;
 const BREAK_DOT_RADIUS = 3.5;
 
 interface ScoreFlowChartProps {
@@ -32,7 +31,7 @@ export default function ScoreFlowChart({
 
   const leadColor = isNeutral ? palette.textMuted : palette.success;
   const trailColor = isNeutral ? palette.textMuted : palette.danger;
-  const { top, bottom } = getMarginRange(steps);
+  const { top, bottom } = getMarginRange(steps.map((step) => step.margin));
   const y = (margin: number) =>
     VERTICAL_PADDING + ((top - margin) * (height - 2 * VERTICAL_PADDING)) / (top - bottom);
   const zeroY = y(0);
@@ -94,19 +93,6 @@ export default function ScoreFlowChart({
       )}
     </View>
   );
-}
-
-/**
- * Margins the chart spans: only the range the game reached, always including the zero line, so a
- * one-sided game uses the full height instead of leaving the other half empty.
- */
-function getMarginRange(steps: ScoreFlowStep[]): { top: number; bottom: number } {
-  const margins = steps.map((step) => step.margin);
-  const top = Math.max(0, ...margins);
-  const bottom = Math.min(0, ...margins);
-  const shortfall = Math.max(0, MIN_MARGIN_SPAN - (top - bottom));
-  // Pad on the side the game leaned toward so the line keeps its direction.
-  return top >= -bottom ? { top: top + shortfall, bottom } : { top, bottom: bottom - shortfall };
 }
 
 const styles = StyleSheet.create({

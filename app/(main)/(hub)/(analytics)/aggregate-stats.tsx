@@ -426,8 +426,7 @@ export default function AggregateStatsScreen() {
         perspectiveSideId={aggregatedAdvancedGame.focusSideId}
         participantNames={aggregatedAdvancedGame.participantNames}
         routeScope="saved"
-        aggregateInfo={{ gameCount: selectedAdvancedGames.length }}
-        aggregateGameIds={selectedAdvancedGames.map((game) => game.id)}
+        aggregateInfo={{ games: selectedGameItems }}
         initialPullWinStats={initialPullWinStats ?? undefined}
         flipStats={flipStats ?? undefined}
       />
