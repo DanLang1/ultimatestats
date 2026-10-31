@@ -32,7 +32,7 @@ tags:
 - assertVisible:
     id: 'advanced-stats-summary-card'
 - assertVisible:
-    id: 'advanced-stats-score-badge'
+    id: 'advanced-stats-score'
 
 # Verify the team classification card and player comparison group.
 - scrollUntilVisible:

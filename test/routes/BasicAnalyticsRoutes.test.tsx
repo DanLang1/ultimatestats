@@ -113,7 +113,7 @@ describe('basic analytics routes', () => {
         params: { gameId: useAdvancedTrackingStore.getState().currentGameId },
       }),
       expectLiveStats: () =>
-        expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('0 - 1'),
+        expect(screen.getByTestId('advanced-stats-score')).toHaveTextContent('0\u2009–\u20091'),
     },
   ];
 
@@ -235,13 +235,13 @@ describe('basic analytics routes', () => {
     expect(screen.getByText('STATS FOR')).toBeVisible();
     expect(screen.getByTestId('advanced-stats-team-name')).toHaveTextContent('Light');
     expect(screen.getByTestId('advanced-stats-opponent-name')).toHaveTextContent('Dark');
-    expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('1 - 0');
+    expect(screen.getByTestId('advanced-stats-score')).toHaveTextContent('1\u2009–\u20090');
 
     await user.press(screen.getAllByText('Dark')[0]);
 
     expect(screen.getByTestId('advanced-stats-team-name')).toHaveTextContent('Dark');
     expect(screen.getByTestId('advanced-stats-opponent-name')).toHaveTextContent('Light');
-    expect(screen.getByTestId('advanced-stats-score-badge')).toHaveTextContent('0 - 1');
+    expect(screen.getByTestId('advanced-stats-score')).toHaveTextContent('0\u2009–\u20091');
   });
 
   it('renders the live game timeline from real events', async () => {

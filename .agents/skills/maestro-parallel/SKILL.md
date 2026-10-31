@@ -52,10 +52,12 @@ Maestro 2.5.1 rows used `--shard-split`; maestro-runner 1.1.28 rows used `--para
 | 2026-10-21 | maestro-runner | 3      | 70    | 7m54s     | 4.3x    | 2      |
 | 2026-10-21 | maestro-runner | 3      | 70    | 8m03s     | 4.2x    | 3      |
 | 2026-10-30 | maestro-runner | 3      | 73    | 8m10s     | 4.1x    | 0      |
+| 2026-10-31 | maestro-runner | 2      | 73    | 11m09s    | 3.0x    | 2      |
+| 2026-10-31 | maestro-runner | 2      | 73    | 11m07s    | 3.0x    | 0      |
 
 With Maestro, each added shard returns less: 2 shards run at about 80% per-device efficiency, 3 at
 about 65%, and flakes grow with load. maestro-runner's shared queue keeps 3 simulators at about 87%
-efficiency against its own single-simulator time; 2 simulators have not been measured. Add a row whenever you run a full suite at a new shard count, hardware, or
+efficiency against its own single-simulator time; 2 simulators run at about 93%. Add a row whenever you run a full suite at a new shard count, hardware, or
 suite size, and keep the script's `MAESTRO_SHARDS` default on the best trade-off in this table.
 
 ## Triage

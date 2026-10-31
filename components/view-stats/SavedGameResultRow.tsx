@@ -102,7 +102,11 @@ export default function SavedGameResultRow({
       </View>
 
       <View style={styles.scoreColumn}>
-        <GameScore game={game} />
+        <GameScore
+          myScore={game.myScore}
+          opponentScore={game.opponentScore}
+          isScrimmage={isScrimmage(game)}
+        />
       </View>
     </Pressable>
   );

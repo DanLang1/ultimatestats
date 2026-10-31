@@ -3,13 +3,14 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import AdvancedEfficiencyCard from '@/components/advancedTracking/AdvancedEfficiencyCard';
+import AdvancedGameScoreHeader from '@/components/advancedTracking/AdvancedGameScoreHeader';
 import AdvancedPossessionFlowCard from '@/components/advancedTracking/AdvancedPossessionFlowCard';
 import AdvancedPullingCard from '@/components/advancedTracking/AdvancedPullingCard';
 import AdvancedRedZoneCard from '@/components/advancedTracking/AdvancedRedZoneCard';
 import AdvancedThrowTypesCard from '@/components/advancedTracking/AdvancedThrowTypesCard';
 import OpeningSetupStats from '@/components/advancedTracking/OpeningSetupStats';
+import ScoreFlowSection from '@/components/advancedTracking/ScoreFlowSection';
 import { ThemedText } from '@/components/ThemedText';
-import { ScoreBadge } from '@/components/ui/ScoreBadge';
 import StatRing from '@/components/view-stats/StatRing';
 import StatsGrid from '@/components/view-stats/StatsGrid';
 import StatsSectionCard from '@/components/view-stats/StatsSectionCard';
@@ -70,26 +71,6 @@ export default function AdvancedStatsContent({
   const topStats = aggregateInfo ? null : timeOfPossessionStats;
   const sorted = [...playerStats].sort((a, b) => b.plusMinus - a.plusMinus);
   const topPerformers = sorted.filter((p) => p.plusMinus > 0).slice(0, 3);
-  const summaryCenter = aggregateInfo ? (
-    <View
-      style={[
-        styles.summaryBadge,
-        { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
-      ]}>
-      <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
-        {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
-      </ThemedText>
-    </View>
-  ) : (
-    <ScoreBadge
-      testID="advanced-stats-score-badge"
-      score1={myScore}
-      score2={opponentScore}
-      size="large"
-      style={styles.scoreBadge}
-    />
-  );
-
   return (
     <>
       <View
@@ -98,25 +79,48 @@ export default function AdvancedStatsContent({
           styles.summaryCard,
           { backgroundColor: palette.statsCardBg, borderColor: palette.overlay10 },
         ]}>
-        <View style={styles.matchupRow}>
-          <View style={styles.teamBlock}>
-            <ThemedText
-              testID="advanced-stats-team-name"
-              style={[styles.teamName, styles.teamNameLeft, { color: palette.textInverse }]}
-              numberOfLines={2}>
-              {myTeamName}
-            </ThemedText>
+        {aggregateInfo ? (
+          <View style={styles.matchupRow}>
+            <View style={styles.teamBlock}>
+              <ThemedText
+                testID="advanced-stats-team-name"
+                style={[styles.teamName, styles.teamNameLeft, { color: palette.textInverse }]}
+                numberOfLines={2}>
+                {myTeamName}
+              </ThemedText>
+            </View>
+            <View style={styles.summaryCenter}>
+              <View
+                style={[
+                  styles.summaryBadge,
+                  { backgroundColor: palette.indigoOverlay20, borderColor: palette.accent },
+                ]}>
+                <ThemedText style={[styles.summaryBadgeText, { color: palette.accent }]}>
+                  {aggregateInfo.gameCount} Game{aggregateInfo.gameCount !== 1 ? 's' : ''} Combined
+                </ThemedText>
+              </View>
+            </View>
+            <View style={[styles.teamBlock, styles.teamBlockRight]}>
+              <ThemedText
+                testID="advanced-stats-opponent-name"
+                style={[styles.teamName, styles.teamNameRight, { color: palette.textMuted }]}
+                numberOfLines={2}>
+                {opponentName}
+              </ThemedText>
+            </View>
           </View>
-          <View style={styles.summaryCenter}>{summaryCenter}</View>
-          <View style={[styles.teamBlock, styles.teamBlockRight]}>
-            <ThemedText
-              testID="advanced-stats-opponent-name"
-              style={[styles.teamName, styles.teamNameRight, { color: palette.textMuted }]}
-              numberOfLines={2}>
-              {opponentName}
-            </ThemedText>
-          </View>
-        </View>
+        ) : (
+          <>
+            <AdvancedGameScoreHeader
+              myTeamName={myTeamName}
+              opponentName={opponentName}
+              myScore={myScore}
+              opponentScore={opponentScore}
+              isScrimmage={game.gameType === 'scrimmage'}
+            />
+            <ScoreFlowSection game={game} perspectiveSideId={perspectiveSideId} />
+          </>
+        )}
 
         {topPerformers.length > 0 && (
           <View style={[styles.topPerformersSection, { borderTopColor: palette.overlay10 }]}>
@@ -320,9 +324,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
     summaryCenter: {
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    scoreBadge: {
-      minWidth: scaleBySizeClass(isLandscape ? 112 : 100, sizeClass),
     },
     summaryBadge: {
       paddingHorizontal: 12,

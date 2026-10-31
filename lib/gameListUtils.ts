@@ -203,12 +203,26 @@ export function groupGamesByTournament(
   return sections;
 }
 
+/** Both teams and their scores, from the tracked team's side. */
+export interface MatchupScore {
+  myTeamName: string;
+  opponentName: string;
+  myScore: number;
+  opponentScore: number;
+}
+
 /** Names the winner so screen readers announce the result without knowing the tracked side. */
-function formatMarginLabel(game: GameListItem): string {
-  const margin = Math.abs(game.myScore - game.opponentScore);
+function formatMarginLabel(matchup: MatchupScore): string {
+  const margin = Math.abs(matchup.myScore - matchup.opponentScore);
   if (margin === 0) return 'Tied';
-  const winnerName = game.myScore > game.opponentScore ? game.myTeamName : game.opponentName;
+  const winnerName =
+    matchup.myScore > matchup.opponentScore ? matchup.myTeamName : matchup.opponentName;
   return `${winnerName} by ${margin}`;
+}
+
+/** Score and winner in words, so the result never depends on the score's color. */
+export function formatScoreAccessibilityLabel(matchup: MatchupScore): string {
+  return `${matchup.myScore} to ${matchup.opponentScore}, ${formatMarginLabel(matchup)}`;
 }
 
 /** A game row's accessibility label: matchup, score, winner, then the row's date or detail if any. */
@@ -216,7 +230,7 @@ export function formatGameRowAccessibilityLabel(
   game: GameListItem,
   detailLabel: string | null,
 ): string {
-  const label = `${game.myTeamName} versus ${game.opponentName}, ${game.myScore} to ${game.opponentScore}, ${formatMarginLabel(game)}`;
+  const label = `${game.myTeamName} versus ${game.opponentName}, ${formatScoreAccessibilityLabel(game)}`;
   return detailLabel != null ? `${label}, ${detailLabel}` : label;
 }
 

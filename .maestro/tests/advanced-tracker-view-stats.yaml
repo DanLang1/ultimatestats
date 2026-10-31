@@ -32,7 +32,7 @@ tags:
 - assertVisible:
     id: 'advanced-stats-summary-card'
 - assertVisible:
-    id: 'advanced-stats-score-badge'
+    id: 'advanced-stats-score'
 
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-view-stats

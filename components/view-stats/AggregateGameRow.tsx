@@ -5,7 +5,7 @@ import GameScore from '@/components/view-stats/GameScore';
 import GameSelectionCheckbox from '@/components/view-stats/GameSelectionCheckbox';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatGameRowAccessibilityLabel, GameListItem } from '@/lib/gameListUtils';
+import { formatGameRowAccessibilityLabel, GameListItem, isScrimmage } from '@/lib/gameListUtils';
 import { Fonts } from '@/theme/theme';
 
 interface AggregateGameRowProps {
@@ -50,7 +50,11 @@ export default function AggregateGameRow({
           </ThemedText>
         )}
       </ThemedText>
-      <GameScore game={game} />
+      <GameScore
+        myScore={game.myScore}
+        opponentScore={game.opponentScore}
+        isScrimmage={isScrimmage(game)}
+      />
     </Pressable>
   );
 }
