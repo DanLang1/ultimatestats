@@ -12,6 +12,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useTheme } from '@/context/ThemeContext';
 import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
+import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useOpponentNameDraft } from '@/hooks/useOpponentNameDraft';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
@@ -28,6 +29,7 @@ export default function PreGameConfirm() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
+  const { finishActiveGameSession } = useGameSessionActions();
 
   const {
     possession,
@@ -138,6 +140,8 @@ export default function PreGameConfirm() {
   };
 
   const handleBack = () => {
+    // The game only counts as live once it starts; backing out abandons it.
+    finishActiveGameSession();
     router.replace('/dashboard');
   };
 

@@ -79,13 +79,6 @@ tags:
     timeout: 5000
 
 # Scrimmage pregame: switching teams keeps the scrimmage setup.
-# The backed-out pregame leaves a live hero, which moves this button down into More.
-- scrollUntilVisible:
-    element:
-      id: 'dashboard-new-game-button'
-    direction: DOWN
-    speed: 30
-    centerElement: true
 - tapOn:
     id: 'dashboard-new-game-button'
 - tapOn:

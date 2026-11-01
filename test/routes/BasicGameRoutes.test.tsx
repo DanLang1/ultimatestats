@@ -59,6 +59,17 @@ describe('basic game routes', () => {
     expect(router.dismissTo).toHaveBeenCalledWith('/scoreboard');
   });
 
+  it('abandons the unstarted game when backing out of pre-game settings', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame({ status: 'fresh' });
+    await renderScreen(<PreGameConfirm />);
+
+    await user.press(screen.getByTestId('screen-header-back'));
+
+    expect(useGameSessionStore.getState().activeGameType).toBeNull();
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
+  });
+
   it('finishes a completed game and clears the active session', async () => {
     const user = userEvent.setup();
     arrangeBasicGame({ status: 'finished' });
