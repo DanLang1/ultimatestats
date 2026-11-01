@@ -6,7 +6,8 @@ tags:
 # Manage Team: add a player, reject a duplicate, edit name/number/matching/role, bulk-assign
 # matching and role, filter by role, deactivate from the cards view, and delete a player.
 - runFlow: ../flows/setup-team-dashboard.yaml
-- tapOn: 'Manage Team'
+- tapOn:
+    id: 'dashboard-roster-button'
 - extendedWaitUntil:
     visible: 'ZOBOOMAFOO'
     timeout: 5000

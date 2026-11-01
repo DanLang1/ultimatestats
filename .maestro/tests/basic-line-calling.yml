@@ -133,7 +133,8 @@ tags:
 - extendedWaitUntil:
     visible: 'DASHBOARD'
     timeout: 5000
-- tapOn: 'Game Timeline'
+- tapOn:
+    id: 'dashboard-live-timeline-button'
 - extendedWaitUntil:
     visible: 'GAME TIMELINE'
     timeout: 5000

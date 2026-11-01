@@ -6,9 +6,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 
 import { AdvancedGameNoteCard } from '@/components/advancedTracking/AdvancedGameNoteCard';
 import { AdvancedGameNoteModal } from '@/components/advancedTracking/AdvancedGameNoteModal';
-import AdvancedGameRecoveryScreen, {
-  type AdvancedGameStatsOrigin,
-} from '@/components/advancedTracking/AdvancedGameRecoveryScreen';
+import AdvancedGameRecoveryScreen from '@/components/advancedTracking/AdvancedGameRecoveryScreen';
 import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -40,6 +38,7 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
+import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -52,7 +51,7 @@ export default function AdvancedSavedGameStatsScreen({
   from,
 }: {
   gameId: string;
-  from?: AdvancedGameStatsOrigin;
+  from?: StatsScreenOrigin;
 }) {
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -72,14 +71,7 @@ export default function AdvancedSavedGameStatsScreen({
   const [isAndroidDatePickerOpen, setIsAndroidDatePickerOpen] = useState(false);
 
   const analyticsGame = rawGame ? buildAnalyticsGame(rawGame) : null;
-  const handleBack = () => {
-    if (from === 'gameComplete') {
-      router.replace('/dashboard');
-      return;
-    }
-
-    router.back();
-  };
+  const handleBack = () => leaveStatsScreen(from);
 
   if (isLoading || !rawGame || !analyticsGame) {
     return <AdvancedGameRecoveryScreen isLoading={isLoading} from={from} />;

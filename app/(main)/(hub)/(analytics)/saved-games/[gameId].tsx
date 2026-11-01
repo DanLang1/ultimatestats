@@ -27,6 +27,7 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
+import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
@@ -34,7 +35,7 @@ import { Fonts } from '@/theme/theme';
 const MIN_PLAYED_AT_DATE = new Date(MIN_PLAYED_AT_YEAR, 0, 1);
 
 export default function SavedGameStatsScreen() {
-  const { gameId } = useLocalSearchParams<{ gameId?: string }>();
+  const { gameId, from } = useLocalSearchParams<{ gameId?: string; from?: StatsScreenOrigin }>();
   const { showAlert } = useAlert();
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
@@ -213,7 +214,7 @@ export default function SavedGameStatsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="SAVED GAME"
-        onBack={() => router.back()}
+        onBack={() => leaveStatsScreen(from)}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}

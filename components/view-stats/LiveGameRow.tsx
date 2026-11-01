@@ -4,51 +4,19 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  getLiveInProgressGame,
-  getOtherSideId,
-  getSideScore,
-} from '@/lib/advancedTracking/trackingUtils';
-import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useLiveGameScore } from '@/hooks/useLiveGameScore';
 import { Fonts } from '@/theme/theme';
-
-type LiveScoreLine = { name: string; score: number };
-type LiveScoreLines = [LiveScoreLine, LiveScoreLine];
-
-/** The focus side first, then its opponent. */
-function getAdvancedScoreLines(game: AdvancedTrackedGame): LiveScoreLines {
-  const focusSide = game.sides.find((side) => side.id === game.focusSideId);
-  const otherSideId = getOtherSideId(game, game.focusSideId);
-  const otherSide = game.sides.find((side) => side.id === otherSideId);
-  if (!focusSide || !otherSide) throw new Error('Live advanced game is missing a side.');
-  return [
-    { name: focusSide.label, score: getSideScore(game, focusSide.id) },
-    { name: otherSide.label, score: getSideScore(game, otherSide.id) },
-  ];
-}
 
 /** Pinned row for the game in progress; opens its live stats. */
 export default function LiveGameRow() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const liveAdvancedGame = useAdvancedTrackingStore(getLiveInProgressGame);
-  const basicTeam1Name = useGameStore((state) => state.currentTeam.name);
-  const basicTeam2Name = useGameStore((state) => state.team2Name);
-  const basicTeam1Score = useGameStore((state) => state.team1Score);
-  const basicTeam2Score = useGameStore((state) => state.team2Score);
-
-  const lines: LiveScoreLines = liveAdvancedGame
-    ? getAdvancedScoreLines(liveAdvancedGame)
-    : [
-        { name: basicTeam1Name, score: basicTeam1Score },
-        { name: basicTeam2Name, score: basicTeam2Score },
-      ];
-
-  // The point being played, or the next one between points.
-  const pointNumber = lines[0].score + lines[1].score + 1;
+  const liveScore = useLiveGameScore();
+  const lines = [
+    { name: liveScore.myTeamName, score: liveScore.myScore },
+    { name: liveScore.opponentName, score: liveScore.opponentScore },
+  ];
 
   return (
     <Pressable
@@ -67,7 +35,7 @@ export default function LiveGameRow() {
           <ThemedText style={[styles.liveBadgeText, { color: palette.danger }]}>LIVE</ThemedText>
         </View>
         <ThemedText style={[styles.pointText, { color: palette.textMuted }]}>
-          Point {pointNumber}
+          Point {liveScore.pointNumber}
         </ThemedText>
       </View>
       <View style={styles.scoreLines}>

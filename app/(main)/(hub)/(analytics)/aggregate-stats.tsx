@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
-import { router, Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -50,6 +50,7 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
+import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -72,6 +73,7 @@ function getRecordedFlipStats(games: AnalyticsGame[]): AdvancedFlipStats | null 
 }
 
 export default function AggregateStatsScreen() {
+  const { from } = useLocalSearchParams<{ from?: StatsScreenOrigin }>();
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
@@ -322,7 +324,7 @@ export default function AggregateStatsScreen() {
       return;
     }
 
-    router.back();
+    leaveStatsScreen(from);
   };
 
   const getHeaderTitle = () => {

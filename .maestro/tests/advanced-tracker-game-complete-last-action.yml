@@ -63,5 +63,17 @@ tags:
 - assertNotVisible:
     id: 'game-complete-finish'
 
+# Back from the finished game's stats returns home, and the Stats tab reopens on Saved Games.
+- tapOn:
+    id: 'screen-header-back'
+- extendedWaitUntil:
+    visible: 'DASHBOARD'
+    timeout: 5000
+- tapOn:
+    id: 'hub-tab-stats'
+- extendedWaitUntil:
+    visible: 'SAVED GAMES'
+    timeout: 5000
+
 - takeScreenshot:
     path: .maestro/screenshots/advanced-tracker-game-complete-last-action

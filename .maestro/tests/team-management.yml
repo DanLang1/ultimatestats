@@ -6,7 +6,8 @@ tags:
 # Rename the current team, create a second team with its own roster, switch between teams from
 # the roster screen, and delete the extra team. Rosters stay isolated per team.
 - runFlow: ../flows/setup-team-dashboard.yaml
-- tapOn: 'Manage Team'
+- tapOn:
+    id: 'dashboard-roster-button'
 - extendedWaitUntil:
     visible: 'ZOBOOMAFOO'
     timeout: 5000
@@ -78,7 +79,8 @@ tags:
 - extendedWaitUntil:
     visible: 'DASHBOARD'
     timeout: 5000
-- tapOn: 'Manage Team'
+- tapOn:
+    id: 'dashboard-roster-button'
 - extendedWaitUntil:
     visible: 'HAMMERS'
     timeout: 5000

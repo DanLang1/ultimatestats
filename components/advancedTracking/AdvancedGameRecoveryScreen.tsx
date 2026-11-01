@@ -7,31 +7,26 @@ import { ThemedView } from '@/components/ThemedView';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, type SizeClass, useLayout } from '@/hooks/useLayout';
+import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { Fonts } from '@/theme/theme';
-
-export type AdvancedGameStatsOrigin = 'gameComplete';
 
 export default function AdvancedGameRecoveryScreen({
   isLoading,
   from,
 }: {
   isLoading: boolean;
-  from?: AdvancedGameStatsOrigin;
+  from?: StatsScreenOrigin;
 }) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const emptyStateText = isLoading ? 'Loading game...' : 'Game not found.';
-  const handleBack = () => {
-    if (from === 'gameComplete') router.replace('/dashboard');
-    else router.back();
-  };
   return (
     <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="ADVANCED GAME"
-        onBack={handleBack}
+        onBack={() => leaveStatsScreen(from)}
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}

@@ -63,7 +63,8 @@ tags:
 - assertVisible: 'Swipes work too.*'
 - tapOn: 'DONE'
 - extendedWaitUntil:
-    visible: 'New Game'
+    visible:
+      id: 'dashboard-new-game-button'
     timeout: 10000
 - takeScreenshot:
     path: .maestro/screenshots/advanced-first-onboarding

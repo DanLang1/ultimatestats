@@ -1,57 +1,49 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import MaterialCommunityIcons, {
-  type MaterialDesignIconsIconName,
-} from '@react-native-vector-icons/material-design-icons/static';
+import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
 import { captureException } from '@sentry/react-native';
 import { router, Stack } from 'expo-router';
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import DashboardIdleHero from '@/components/dashboard/DashboardIdleHero';
+import DashboardLiveHero from '@/components/dashboard/DashboardLiveHero';
+import DashboardRow from '@/components/dashboard/DashboardRow';
+import DashboardSection from '@/components/dashboard/DashboardSection';
 import { NewGameSheet } from '@/components/new-game/NewGameSheet';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { DiscordIcon } from '@/components/ui/DiscordIcon';
+import {
+  type ResponsiveHeaderAction,
+  ResponsiveHeaderActions,
+} from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import SavedGameResultRow from '@/components/view-stats/SavedGameResultRow';
 import { useTheme } from '@/context/ThemeContext';
 import { resumeGameSession, useActiveGameSession } from '@/hooks/useActiveGameSession';
-import { useDashboardSession } from '@/hooks/useDashboardSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { useMostRecentSavedGame } from '@/hooks/useMostRecentSavedGame';
 import { useNewGameLauncher } from '@/hooks/useNewGameLauncher';
 import { useRemoteVersionCheck } from '@/hooks/useRemoteVersionCheck';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { APP_STORE_URL, DISCORD_URL, PLAY_STORE_URL } from '@/lib/constants';
+import { formatDayTitle } from '@/lib/dateUtils';
+import type { GameListItem } from '@/lib/gameListUtils';
 import { seedTestTeam } from '@/lib/maestroUtils';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { reportError } from '@/lib/sentry';
-import { pluralize } from '@/lib/utils';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
-
-interface MenuItem {
-  icon: MaterialDesignIconsIconName;
-  label: string;
-  description: string;
-  onPress: () => void;
-  disabled?: boolean;
-  showBadge?: boolean;
-  testID?: string;
-}
-
-interface MenuSection {
-  title: string;
-  items: MenuItem[];
-}
 
 const CONTENT_PADDING = 24;
 const SECTION_GAP = 24;
 const SECTION_MIN_WIDTH = 280;
-const DESCRIPTION_LINE_HEIGHT = 16;
-const DESCRIPTION_MAX_LINES = 2;
 
 export default function DashboardScreen() {
   const { palette } = useTheme();
-  const { sizeClass, width } = useLayout();
-  const styles = createStyles(sizeClass, isMultiColumnDashboard(width, sizeClass));
+  const { sizeClass } = useLayout();
+  const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
   const { resetStatsTutorial } = useTutorialStore();
   const {
@@ -66,21 +58,14 @@ export default function DashboardScreen() {
   const activeSession = useActiveGameSession();
   const { hasNewVersion } = useVersionCheck();
   const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
-  const {
-    currentTeam,
-    statTrackingEnabled,
-    team1Name,
-    rosterCount,
-    sessionStatus,
-    currentGameId,
-    hasCompletedGame,
-    completedGameSummary,
-  } = useDashboardSession();
-  // Only a game that has been ended at least once has a saved record to open.
-  const lastCompletedGameId = hasCompletedGame && statTrackingEnabled ? currentGameId : null;
-  const hasActiveAdvancedGame = activeSession.kind === 'advanced';
+  const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
+  const team1Name = useGameStore((state) => state.currentTeam.name);
+  const rosterCount = useGameStore((state) => state.currentTeam.roster.length);
+  const mostRecentGame = useMostRecentSavedGame();
   const hasActiveBasicGame = activeSession.kind === 'basic';
   const hasLiveGame = activeSession.kind !== 'none';
+  // A live game takes over the hero, so the last result only shows between games.
+  const lastGame = hasLiveGame ? null : mostRecentGame;
 
   const handleRemoteUpdatePress = async () => {
     const updateUrl = Platform.OS === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
@@ -114,162 +99,55 @@ export default function DashboardScreen() {
     }
   };
 
-  const sections: MenuSection[] = [
-    {
-      title: 'GAME SETUP',
-      items: [
-        {
-          icon: 'plus-circle-outline' as const,
-          label: 'New Game',
-          description: (() => {
-            if (hasLiveGame) {
-              return 'Leave the current game and start a fresh one';
-            }
-            if (sessionStatus === 'finished') {
-              return statTrackingEnabled
-                ? 'Completed game is saved. Clear the scoreboard and start fresh'
-                : 'Clear the completed scoreboard and start fresh';
-            }
-            return 'Open a fresh scoreboard and start tracking';
-          })(),
-          onPress: openNewGameSheet,
-          testID: 'dashboard-new-game-button',
-        },
-        {
-          icon: 'cog-outline' as const,
-          label: 'App Settings',
-          description: 'Colors, display, player preferences',
-          onPress: () => router.push('/settings'),
-        },
-      ],
-    },
+  // Saved stats screens live in the Stats tab; the origin sends their Back here, not to its list.
+  const handleOpenLastGame = (game: GameListItem) => {
+    if (game.kind === 'advanced') {
+      router.push({
+        pathname: '/advanced-tracking/analytics/[gameId]',
+        params: { gameId: game.id, from: 'dashboard' },
+      });
+      return;
+    }
+    router.push({
+      pathname: '/saved-games/[gameId]',
+      params: { gameId: game.id, from: 'dashboard' },
+    });
+  };
+
+  const liveGameShortcuts =
+    hasActiveBasicGame && statTrackingEnabled
+      ? {
+          onOpenTimeline: () => router.push('/live-stats/timeline'),
+          onOpenStats: () => router.push('/live-stats'),
+        }
+      : null;
+  const hasLinePresets = rosterCount > 0;
+  const moreRows = [
+    // While a game is live, Resume is the primary action and starting over drops down here.
     ...(hasLiveGame
       ? [
           {
-            title: 'IN PROGRESS',
-            items: [
-              {
-                icon: 'scoreboard-outline' as const,
-                label: 'Resume Game',
-                description: hasActiveAdvancedGame
-                  ? 'Return to the advanced tracker'
-                  : 'Return to the live scoreboard',
-                onPress: () => resumeGameSession(activeSession),
-                testID: 'dashboard-resume-game-button',
-              },
-              ...(hasActiveAdvancedGame
-                ? []
-                : [
-                    {
-                      icon: 'timeline-clock-outline' as const,
-                      label: 'Game Timeline',
-                      description: 'View play-by-play events',
-                      onPress: () => router.push('/live-stats/timeline'),
-                      disabled: !hasActiveBasicGame || !statTrackingEnabled,
-                    },
-                    {
-                      icon: 'chart-bar' as const,
-                      label: 'View Stats',
-                      description: 'Live player and team stats',
-                      onPress: () => router.push('/live-stats'),
-                      disabled: !hasActiveBasicGame || !statTrackingEnabled,
-                    },
-                  ]),
-            ],
+            label: 'Start a new game',
+            onPress: openNewGameSheet,
+            testID: 'dashboard-new-game-button',
           },
         ]
       : []),
-    ...(lastCompletedGameId !== null
-      ? [
-          {
-            title: 'LAST COMPLETED GAME',
-            items: [
-              {
-                icon: 'chart-bar' as const,
-                label: 'View Stats',
-                description: completedGameSummary,
-                onPress: () =>
-                  router.push({
-                    pathname: '/saved-games/[gameId]',
-                    params: { gameId: lastCompletedGameId },
-                  }),
-              },
-              {
-                icon: 'timeline-clock-outline' as const,
-                label: 'Game Timeline',
-                description: 'Review the play-by-play from the finished game',
-                onPress: () =>
-                  router.push({
-                    pathname: '/game-timeline',
-                    params: { gameId: lastCompletedGameId },
-                  }),
-              },
-            ],
-          },
-        ]
-      : []),
+    { label: 'Help', onPress: () => router.push('/help'), testID: 'dashboard-help-button' },
+    { label: 'About', onPress: () => router.push('/about'), showDot: hasNewVersion },
+  ];
+  const headerActions: ResponsiveHeaderAction[] = [
     {
-      title: 'DATA',
-      items: [
-        {
-          icon: 'account-group-outline' as const,
-          label: 'Manage Team',
-          description: `${team1Name}${rosterCount > 0 ? ` • ${rosterCount} ${pluralize(rosterCount, 'player', 'players')}` : ''}`,
-          onPress: () =>
-            router.push({
-              pathname: '/edit-roster',
-              params: { teamName: team1Name },
-            }),
-        },
-        ...(currentTeam && rosterCount > 0
-          ? [
-              {
-                icon: 'account-group-outline' as const,
-                label: 'Team Line Presets',
-                description: 'Create and manage preset lines',
-                onPress: () => router.push('/line-preset-editor'),
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      title: 'EXPLORE',
-      items: [
-        {
-          icon: 'trophy-outline' as const,
-          label: 'Showcase (Beta)',
-          description: 'Browse and import popular games',
-          onPress: () => router.push('/showcase'),
-        },
-        {
-          icon: 'tshirt-crew-outline' as const,
-          label: 'Partners',
-          description: 'Checkout DH Ultimate',
-          onPress: () => {
-            router.push('/partners');
-          },
-        },
-      ],
-    },
-    {
-      title: 'HELP',
-      items: [
-        {
-          icon: 'help-circle-outline' as const,
-          label: 'Help',
-          description: 'Tutorials, legends, privacy',
-          onPress: () => router.push('/help'),
-          testID: 'dashboard-help-button',
-        },
-        {
-          icon: 'information-outline' as const,
-          label: 'About',
-          description: 'Version info & changelog',
-          onPress: () => router.push('/about'),
-          showBadge: hasNewVersion,
-        },
-      ],
+      key: 'settings',
+      label: 'Settings',
+      onPress: () => router.push('/settings'),
+      inlineIcon: (
+        <MaterialCommunityIcons
+          name="cog-outline"
+          size={scaleBySizeClass(24, sizeClass)}
+          color={palette.textMuted}
+        />
+      ),
     },
   ];
 
@@ -289,6 +167,7 @@ export default function DashboardScreen() {
         title="DASHBOARD"
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
+        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
 
       <ScrollView contentContainerStyle={[styles.scrollContent]}>
@@ -301,7 +180,7 @@ export default function DashboardScreen() {
                 backgroundColor: palette.accentOverlay10,
                 borderColor: palette.accentOverlay30,
               },
-              pressed && styles.menuItemPressed,
+              pressed && styles.pressed,
             ]}>
             <MaterialCommunityIcons
               name="download-circle-outline"
@@ -326,76 +205,97 @@ export default function DashboardScreen() {
           </Pressable>
         )}
 
-        {sections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
-            <ThemedText style={[styles.sectionTitle, { color: palette.textMuted }]}>
-              {section.title}
-            </ThemedText>
-            <View style={styles.menuList}>
-              {section.items.map((item, index) => (
-                <Pressable
-                  key={index}
-                  testID={item.testID}
-                  accessibilityRole="button"
-                  accessibilityLabel={item.label}
-                  onPress={item.onPress}
-                  disabled={item.disabled}
-                  style={({ pressed }) => [
-                    styles.menuItem,
-                    { backgroundColor: palette.overlay08 },
-                    pressed && styles.menuItemPressed,
-                    item.disabled && styles.menuItemDisabled,
-                  ]}>
-                  <View
-                    style={[styles.iconContainer, { backgroundColor: palette.accentOverlay10 }]}>
-                    <MaterialCommunityIcons
-                      name={item.icon}
-                      size={metrics.menuItemIconSize}
-                      color={item.disabled ? palette.textMuted : palette.accent}
-                    />
-                  </View>
-                  <View style={styles.menuItemText}>
-                    <View style={styles.menuItemLabelRow}>
-                      <ThemedText
-                        style={[
-                          styles.menuItemLabel,
-                          {
-                            color: item.disabled ? palette.textMuted : palette.textInverse,
-                          },
-                        ]}>
-                        {item.label}
-                      </ThemedText>
-                      {item.showBadge && (
-                        <View style={[styles.newBadge, { backgroundColor: palette.accent }]}>
-                          <ThemedText style={[styles.newBadgeText, { color: palette.primary }]}>
-                            New!
-                          </ThemedText>
-                        </View>
-                      )}
-                    </View>
-                    <ThemedText
-                      numberOfLines={DESCRIPTION_MAX_LINES}
-                      style={[styles.menuItemDescription, { color: palette.textMuted }]}>
-                      {item.disabled ? 'Enable stat tracking first' : item.description}
-                    </ThemedText>
-                  </View>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={metrics.chevronIconSize}
-                    color={item.disabled ? palette.overlay20 : palette.textMuted}
-                  />
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        ))}
+        <View style={styles.hero}>
+          {hasLiveGame ? (
+            <DashboardLiveHero
+              onResume={() => resumeGameSession(activeSession)}
+              shortcuts={liveGameShortcuts}
+            />
+          ) : (
+            <DashboardIdleHero
+              teamName={team1Name}
+              rosterCount={rosterCount}
+              onStartGame={openNewGameSheet}
+            />
+          )}
+        </View>
+
+        {lastGame != null && (
+          <DashboardSection title="Last game" style={styles.section}>
+            <SavedGameResultRow
+              game={lastGame}
+              detailLabel={formatDayTitle(lastGame.timestamp)}
+              showDivider={false}
+              selectionMode={false}
+              onPress={() => handleOpenLastGame(lastGame)}
+            />
+          </DashboardSection>
+        )}
+
+        <DashboardSection title="Stats" style={styles.section}>
+          <DashboardRow
+            testID="dashboard-saved-games-button"
+            label="Saved games"
+            showDivider
+            onPress={() => router.navigate('/stats')}
+          />
+          <DashboardRow
+            testID="dashboard-combine-games-button"
+            label="Combine games"
+            showDivider={false}
+            onPress={() =>
+              router.navigate({ pathname: '/aggregate-stats', params: { from: 'dashboard' } })
+            }
+          />
+        </DashboardSection>
+
+        <DashboardSection title="Team" style={styles.section}>
+          <DashboardRow
+            testID="dashboard-roster-button"
+            label="Roster"
+            showDivider={hasLinePresets}
+            onPress={() =>
+              router.push({ pathname: '/edit-roster', params: { teamName: team1Name } })
+            }
+          />
+          {hasLinePresets && (
+            <DashboardRow
+              testID="dashboard-line-presets-button"
+              label="Lines"
+              showDivider={false}
+              onPress={() => router.push('/line-preset-editor')}
+            />
+          )}
+        </DashboardSection>
+
+        <DashboardSection title="Explore" style={styles.section}>
+          <DashboardRow label="Showcase" showDivider onPress={() => router.push('/showcase')} />
+          <DashboardRow
+            label="Partners"
+            showDivider={false}
+            onPress={() => router.push('/partners')}
+          />
+        </DashboardSection>
+
+        <DashboardSection title="More" style={styles.section}>
+          {moreRows.map((row, index) => (
+            <DashboardRow
+              key={row.label}
+              testID={row.testID}
+              label={row.label}
+              showDot={row.showDot}
+              showDivider={index < moreRows.length - 1}
+              onPress={row.onPress}
+            />
+          ))}
+        </DashboardSection>
 
         <Pressable
           onPress={() => Linking.openURL(DISCORD_URL)}
           style={({ pressed }) => [
             styles.discordBanner,
             { backgroundColor: palette.discordBg },
-            pressed && styles.menuItemPressed,
+            pressed && styles.pressed,
           ]}>
           <DiscordIcon size={metrics.bannerIconSize} color={palette.discordText} />
           <View style={styles.discordText}>
@@ -420,7 +320,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="alert-octagon"
@@ -444,7 +344,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="bug-outline"
@@ -465,7 +365,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.success, marginTop: 12 },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="seed-outline"
@@ -487,7 +387,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="bug"
@@ -509,7 +409,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="cloud-refresh"
@@ -533,7 +433,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger, marginTop: 12 },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="gesture-tap-button"
@@ -560,7 +460,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.danger, marginTop: 12 },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="restart"
@@ -585,7 +485,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.discordBanner,
                 { backgroundColor: palette.warning, marginTop: 12 },
-                pressed && styles.menuItemPressed,
+                pressed && styles.pressed,
               ]}>
               <MaterialCommunityIcons
                 name="link-off"
@@ -608,16 +508,7 @@ export default function DashboardScreen() {
   );
 }
 
-// Sections wrap into columns once two fit side by side.
-function isMultiColumnDashboard(width: number, sizeClass: SizeClass): boolean {
-  const contentWidth = width - scaleBySizeClass(CONTENT_PADDING, sizeClass) * 2;
-  const twoSectionsWidth =
-    scaleBySizeClass(SECTION_MIN_WIDTH, sizeClass) * 2 + scaleBySizeClass(SECTION_GAP, sizeClass);
-  return contentWidth >= twoSectionsWidth;
-}
-
-function createStyles(sizeClass: SizeClass, isMultiColumn: boolean) {
-  const descriptionLineHeight = scaleBySizeClass(DESCRIPTION_LINE_HEIGHT, sizeClass);
+function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -629,72 +520,17 @@ function createStyles(sizeClass: SizeClass, isMultiColumn: boolean) {
       flexWrap: 'wrap',
       gap: scaleBySizeClass(SECTION_GAP, sizeClass),
     },
+    // Sections wrap into side-by-side columns once two fit; the hero always spans the row.
+    hero: {
+      width: '100%',
+    },
     section: {
       flex: 1,
       minWidth: scaleBySizeClass(SECTION_MIN_WIDTH, sizeClass),
-      gap: scaleBySizeClass(12, sizeClass),
     },
-    sectionTitle: {
-      fontSize: scaleBySizeClass(11, sizeClass),
-      fontFamily: Fonts.bold,
-      letterSpacing: scaleBySizeClass(1.5, sizeClass, { rounding: 'none' }),
-      marginLeft: scaleBySizeClass(4, sizeClass),
-    },
-    menuList: {
-      gap: scaleBySizeClass(8, sizeClass),
-    },
-    menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: scaleBySizeClass(14, sizeClass),
-      borderRadius: scaleBySizeClass(14, sizeClass),
-      gap: scaleBySizeClass(14, sizeClass),
-    },
-    menuItemPressed: {
+    pressed: {
       opacity: 0.8,
       transform: [{ scale: 0.98 }],
-    },
-    menuItemDisabled: {
-      opacity: 0.5,
-    },
-    iconContainer: {
-      width: scaleBySizeClass(42, sizeClass),
-      height: scaleBySizeClass(42, sizeClass),
-      borderRadius: scaleBySizeClass(10, sizeClass),
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    menuItemText: {
-      flex: 1,
-      gap: scaleBySizeClass(2, sizeClass),
-    },
-    menuItemLabel: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    menuItemLabelRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scaleBySizeClass(8, sizeClass),
-    },
-    newBadge: {
-      paddingHorizontal: scaleBySizeClass(6, sizeClass),
-      paddingVertical: scaleBySizeClass(2, sizeClass),
-      borderRadius: scaleBySizeClass(4, sizeClass),
-    },
-    newBadgeText: {
-      fontSize: scaleBySizeClass(10, sizeClass),
-      fontFamily: Fonts.bold,
-    },
-    menuItemDescription: {
-      fontSize: scaleBySizeClass(12, sizeClass),
-      // Side-by-side columns reserve both lines so cards stay the same height across columns.
-      ...(isMultiColumn
-        ? {
-            lineHeight: descriptionLineHeight,
-            minHeight: descriptionLineHeight * DESCRIPTION_MAX_LINES,
-          }
-        : {}),
     },
     updateBanner: {
       flexDirection: 'row',
@@ -741,7 +577,6 @@ function createStyles(sizeClass: SizeClass, isMultiColumn: boolean) {
 
 function createMetrics(sizeClass: SizeClass) {
   return {
-    menuItemIconSize: scaleBySizeClass(22, sizeClass),
     chevronIconSize: scaleBySizeClass(22, sizeClass),
     bannerIconSize: scaleBySizeClass(24, sizeClass),
   };

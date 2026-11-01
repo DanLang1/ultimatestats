@@ -23,10 +23,10 @@ interface SavedGameResultRowProps {
   detailLabel: string | null;
   showDivider: boolean;
   selectionMode: boolean;
-  isSelectable: boolean;
-  isSelected: boolean;
+  isSelectable?: boolean;
+  isSelected?: boolean;
   onPress: () => void;
-  onLongPress: () => void;
+  onLongPress?: () => void;
 }
 
 function getResultStyle(result: RowResult, palette: Palette) {
@@ -48,8 +48,8 @@ export default function SavedGameResultRow({
   detailLabel,
   showDivider,
   selectionMode,
-  isSelectable,
-  isSelected,
+  isSelectable = true,
+  isSelected = false,
   onPress,
   onLongPress,
 }: SavedGameResultRowProps) {

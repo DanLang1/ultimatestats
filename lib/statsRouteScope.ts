@@ -1,3 +1,5 @@
+import { router } from 'expo-router';
+
 /**
  * Which copy of a stats screen a link opens. Live-game screens sit on the main stack, above the
  * screen that opened them; saved-game screens sit in the hub's Stats tab. Pushed links from a live
@@ -23,4 +25,20 @@ export const ADVANCED_TIMELINE_PATHNAME = {
 
 export function isStatsRouteScope(value: string | undefined): value is StatsRouteScope {
   return value === 'live' || value === 'saved';
+}
+
+/**
+ * Where a saved stats screen was opened from outside the Stats tab. The tab keeps Saved Games
+ * beneath every screen in it, so Back from one of these origins returns to the Dashboard instead.
+ */
+export type StatsScreenOrigin = 'gameComplete' | 'dashboard';
+
+export function leaveStatsScreen(from: StatsScreenOrigin | undefined) {
+  if (!from) {
+    router.back();
+    return;
+  }
+  // Reset the tab to Saved Games first, or its next visit reopens this screen.
+  router.dismissTo('/stats');
+  router.navigate('/dashboard');
 }

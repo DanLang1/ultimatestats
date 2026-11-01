@@ -1,7 +1,7 @@
-import { GameSessionStatus } from '@/lib/basic/gameSessionUtils';
 import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 
+export type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 export type UpdateRosterPlayerResult =
   | 'updated'

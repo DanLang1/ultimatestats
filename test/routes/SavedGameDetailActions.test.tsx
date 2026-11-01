@@ -9,6 +9,7 @@ import { Platform } from 'react-native';
 import AdvancedGameScreen from '@/app/(main)/(hub)/(analytics)/advanced-tracking/analytics/[gameId]';
 import BasicGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]';
 import type { SharedPayload } from '@/lib/sharing/types';
+import type { StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -64,7 +65,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function arrangeDetail(kind: 'basic' | 'advanced', from?: 'gameComplete') {
+async function arrangeDetail(kind: 'basic' | 'advanced', from?: StatsScreenOrigin) {
   const id = `${kind}-detail`;
   if (kind === 'basic') {
     useGameStore.setState({
@@ -183,15 +184,22 @@ it.each(['basic', 'advanced'] as const)('opens the timeline for the %s record', 
   });
 });
 
-it.each([undefined, 'gameComplete'] as const)(
-  'returns from advanced detail according to its entry point (%s)',
-  async (from) => {
-    await arrangeDetail('advanced', from);
-    await userEvent.setup().press(screen.getByTestId('screen-header-back'));
-    if (from) expect(router.replace).toHaveBeenCalledWith('/dashboard');
-    else expect(router.back).toHaveBeenCalledTimes(1);
-  },
-);
+it.each([
+  ['basic', undefined],
+  ['basic', 'dashboard'],
+  ['advanced', undefined],
+  ['advanced', 'gameComplete'],
+  ['advanced', 'dashboard'],
+] as const)('returns from %s detail according to its entry point (%s)', async (kind, from) => {
+  await arrangeDetail(kind, from);
+  await userEvent.setup().press(screen.getByTestId('screen-header-back'));
+  if (from) {
+    expect(router.dismissTo).toHaveBeenCalledWith('/stats');
+    expect(router.navigate).toHaveBeenCalledWith('/dashboard');
+  } else {
+    expect(router.back).toHaveBeenCalledTimes(1);
+  }
+});
 
 it.each(['basic', 'advanced'] as const)(
   'recovers to saved games when a %s record no longer exists',

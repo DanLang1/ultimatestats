@@ -6,7 +6,8 @@ tags:
 - runFlow: ../flows/setup-team-dashboard.yaml
 
 # Create a second team so the pregame team-switch entry point appears.
-- tapOn: 'Manage Team'
+- tapOn:
+    id: 'dashboard-roster-button'
 - extendedWaitUntil:
     visible: 'ZOBOOMAFOO'
     timeout: 10000

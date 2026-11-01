@@ -6,7 +6,8 @@ tags:
 ---
 # Create, validate, edit, discard, and delete team line presets from the Dashboard.
 - runFlow: ../flows/setup-team-dashboard.yaml
-- tapOn: 'Team Line Presets'
+- tapOn:
+    id: 'dashboard-line-presets-button'
 - extendedWaitUntil:
     visible: 'Line Presets'
     timeout: 5000
@@ -130,7 +131,8 @@ tags:
 - extendedWaitUntil:
     visible: 'DASHBOARD'
     timeout: 5000
-- tapOn: 'Team Line Presets'
+- tapOn:
+    id: 'dashboard-line-presets-button'
 - extendedWaitUntil:
     visible:
       id: 'line-preset-edit-O Line'

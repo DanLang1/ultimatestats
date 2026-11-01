@@ -9,7 +9,7 @@ import { useTournamentStore } from '@/store/tournamentStore';
 import { createFinalAdvancedGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetAdvancedTrackingStorage } from '@/test/mocks/advancedTrackingStorage';
-import { resetMockRouter } from '@/test/mocks/expoRouter';
+import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
 
 async function arrangeGames(kind: 'basic' | 'advanced') {
@@ -161,6 +161,15 @@ describe('advanced aggregate recovery', () => {
     resetAllStores();
     resetMockRouter();
     await AsyncStorage.clear();
+  });
+
+  it('returns to the dashboard when the dashboard opened it', async () => {
+    setMockSearchParams({ from: 'dashboard' });
+    await renderScreen(<AggregateStatsScreen />);
+    await userEvent.setup().press(screen.getByTestId('screen-header-back'));
+    expect(router.dismissTo).toHaveBeenCalledWith('/stats');
+    expect(router.navigate).toHaveBeenCalledWith('/dashboard');
+    expect(router.back).not.toHaveBeenCalled();
   });
 
   it("opens on advanced and shows each mode's empty state", async () => {
