@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import DashboardPrimaryButton from '@/components/dashboard/DashboardPrimaryButton';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,19 +9,12 @@ import { useLiveGameScore } from '@/hooks/useLiveGameScore';
 import { formatScoreAccessibilityLabel } from '@/lib/gameListUtils';
 import { Fonts } from '@/theme/theme';
 
-/** Shortcuts into a live basic game's stats; advanced games reach them from the tracker. */
-export interface LiveGameShortcuts {
-  onOpenTimeline: () => void;
-  onOpenStats: () => void;
-}
-
 interface DashboardLiveHeroProps {
   onResume: () => void;
-  shortcuts: LiveGameShortcuts | null;
 }
 
 /** With a game in progress: its live score and the screen's one primary action, Resume. */
-export default function DashboardLiveHero({ onResume, shortcuts }: DashboardLiveHeroProps) {
+export default function DashboardLiveHero({ onResume }: DashboardLiveHeroProps) {
   const liveScore = useLiveGameScore();
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -69,36 +62,6 @@ export default function DashboardLiveHero({ onResume, shortcuts }: DashboardLive
           label="Resume game"
           onPress={onResume}
         />
-        {shortcuts != null && (
-          <View style={styles.shortcutRow}>
-            <Pressable
-              testID="dashboard-live-timeline-button"
-              accessibilityRole="button"
-              onPress={shortcuts.onOpenTimeline}
-              style={({ pressed }) => [
-                styles.shortcutButton,
-                { backgroundColor: palette.accentOverlay15 },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText style={[styles.shortcutText, { color: palette.accent }]}>
-                Timeline
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              testID="dashboard-live-stats-button"
-              accessibilityRole="button"
-              onPress={shortcuts.onOpenStats}
-              style={({ pressed }) => [
-                styles.shortcutButton,
-                { backgroundColor: palette.accentOverlay15 },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText style={[styles.shortcutText, { color: palette.accent }]}>
-                Live stats
-              </ThemedText>
-            </Pressable>
-          </View>
-        )}
       </View>
     </View>
   );
@@ -158,27 +121,7 @@ function createStyles(sizeClass: SizeClass) {
       lineHeight: scaleBySizeClass(40, sizeClass),
     },
     actions: {
-      gap: scaleBySizeClass(8, sizeClass),
       marginTop: scaleBySizeClass(4, sizeClass),
-    },
-    // Paired shortcuts share one width.
-    shortcutRow: {
-      flexDirection: 'row',
-      gap: scaleBySizeClass(8, sizeClass),
-    },
-    shortcutButton: {
-      flex: 1,
-      height: scaleBySizeClass(42, sizeClass),
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    shortcutText: {
-      fontSize: scaleBySizeClass(15, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    pressed: {
-      opacity: 0.8,
     },
   });
 }

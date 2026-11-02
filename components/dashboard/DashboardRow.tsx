@@ -10,6 +10,8 @@ interface DashboardRowProps {
   label: string;
   /** A dot for something new behind the row, such as an unseen changelog. */
   showDot?: boolean;
+  /** A leading live dot for a row about the game in progress. */
+  isLive?: boolean;
   showDivider: boolean;
   onPress: () => void;
   testID?: string;
@@ -19,6 +21,7 @@ interface DashboardRowProps {
 export default function DashboardRow({
   label,
   showDot = false,
+  isLive = false,
   showDivider,
   onPress,
   testID,
@@ -39,6 +42,7 @@ export default function DashboardRow({
         showDivider && { borderBottomColor: palette.overlay08, borderBottomWidth: 1 },
         pressed && { backgroundColor: palette.overlay05 },
       ]}>
+      {isLive && <View style={[styles.dot, { backgroundColor: palette.danger }]} />}
       <ThemedText style={[styles.label, { color: palette.textInverse }]}>{label}</ThemedText>
       {showDot && <View style={[styles.dot, { backgroundColor: palette.accent }]} />}
       <MaterialCommunityIcons

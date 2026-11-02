@@ -114,13 +114,7 @@ export default function DashboardScreen() {
     });
   };
 
-  const liveGameShortcuts =
-    hasActiveBasicGame && statTrackingEnabled
-      ? {
-          onOpenTimeline: () => router.push('/live-stats/timeline'),
-          onOpenStats: () => router.push('/live-stats'),
-        }
-      : null;
+  const hasLiveGameStats = hasActiveBasicGame && statTrackingEnabled;
   const hasLinePresets = rosterCount > 0;
   const moreRows = [
     // While a game is live, Resume is the primary action and starting over drops down here.
@@ -133,6 +127,11 @@ export default function DashboardScreen() {
           },
         ]
       : []),
+    {
+      label: 'Settings',
+      onPress: () => router.push('/settings'),
+      testID: 'dashboard-settings-button',
+    },
     { label: 'Help', onPress: () => router.push('/help'), testID: 'dashboard-help-button' },
     { label: 'About', onPress: () => router.push('/about'), showDot: hasNewVersion },
   ];
@@ -207,10 +206,7 @@ export default function DashboardScreen() {
 
         <View style={styles.hero}>
           {hasLiveGame ? (
-            <DashboardLiveHero
-              onResume={() => resumeGameSession(activeSession)}
-              shortcuts={liveGameShortcuts}
-            />
+            <DashboardLiveHero onResume={() => resumeGameSession(activeSession)} />
           ) : (
             <DashboardIdleHero
               teamName={team1Name}
@@ -233,6 +229,15 @@ export default function DashboardScreen() {
         )}
 
         <DashboardSection title="Stats" style={styles.section}>
+          {hasLiveGameStats && (
+            <DashboardRow
+              testID="dashboard-live-stats-button"
+              label="Live game stats"
+              isLive
+              showDivider
+              onPress={() => router.push('/live-stats')}
+            />
+          )}
           <DashboardRow
             testID="dashboard-saved-games-button"
             label="Saved games"

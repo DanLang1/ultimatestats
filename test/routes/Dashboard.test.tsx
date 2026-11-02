@@ -90,10 +90,7 @@ describe('<DashboardScreen />', () => {
     expect(screen.getByText('Point 1')).toBeVisible();
     expect(screen.queryByText('Start game')).not.toBeOnTheScreen();
 
-    await user.press(screen.getByText('Timeline'));
-    expect(router.push).toHaveBeenCalledWith('/live-stats/timeline');
-
-    await user.press(screen.getByText('Live stats'));
+    await user.press(screen.getByText('Live game stats'));
     expect(router.push).toHaveBeenCalledWith('/live-stats');
 
     await user.press(screen.getByText('Resume game'));
@@ -101,14 +98,17 @@ describe('<DashboardScreen />', () => {
     expect(router.navigate).toHaveBeenCalledWith('/scoreboard');
   });
 
-  it('routes to settings from a user press', async () => {
-    const user = userEvent.setup();
-    await renderScreen(<DashboardScreen />, { queryClient: arrangeDashboard() });
+  it.each(['header-action-settings', 'dashboard-settings-button'])(
+    'routes to settings from %s',
+    async (testID) => {
+      const user = userEvent.setup();
+      await renderScreen(<DashboardScreen />, { queryClient: arrangeDashboard() });
 
-    await user.press(screen.getByLabelText('Settings'));
+      await user.press(screen.getByTestId(testID));
 
-    expect(router.push).toHaveBeenCalledWith('/settings');
-  });
+      expect(router.push).toHaveBeenCalledWith('/settings');
+    },
+  );
 });
 
 afterEach(() => {
@@ -143,7 +143,7 @@ it('resumes advanced line setup and starts a scrimmage after warning about the a
   arrangeAdvancedGame();
   const user = userEvent.setup();
   await renderScreen(<DashboardScreen />, { queryClient });
-  expect(screen.queryByText('Timeline')).not.toBeOnTheScreen();
+  expect(screen.queryByText('Live game stats')).not.toBeOnTheScreen();
   await user.press(screen.getByText('Resume game'));
   expect(router.dismissTo).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
   await user.press(screen.getByText('Start a new game'));
