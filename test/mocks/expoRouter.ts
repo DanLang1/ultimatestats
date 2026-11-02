@@ -7,6 +7,7 @@ export const router = {
   back: jest.fn(),
   dismiss: jest.fn(),
   dismissTo: jest.fn(),
+  canGoBack: jest.fn(() => canGoBack),
 };
 
 type RedirectProps = {
@@ -37,6 +38,8 @@ export const Tabs = Object.assign(() => null, {
 
 let searchParams: Record<string, string | undefined> = {};
 let pathname = '/';
+let segments: string[] = [];
+let canGoBack = false;
 
 export function setMockSearchParams(params: Record<string, string | undefined>) {
   searchParams = params;
@@ -46,9 +49,19 @@ export function setMockPathname(nextPathname: string) {
   pathname = nextPathname;
 }
 
+export function setMockSegments(nextSegments: string[]) {
+  segments = nextSegments;
+}
+
+export function setMockCanGoBack(nextCanGoBack: boolean) {
+  canGoBack = nextCanGoBack;
+}
+
 export function resetMockRouter() {
+  canGoBack = false;
   searchParams = {};
   pathname = '/';
+  segments = [];
 }
 
 export function useLocalSearchParams() {
@@ -57,6 +70,10 @@ export function useLocalSearchParams() {
 
 export function usePathname() {
   return pathname;
+}
+
+export function useSegments() {
+  return segments;
 }
 
 export function useFocusEffect(effect: EffectCallback, _dependencies?: DependencyList) {

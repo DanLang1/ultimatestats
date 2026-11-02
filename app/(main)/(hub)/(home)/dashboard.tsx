@@ -337,7 +337,7 @@ export default function DashboardScreen() {
                   Open Crashing Screen
                 </ThemedText>
                 <ThemedText style={[styles.discordSubtitle, { color: palette.textOnAccentMuted }]}>
-                  DEV ONLY - Screen throws on render; tests Go to Dashboard
+                  DEV ONLY - Screen throws on render; tests error recovery
                 </ThemedText>
               </View>
             </Pressable>

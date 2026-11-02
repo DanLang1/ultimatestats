@@ -4,7 +4,12 @@ import { Linking } from 'react-native';
 
 import { ScreenErrorBoundary } from '@/components/ui/ScreenErrorBoundary';
 import { resetAllStores } from '@/test/fixtures/resetStores';
-import { resetMockRouter, setMockPathname } from '@/test/mocks/expoRouter';
+import {
+  resetMockRouter,
+  setMockCanGoBack,
+  setMockPathname,
+  setMockSegments,
+} from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
 
 const originalDev = __DEV__;
@@ -30,6 +35,23 @@ it.each([true, false])(
     expect(router.dismissTo).toHaveBeenCalledWith('/dashboard');
   },
 );
+
+it('goes back to the previous screen when there is history', async () => {
+  setMockCanGoBack(true);
+  await renderScreen(<ScreenErrorBoundary error={new Error('failed')} retry={jest.fn()} />);
+  await userEvent.setup().press(screen.getByText('Go Back'));
+  expect(router.back).toHaveBeenCalledTimes(1);
+  expect(router.dismissTo).not.toHaveBeenCalled();
+});
+
+it('switches to the Dashboard tab when a screen in another hub tab fails', async () => {
+  setMockPathname('/stats');
+  setMockSegments(['(main)', '(hub)', '(analytics)', 'stats']);
+  await renderScreen(<ScreenErrorBoundary error={new Error('stats failed')} retry={jest.fn()} />);
+  await userEvent.setup().press(screen.getByText('Go to Dashboard'));
+  expect(router.navigate).toHaveBeenCalledWith('/dashboard');
+  expect(router.dismissTo).not.toHaveBeenCalled();
+});
 
 it('retries in place when Dashboard itself fails', async () => {
   setMockPathname('/dashboard');
