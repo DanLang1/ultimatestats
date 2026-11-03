@@ -3,6 +3,7 @@ import { captureException } from '@sentry/react-native';
 
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
+import { getActivePlayElapsedMsAt } from '@/lib/advancedTracking/pointClock';
 import {
   loadAdvancedGameHistorySnapshot,
   upsertAdvancedGame,
@@ -2709,6 +2710,112 @@ describe('advancedTrackingStore', () => {
       'disc_pickup',
       'stoppage',
     ]);
+  });
+
+  describe('undo that leaves a possession with only stoppages', () => {
+    const regularTimeoutsUsed = (sideId: string) =>
+      getSideTimeoutState(getCurrentGame()!, sideId).regularUsedInHalf;
+
+    it('removes the point with its stoppage when the pull is undone after a pause', () => {
+      createGame();
+      const store = useAdvancedTrackingStore.getState();
+      store.recordPull({ lines: homeLines, puller: untracked, result: 'inbound' });
+      store.resumeStoppage(store.recordStoppage({ reason: 'manual_pause' }));
+
+      expect(store.undoLastOperation()).toBe(true);
+
+      expect(getCurrentGame()!.points).toEqual([]);
+      expect(() => buildAnalyticsGame(getCurrentGame()!)).not.toThrow();
+    });
+
+    it('keeps a timeout while a play action remains and gives it back with the pull', () => {
+      createGame();
+      const store = useAdvancedTrackingStore.getState();
+      store.recordPull({ lines: homeLinesAugust, puller: untracked, result: 'inbound' });
+      store.recordPickup({ sideId: homeSideId, player: august });
+      store.resumeStoppage(store.recordStoppage({ reason: 'timeout', sideId: homeSideId }));
+
+      expect(store.undoLastOperation()).toBe(true);
+      expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.map((a) => a.kind)).toEqual([
+        'pull',
+        'stoppage',
+      ]);
+      expect(regularTimeoutsUsed(homeSideId)).toBe(1);
+
+      expect(store.undoLastOperation()).toBe(true);
+      expect(getCurrentGame()!.points).toEqual([]);
+      expect(regularTimeoutsUsed(homeSideId)).toBe(0);
+    });
+
+    it('moves a later possession timeout to the end of the turnover possession', () => {
+      const nowSpy = jest.spyOn(Date, 'now');
+      nowSpy.mockReturnValue(1_000);
+      createGame();
+      const store = useAdvancedTrackingStore.getState();
+      store.recordPull({
+        lines: homeLinesAugust,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      nowSpy.mockReturnValue(2_000);
+      store.recordThrow({ thrower: august, result: 'throwaway' });
+      nowSpy.mockReturnValue(3_000);
+      store.recordPickup({ sideId: awaySideId, player: untracked });
+      nowSpy.mockReturnValue(4_000);
+      const timeoutId = store.recordStoppage({ reason: 'timeout', sideId: awaySideId });
+      nowSpy.mockReturnValue(14_000);
+      store.resumeStoppage(timeoutId);
+      nowSpy.mockReturnValue(15_000);
+
+      expect(store.undoLastOperation()).toBe(true);
+      nowSpy.mockRestore();
+
+      const point = getCurrentPoint(getCurrentGame())!;
+      expect(point.possessions).toHaveLength(1);
+      expect(point.possessions[0].actions.slice(-2)).toMatchObject([
+        { kind: 'throw', result: 'throwaway' },
+        { id: timeoutId, kind: 'stoppage', reason: 'timeout' },
+      ]);
+      expect(regularTimeoutsUsed(awaySideId)).toBe(1);
+      expect(getActivePlayElapsedMsAt(getCurrentGame()!, point, 20_000)).toBe(9_000);
+      expect(buildAnalyticsGame(getCurrentGame()!).possessions).toHaveLength(1);
+
+      store.recordPickup({ sideId: awaySideId, player: untracked });
+      expect(
+        getCurrentPoint(getCurrentGame())!.possessions.map((possession) =>
+          possession.actions.map((action) => action.kind),
+        ),
+      ).toEqual([['pull', 'disc_pickup', 'throw', 'stoppage'], ['disc_pickup']]);
+    });
+
+    it('keeps injury subs with a stoppage moved to the turnover possession', () => {
+      createGame();
+      const store = useAdvancedTrackingStore.getState();
+      store.recordPull({
+        lines: homeLines,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      store.recordThrow({ thrower: august, toPlayer: meves, result: 'complete' });
+      store.recordThrow({ thrower: meves, result: 'throwaway' });
+      store.recordPickup({ sideId: awaySideId, player: untracked });
+      const stoppageId = store.recordInjurySubs({
+        sideId: homeSideId,
+        changes: [{ sideId: homeSideId, inIds: [], outIds: [meves.participantId] }],
+      });
+      store.resumeStoppage(stoppageId);
+      expect(getCurrentPoint(getCurrentGame())?.subs).toHaveLength(1);
+
+      expect(store.undoLastOperation()).toBe(true);
+
+      const point = getCurrentPoint(getCurrentGame())!;
+      expect(point.possessions).toHaveLength(1);
+      expect(point.possessions[0].actions.at(-1)).toMatchObject({ id: stoppageId });
+      expect(point.subs).toEqual([expect.objectContaining({ stoppageActionId: stoppageId })]);
+      expect(() => buildAnalyticsGame(getCurrentGame()!)).not.toThrow();
+    });
   });
 
   it('recordInjurySubs attaches a PointSub to the current point', () => {

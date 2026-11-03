@@ -1,6 +1,6 @@
 import { withAdvancedGameNote } from './gameNoteUtils';
 import { getSafeDiscHolderRef } from './livePlayState';
-import { assertTwoSides } from './trackingUtils';
+import { assertTwoSides, getLastPlayAction } from './trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   type AdvancedGameType,
@@ -91,9 +91,11 @@ export function removeSubsForStoppages(
 }
 
 /**
- * Removes one action from a live game draft. An emptied possession is removed, and the point too
- * when it was the point's only possession. Replaces `game.points` or `point.possessions` in those
- * cases, so callers must not reuse references to them afterwards.
+ * Removes one action from a live game draft. A possession left without a play action is removed,
+ * since analytics reads each possession from its last play action: its remaining stoppages move to
+ * the end of the previous possession, or go with the point when it was the point's only possession.
+ * Replaces `game.points` or `point.possessions` in those cases, so callers must not reuse references
+ * to them afterwards.
  */
 export function removeActionById(
   game: AdvancedTrackedGame,
@@ -116,7 +118,16 @@ export function removeActionById(
     removeSubsForStoppages(point, new Set([removedAction.id]));
   }
 
-  if (possession.actions.length === 0) {
+  if (getLastPlayAction(possession.actions) == null) {
+    const previousPossession = point.possessions[point.possessions.indexOf(possession) - 1];
+    if (previousPossession != null) {
+      // Play is back at the previous possession's end, where the tracker records a stoppage called
+      // before the next pickup.
+      previousPossession.actions.push(...possession.actions);
+      point.possessions = point.possessions.filter((candidate) => candidate.id !== possessionId);
+      return;
+    }
+    removeSubsForStoppages(point, new Set(possession.actions.map((action) => action.id)));
     if (point.possessions.length > 1) {
       point.possessions = point.possessions.filter((candidate) => candidate.id !== possessionId);
     } else {

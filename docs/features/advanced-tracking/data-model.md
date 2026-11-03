@@ -32,7 +32,9 @@
 ## Editing and Undo
 
 - Point, possession, action, transition, and participant IDs are stable. Corrections update payload
-  fields; they never move actions between possessions or points.
+  fields; they never move actions between possessions or points. The one exception is undo: when
+  it leaves a possession without a play action, its stoppages move to the end of the previous
+  possession if there is one; otherwise they are removed with the point.
 - Corrections go through the shared domain operations in `lib/advancedTracking/` and their existing
   assertions; do not add another validation pattern.
 - Undo history is local recovery state, outside the game schema, analytics, summaries, and every

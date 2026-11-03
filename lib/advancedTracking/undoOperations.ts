@@ -1,8 +1,9 @@
 /**
  * Inverse operations for the live tracker's undo stack. Operations that are never pushed to the
  * stack (stoppages, between-point timeouts, cap transitions, Red Zone scaffold pickups)
- * intentionally survive undo, except that undoing a point-ending action drops that point's
- * between-point timeouts.
+ * intentionally survive undo, except when undo removes what holds them: a point-ending action's
+ * between-point timeouts, an undone pull's point, or the possessions after an undone turnover.
+ * Stoppages left in a possession with no play action move to the previous possession.
  *
  * Entries are semantic ("remove action X"), not snapshots or Immer patches: undo applies domain
  * rules (possession cleanup, revival pauses, halftime rederivation) rather than a pure revert. The

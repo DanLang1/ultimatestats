@@ -40,7 +40,8 @@ Each rule has one home; extend it there rather than in a screen or a second stor
   (`writeContext.ts`); the store supplies time and IDs and only `writeLiveGame` stamps `updatedAt`.
 - Undo entries are meaning-based (`undoOperations.ts`); a stale entry is reported and dropped.
   Stoppages and between-point timeouts are not undoable: they are cancelled while running and
-  permanent once ended.
+  permanent once ended, unless undo removes the point that holds them or the possessions after an
+  undone turnover.
 - Live-play facts come from `livePlayState.ts`, lineups from `lineup.ts`, and point timing from
   `pointClock.ts`.
 
