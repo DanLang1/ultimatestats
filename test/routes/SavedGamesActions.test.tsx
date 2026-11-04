@@ -310,6 +310,30 @@ it('filters saved games by either team, trims search text, and reports an unmatc
   expect(screen.getByText('No games match "missing"')).toBeVisible();
 });
 
+it('filters to a tournament from the sort sheet, clears it with the chip, and searches by tournament name', async () => {
+  arrangeSortableGames();
+  const tournamentId = await useTournamentStore
+    .getState()
+    .addTournament('Sectionals', '2026-01-01', '2026-01-02');
+  await useTournamentStore.getState().addGamesToTournament(tournamentId, 'basic', ['Light']);
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId(`saved-games-tournament-option-${tournamentId}`));
+  expect(screen.getByText('Dark')).toBeVisible();
+  expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
+  expect(screen.getByTestId('saved-games-tournament-chip')).toHaveTextContent(/Sectionals/);
+
+  await user.press(screen.getByTestId('saved-games-tournament-chip'));
+  expect(screen.getByText('Rivals')).toBeVisible();
+  expect(screen.queryByTestId('saved-games-tournament-chip')).not.toBeOnTheScreen();
+
+  await user.type(screen.getByPlaceholderText('Search'), 'sectionals');
+  expect(screen.getByText('Dark')).toBeVisible();
+  expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
+});
+
 it('finds games by the weekday shown in day headings and dates rows when ungrouped', async () => {
   arrangeSortableGames();
   const user = userEvent.setup();

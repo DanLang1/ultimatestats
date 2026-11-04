@@ -4,12 +4,12 @@ import { ReactNode, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { TournamentFilterModal } from '@/components/ui/TournamentFilterModal';
 import SavedGameResultRow from '@/components/view-stats/SavedGameResultRow';
 import {
   SAVED_GAMES_SORT_OPTIONS,
   SavedGamesSortKey,
   SavedGamesSortSheet,
+  TournamentFilterOption,
 } from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -35,6 +35,10 @@ interface SavedGamesListProps {
 
 const EMPTY_GAME_IDS = new Set<string>();
 const EMPTY_TOURNAMENTS: Tournament[] = [];
+
+interface TournamentSummary extends TournamentFilterOption {
+  latestTimestamp: number;
+}
 
 interface SavedGameGroup {
   key: string;
@@ -91,34 +95,49 @@ export default function SavedGamesList({
   const [sortKey, setSortKey] = useState<SavedGamesSortKey>('newest');
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
-  const [showTournamentFilter, setShowTournamentFilter] = useState(false);
 
-  // Tournaments that have at least one linked saved game, with counts
-  const tournamentGameCounts = new Map<string, number>();
+  const tournamentsById = new Map(tournaments.map((t) => [t.id, t]));
+  // Deleting a tournament also deletes its game links, so a linked game always has its tournament.
+  const getLinkedTournament = (tournamentId: string): Tournament => {
+    const tournament = tournamentsById.get(tournamentId);
+    if (!tournament) throw new Error(`Saved game is linked to missing tournament ${tournamentId}`);
+    return tournament;
+  };
+
+  // Tournaments that have at least one linked saved game, with counts and their newest game
+  const tournamentSummaries = new Map<string, TournamentSummary>();
   for (const game of games) {
-    if (game.tournamentId) {
-      tournamentGameCounts.set(
-        game.tournamentId,
-        (tournamentGameCounts.get(game.tournamentId) ?? 0) + 1,
-      );
+    if (game.tournamentId == null) continue;
+    const summary = tournamentSummaries.get(game.tournamentId);
+    if (summary) {
+      summary.gameCount++;
+      summary.latestTimestamp = Math.max(summary.latestTimestamp, game.timestamp);
+    } else {
+      tournamentSummaries.set(game.tournamentId, {
+        tournament: getLinkedTournament(game.tournamentId),
+        gameCount: 1,
+        latestTimestamp: game.timestamp,
+      });
     }
   }
-  const visibleTournaments = tournaments.filter((t) => {
-    if (!tournamentGameCounts.has(t.id)) return false;
-    if (selectionMode && selectedGameKind != null) {
-      return t.kind === selectedGameKind;
-    }
-    return t.kind !== null;
-  });
-  const activeTournament = visibleTournaments.find((t) => t.id === tournamentFilter) ?? null;
-  const effectiveTournamentFilter = activeTournament ? tournamentFilter : null;
+  // Newest tournament first, so the current one sits at the top of the sheet.
+  const tournamentOptions = [...tournamentSummaries.values()]
+    .filter(({ tournament }) => {
+      if (selectionMode && selectedGameKind != null) {
+        return tournament.kind === selectedGameKind;
+      }
+      return tournament.kind !== null;
+    })
+    .sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+  const activeTournament =
+    tournamentOptions.find(({ tournament }) => tournament.id === tournamentFilter)?.tournament ??
+    null;
 
   let filteredAndSortedGames = [...games];
 
-  if (effectiveTournamentFilter) {
+  if (activeTournament) {
     filteredAndSortedGames = filteredAndSortedGames.filter(
-      (game) =>
-        game.kind === activeTournament?.kind && game.tournamentId === effectiveTournamentFilter,
+      (game) => game.kind === activeTournament.kind && game.tournamentId === activeTournament.id,
     );
   }
 
@@ -130,7 +149,10 @@ export default function SavedGamesList({
       // Matches the day heading the list shows, e.g. "Thu, Oct 29", plus the year it may omit.
       const date =
         `${formatDayTitle(game.timestamp)} ${new Date(game.timestamp).getFullYear()}`.toLowerCase();
-      return t1.includes(query) || t2.includes(query) || date.includes(query);
+      const matchesTournament =
+        game.tournamentId != null &&
+        getLinkedTournament(game.tournamentId).name.toLowerCase().includes(query);
+      return t1.includes(query) || t2.includes(query) || date.includes(query) || matchesTournament;
     });
   }
 
@@ -184,11 +206,6 @@ export default function SavedGamesList({
   const listedGamesCount = filteredAndSortedGames.length;
   const isGroupedByDay = sortOption.field === 'date';
   const gameGroups = groupGames(filteredAndSortedGames, isGroupedByDay);
-  const tournamentNames = new Map(tournaments.map((t) => [t.id, t.name]));
-
-  const tournamentFilterLabel = activeTournament
-    ? `Filter by tournament, ${activeTournament.name} selected`
-    : 'Filter by tournament';
 
   return (
     <View style={styles.container}>
@@ -214,7 +231,7 @@ export default function SavedGamesList({
         <Pressable
           testID="saved-games-sort"
           accessibilityRole="button"
-          accessibilityLabel={`Sort games, ${sortOption.label}`}
+          accessibilityLabel={`Sort and filter games, ${sortOption.label}`}
           onPress={() => setShowSortSheet(true)}
           style={({ pressed }) => [
             styles.controlButton,
@@ -231,34 +248,34 @@ export default function SavedGamesList({
             {sortOption.shortLabel}
           </ThemedText>
         </Pressable>
-        {visibleTournaments.length > 0 && (
-          <Pressable
-            testID="saved-games-tournament-filter"
-            accessibilityRole="button"
-            accessibilityLabel={tournamentFilterLabel}
-            onPress={() => setShowTournamentFilter(true)}
-            style={({ pressed }) => [
-              styles.controlButton,
-              {
-                backgroundColor: activeTournament ? palette.accentOverlay15 : palette.overlay05,
-              },
-              pressed && { opacity: 0.7 },
-            ]}>
-            <MaterialCommunityIcons
-              name="trophy"
-              size={scaleBySizeClass(18, sizeClass)}
-              color={activeTournament ? palette.accent : palette.textMuted}
-            />
-            {activeTournament && (
-              <ThemedText
-                style={[styles.tournamentName, { color: palette.accent }]}
-                numberOfLines={1}>
-                {activeTournament.name}
-              </ThemedText>
-            )}
-          </Pressable>
-        )}
       </View>
+
+      {activeTournament != null && (
+        <Pressable
+          testID="saved-games-tournament-chip"
+          // Reaches the 44pt touch target; the chip is the list's only way to clear the filter.
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={`Clear tournament filter, ${activeTournament.name}`}
+          onPress={() => {
+            setTournamentFilter(null);
+            onClearSelection?.();
+          }}
+          style={({ pressed }) => [
+            styles.filterChip,
+            { backgroundColor: palette.accentOverlay15 },
+            pressed && styles.filterChipPressed,
+          ]}>
+          <ThemedText style={[styles.filterChipText, { color: palette.accent }]} numberOfLines={1}>
+            {activeTournament.name}
+          </ThemedText>
+          <MaterialCommunityIcons
+            name="close"
+            size={scaleBySizeClass(16, sizeClass)}
+            color={palette.accent}
+          />
+        </Pressable>
+      )}
 
       <View style={styles.summaryRow}>
         <ThemedText style={[styles.summaryCount, { color: palette.textMuted }]}>
@@ -274,8 +291,8 @@ export default function SavedGamesList({
             groupTournamentId != null &&
             group.games.every((game) => game.tournamentId === groupTournamentId);
           const groupTournamentName = sharesTournament
-            ? tournamentNames.get(groupTournamentId)
-            : undefined;
+            ? getLinkedTournament(groupTournamentId).name
+            : null;
           // A lone game's row already shows its result.
           const groupRecord = group.games.length > 1 ? formatRecord(group.games) : null;
 
@@ -343,15 +360,11 @@ export default function SavedGamesList({
         })}
       </View>
 
-      {filteredAndSortedGames.length === 0 &&
-        effectiveTournamentFilter &&
-        searchQuery.trim() === '' && (
-          <View style={styles.noResults}>
-            <ThemedText style={{ color: palette.textMuted }}>
-              No games in this tournament
-            </ThemedText>
-          </View>
-        )}
+      {filteredAndSortedGames.length === 0 && activeTournament && searchQuery.trim() === '' && (
+        <View style={styles.noResults}>
+          <ThemedText style={{ color: palette.textMuted }}>No games in this tournament</ThemedText>
+        </View>
+      )}
 
       {filteredAndSortedGames.length === 0 && searchQuery.trim() !== '' && (
         <View style={styles.noResults}>
@@ -368,19 +381,13 @@ export default function SavedGamesList({
           setSortKey(key);
           onClearSelection?.();
         }}
-        onClose={() => setShowSortSheet(false)}
-      />
-
-      <TournamentFilterModal
-        visible={showTournamentFilter}
-        tournaments={visibleTournaments}
-        gameCounts={tournamentGameCounts}
-        selectedTournamentId={effectiveTournamentFilter}
-        onSelect={(id) => {
+        tournamentOptions={tournamentOptions}
+        selectedTournamentId={activeTournament?.id ?? null}
+        onSelectTournament={(id) => {
           setTournamentFilter(id);
           onClearSelection?.();
         }}
-        onClose={() => setShowTournamentFilter(false)}
+        onClose={() => setShowSortSheet(false)}
       />
     </View>
   );
@@ -398,7 +405,7 @@ function createStyles(sizeClass: SizeClass) {
     },
     searchWrapper: {
       flex: 1,
-      // Keeps the field usable when the sort and tournament labels are long; they truncate instead.
+      // Keeps the field usable when the sort label is long; it truncates instead.
       minWidth: scaleBySizeClass(140, sizeClass),
       flexDirection: 'row',
       alignItems: 'center',
@@ -427,10 +434,23 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },
-    tournamentName: {
+    filterChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      maxWidth: '100%',
+      gap: scaleBySizeClass(6, sizeClass),
+      minHeight: scaleBySizeClass(32, sizeClass),
+      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      borderRadius: 999,
+      // Pulls the summary row closer than the container's 16pt gap so the chip reads as its label.
+      marginBottom: -8,
+    },
+    filterChipPressed: {
+      opacity: 0.7,
+    },
+    filterChipText: {
       flexShrink: 1,
-      // Scaled with the text so the name truncates at the same character count on tablets.
-      maxWidth: scaleBySizeClass(96, sizeClass),
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },
@@ -467,6 +487,7 @@ function createStyles(sizeClass: SizeClass) {
       justifyContent: 'space-between',
       gap: 12,
       minHeight: scaleBySizeClass(44, sizeClass),
+      // Pulls the first day group closer than the container's 16pt gap; the row's 44pt height already spaces it.
       marginBottom: -8,
     },
     summaryCount: {
