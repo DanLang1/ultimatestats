@@ -29,7 +29,7 @@ import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
-import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
+import { attachTournaments, buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -58,17 +58,13 @@ export default function StatsScreen() {
   );
   const isNavigatingToGameRef = useRef(false);
 
-  const basicTournamentIdsByGame = getTournamentIdsByGame(gameLinks, 'basic');
-  const advancedTournamentIdsByGame = getTournamentIdsByGame(gameLinks, 'advanced');
-  const basicItems = savedGames.map((g) => ({
-    ...basicGameToListItem(g, savedTeams),
-    tournamentId: basicTournamentIdsByGame.get(g.id),
-  }));
-  const advancedItems = completedAdvancedSavedGameSummaries.map((summary) => ({
-    ...advancedGameSummaryToListItem(summary),
-    tournamentId: advancedTournamentIdsByGame.get(summary.id),
-  }));
-  const allGames = [...basicItems, ...advancedItems].sort((a, b) => b.timestamp - a.timestamp);
+  const allGames = attachTournaments(
+    [
+      ...savedGames.map((g) => basicGameToListItem(g, savedTeams)),
+      ...completedAdvancedSavedGameSummaries.map(advancedGameSummaryToListItem),
+    ],
+    buildTournamentIndex(tournaments, gameLinks),
+  ).sort((a, b) => b.timestamp - a.timestamp);
   const canCombineGames = allGames.length >= MIN_GAMES_TO_COMBINE;
   const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
   const selectedGameKind = selectedGames[0]?.kind ?? null;
@@ -260,7 +256,6 @@ export default function StatsScreen() {
           onToggleGameSelection={handleToggleSavedGameSelection}
           onEnterSelectionWithGame={handleEnterSelectionWithGame}
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
-          tournaments={tournaments}
           selectionMode={selectionMode}
           summaryAction={canCombineGames ? <CombineGamesButton /> : null}
         />

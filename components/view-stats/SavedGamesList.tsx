@@ -5,74 +5,44 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import SavedGameResultRow from '@/components/view-stats/SavedGameResultRow';
-import {
-  SAVED_GAMES_SORT_OPTIONS,
-  SavedGamesSortKey,
-  SavedGamesSortSheet,
-  TournamentFilterOption,
-} from '@/components/view-stats/SavedGamesSortSheet';
+import { SavedGamesSortSheet } from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatDayTitle, formatRecentDay } from '@/lib/dateUtils';
-import { formatRecord, GameKind, GameListItem, isScrimmage } from '@/lib/gameListUtils';
-import { Tournament } from '@/lib/storage/types';
+import { formatRecentDay } from '@/lib/dateUtils';
+import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/lib/gameListUtils';
+import {
+  filterSavedGames,
+  getSharedTournament,
+  getTournamentFilterOptions,
+  groupSavedGames,
+  SAVED_GAMES_SORT_OPTIONS,
+  SavedGamesSortKey,
+  sortSavedGames,
+  summarizeTournaments,
+} from '@/lib/savedGamesListUtils';
+import { GameKind } from '@/lib/storage/types';
 import { Fonts } from '@/theme/theme';
 
 interface SavedGamesListProps {
-  games: GameListItem[];
-  onSelectGame: (game: GameListItem) => void;
+  games: LinkedGameListItem[];
+  onSelectGame: (game: LinkedGameListItem) => void;
   selectedGameIds?: Set<string>;
   /** Required by selection-mode callers to keep basic and advanced bulk actions separate. */
   selectedGameKind?: GameKind | null;
   onToggleGameSelection?: (gameId: string) => void;
   onEnterSelectionWithGame?: (gameId: string) => void;
   onClearSelection?: () => void;
-  tournaments?: Tournament[];
   selectionMode?: boolean;
   /** Shown at the end of the row that counts the listed games. */
   summaryAction?: ReactNode;
 }
 
 const EMPTY_GAME_IDS = new Set<string>();
-const EMPTY_TOURNAMENTS: Tournament[] = [];
-
-interface TournamentSummary extends TournamentFilterOption {
-  latestTimestamp: number;
-}
-
-interface SavedGameGroup {
-  key: string;
-  /** Null when the list is not sorted by date, so the games share one ungrouped section. */
-  title: string | null;
-  games: GameListItem[];
-}
 
 /** Advanced is the default mode, so only basic games and scrimmages are labeled. */
 function getGameModeLabel(game: GameListItem): string | null {
   if (game.kind === 'basic') return 'Basic';
   return isScrimmage(game) ? 'Scrimmage' : null;
-}
-
-/** Groups consecutive games that share a calendar day, preserving the sorted order. */
-function groupGamesByDay(games: GameListItem[]): SavedGameGroup[] {
-  const groups: SavedGameGroup[] = [];
-  for (const game of games) {
-    const key = new Date(game.timestamp).toDateString();
-    const current = groups.at(-1);
-    if (current?.key === key) {
-      current.games.push(game);
-    } else {
-      groups.push({ key, title: formatDayTitle(game.timestamp), games: [game] });
-    }
-  }
-  return groups;
-}
-
-/** Day groups when sorted by date, otherwise one untitled group. Every group has at least one game. */
-function groupGames(games: GameListItem[], isGroupedByDay: boolean): SavedGameGroup[] {
-  if (games.length === 0) return [];
-  if (isGroupedByDay) return groupGamesByDay(games);
-  return [{ key: 'all', title: null, games }];
 }
 
 export default function SavedGamesList({
@@ -83,7 +53,6 @@ export default function SavedGamesList({
   onToggleGameSelection,
   onEnterSelectionWithGame,
   onClearSelection,
-  tournaments = EMPTY_TOURNAMENTS,
   selectionMode = false,
   summaryAction,
 }: SavedGamesListProps) {
@@ -96,82 +65,20 @@ export default function SavedGamesList({
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
 
-  const tournamentsById = new Map(tournaments.map((t) => [t.id, t]));
-  // Deleting a tournament also deletes its game links, so a linked game always has its tournament.
-  const getLinkedTournament = (tournamentId: string): Tournament => {
-    const tournament = tournamentsById.get(tournamentId);
-    if (!tournament) throw new Error(`Saved game is linked to missing tournament ${tournamentId}`);
-    return tournament;
-  };
-
-  // Tournaments that have at least one linked saved game, with counts and their newest game
-  const tournamentSummaries = new Map<string, TournamentSummary>();
-  for (const game of games) {
-    if (game.tournamentId == null) continue;
-    const summary = tournamentSummaries.get(game.tournamentId);
-    if (summary) {
-      summary.gameCount++;
-      summary.latestTimestamp = Math.max(summary.latestTimestamp, game.timestamp);
-    } else {
-      tournamentSummaries.set(game.tournamentId, {
-        tournament: getLinkedTournament(game.tournamentId),
-        gameCount: 1,
-        latestTimestamp: game.timestamp,
-      });
-    }
-  }
   // Newest tournament first, so the current one sits at the top of the sheet.
-  const tournamentOptions = [...tournamentSummaries.values()]
-    .filter(({ tournament }) => {
-      if (selectionMode && selectedGameKind != null) {
-        return tournament.kind === selectedGameKind;
-      }
-      return tournament.kind !== null;
-    })
-    .sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+  const tournamentOptions = getTournamentFilterOptions(
+    summarizeTournaments(games),
+    selectionMode ? selectedGameKind : null,
+  );
   const activeTournament =
     tournamentOptions.find(({ tournament }) => tournament.id === tournamentFilter)?.tournament ??
     null;
 
-  let filteredAndSortedGames = [...games];
-
-  if (activeTournament) {
-    filteredAndSortedGames = filteredAndSortedGames.filter(
-      (game) => game.kind === activeTournament.kind && game.tournamentId === activeTournament.id,
-    );
-  }
-
-  if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase().trim();
-    filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
-      const t1 = game.myTeamName.toLowerCase();
-      const t2 = game.opponentName.toLowerCase();
-      // Matches the day heading the list shows, e.g. "Thu, Oct 29", plus the year it may omit.
-      const date =
-        `${formatDayTitle(game.timestamp)} ${new Date(game.timestamp).getFullYear()}`.toLowerCase();
-      const matchesTournament =
-        game.tournamentId != null &&
-        getLinkedTournament(game.tournamentId).name.toLowerCase().includes(query);
-      return t1.includes(query) || t2.includes(query) || date.includes(query) || matchesTournament;
-    });
-  }
-
+  const filteredAndSortedGames = sortSavedGames(
+    filterSavedGames(games, { tournament: activeTournament, query: searchQuery }),
+    sortKey,
+  );
   const sortOption = SAVED_GAMES_SORT_OPTIONS[sortKey];
-  const dir = sortOption.direction === 'asc' ? 1 : -1;
-  filteredAndSortedGames.sort((a, b) => {
-    switch (sortOption.field) {
-      case 'team':
-        return dir * a.myTeamName.localeCompare(b.myTeamName);
-      case 'score': {
-        const totalA = a.myScore + a.opponentScore;
-        const totalB = b.myScore + b.opponentScore;
-        return dir * (totalA - totalB);
-      }
-      case 'date':
-      default:
-        return dir * (a.timestamp - b.timestamp);
-    }
-  });
 
   if (games.length === 0) {
     return (
@@ -205,7 +112,7 @@ export default function SavedGamesList({
 
   const listedGamesCount = filteredAndSortedGames.length;
   const isGroupedByDay = sortOption.field === 'date';
-  const gameGroups = groupGames(filteredAndSortedGames, isGroupedByDay);
+  const gameGroups = groupSavedGames(filteredAndSortedGames, isGroupedByDay);
 
   return (
     <View style={styles.container}>
@@ -286,13 +193,7 @@ export default function SavedGamesList({
 
       <View style={styles.savedGamesList}>
         {gameGroups.map((group) => {
-          const groupTournamentId = group.games[0].tournamentId;
-          const sharesTournament =
-            groupTournamentId != null &&
-            group.games.every((game) => game.tournamentId === groupTournamentId);
-          const groupTournamentName = sharesTournament
-            ? getLinkedTournament(groupTournamentId).name
-            : null;
+          const groupTournamentName = getSharedTournament(group.games)?.name ?? null;
           // A lone game's row already shows its result.
           const groupRecord = group.games.length > 1 ? formatRecord(group.games) : null;
 

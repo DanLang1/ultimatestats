@@ -3,6 +3,7 @@ import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import AggregateStatsScreen from '@/app/(main)/(hub)/(analytics)/aggregate-stats';
+import { buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -102,6 +103,14 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
 
   it('assigns selected games to a tournament and clears the selection after persistence', async () => {
     const { emptyTournamentId } = await arrangeGames(kind);
+    const otherKindTournamentId = await useTournamentStore
+      .getState()
+      .addTournament('Other Kind Cup', '2026-03-01', '2026-03-01');
+    await useTournamentStore
+      .getState()
+      .addGamesToTournament(otherKindTournamentId, kind === 'basic' ? 'advanced' : 'basic', [
+        'other-kind-game',
+      ]);
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
     if (kind === 'basic') await user.press(screen.getByText('Basic'));
@@ -109,10 +118,12 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     await user.press(screen.getByLabelText(/versus Eagles/));
     await user.press(screen.getByText('Add to tournament'));
     expect(screen.getByText('Select Tournament')).toBeVisible();
+    expect(screen.queryByText('Other Kind Cup')).not.toBeOnTheScreen();
     await user.press(screen.getByText('Empty Invite'));
-    expect(useTournamentStore.getState().getTournamentIdForGame(kind, 'second')).toBe(
-      emptyTournamentId,
-    );
+    const { tournaments, gameLinks } = useTournamentStore.getState();
+    expect(
+      buildTournamentIndex(tournaments, gameLinks).tournamentFor({ kind, id: 'second' })?.id,
+    ).toBe(emptyTournamentId);
     expect(screen.queryByText(/^1 selected/)).not.toBeOnTheScreen();
     expect(screen.getByLabelText('Select games in Empty Invite')).toBeVisible();
   });

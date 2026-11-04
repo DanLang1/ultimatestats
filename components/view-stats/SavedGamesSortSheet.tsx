@@ -5,88 +5,21 @@ import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { Tournament } from '@/lib/storage/types';
+import {
+  SAVED_GAMES_SORT_OPTIONS,
+  SavedGamesSortKey,
+  TournamentSummary,
+} from '@/lib/savedGamesListUtils';
 import { Fonts } from '@/theme/theme';
 
-export type SavedGamesSortField = 'date' | 'team' | 'score';
-export type SavedGamesSortDirection = 'asc' | 'desc';
-export type SavedGamesSortKey =
-  | 'newest'
-  | 'oldest'
-  | 'team-asc'
-  | 'team-desc'
-  | 'points-desc'
-  | 'points-asc';
-
-export interface SavedGamesSortOption {
-  key: SavedGamesSortKey;
-  field: SavedGamesSortField;
-  direction: SavedGamesSortDirection;
-  /** Full wording for the picker sheet. */
-  label: string;
-  /** Compact wording for the sort button. */
-  shortLabel: string;
-}
-
-export const SAVED_GAMES_SORT_OPTIONS: Record<SavedGamesSortKey, SavedGamesSortOption> = {
-  newest: {
-    key: 'newest',
-    field: 'date',
-    direction: 'desc',
-    label: 'Newest first',
-    shortLabel: 'Newest',
-  },
-  oldest: {
-    key: 'oldest',
-    field: 'date',
-    direction: 'asc',
-    label: 'Oldest first',
-    shortLabel: 'Oldest',
-  },
-  'team-asc': {
-    key: 'team-asc',
-    field: 'team',
-    direction: 'asc',
-    label: 'Team A–Z',
-    shortLabel: 'Team A–Z',
-  },
-  'team-desc': {
-    key: 'team-desc',
-    field: 'team',
-    direction: 'desc',
-    label: 'Team Z–A',
-    shortLabel: 'Team Z–A',
-  },
-  'points-desc': {
-    key: 'points-desc',
-    field: 'score',
-    direction: 'desc',
-    label: 'Highest scoring',
-    shortLabel: 'High scoring',
-  },
-  'points-asc': {
-    key: 'points-asc',
-    field: 'score',
-    direction: 'asc',
-    label: 'Lowest scoring',
-    shortLabel: 'Low scoring',
-  },
-};
-
 const SORT_OPTION_LIST = Object.values(SAVED_GAMES_SORT_OPTIONS);
-
-/** A tournament the list can be filtered to, with how many listed games it has. */
-export interface TournamentFilterOption {
-  tournament: Tournament;
-  gameCount: number;
-}
 
 interface SavedGamesSortSheetProps {
   visible: boolean;
   selectedKey: SavedGamesSortKey;
   onSelect: (key: SavedGamesSortKey) => void;
   /** In display order; the tournament section is hidden when empty. */
-  tournamentOptions: TournamentFilterOption[];
+  tournamentOptions: TournamentSummary[];
   selectedTournamentId: string | null;
   onSelectTournament: (tournamentId: string | null) => void;
   onClose: () => void;

@@ -23,7 +23,7 @@ export interface SavedGame {
   team1Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   team2Color?: string; // hex color snapshot at save time - optional, falls back to theme default
   importedAt?: number; // timestamp when this game was imported via sharing
-  tournamentId?: string;
+  tournamentId?: string; // legacy: read only by the basic-tournament-links startup migration (see docs/tech-debt.md)
 }
 
 export type MatchingType = 'fmp' | 'mmp';
@@ -45,12 +45,12 @@ export interface SavedTeam {
   // Future: add updatedAt/importedAt for cloud sync and import tracking
 }
 
-export type TournamentKind = 'basic' | 'advanced';
+export type GameKind = 'basic' | 'advanced';
 
 export interface Tournament {
   id: string;
   schemaVersion: number;
-  kind: TournamentKind | null;
+  kind: GameKind | null;
   name: string;
   startDate: string; // ISO date string, e.g. "2026-03-12"
   endDate: string; // ISO date string, e.g. "2026-03-14"
@@ -62,7 +62,7 @@ export interface TournamentGameLink {
   id: string;
   schemaVersion: number;
   tournamentId: string;
-  gameKind: TournamentKind;
+  gameKind: GameKind;
   gameId: string;
   createdAt: number;
 }

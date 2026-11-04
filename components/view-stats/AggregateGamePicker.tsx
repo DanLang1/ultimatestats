@@ -5,14 +5,13 @@ import AggregateGameSection from '@/components/view-stats/AggregateGameSection';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatRecord, GameListItem, groupGamesByTournament } from '@/lib/gameListUtils';
-import { Tournament } from '@/lib/storage/types';
+import { attachTournaments, TournamentIndex } from '@/lib/tournamentIndex';
 import { Fonts } from '@/theme/theme';
 
 interface AggregateGamePickerProps {
   /** One team's games. */
   games: GameListItem[];
-  tournaments: Tournament[];
-  tournamentIdsByGame: Map<string, string>;
+  tournamentIndex: TournamentIndex;
   selectedGameIds: Set<string>;
   onToggleGameSelection: (gameId: string) => void;
   onSelectGames: (gameIds: string[]) => void;
@@ -22,8 +21,7 @@ interface AggregateGamePickerProps {
 /** A team's record over its games, then the games grouped by tournament for selection. */
 export default function AggregateGamePicker({
   games,
-  tournaments,
-  tournamentIdsByGame,
+  tournamentIndex,
   selectedGameIds,
   onToggleGameSelection,
   onSelectGames,
@@ -33,7 +31,7 @@ export default function AggregateGamePicker({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const sections = groupGamesByTournament(games, tournaments, tournamentIdsByGame);
+  const sections = groupGamesByTournament(attachTournaments(games, tournamentIndex));
   const gameIds = games.map((game) => game.id);
   const areAllSelected = gameIds.every((id) => selectedGameIds.has(id));
   const record = formatRecord(games);

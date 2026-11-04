@@ -52,12 +52,11 @@ import {
 } from '@/lib/sharing/shareActionUtils';
 import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { GameEvent, Player, SavedGame } from '@/lib/storage';
-import { getTournamentIdsByGame } from '@/lib/tournamentUtils';
+import { GameKind } from '@/lib/storage/types';
+import { buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
-
-type AggregateMode = 'basic' | 'advanced';
 
 function getAdvancedAggregateErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.includes('same focus side')) {
@@ -84,7 +83,7 @@ export default function AggregateStatsScreen() {
     isAdvancedGameAggregateEligible,
   );
   const { tournaments, gameLinks, addGamesToTournament } = useTournamentStore();
-  const [aggregateMode, setAggregateMode] = useState<AggregateMode>('advanced');
+  const [aggregateMode, setAggregateMode] = useState<GameKind>('advanced');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedAdvancedTeamId, setSelectedAdvancedTeamId] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
@@ -93,8 +92,7 @@ export default function AggregateStatsScreen() {
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
-  const tournamentIdsByBasicGame = getTournamentIdsByGame(gameLinks, 'basic');
-  const tournamentIdsByAdvancedGame = getTournamentIdsByGame(gameLinks, 'advanced');
+  const tournamentIndex = buildTournamentIndex(tournaments, gameLinks);
   const selectedGameItems: GameListItem[] =
     aggregateMode === 'advanced'
       ? aggregateEligibleAdvancedGameSummaries
@@ -190,7 +188,7 @@ export default function AggregateStatsScreen() {
     setShowingAggregatedStats(false);
   };
 
-  const handleSetAggregateMode = (mode: AggregateMode) => {
+  const handleSetAggregateMode = (mode: GameKind) => {
     setAggregateMode(mode);
     setSelectedTeam(null);
     setSelectedAdvancedTeamId(null);
@@ -461,8 +459,7 @@ export default function AggregateStatsScreen() {
         onToggleGameSelection={handleToggleGameSelection}
         onSelectGames={handleSelectGames}
         onDeselectGames={handleDeselectGames}
-        tournaments={tournaments}
-        tournamentIdsByGame={tournamentIdsByAdvancedGame}
+        tournamentIndex={tournamentIndex}
       />
     );
   } else {
@@ -475,8 +472,7 @@ export default function AggregateStatsScreen() {
         onToggleGameSelection={handleToggleGameSelection}
         onSelectGames={handleSelectGames}
         onDeselectGames={handleDeselectGames}
-        tournaments={tournaments}
-        tournamentIdsByGame={tournamentIdsByBasicGame}
+        tournamentIndex={tournamentIndex}
       />
     );
   }

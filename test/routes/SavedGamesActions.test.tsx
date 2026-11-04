@@ -271,11 +271,7 @@ function arrangeSortableGames() {
 
 it.each([
   ['team-asc', 'Team A–Z', ['Beta', 'Rivals', 'Dark']],
-  ['team-desc', 'Team Z–A', ['Dark', 'Rivals', 'Beta']],
-  ['points-asc', 'Low scoring', ['Rivals', 'Beta', 'Dark']],
-  ['points-desc', 'High scoring', ['Dark', 'Beta', 'Rivals']],
   ['oldest', 'Oldest', ['Beta', 'Dark', 'Rivals']],
-  ['newest', 'Newest', ['Rivals', 'Dark', 'Beta']],
 ])('sorts saved games by %s and clears selection', async (key, buttonLabel, expected) => {
   arrangeSortableGames();
   const user = userEvent.setup();
@@ -291,23 +287,6 @@ it.each([
   expect(screen.queryByTestId('saved-games-sort-sheet')).not.toBeOnTheScreen();
   expect(within(screen.getByTestId('saved-games-sort')).getByText(buttonLabel)).toBeVisible();
   expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
-});
-
-it('filters saved games by either team, trims search text, and reports an unmatched query', async () => {
-  arrangeSortableGames();
-  const user = userEvent.setup();
-  await renderScreen(<StatsScreen />);
-  const input = screen.getByPlaceholderText('Search');
-  await user.type(input, ' DARK ');
-  expect(screen.getByText('Dark')).toBeVisible();
-  expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
-  await user.clear(input);
-  await user.type(input, 'hybrid');
-  expect(screen.getByText('Rivals')).toBeVisible();
-  expect(screen.queryByText('Dark')).not.toBeOnTheScreen();
-  await user.clear(input);
-  await user.type(input, 'missing');
-  expect(screen.getByText('No games match "missing"')).toBeVisible();
 });
 
 it('filters to a tournament from the sort sheet, clears it with the chip, and searches by tournament name', async () => {

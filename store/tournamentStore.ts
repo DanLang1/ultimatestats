@@ -4,7 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { reportHydrationError } from '@/lib/sentry';
-import { SavedGame, Tournament, TournamentGameLink, TournamentKind } from '@/lib/storage/types';
+import { GameKind, SavedGame, Tournament, TournamentGameLink } from '@/lib/storage/types';
+import { isTournamentCompatible } from '@/lib/tournamentRules';
 import { generateId } from '@/lib/utils';
 
 const TOURNAMENT_SCHEMA_VERSION = 1;
@@ -50,17 +51,14 @@ interface TournamentState {
   deleteTournament: (id: string) => Promise<void>;
   addGamesToTournament: (
     tournamentId: string,
-    gameKind: TournamentKind,
+    gameKind: GameKind,
     gameIds: string[],
   ) => Promise<boolean>;
-  removeGameFromTournament: (gameKind: TournamentKind, gameId: string) => Promise<void>;
+  removeGameFromTournament: (gameKind: GameKind, gameId: string) => Promise<void>;
   migrateBasicTournamentLinks: (savedGames: SavedGame[]) => Promise<void>;
-  getTournamentIdForGame: (gameKind: TournamentKind, gameId: string) => string | null;
-  getLinksForTournament: (tournamentId: string) => TournamentGameLink[];
-  getTournamentGameCounts: (gameKind: TournamentKind) => Map<string, number>;
 }
 
-function getTournamentKind(tournament: Tournament | LegacyTournament): TournamentKind | null {
+function getTournamentKind(tournament: Tournament | LegacyTournament): GameKind | null {
   if (tournament.kind === null) return null;
   if (tournament.kind === 'advanced' || tournament.kind === 'basic') return tournament.kind;
   return 'basic';
@@ -80,7 +78,7 @@ function enrichTournament(tournament: LegacyTournament): Tournament {
   };
 }
 
-function isValidGameKind(kind: unknown): kind is TournamentKind {
+function isValidGameKind(kind: unknown): kind is GameKind {
   return kind === 'basic' || kind === 'advanced';
 }
 
@@ -111,7 +109,7 @@ function normalizeLinks(links: TournamentGameLink[] | undefined): TournamentGame
   return Array.from(linkByGame.values());
 }
 
-function getKnownTournamentIds(tournaments: Tournament[], kind: TournamentKind) {
+function getKnownTournamentIds(tournaments: Tournament[], kind: GameKind) {
   return new Set(
     tournaments.filter((tournament) => tournament.kind === kind).map((tournament) => tournament.id),
   );
@@ -178,7 +176,7 @@ export const useTournamentStore = create<TournamentState>()(
         addGamesToTournament: async (tournamentId, gameKind, gameIds) => {
           const tournament = get().tournaments.find((t) => t.id === tournamentId);
           if (!tournament || !isValidGameKind(gameKind) || gameIds.length === 0) return false;
-          if (tournament.kind !== null && tournament.kind !== gameKind) return false;
+          if (!isTournamentCompatible(tournament, gameKind)) return false;
 
           const uniqueGameIds = [...new Set(gameIds)];
           const now = Date.now();
@@ -245,22 +243,6 @@ export const useTournamentStore = create<TournamentState>()(
           set((state) => {
             state.gameLinks.push(...linksToAdd);
           });
-        },
-
-        getTournamentIdForGame: (gameKind, gameId) =>
-          get().gameLinks.find((link) => link.gameKind === gameKind && link.gameId === gameId)
-            ?.tournamentId ?? null,
-
-        getLinksForTournament: (tournamentId) =>
-          get().gameLinks.filter((link) => link.tournamentId === tournamentId),
-
-        getTournamentGameCounts: (gameKind) => {
-          const counts = new Map<string, number>();
-          for (const link of get().gameLinks) {
-            if (link.gameKind !== gameKind) continue;
-            counts.set(link.tournamentId, (counts.get(link.tournamentId) ?? 0) + 1);
-          }
-          return counts;
         },
       }),
       {

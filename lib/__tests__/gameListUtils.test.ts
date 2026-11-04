@@ -14,6 +14,7 @@ import {
   groupAdvancedGamesByTeam,
   groupBasicGamesByTeam,
   groupGamesByTournament,
+  LinkedGameListItem,
 } from '../gameListUtils';
 import type { SavedGame, SavedTeam, Tournament } from '../storage';
 
@@ -62,13 +63,6 @@ describe('basicGameToListItem', () => {
   it('falls back to game team1.name when no saved team matches', () => {
     const item = basicGameToListItem(baseBasicGame, []);
     expect(item.myTeamName).toBe('My Team');
-  });
-
-  it('passes through tournamentId when present', () => {
-    const game: SavedGame = { ...baseBasicGame, tournamentId: 'tour1' };
-    const item = basicGameToListItem(game, []);
-    if (item.kind !== 'basic') throw new Error('expected basic kind');
-    expect(item.tournamentId).toBe('tour1');
   });
 });
 
@@ -378,23 +372,25 @@ function tournament(id: string): Tournament {
   };
 }
 
+function linkedItem(
+  id: string,
+  timestamp: number,
+  linkedTournament: Tournament | null,
+): LinkedGameListItem {
+  return { ...listItem(id, timestamp), tournament: linkedTournament };
+}
+
 describe('groupGamesByTournament', () => {
   it('orders tournaments by their newest game and lists unlinked games last, newest first', () => {
-    const sections = groupGamesByTournament(
-      [
-        listItem('a1', 1),
-        listItem('none1', 2),
-        listItem('b1', 3),
-        listItem('a2', 4),
-        listItem('none2', 5),
-      ],
-      [tournament('b'), tournament('a')],
-      new Map([
-        ['a1', 'a'],
-        ['a2', 'a'],
-        ['b1', 'b'],
-      ]),
-    );
+    const a = tournament('a');
+    const b = tournament('b');
+    const sections = groupGamesByTournament([
+      linkedItem('a1', 1, a),
+      linkedItem('none1', 2, null),
+      linkedItem('b1', 3, b),
+      linkedItem('a2', 4, a),
+      linkedItem('none2', 5, null),
+    ]);
 
     expect(
       sections.map((section) => [section.tournament?.id ?? null, section.games.map((g) => g.id)]),

@@ -12,7 +12,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { MAX_TOURNAMENT_NAME_LENGTH } from '@/lib/constants';
 import { formatDateForDisplay, toISODate } from '@/lib/dateUtils';
-import { TournamentKind } from '@/lib/storage/types';
+import { GameKind } from '@/lib/storage/types';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 
@@ -29,7 +29,7 @@ export default function CreateTournamentScreen() {
   const { addTournament, addGamesToTournament, tournaments } = useTournamentStore();
   // The tournament picker opens this screen with the games the new tournament should start with.
   const { gameKind, gameIds } = useLocalSearchParams<{
-    gameKind: TournamentKind;
+    gameKind: GameKind;
     gameIds: string;
   }>();
 

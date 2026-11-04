@@ -5,8 +5,6 @@ import { resolveTeamName } from '@/lib/playerUtils';
 import { getGameDisplayTimestamp } from '@/lib/savedGameUtils';
 import { SavedGame, SavedTeam, Tournament } from '@/lib/storage';
 
-export type GameKind = 'basic' | 'advanced';
-
 export type GameListItem =
   | {
       kind: 'basic';
@@ -16,7 +14,6 @@ export type GameListItem =
       opponentName: string;
       myScore: number;
       opponentScore: number;
-      tournamentId?: string;
     }
   | {
       kind: 'advanced';
@@ -27,8 +24,10 @@ export type GameListItem =
       opponentName: string;
       myScore: number;
       opponentScore: number;
-      tournamentId?: string;
     };
+
+/** A list item with its tournament resolved, or null when it isn't in one. */
+export type LinkedGameListItem = GameListItem & { tournament: Tournament | null };
 
 export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): GameListItem {
   return {
@@ -39,7 +38,6 @@ export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): G
     opponentName: game.team2Name,
     myScore: game.team1Score,
     opponentScore: game.team2Score,
-    tournamentId: game.tournamentId,
   };
 }
 
@@ -192,39 +190,27 @@ export function formatPointDifferential(games: GameListItem[]): string {
 export interface TournamentGameSection {
   tournament: Tournament | null;
   /** Newest first; never empty. */
-  games: GameListItem[];
+  games: LinkedGameListItem[];
 }
 
 /**
  * One section per tournament that has a listed game, ordered by its newest game, then a final
  * section for games linked to no tournament.
  */
-export function groupGamesByTournament(
-  games: GameListItem[],
-  tournaments: Tournament[],
-  tournamentIdsByGame: Map<string, string>,
-): TournamentGameSection[] {
-  const tournamentsById = new Map(tournaments.map((tournament) => [tournament.id, tournament]));
+export function groupGamesByTournament(games: LinkedGameListItem[]): TournamentGameSection[] {
   // Map insertion order follows each tournament's newest game.
   const tournamentSections = new Map<string, TournamentGameSection>();
-  const unlinkedGames: GameListItem[] = [];
+  const unlinkedGames: LinkedGameListItem[] = [];
 
   for (const game of [...games].sort((a, b) => b.timestamp - a.timestamp)) {
-    const tournamentId = tournamentIdsByGame.get(game.id);
-    if (tournamentId === undefined) {
+    const { tournament } = game;
+    if (tournament === null) {
       unlinkedGames.push(game);
       continue;
     }
-    const section = tournamentSections.get(tournamentId);
-    if (section) {
-      section.games.push(game);
-      continue;
-    }
-    const tournament = tournamentsById.get(tournamentId);
-    if (!tournament) {
-      throw new Error(`Game ${game.id} is linked to missing tournament ${tournamentId}`);
-    }
-    tournamentSections.set(tournamentId, { tournament, games: [game] });
+    const section = tournamentSections.get(tournament.id);
+    if (section) section.games.push(game);
+    else tournamentSections.set(tournament.id, { tournament, games: [game] });
   }
 
   const sections = [...tournamentSections.values()];

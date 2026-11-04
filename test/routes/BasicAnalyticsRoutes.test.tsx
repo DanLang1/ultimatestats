@@ -12,6 +12,7 @@ import LivePlayerStatsScreen from '@/app/(main)/live-stats/player-stats';
 import LiveGameTimelineScreen from '@/app/(main)/live-stats/timeline';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { GameEvent, PointLineRecord } from '@/lib/storage/types';
+import { buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
@@ -163,10 +164,15 @@ describe('basic analytics routes', () => {
     await user.type(screen.getByPlaceholderText('Tournament name'), 'Windy City Invite');
     await user.press(screen.getByText('Create Tournament'));
 
-    const { tournaments, getTournamentIdForGame } = useTournamentStore.getState();
+    const { tournaments, gameLinks } = useTournamentStore.getState();
+    const tournamentIndex = buildTournamentIndex(tournaments, gameLinks);
     expect(tournaments[0]?.name).toBe('Windy City Invite');
-    expect(getTournamentIdForGame('advanced', 'first')).toBe(tournaments[0]?.id);
-    expect(getTournamentIdForGame('advanced', 'second')).toBe(tournaments[0]?.id);
+    expect(tournamentIndex.tournamentFor({ kind: 'advanced', id: 'first' })?.id).toBe(
+      tournaments[0]?.id,
+    );
+    expect(tournamentIndex.tournamentFor({ kind: 'advanced', id: 'second' })?.id).toBe(
+      tournaments[0]?.id,
+    );
     expect(router.back).toHaveBeenCalledTimes(1);
   });
 

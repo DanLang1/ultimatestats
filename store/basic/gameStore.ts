@@ -1207,18 +1207,6 @@ export const useGameStore = create<GameState>()(
           });
         },
 
-        updateSavedGameTournament: async (gameId: string, tournamentId: string | undefined) => {
-          const game = get().savedGames.find((g) => g.id === gameId);
-          if (!game) return;
-
-          const updatedGame: SavedGame = { ...game, tournamentId };
-
-          await set((state: GameState) => {
-            const idx = state.savedGames.findIndex((g) => g.id === gameId);
-            state.savedGames[idx] = updatedGame;
-          });
-        },
-
         saveCurrentGame: async () => {
           const state = get();
           // Use existing gameId if we've already saved this game (e.g., after undo+re-win)

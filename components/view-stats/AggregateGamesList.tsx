@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { basicGameToListItem, groupBasicGamesByTeam } from '@/lib/gameListUtils';
 import { SavedGame } from '@/lib/storage';
-import { Tournament } from '@/lib/storage/types';
+import { TournamentIndex } from '@/lib/tournamentIndex';
 import { useGameStore } from '@/store/basic/gameStore';
 
 interface AggregateGamesListProps {
@@ -19,8 +19,7 @@ interface AggregateGamesListProps {
   onToggleGameSelection: (gameId: string) => void;
   onSelectGames: (gameIds: string[]) => void;
   onDeselectGames: (gameIds: string[]) => void;
-  tournaments: Tournament[];
-  tournamentIdsByGame: Map<string, string>;
+  tournamentIndex: TournamentIndex;
 }
 
 export default function AggregateGamesList({
@@ -31,8 +30,7 @@ export default function AggregateGamesList({
   onToggleGameSelection,
   onSelectGames,
   onDeselectGames,
-  tournaments,
-  tournamentIdsByGame,
+  tournamentIndex,
 }: AggregateGamesListProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
@@ -66,8 +64,7 @@ export default function AggregateGamesList({
     return (
       <AggregateGamePicker
         games={teamGames}
-        tournaments={tournaments}
-        tournamentIdsByGame={tournamentIdsByGame}
+        tournamentIndex={tournamentIndex}
         selectedGameIds={selectedGameIds}
         onToggleGameSelection={onToggleGameSelection}
         onSelectGames={onSelectGames}

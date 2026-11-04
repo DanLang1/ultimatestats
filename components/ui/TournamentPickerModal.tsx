@@ -9,13 +9,14 @@ import { useTheme } from '@/context/ThemeContext';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatTournamentDateRange } from '@/lib/dateUtils';
 import { reportError } from '@/lib/sentry';
-import { Tournament, TournamentKind } from '@/lib/storage/types';
+import { GameKind, Tournament } from '@/lib/storage/types';
+import { isTournamentCompatible } from '@/lib/tournamentRules';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 
 interface TournamentPickerModalProps {
   visible: boolean;
-  gameKind: TournamentKind;
+  gameKind: GameKind;
   onSelect: (tournamentId: string) => void;
   onClose: () => void;
   /** Games a newly created tournament should start with. */
@@ -37,9 +38,9 @@ export function TournamentPickerModal({
   // The alert provider's modal can't present over this one, so delete is confirmed in the sheet.
   const [pendingDelete, setPendingDelete] = useState<Tournament | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const compatibleTournaments = tournaments.filter((tournament) => {
-    return tournament.kind === null || tournament.kind === gameKind;
-  });
+  const compatibleTournaments = tournaments.filter((tournament) =>
+    isTournamentCompatible(tournament, gameKind),
+  );
 
   const handleClose = () => {
     setPendingDelete(null);

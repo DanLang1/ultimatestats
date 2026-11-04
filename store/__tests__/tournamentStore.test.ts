@@ -250,29 +250,4 @@ describe('tournamentStore', () => {
       expect(useTournamentStore.getState().gameLinks).toHaveLength(0);
     });
   });
-
-  describe('selectors', () => {
-    it('returns tournament ids and counts from links', () => {
-      useTournamentStore.setState({
-        gameLinks: [
-          makeLink({ gameId: 'game-1' }),
-          makeLink({ id: 'link-2', gameId: 'game-2' }),
-          makeLink({
-            id: 'link-3',
-            tournamentId: 'advanced-tournament',
-            gameKind: 'advanced',
-            gameId: 'advanced-1',
-          }),
-        ],
-      });
-
-      expect(useTournamentStore.getState().getTournamentIdForGame('basic', 'game-1')).toBe(
-        'tournament-1',
-      );
-      expect(useTournamentStore.getState().getLinksForTournament('tournament-1')).toHaveLength(2);
-      expect(
-        useTournamentStore.getState().getTournamentGameCounts('basic').get('tournament-1'),
-      ).toBe(2);
-    });
-  });
 });
