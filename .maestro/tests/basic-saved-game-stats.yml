@@ -14,7 +14,7 @@ tags:
     timeout: 5000
 
 # The simulator may hold other saved games; search narrows the list to the seeded one.
-- tapOn: 'Search teams or dates...'
+- tapOn: 'Search'
 - inputText: 'Rivals'
 - hideKeyboard
 - tapOn: '.*versus Rivals, 2 to 1.*'

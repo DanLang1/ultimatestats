@@ -5,17 +5,8 @@ import GameScore from '@/components/view-stats/GameScore';
 import GameSelectionCheckbox from '@/components/view-stats/GameSelectionCheckbox';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  formatGameRowAccessibilityLabel,
-  GameListItem,
-  GameResult,
-  getGameResult,
-  isScrimmage,
-} from '@/lib/gameListUtils';
-import { Fonts, Palette } from '@/theme/theme';
-
-/** Scrimmages show their own marker instead of a result. */
-type RowResult = GameResult | 'scrimmage';
+import { formatGameRowAccessibilityLabel, GameListItem, isScrimmage } from '@/lib/gameListUtils';
+import { Fonts } from '@/theme/theme';
 
 interface SavedGameResultRowProps {
   game: GameListItem;
@@ -29,20 +20,7 @@ interface SavedGameResultRowProps {
   onLongPress?: () => void;
 }
 
-function getResultStyle(result: RowResult, palette: Palette) {
-  const styles: Record<RowResult, { letter: string; color: string }> = {
-    win: { letter: 'W', color: palette.success },
-    loss: { letter: 'L', color: palette.danger },
-    tie: { letter: 'T', color: palette.warning },
-    scrimmage: { letter: 'S', color: palette.accent },
-  };
-  return styles[result];
-}
-
-/**
- * One saved game as a result-first row: W/L/T (or scrimmage) letter, matchup, and a
- * result-colored score.
- */
+/** One saved game as a row: matchup and a result-colored score. */
 export default function SavedGameResultRow({
   game,
   detailLabel,
@@ -57,10 +35,9 @@ export default function SavedGameResultRow({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const result: RowResult = isScrimmage(game) ? 'scrimmage' : getGameResult(game);
-  const resultStyle = getResultStyle(result, palette);
+  const gameIsScrimmage = isScrimmage(game);
   // In a scrimmage neither side is the opponent, so both names keep full weight.
-  const opponentColor = result === 'scrimmage' ? palette.textInverse : palette.textMuted;
+  const opponentColor = gameIsScrimmage ? palette.textInverse : palette.textMuted;
   const isSelectionDisabled = selectionMode && !isSelectable;
 
   return (
@@ -82,10 +59,6 @@ export default function SavedGameResultRow({
         <GameSelectionCheckbox isSelected={isSelected} isSelectable={isSelectable} />
       )}
 
-      <ThemedText style={[styles.resultLetter, { color: resultStyle.color }]}>
-        {resultStyle.letter}
-      </ThemedText>
-
       <View style={styles.details}>
         <ThemedText style={[styles.matchup, { color: palette.textInverse }]} numberOfLines={1}>
           {game.myTeamName}
@@ -105,7 +78,7 @@ export default function SavedGameResultRow({
         <GameScore
           myScore={game.myScore}
           opponentScore={game.opponentScore}
-          isScrimmage={isScrimmage(game)}
+          isScrimmage={gameIsScrimmage}
         />
       </View>
     </Pressable>
@@ -124,12 +97,6 @@ function createStyles(sizeClass: SizeClass) {
     },
     disabled: {
       opacity: 0.45,
-    },
-    resultLetter: {
-      width: scaleBySizeClass(16, sizeClass),
-      fontSize: scaleBySizeClass(16, sizeClass),
-      fontFamily: Fonts.bold,
-      textAlign: 'center',
     },
     details: {
       flex: 1,

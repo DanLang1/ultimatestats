@@ -176,7 +176,7 @@ it('cancels sharing without losing selection and clears selection when search ch
   await user.press(screen.getByText('Share (1)'));
   await user.press(screen.getByTestId('share-confirm-cancel'));
   expect(screen.getByText('Share (1)')).toBeVisible();
-  await user.type(screen.getByPlaceholderText('Search teams or dates...'), 'Second');
+  await user.type(screen.getByPlaceholderText('Search'), 'Second');
   expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
   expect(screen.queryByText('First Rival')).not.toBeOnTheScreen();
 });
@@ -297,7 +297,7 @@ it('filters saved games by either team, trims search text, and reports an unmatc
   arrangeSortableGames();
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
-  const input = screen.getByPlaceholderText('Search teams or dates...');
+  const input = screen.getByPlaceholderText('Search');
   await user.type(input, ' DARK ');
   expect(screen.getByText('Dark')).toBeVisible();
   expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
@@ -310,7 +310,7 @@ it('filters saved games by either team, trims search text, and reports an unmatc
   expect(screen.getByText('No games match "missing"')).toBeVisible();
 });
 
-it('finds games by the weekday shown in day headings and dates rows with the year when ungrouped', async () => {
+it('finds games by the weekday shown in day headings and dates rows when ungrouped', async () => {
   arrangeSortableGames();
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
@@ -318,22 +318,23 @@ it('finds games by the weekday shown in day headings and dates rows with the yea
   const hybridWeekday = new Date(Date.UTC(2026, 0, 3)).toLocaleDateString(undefined, {
     weekday: 'short',
   });
-  await user.type(screen.getByPlaceholderText('Search teams or dates...'), hybridWeekday);
+  await user.type(screen.getByPlaceholderText('Search'), hybridWeekday);
   expect(screen.getByText('Rivals')).toBeVisible();
   expect(screen.queryByText('Dark')).not.toBeOnTheScreen();
   expect(screen.queryByText('Beta')).not.toBeOnTheScreen();
 
-  await user.clear(screen.getByPlaceholderText('Search teams or dates...'));
+  await user.clear(screen.getByPlaceholderText('Search'));
   await user.press(screen.getByTestId('saved-games-sort'));
   await user.press(screen.getByTestId('saved-games-sort-option-team-asc'));
-  expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}, \d{4} · Basic$/)).toHaveLength(3);
-  await user.type(screen.getByPlaceholderText('Search teams or dates...'), 'missing');
+  expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}(, \d{4})? · Basic$/)).toHaveLength(3);
+  await user.type(screen.getByPlaceholderText('Search'), 'missing');
   expect(screen.getByText('No games match "missing"')).toBeVisible();
 });
 
 it.each([
   ['one tracked team', ['Light', 'Light'], '1–1'],
   ['mixed tracked teams', ['Light', 'Hybrid'], null],
+  ['a single game', ['Light'], null],
 ] as const)('shows a day record only for %s', async (_case, teamNames, expectedRecord) => {
   useGameStore.setState({
     savedGames: teamNames.map((name, i) => ({

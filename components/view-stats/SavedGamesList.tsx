@@ -13,7 +13,7 @@ import {
 } from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { formatDayTitle } from '@/lib/dateUtils';
+import { formatDayTitle, formatRecentDay } from '@/lib/dateUtils';
 import { formatRecord, GameKind, GameListItem, isScrimmage } from '@/lib/gameListUtils';
 import { Tournament } from '@/lib/storage/types';
 import { Fonts } from '@/theme/theme';
@@ -41,15 +41,6 @@ interface SavedGameGroup {
   /** Null when the list is not sorted by date, so the games share one ungrouped section. */
   title: string | null;
   games: GameListItem[];
-}
-
-/** Outside day groups, the year tells games from different seasons apart. */
-function formatShortDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 /** Advanced is the default mode, so only basic games and scrimmages are labeled. */
@@ -136,8 +127,9 @@ export default function SavedGamesList({
     filteredAndSortedGames = filteredAndSortedGames.filter((game) => {
       const t1 = game.myTeamName.toLowerCase();
       const t2 = game.opponentName.toLowerCase();
-      // Matches the day heading the list shows, e.g. "Thu, Oct 29, 2026".
-      const date = formatDayTitle(game.timestamp).toLowerCase();
+      // Matches the day heading the list shows, e.g. "Thu, Oct 29", plus the year it may omit.
+      const date =
+        `${formatDayTitle(game.timestamp)} ${new Date(game.timestamp).getFullYear()}`.toLowerCase();
       return t1.includes(query) || t2.includes(query) || date.includes(query);
     });
   }
@@ -209,7 +201,7 @@ export default function SavedGamesList({
           />
           <TextInput
             style={[styles.searchInput, { color: palette.textInverse }]}
-            placeholder="Search teams or dates..."
+            placeholder="Search"
             placeholderTextColor={palette.textMuted}
             value={searchQuery}
             onChangeText={(text) => {
@@ -284,7 +276,8 @@ export default function SavedGamesList({
           const groupTournamentName = sharesTournament
             ? tournamentNames.get(groupTournamentId)
             : undefined;
-          const groupRecord = formatRecord(group.games);
+          // A lone game's row already shows its result.
+          const groupRecord = group.games.length > 1 ? formatRecord(group.games) : null;
 
           return (
             <View key={group.key} style={styles.gameGroup}>
@@ -313,7 +306,7 @@ export default function SavedGamesList({
                 {group.games.map((game, index) => {
                   const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
                   // Day headers already carry the date, so rows only repeat it when ungrouped.
-                  const detailParts = isGroupedByDay ? [] : [formatShortDate(game.timestamp)];
+                  const detailParts = isGroupedByDay ? [] : [formatRecentDay(game.timestamp)];
                   const modeLabel = getGameModeLabel(game);
                   if (modeLabel != null) {
                     detailParts.push(modeLabel);

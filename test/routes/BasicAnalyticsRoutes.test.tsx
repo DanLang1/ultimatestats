@@ -41,7 +41,7 @@ describe('basic analytics routes', () => {
     expect(screen.getByText('SAVED GAMES')).toBeVisible();
     expect(screen.getByText('No saved games yet')).toBeVisible();
     expect(screen.getByText('See what full game stats look like')).toBeVisible();
-    expect(screen.queryByPlaceholderText('Search teams or dates...')).not.toBeOnTheScreen();
+    expect(screen.queryByPlaceholderText('Search')).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Combine games' })).not.toBeOnTheScreen();
     expect(screen.queryByTestId('stats-live-game')).not.toBeOnTheScreen();
   });
@@ -84,7 +84,7 @@ describe('basic analytics routes', () => {
           ],
         });
       },
-      liveRowText: /LIVE\s*Point 2\s*Windchill\s*1\s*Rivals\s*0/,
+      liveRowText: /LIVE\s*Windchill vs Rivals\s*Point 2\s*1\s*–\s*0/,
       liveTimelineHref: () => '/live-stats/timeline',
       expectLiveStats: () => {
         expect(screen.getByText('Windchill')).toBeVisible();
@@ -107,7 +107,7 @@ describe('basic analytics routes', () => {
         useAdvancedTrackingStore.setState({ currentGameId: game.id, currentGame: game });
         useGameSessionStore.getState().setActiveGameType('advanced');
       },
-      liveRowText: /LIVE\s*Point 2\s*Focus\s*0\s*Opponent\s*1/,
+      liveRowText: /LIVE\s*Focus vs Opponent\s*Point 2\s*0\s*–\s*1/,
       liveTimelineHref: () => ({
         pathname: '/live-stats/advanced-timeline/[gameId]',
         params: { gameId: useAdvancedTrackingStore.getState().currentGameId },

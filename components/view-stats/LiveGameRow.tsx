@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
+import GameScore from '@/components/view-stats/GameScore';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { useLiveGameScore } from '@/hooks/useLiveGameScore';
@@ -13,10 +14,8 @@ export default function LiveGameRow() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const liveScore = useLiveGameScore();
-  const lines = [
-    { name: liveScore.myTeamName, score: liveScore.myScore },
-    { name: liveScore.opponentName, score: liveScore.opponentScore },
-  ];
+  // In a scrimmage neither side is the opponent, so both names keep full weight.
+  const opponentColor = liveScore.isScrimmage ? palette.textInverse : palette.textMuted;
 
   return (
     <Pressable
@@ -25,54 +24,51 @@ export default function LiveGameRow() {
       accessibilityLabel="Open live game stats"
       onPress={() => router.push('/live-stats')}
       style={({ pressed }) => [
-        styles.card,
+        styles.row,
         { backgroundColor: palette.overlay05 },
         pressed && styles.pressed,
       ]}>
-      <View style={styles.header}>
-        <View style={[styles.liveBadge, { backgroundColor: palette.dangerOverlay15 }]}>
-          <View style={[styles.liveDot, { backgroundColor: palette.danger }]} />
-          <ThemedText style={[styles.liveBadgeText, { color: palette.danger }]}>LIVE</ThemedText>
-        </View>
+      <View style={[styles.liveBadge, { backgroundColor: palette.dangerOverlay15 }]}>
+        <View style={[styles.liveDot, { backgroundColor: palette.danger }]} />
+        <ThemedText style={[styles.liveBadgeText, { color: palette.danger }]}>LIVE</ThemedText>
+      </View>
+
+      <View style={styles.details}>
+        <ThemedText style={[styles.matchup, { color: palette.textInverse }]} numberOfLines={1}>
+          {liveScore.myTeamName}
+          <ThemedText style={[styles.matchup, { color: palette.textMuted }]}> vs </ThemedText>
+          <ThemedText style={[styles.matchup, { color: opponentColor }]}>
+            {liveScore.opponentName}
+          </ThemedText>
+        </ThemedText>
         <ThemedText style={[styles.pointText, { color: palette.textMuted }]}>
           Point {liveScore.pointNumber}
         </ThemedText>
       </View>
-      <View style={styles.scoreLines}>
-        {lines.map((line, index) => (
-          <View key={index} style={styles.scoreLine}>
-            <ThemedText style={[styles.teamName, { color: palette.textInverse }]} numberOfLines={1}>
-              {line.name}
-            </ThemedText>
-            <ThemedText style={[styles.score, { color: palette.textInverse }]}>
-              {line.score}
-            </ThemedText>
-          </View>
-        ))}
-      </View>
+
+      <GameScore
+        myScore={liveScore.myScore}
+        opponentScore={liveScore.opponentScore}
+        isScrimmage={liveScore.isScrimmage}
+      />
     </Pressable>
   );
 }
 
 function createStyles(sizeClass: SizeClass) {
-  // Matches the saved game cards in SavedGamesList so the live game reads as the top of the list.
-  const rowInset = scaleBySizeClass(10, sizeClass);
+  // Matches SavedGameResultRow inside a SavedGamesList group so the live game reads as the top of the list.
   return StyleSheet.create({
-    card: {
-      borderRadius: 12,
-      padding: scaleBySizeClass(8, sizeClass),
-      gap: scaleBySizeClass(6, sizeClass),
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(12, sizeClass),
+      borderRadius: 14,
+      paddingHorizontal: scaleBySizeClass(14, sizeClass),
+      paddingVertical: scaleBySizeClass(12, sizeClass),
+      minHeight: scaleBySizeClass(64, sizeClass),
     },
     pressed: {
       opacity: 0.7,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
-      paddingHorizontal: rowInset,
-      paddingTop: scaleBySizeClass(4, sizeClass),
     },
     liveBadge: {
       flexDirection: 'row',
@@ -92,30 +88,16 @@ function createStyles(sizeClass: SizeClass) {
       fontFamily: Fonts.bold,
       letterSpacing: 0.6,
     },
-    pointText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-    },
-    scoreLines: {
+    details: {
+      flex: 1,
       gap: 2,
     },
-    scoreLine: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: rowInset,
-      paddingVertical: scaleBySizeClass(8, sizeClass),
-    },
-    teamName: {
-      flex: 1,
+    matchup: {
       fontSize: scaleBySizeClass(17, sizeClass),
       fontFamily: Fonts.semiBold,
     },
-    score: {
-      fontSize: scaleBySizeClass(20, sizeClass),
-      fontFamily: Fonts.bold,
-      fontVariant: ['tabular-nums'],
-      minWidth: 28,
-      textAlign: 'right',
+    pointText: {
+      fontSize: scaleBySizeClass(13, sizeClass),
     },
   });
 }

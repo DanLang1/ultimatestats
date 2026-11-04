@@ -14,18 +14,19 @@ export function formatDateForDisplay(date: Date): string {
   return formatISODateForDisplay(toISODate(date));
 }
 
-/** A game's day, e.g. "Sat, Oct 3, 2026". */
+function isCurrentYear(date: Date): boolean {
+  return date.getFullYear() === new Date().getFullYear();
+}
+
+/** A game's day, e.g. "Sat, Oct 3", with the year only when it isn't the current year. */
 export function formatDayTitle(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString(undefined, {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString(undefined, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
+    year: isCurrentYear(date) ? undefined : 'numeric',
   });
-}
-
-function isCurrentYear(date: Date): boolean {
-  return date.getFullYear() === new Date().getFullYear();
 }
 
 /** A recent day like "Oct 19", with the year only when it isn't the current year. */
