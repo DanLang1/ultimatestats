@@ -1,3 +1,4 @@
+import { getAdvancedFocusSourceTeamId } from '@/lib/advancedTracking/advancedGameTeamUtils';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import { getGameScore } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedGameType, AdvancedTrackedGame } from '@/lib/advancedTracking/types';
@@ -21,7 +22,7 @@ export type GameListItem =
       kind: 'advanced';
       gameType: AdvancedGameType;
       id: string;
-      /** The focus side's source team, or the focus side when it has none. */
+      /** The focus side's source team. */
       teamId: string;
       timestamp: number;
       myTeamName: string;
@@ -66,7 +67,7 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
     kind: 'advanced',
     gameType: game.gameType,
     id: game.id,
-    teamId: focusSide?.sourceTeamId ?? game.focusSideId,
+    teamId: getAdvancedFocusSourceTeamId(game),
     timestamp,
     myTeamName,
     opponentName,
@@ -80,7 +81,7 @@ export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): Gam
     kind: 'advanced',
     gameType: summary.gameType,
     id: summary.id,
-    teamId: summary.focusSourceTeamId ?? summary.focusSideId,
+    teamId: summary.focusSourceTeamId,
     timestamp: summary.sortTimestamp,
     myTeamName: summary.myTeamName,
     opponentName: summary.opponentName,
@@ -98,10 +99,9 @@ export function advancedGameSummaryToTeamListItem(
   savedTeams: SavedTeam[],
 ): GameListItem {
   const item = advancedGameSummaryToListItem(summary);
-  if (summary.focusSourceTeamId === null) return item;
   return {
     ...item,
-    myTeamName: resolveTeamName(summary.focusSourceTeamId, summary.myTeamName, savedTeams),
+    myTeamName: resolveTeamName(item.teamId, summary.myTeamName, savedTeams),
   };
 }
 
@@ -276,14 +276,14 @@ function groupGamesByTeam<T>(
   return [...teams.values()].sort((a, b) => b.games.length - a.games.length);
 }
 
-/** Groups advanced games by focus team (source team when known), most games first. */
+/** Groups advanced games by focus source team, most games first. */
 export function groupAdvancedGamesByTeam(
   games: AdvancedGameSummary[],
   savedTeams: SavedTeam[],
 ): AggregateTeam[] {
   return groupGamesByTeam(
     games,
-    (game) => game.focusSourceTeamId ?? game.focusSideId,
+    (game) => game.focusSourceTeamId,
     (game) => advancedGameSummaryToTeamListItem(game, savedTeams),
   );
 }

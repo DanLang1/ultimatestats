@@ -49,7 +49,7 @@ function arrangeDualTrackedPoint() {
     focusSideId: 'light',
     initialReceivingSideId: 'light',
     sides: [
-      { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+      { id: 'light', label: 'Light', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
       { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
     ],
     participants,
@@ -153,7 +153,12 @@ function arrangeSingleSideTrackedPoint() {
     focusSideId: 'windchill',
     initialReceivingSideId: 'windchill',
     sides: [
-      { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+      {
+        id: 'windchill',
+        label: 'Windchill',
+        sourceTeamId: 'focus-team',
+        trackingMode: 'full-roster',
+      },
       { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
     ],
     participants,
@@ -187,7 +192,7 @@ function arrangeCompletedPointForNextLineSelection() {
     focusSideId: 'home',
     initialReceivingSideId: 'home',
     sides: [
-      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+      { id: 'home', label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
       { id: 'away', label: 'Away', trackingMode: 'anonymous' },
     ],
     participants,
@@ -643,7 +648,12 @@ describe('advanced tracking routes', () => {
         focusSideId: 'windchill',
         initialReceivingSideId: 'rivals',
         sides: [
-          { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+          {
+            id: 'windchill',
+            label: 'Windchill',
+            sourceTeamId: 'focus-team',
+            trackingMode: 'full-roster',
+          },
           { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
         ],
         participants: testTeam.roster.map((player) => ({ id: player.id, name: player.name })),
@@ -683,7 +693,7 @@ describe('advanced tracking routes', () => {
         focusSideId: 'light',
         initialReceivingSideId: 'light',
         sides: [
-          { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+          { id: 'light', label: 'Light', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
           { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
         ],
         participants,
@@ -942,7 +952,7 @@ describe('advanced tracking routes', () => {
       initialReceivingSideId: 'home',
       settings: { locationMode: 'none' },
       sides: [
-        { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+        { id: 'home', label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: 'away', label: 'Away', trackingMode: 'full-roster' },
       ],
       participants,
@@ -1005,7 +1015,12 @@ describe('advanced tracking routes', () => {
       focusSideId: 'windchill',
       initialReceivingSideId: 'windchill',
       sides: [
-        { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+        {
+          id: 'windchill',
+          label: 'Windchill',
+          sourceTeamId: 'focus-team',
+          trackingMode: 'full-roster',
+        },
         { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
       ],
       participants,
@@ -1062,7 +1077,7 @@ describe('advanced tracking routes', () => {
       focusSideId: 'light',
       initialReceivingSideId: 'light',
       sides: [
-        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'light', label: 'Light', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
       ],
       participants,
@@ -1167,7 +1182,7 @@ describe('advanced tracking routes', () => {
         },
       },
       sides: [
-        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'light', label: 'Light', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
       ],
       participants: [

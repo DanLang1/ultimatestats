@@ -190,7 +190,7 @@ describe('basic analytics routes', () => {
       initialReceivingSideId: 'light',
       settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
       sides: [
-        { id: 'light', label: 'Light', trackingMode: 'full-roster' },
+        { id: 'light', label: 'Light', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
       ],
       participants: [

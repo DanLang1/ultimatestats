@@ -25,7 +25,11 @@ import {
   basicGameToListItem,
   GameListItem,
 } from '@/lib/gameListUtils';
-import { SavedGamesSortKey, summarizeSavedGameTeams } from '@/lib/savedGamesListUtils';
+import {
+  getSelectionKind,
+  SavedGamesSortKey,
+  summarizeSavedGameTeams,
+} from '@/lib/savedGamesListUtils';
 import { reportError } from '@/lib/sentry';
 import { serializeAdvancedGames, serializeGames, uploadPayload } from '@/lib/sharing';
 import {
@@ -190,9 +194,8 @@ export default function StatsScreen() {
     });
   };
 
-  // The select bar only shares a selection of one kind within the share limit.
   const handleBulkShareGames = () => {
-    const isAdvancedSelection = selectedGames[0].kind === 'advanced';
+    const isAdvancedSelection = getSelectionKind(selectedGames) === 'advanced';
     const gameIds = new Set(selectedGames.map((game) => game.id));
     setPendingShareAction(() => async () => {
       if (isAdvancedSelection) {
@@ -209,7 +212,7 @@ export default function StatsScreen() {
     });
   };
 
-  // The select bar only combines a selection of one kind. The selection stays for Back.
+  // The selection stays for Back.
   const handleViewStats = () => {
     // One game has nothing to combine, so it opens like a row tap.
     if (selectedGames.length === 1) {
@@ -220,18 +223,17 @@ export default function StatsScreen() {
     router.push({
       pathname: '/combined-stats',
       params: {
-        kind: selectedGames[0].kind,
+        kind: getSelectionKind(selectedGames),
         gameIds: selectedGames.map((game) => game.id).join(','),
       },
     });
   };
 
-  // The select bar only adds a selection of one kind.
   const handleTournamentSelected = async (tournamentId: string) => {
     try {
       const didAdd = await addGamesToTournament(
         tournamentId,
-        selectedGames[0].kind,
+        getSelectionKind(selectedGames),
         selectedGames.map((game) => game.id),
       );
       if (!didAdd) {

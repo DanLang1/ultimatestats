@@ -44,7 +44,12 @@ async function arrangeGames(kind: 'basic' | 'advanced') {
           id,
           status: 'final',
           sides: [
-            { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+            {
+              id: 'focus',
+              label: 'Focus',
+              sourceTeamId: testTeam.id,
+              trackingMode: 'full-roster',
+            },
             {
               id: 'opponent',
               label: id === 'first' ? 'First Rival' : 'Second Rival',
@@ -140,7 +145,12 @@ it('caps advanced game shares at four while basic shares allow more', async () =
         id: `advanced-${i}`,
         status: 'final',
         sides: [
-          { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+          {
+            id: 'focus',
+            label: 'Focus',
+            sourceTeamId: 'advanced-team',
+            trackingMode: 'full-roster',
+          },
           { id: 'opponent', label: `Advanced ${label}`, trackingMode: 'anonymous' },
         ],
       }).build(),
@@ -150,7 +160,7 @@ it('caps advanced game shares at four while basic shares allow more', async () =
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByTestId('saved-games-team-switcher'));
-  await user.press(screen.getByTestId('saved-games-team-option-focus'));
+  await user.press(screen.getByTestId('saved-games-team-option-advanced-team'));
 
   for (const label of rivals) await user.press(screen.getByText(`Advanced ${label}`));
   await user.press(screen.getByLabelText('Share games'));

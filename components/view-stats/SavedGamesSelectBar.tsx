@@ -6,7 +6,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MAX_SHARE_GAMES_BY_KIND } from '@/lib/constants';
 import {
   formatPointDifferential,
   formatRecord,
@@ -52,7 +51,7 @@ export default function SavedGamesSelectBar({
 
   if (selectedGames.length === 0) return null;
 
-  const blocks = getSelectionActionBlocks(selectedGames, MAX_SHARE_GAMES_BY_KIND);
+  const blocks = getSelectionActionBlocks(selectedGames);
   const selectionSummary = `${selectedGames.length} selected · ${formatRecord(selectedGames)}`;
   const viewStatsBlockedAlert = toBlockedAlert("Can't combine these games", blocks.viewStats);
   const hasScoredGames = selectedGames.some((game) => !isScrimmage(game));

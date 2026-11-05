@@ -321,6 +321,10 @@ function validateAdvancedGameStructure(data: Record<string, unknown>): {
   for (const side of data.sides) {
     validateAdvancedSide(side, fullRosterSideIds);
   }
+  const focusSide = data.sides.find((side) => side.id === data.focusSideId);
+  if (!isString(focusSide?.sourceTeamId) || focusSide.sourceTeamId.length === 0) {
+    throw new InvalidSharePayloadError('Invalid advanced game: focus side missing source team');
+  }
   if (!Array.isArray(data.participants)) {
     throw new InvalidSharePayloadError('Invalid advanced game: missing participants');
   }

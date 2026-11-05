@@ -119,6 +119,10 @@ async function migrateAdvancedTrackingDb(db: SQLite.SQLiteDatabase) {
 }
 
 function rowToSummary(row: SummaryRow): AdvancedGameSummary {
+  // Saving derives the summary, which requires the focus source team.
+  if (row.focus_source_team_id === null) {
+    throw new Error(`Advanced game ${row.id} summary has no focus source team`);
+  }
   return {
     id: row.id,
     schemaVersion: row.schema_version,

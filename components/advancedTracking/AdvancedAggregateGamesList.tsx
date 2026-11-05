@@ -55,7 +55,7 @@ export default function AdvancedAggregateGamesList({
 
   if (selectedTeamId) {
     const teamGames = games
-      .filter((game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedTeamId)
+      .filter((game) => game.focusSourceTeamId === selectedTeamId)
       .map((game) => advancedGameSummaryToTeamListItem(game, savedTeams));
 
     return (

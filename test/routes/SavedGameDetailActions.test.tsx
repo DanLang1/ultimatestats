@@ -78,7 +78,7 @@ async function arrangeDetail(kind: 'basic' | 'advanced', from?: StatsScreenOrigi
         id,
         status: 'final',
         sides: [
-          { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+          { id: 'focus', label: 'Focus', sourceTeamId: testTeam.id, trackingMode: 'full-roster' },
           { id: 'opponent', label: 'Detail Rival', trackingMode: 'anonymous' },
         ],
       })
@@ -219,7 +219,7 @@ it('exports the selected side rather than the focus side in a dual-tracked game'
     id: 'dual-export',
     status: 'final',
     sides: [
-      { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+      { id: 'focus', label: 'Focus', sourceTeamId: testTeam.id, trackingMode: 'full-roster' },
       { id: 'opponent', label: 'Visitors', trackingMode: 'full-roster' },
     ],
     participants: [

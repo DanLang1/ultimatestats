@@ -40,7 +40,7 @@ function makeLegacyGame(): AdvancedTrackedGame {
     initialReceivingSideId: 'home',
     settings: { locationMode: 'none' },
     sides: [
-      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+      { id: 'home', label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
       { id: 'away', label: 'Away', trackingMode: 'anonymous' },
     ],
     participants: [],

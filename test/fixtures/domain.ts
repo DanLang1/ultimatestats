@@ -82,7 +82,12 @@ export function arrangeAdvancedGame() {
     focusSideId: 'windchill',
     initialReceivingSideId: 'windchill',
     sides: [
-      { id: 'windchill', label: 'Windchill', trackingMode: 'full-roster' },
+      {
+        id: 'windchill',
+        label: 'Windchill',
+        sourceTeamId: testTeam.id,
+        trackingMode: 'full-roster',
+      },
       { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
     ],
     participants: testPlayers.map((player) => ({ id: player.id, name: player.name })),
@@ -147,7 +152,7 @@ export function createFinalAdvancedGame({
   id: string;
   opponentName: string;
   focusLabel: string;
-  sourceTeamId?: string;
+  sourceTeamId: string;
 }) {
   const sides = ADVANCED_TEST_SIDES.map((side, index) =>
     index === 0 ? { ...side, label: focusLabel, sourceTeamId } : side,

@@ -17,7 +17,6 @@ import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
 import { useCombinedStats } from '@/hooks/useCombinedStats';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MAX_SHARE_GAMES_BY_KIND } from '@/lib/constants';
 import { getShareLimitBlock } from '@/lib/savedGamesListUtils';
 import { serializeAdvancedGames, serializeGames, uploadPayload } from '@/lib/sharing';
 import {
@@ -49,7 +48,7 @@ export default function CombinedStatsView({ kind, gameIds }: CombinedStatsViewPr
     if (state.status !== 'ready') return;
     const { stats } = state;
 
-    const shareBlock = getShareLimitBlock(stats.kind, stats.games.length, MAX_SHARE_GAMES_BY_KIND);
+    const shareBlock = getShareLimitBlock(stats.kind, stats.games.length);
     if (shareBlock != null) {
       showAlert({ title: "Can't share these games", message: shareBlock });
       return;

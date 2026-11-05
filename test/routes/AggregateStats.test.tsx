@@ -33,7 +33,7 @@ async function arrangeGames(kind: 'basic' | 'advanced') {
         id,
         opponentName,
         focusLabel: isOther ? 'Other Team' : testTeam.name,
-        sourceTeamId: isOther ? undefined : testTeam.id,
+        sourceTeamId: isOther ? 'other-team' : testTeam.id,
       });
       await useSavedAdvancedGamesStore.getState().saveGame(game);
     }

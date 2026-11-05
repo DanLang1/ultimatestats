@@ -33,7 +33,7 @@ function buildGameWithThrow(result: ThrowResult): AdvancedTrackedGame {
   const scenario = createAdvancedGameScenario({
     status: 'final',
     sides: [
-      { id: FOCUS, label: 'Focus', trackingMode: 'full-roster' },
+      { id: FOCUS, label: 'Focus', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
       { id: OPPONENT, label: 'Opponent', trackingMode: 'full-roster' },
     ],
     participants: [...FOCUS_IDS, ...OPPONENT_IDS].map((id) => ({ id, name: NAMES[id] ?? id })),

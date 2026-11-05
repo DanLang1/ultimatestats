@@ -52,7 +52,7 @@ jest.mock('@/lib/advancedTracking/storage', () => ({
     status: game.status,
     gameType: game.gameType,
     focusSideId: game.focusSideId,
-    focusSourceTeamId: null,
+    focusSourceTeamId: 'focus-team',
     myTeamName: 'Home',
     opponentName: 'Away',
     myScore: 0,
@@ -70,7 +70,7 @@ jest.mock('@/lib/advancedTracking/storage', () => ({
     status: game.status,
     gameType: game.gameType,
     focusSideId: game.focusSideId,
-    focusSourceTeamId: null,
+    focusSourceTeamId: 'focus-team',
     myTeamName: 'Home',
     opponentName: 'Away',
     myScore: 0,
@@ -110,7 +110,7 @@ function createGame(gameTo = 15, initialReceivingSideId = homeSideId): string {
     focusSideId: homeSideId,
     initialReceivingSideId,
     sides: [
-      { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+      { id: homeSideId, label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
       { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
     ],
     participants: [
@@ -136,7 +136,7 @@ function createDualTrackedScrimmage() {
     focusSideId: homeSideId,
     initialReceivingSideId: homeSideId,
     sides: [
-      { id: homeSideId, label: 'Light', trackingMode: 'full-roster' },
+      { id: homeSideId, label: 'Light', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
       { id: awaySideId, label: 'Dark', trackingMode: 'full-roster' },
     ],
     participants,
@@ -209,7 +209,7 @@ describe('advancedTrackingStore', () => {
       focusSideId: homeSideId,
       initialReceivingSideId: homeSideId,
       sides: [
-        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: homeSideId, label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
       ],
       participants: [
@@ -895,7 +895,7 @@ describe('advancedTrackingStore', () => {
       focusSideId: homeSideId,
       initialReceivingSideId: homeSideId,
       sides: [
-        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: homeSideId, label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
       ],
       participants: [],
@@ -1788,7 +1788,7 @@ describe('advancedTrackingStore', () => {
       focusSideId: homeSideId,
       initialReceivingSideId: homeSideId,
       sides: [
-        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: homeSideId, label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
       ],
       participants: [],
@@ -1928,7 +1928,7 @@ describe('advancedTrackingStore', () => {
       focusSideId: homeSideId,
       initialReceivingSideId: homeSideId,
       sides: [
-        { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+        { id: homeSideId, label: 'Home', sourceTeamId: 'focus-team', trackingMode: 'full-roster' },
         { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
       ],
       participants: [
@@ -2146,7 +2146,12 @@ describe('advancedTrackingStore', () => {
         focusSideId: homeSideId,
         initialReceivingSideId: homeSideId,
         sides: [
-          { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+          {
+            id: homeSideId,
+            label: 'Home',
+            sourceTeamId: 'focus-team',
+            trackingMode: 'full-roster',
+          },
           { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
         ],
         participants: [
@@ -3176,7 +3181,12 @@ describe('advancedTrackingStore', () => {
         focusSideId: homeSideId,
         initialReceivingSideId: homeSideId,
         sides: [
-          { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+          {
+            id: homeSideId,
+            label: 'Home',
+            sourceTeamId: 'focus-team',
+            trackingMode: 'full-roster',
+          },
           { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
         ],
         participants: [
@@ -3347,7 +3357,12 @@ describe('advancedTrackingStore', () => {
         focusSideId: homeSideId,
         initialReceivingSideId: homeSideId,
         sides: [
-          { id: homeSideId, label: 'Home', trackingMode: 'full-roster' },
+          {
+            id: homeSideId,
+            label: 'Home',
+            sourceTeamId: 'focus-team',
+            trackingMode: 'full-roster',
+          },
           { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
         ],
         participants: [

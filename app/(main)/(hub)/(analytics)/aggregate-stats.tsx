@@ -181,7 +181,7 @@ export default function AggregateStatsScreen() {
   const getHeaderTitle = () => {
     if (aggregateMode === 'advanced' && selectedAdvancedTeamId) {
       const gameForSide = aggregateEligibleAdvancedGameSummaries.find(
-        (game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedAdvancedTeamId,
+        (game) => game.focusSourceTeamId === selectedAdvancedTeamId,
       );
       const sideName = gameForSide
         ? advancedGameSummaryToTeamListItem(gameForSide, savedTeams).myTeamName

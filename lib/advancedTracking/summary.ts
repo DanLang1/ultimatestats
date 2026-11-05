@@ -1,5 +1,5 @@
 import {
-  getAdvancedFocusSide,
+  getAdvancedFocusSourceTeamId,
   getAdvancedFocusTeamName,
   getAdvancedGameTimestamp,
   getAdvancedOpponentName,
@@ -22,7 +22,7 @@ export interface AdvancedGameSummary {
   status: GameStatus;
   gameType: AdvancedGameType;
   focusSideId: string;
-  focusSourceTeamId: string | null;
+  focusSourceTeamId: string;
   myTeamName: string;
   opponentName: string;
   myScore: number;
@@ -36,7 +36,6 @@ export function getAdvancedGamePlayedAt(game: AdvancedTrackedGame): number | nul
 }
 
 export function deriveAdvancedGameSummary(game: AdvancedTrackedGame): AdvancedGameSummary {
-  const focusSide = getAdvancedFocusSide(game);
   const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
   const score = getGameScore(game);
 
@@ -51,7 +50,7 @@ export function deriveAdvancedGameSummary(game: AdvancedTrackedGame): AdvancedGa
     status: game.status,
     gameType: game.gameType,
     focusSideId: game.focusSideId,
-    focusSourceTeamId: focusSide?.sourceTeamId ?? null,
+    focusSourceTeamId: getAdvancedFocusSourceTeamId(game),
     myTeamName: getAdvancedFocusTeamName(game),
     opponentName: getAdvancedOpponentName(game),
     myScore: score[game.focusSideId] ?? 0,

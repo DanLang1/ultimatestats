@@ -116,7 +116,7 @@ const baseAdvancedGame: AdvancedTrackedGame = {
   initialReceivingSideId: ZOO,
   settings: { locationMode: 'none' },
   sides: [
-    { id: ZOO, label: 'Zoo', trackingMode: 'full-roster' },
+    { id: ZOO, label: 'Zoo', sourceTeamId: 'team-zoo', trackingMode: 'full-roster' },
     { id: RIVALS, label: 'Rivals', trackingMode: 'anonymous' },
   ],
   participants: [
@@ -135,15 +135,8 @@ describe('advancedGameToListItem', () => {
     expect(item.gameType).toBe('game');
   });
 
-  it("identifies the team by the focus side's source team, else the focus side", () => {
-    expect(advancedGameToListItem(baseAdvancedGame).teamId).toBe(ZOO);
-    const linkedGame: AdvancedTrackedGame = {
-      ...baseAdvancedGame,
-      sides: baseAdvancedGame.sides.map((side) =>
-        side.id === ZOO ? { ...side, sourceTeamId: 'team-zoo' } : side,
-      ),
-    };
-    expect(advancedGameToListItem(linkedGame).teamId).toBe('team-zoo');
+  it("identifies the team by the focus side's source team", () => {
+    expect(advancedGameToListItem(baseAdvancedGame).teamId).toBe('team-zoo');
   });
 
   it('derives myTeamName from focusSide label', () => {
@@ -205,7 +198,7 @@ const advancedSummary: AdvancedGameSummary = {
   status: 'final',
   gameType: 'game',
   focusSideId: ZOO,
-  focusSourceTeamId: null,
+  focusSourceTeamId: 'team-zoo',
   myTeamName: 'Zoo',
   opponentName: 'Rivals',
   myScore: 12,
@@ -221,7 +214,7 @@ describe('advancedGameSummaryToListItem', () => {
       kind: 'advanced',
       gameType: 'game',
       id: 'summary1',
-      teamId: ZOO,
+      teamId: 'team-zoo',
       timestamp: 1500,
       myTeamName: 'Zoo',
       opponentName: 'Rivals',
@@ -251,7 +244,7 @@ describe('advancedGameSummaryToListItem', () => {
 });
 
 describe('groupAdvancedGamesByTeam', () => {
-  it('groups by source team when known, newest game first, and sorts by game count', () => {
+  it('groups by source team, newest game first, and sorts by game count', () => {
     const groups = groupAdvancedGamesByTeam(
       [
         { ...advancedSummary, id: 'a', focusSourceTeamId: 'team-b', myTeamName: 'B' },

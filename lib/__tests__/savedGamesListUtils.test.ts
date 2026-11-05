@@ -1,7 +1,9 @@
+import { MAX_SHARE_GAMES_BY_KIND } from '../constants';
 import type { LinkedGameListItem } from '../gameListUtils';
 import {
   filterSavedGames,
   getSelectionActionBlocks,
+  getSelectionKind,
   getSharedTournament,
   groupSavedGames,
   SavedGamesSortKey,
@@ -97,16 +99,20 @@ describe('summarizeSavedGameTeams', () => {
   });
 });
 
+const advanced = (id: string, gameType: 'game' | 'scrimmage' = 'game'): LinkedGameListItem => ({
+  ...game(id),
+  kind: 'advanced',
+  gameType,
+});
+
 describe('getSelectionActionBlocks', () => {
-  const shareLimits = { basic: 3, advanced: 2 };
-  const advanced = (id: string, gameType: 'game' | 'scrimmage' = 'game'): LinkedGameListItem => ({
-    ...game(id),
-    kind: 'advanced',
-    gameType,
-  });
+  const gamesOfKind = (kind: GameKind, count: number) =>
+    Array.from({ length: count }, (_, index) =>
+      kind === 'advanced' ? advanced(`g${index}`) : game(`g${index}`),
+    );
 
   it('allows every action for a shareable selection of one kind', () => {
-    expect(getSelectionActionBlocks([game('a'), game('b')], shareLimits)).toEqual({
+    expect(getSelectionActionBlocks([game('a'), game('b')])).toEqual({
       viewStats: null,
       share: null,
       addToTournament: null,
@@ -114,7 +120,7 @@ describe('getSelectionActionBlocks', () => {
   });
 
   it('blocks combining, sharing, and adding a selection of both kinds', () => {
-    expect(getSelectionActionBlocks([game('a'), advanced('b')], shareLimits)).toEqual({
+    expect(getSelectionActionBlocks([game('a'), advanced('b')])).toEqual({
       viewStats: "Basic and advanced games can't be combined.",
       share: 'Share basic games or advanced games separately.',
       addToTournament: 'Add basic and advanced games to tournaments separately.',
@@ -122,31 +128,37 @@ describe('getSelectionActionBlocks', () => {
   });
 
   it('blocks combining scrimmages but still shares and adds them', () => {
-    expect(
-      getSelectionActionBlocks([advanced('a'), advanced('b', 'scrimmage')], shareLimits),
-    ).toEqual({ viewStats: "Scrimmages can't be combined.", share: null, addToTournament: null });
+    expect(getSelectionActionBlocks([advanced('a'), advanced('b', 'scrimmage')])).toEqual({
+      viewStats: "Scrimmages can't be combined.",
+      share: null,
+      addToTournament: null,
+    });
   });
 
   it('lets a lone scrimmage open its own stats', () => {
-    expect(
-      getSelectionActionBlocks([advanced('a', 'scrimmage')], shareLimits).viewStats,
-    ).toBeNull();
+    expect(getSelectionActionBlocks([advanced('a', 'scrimmage')]).viewStats).toBeNull();
   });
 
   it.each([
-    [
-      'basic',
-      [game('a'), game('b'), game('c'), game('d')],
-      'You can share up to 3 games at a time.',
-    ],
+    ['basic', `You can share up to ${MAX_SHARE_GAMES_BY_KIND.basic} games at a time.`],
     [
       'advanced',
-      [advanced('a'), advanced('b'), advanced('c')],
-      'You can share up to 2 advanced games at a time.',
+      `You can share up to ${MAX_SHARE_GAMES_BY_KIND.advanced} advanced games at a time.`,
     ],
-  ])('blocks sharing more %s games than the share limit', (_kind, games, reason) => {
-    expect(getSelectionActionBlocks(games, shareLimits).share).toBe(reason);
-    expect(getSelectionActionBlocks(games.slice(1), shareLimits).share).toBeNull();
+  ] as const)('blocks sharing more %s games than the share limit', (kind, reason) => {
+    const limit = MAX_SHARE_GAMES_BY_KIND[kind];
+    expect(getSelectionActionBlocks(gamesOfKind(kind, limit + 1)).share).toBe(reason);
+    expect(getSelectionActionBlocks(gamesOfKind(kind, limit)).share).toBeNull();
+  });
+});
+
+describe('getSelectionKind', () => {
+  it('returns the kind shared by every selected game', () => {
+    expect(getSelectionKind([advanced('a'), advanced('b')])).toBe('advanced');
+  });
+
+  it('throws for a selection of both kinds', () => {
+    expect(() => getSelectionKind([game('a'), advanced('b')])).toThrow();
   });
 });
 

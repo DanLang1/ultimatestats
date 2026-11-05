@@ -32,12 +32,14 @@ import type { GenderRatio } from '@/lib/genderRatioUtils';
 
 export const ADVANCED_TEST_FOCUS_SIDE_ID = 'focus';
 export const ADVANCED_TEST_OPPONENT_SIDE_ID = 'opponent';
+export const ADVANCED_TEST_FOCUS_TEAM_ID = 'focus-team';
 export const ADVANCED_TEST_TIMESTAMP = Date.UTC(2026, 0, 1);
 
 export const ADVANCED_TEST_SIDES: GameSide[] = [
   {
     id: ADVANCED_TEST_FOCUS_SIDE_ID,
     label: 'Focus',
+    sourceTeamId: ADVANCED_TEST_FOCUS_TEAM_ID,
     trackingMode: 'full-roster',
   },
   {
@@ -88,7 +90,13 @@ export interface AdvancedGameFixtureOptions {
 export function createAdvancedGameFixture(
   options: AdvancedGameFixtureOptions = {},
 ): AdvancedTrackedGame {
-  const sides = options.sides ?? ADVANCED_TEST_SIDES;
+  const focusSideId = options.focusSideId ?? (options.sides ?? ADVANCED_TEST_SIDES)[0].id;
+  // Capture always links the focus side to a saved team.
+  const sides = (options.sides ?? ADVANCED_TEST_SIDES).map((side) =>
+    side.id === focusSideId && side.sourceTeamId == null
+      ? { ...side, sourceTeamId: ADVANCED_TEST_FOCUS_TEAM_ID }
+      : side,
+  );
   const participants = options.participants ?? ADVANCED_TEST_PARTICIPANTS;
 
   return cloneFixture({
@@ -99,7 +107,7 @@ export function createAdvancedGameFixture(
     gameType: options.gameType ?? 'game',
     status: options.status ?? 'in_progress',
     endReason: options.endReason,
-    focusSideId: options.focusSideId ?? sides[0].id,
+    focusSideId,
     initialReceivingSideId: options.initialReceivingSideId ?? sides[0].id,
     metadata: options.metadata,
     settings: options.settings ?? { locationMode: 'none' },

@@ -1,3 +1,4 @@
+import { MAX_SHARE_GAMES_BY_KIND } from '@/lib/constants';
 import { formatDayTitle } from '@/lib/dateUtils';
 import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/lib/gameListUtils';
 import { GameKind, Tournament } from '@/lib/storage/types';
@@ -107,9 +108,6 @@ export function summarizeSavedGameTeams(games: GameListItem[]): SavedGameTeam[] 
     .sort((a, b) => b.latestTimestamp - a.latestTimestamp);
 }
 
-/** The most games one share link may hold, per kind. */
-export type ShareGameLimits = Record<GameKind, number>;
-
 /**
  * Why each select-bar action can't run on the selected games, or null when it can. Delete runs on
  * any selection, so it has no entry.
@@ -121,10 +119,7 @@ export interface SelectionActionBlocks {
 }
 
 /** The Saved Games select bar's action rules for a non-empty selection. */
-export function getSelectionActionBlocks(
-  games: GameListItem[],
-  shareLimits: ShareGameLimits,
-): SelectionActionBlocks {
+export function getSelectionActionBlocks(games: GameListItem[]): SelectionActionBlocks {
   const kind = games[0].kind;
   if (games.some((game) => game.kind !== kind)) {
     return {
@@ -138,21 +133,27 @@ export function getSelectionActionBlocks(
   const combinesScrimmage = games.length > 1 && games.some(isScrimmage);
   return {
     viewStats: combinesScrimmage ? "Scrimmages can't be combined." : null,
-    share: getShareLimitBlock(kind, games.length, shareLimits),
+    share: getShareLimitBlock(kind, games.length),
     addToTournament: null,
   };
 }
 
 /** Why `count` games of one kind can't go in one share link, or null when they can. */
-export function getShareLimitBlock(
-  kind: GameKind,
-  count: number,
-  shareLimits: ShareGameLimits,
-): string | null {
-  const shareLimit = shareLimits[kind];
+export function getShareLimitBlock(kind: GameKind, count: number): string | null {
+  const shareLimit = MAX_SHARE_GAMES_BY_KIND[kind];
   if (count <= shareLimit) return null;
   const gameLabel = kind === 'advanced' ? 'advanced games' : 'games';
   return `You can share up to ${shareLimit} ${gameLabel} at a time.`;
+}
+
+/** The one kind of a selection the select bar allows an action on. */
+export function getSelectionKind(games: GameListItem[]): GameKind {
+  if (games.length === 0) throw new Error('getSelectionKind requires a selected game');
+  const kind = games[0].kind;
+  if (games.some((game) => game.kind !== kind)) {
+    throw new Error('getSelectionKind requires games of one kind');
+  }
+  return kind;
 }
 
 export interface SavedGamesFilter {

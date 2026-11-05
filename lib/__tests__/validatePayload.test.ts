@@ -71,7 +71,7 @@ function makeAdvancedGameData(
     initialReceivingSideId: 'home',
     settings: { locationMode: 'none', format: { formatType: 'standard', gameTo: 15 } },
     sides: [
-      { id: 'home', label: 'Home', trackingMode: 'full-roster' },
+      { id: 'home', label: 'Home', sourceTeamId: 'team-1', trackingMode: 'full-roster' },
       { id: 'away', label: 'Away', trackingMode: 'anonymous' },
     ],
     participants: [{ id: 'p1', name: 'Alex' }],
@@ -416,6 +416,18 @@ describe('validatePayload', () => {
         details: { type: 'huck' },
       });
     });
+
+    it.each([undefined, null, ''])(
+      'rejects a focus side whose sourceTeamId is %p',
+      (sourceTeamId) => {
+        const data = makeAdvancedGameData();
+        data.sides[0] = { ...data.sides[0], sourceTeamId };
+
+        expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow(
+          'focus side missing source team',
+        );
+      },
+    );
 
     it('accepts and migrates possession red-zone data', () => {
       const data = makeAdvancedGameData();
