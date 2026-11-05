@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -35,10 +35,10 @@ interface SavedGamesListProps {
   selectedGameIds?: Set<string>;
   onToggleGameSelection?: (gameId: string) => void;
   onEnterSelectionWithGame?: (gameId: string) => void;
-  onClearSelection?: () => void;
+  onClearSelection: () => void;
+  /** Replaces the selection with these games. */
+  onSelectGames: (gameIds: string[]) => void;
   selectionMode?: boolean;
-  /** Shown at the end of the row that counts the listed games. */
-  summaryAction?: ReactNode;
   sortKey: SavedGamesSortKey;
   onChangeSortKey: (sortKey: SavedGamesSortKey) => void;
   searchQuery: string;
@@ -94,8 +94,8 @@ export default function SavedGamesList({
   onToggleGameSelection,
   onEnterSelectionWithGame,
   onClearSelection,
+  onSelectGames,
   selectionMode = false,
-  summaryAction,
   sortKey,
   onChangeSortKey,
   searchQuery,
@@ -147,6 +147,18 @@ export default function SavedGamesList({
 
   // Switching teams would drop the selection, so neither team list shows while selecting.
   const canSwitchTeams = !selectionMode;
+  // Checks each listed game: a game deleted from its own screen can leave a stale id selected.
+  const areAllListedGamesSelected = filteredAndSortedGames.every((game) =>
+    selectedGameIds.has(game.id),
+  );
+  const showsSelectAll = selectionMode && listedGamesCount > 0;
+  const handleToggleSelectAll = () => {
+    if (areAllListedGamesSelected) {
+      onClearSelection();
+      return;
+    }
+    onSelectGames(filteredAndSortedGames.map((game) => game.id));
+  };
   const showsOtherTeamSearchMatches =
     canSwitchTeams && isSearching && !teamHasSearchMatches && otherTeamSearchMatches.length > 0;
   // One list of other teams at a time: search matches replace the footer.
@@ -169,7 +181,7 @@ export default function SavedGamesList({
             value={searchQuery}
             onChangeText={(text) => {
               onChangeSearchQuery(text);
-              onClearSelection?.();
+              onClearSelection();
             }}
             clearButtonMode="while-editing"
           />
@@ -205,7 +217,7 @@ export default function SavedGamesList({
           accessibilityLabel={`Clear tournament filter, ${activeTournament.name}`}
           onPress={() => {
             setTournamentFilter(null);
-            onClearSelection?.();
+            onClearSelection();
           }}
           style={({ pressed }) => [
             styles.filterChip,
@@ -227,7 +239,18 @@ export default function SavedGamesList({
         <ThemedText style={[styles.summaryCount, { color: palette.textMuted }]}>
           {listedGamesCount} {listedGamesCount === 1 ? 'GAME' : 'GAMES'}
         </ThemedText>
-        {summaryAction}
+        {showsSelectAll && (
+          <Pressable
+            testID="saved-games-select-all"
+            accessibilityRole="button"
+            onPress={handleToggleSelectAll}
+            hitSlop={12}
+            style={({ pressed }) => pressed && styles.selectAllPressed}>
+            <ThemedText style={[styles.selectAllLabel, { color: palette.accent }]}>
+              {areAllListedGamesSelected ? 'Deselect all' : 'Select all'}
+            </ThemedText>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.savedGamesList}>
@@ -338,13 +361,13 @@ export default function SavedGamesList({
         selectedKey={sortKey}
         onSelect={(key) => {
           onChangeSortKey(key);
-          onClearSelection?.();
+          onClearSelection();
         }}
         tournamentOptions={tournamentOptions}
         selectedTournamentId={activeTournament?.id ?? null}
         onSelectTournament={(id) => {
           setTournamentFilter(id);
-          onClearSelection?.();
+          onClearSelection();
         }}
         onClose={() => setShowSortSheet(false)}
       />
@@ -425,6 +448,13 @@ function createStyles(sizeClass: SizeClass) {
       minHeight: scaleBySizeClass(44, sizeClass),
       // Pulls the first day group closer than the container's 16pt gap; the row's 44pt height already spaces it.
       marginBottom: -8,
+    },
+    selectAllLabel: {
+      fontSize: scaleBySizeClass(15, sizeClass),
+      fontFamily: Fonts.semiBold,
+    },
+    selectAllPressed: {
+      opacity: 0.6,
     },
     summaryCount: {
       fontSize: scaleBySizeClass(12, sizeClass),

@@ -128,12 +128,18 @@ describe('getSelectionActionBlocks', () => {
     });
   });
 
-  it('blocks combining scrimmages but still shares and adds them', () => {
+  it('combines past a scrimmage in the selection', () => {
     expect(getSelectionActionBlocks([advanced('a'), advanced('b', 'scrimmage')])).toEqual({
-      viewStats: "Scrimmages can't be combined.",
+      viewStats: null,
       share: null,
       addToTournament: null,
     });
+  });
+
+  it('blocks combining only scrimmages but still shares and adds them', () => {
+    expect(
+      getSelectionActionBlocks([advanced('a', 'scrimmage'), advanced('b', 'scrimmage')]),
+    ).toEqual({ viewStats: "Scrimmages can't be combined.", share: null, addToTournament: null });
   });
 
   it('lets a lone scrimmage open its own stats', () => {

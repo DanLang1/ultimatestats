@@ -11,7 +11,6 @@ import {
 import { ScreenHeader, ScreenHeaderTitleAction } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { TournamentPickerModal } from '@/components/ui/TournamentPickerModal';
-import CombineGamesButton from '@/components/view-stats/CombineGamesButton';
 import LiveGameRow from '@/components/view-stats/LiveGameRow';
 import SavedGamesEmptyState from '@/components/view-stats/SavedGamesEmptyState';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
@@ -25,6 +24,7 @@ import {
   advancedGameSummaryToTeamListItem,
   basicGameToListItem,
   GameListItem,
+  isScrimmage,
 } from '@/lib/gameListUtils';
 import {
   countTeamSearchMatches,
@@ -45,8 +45,6 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 
 const GAME_NAVIGATION_GUARD_MS = 750;
-// Combining a single game shows nothing its own stats don't.
-const MIN_GAMES_TO_COMBINE = 2;
 
 export default function StatsScreen() {
   const { palette } = useTheme();
@@ -96,7 +94,6 @@ export default function StatsScreen() {
     ? countTeamSearchMatches(otherTeams, allGames, searchQuery)
     : [];
   const teamGames = allGames.filter((game) => game.teamId === currentTeam?.id);
-  const canCombineGames = teamGames.length >= MIN_GAMES_TO_COMBINE;
   const selectedGames = teamGames.filter((game) => selectedSavedGameIds.has(game.id));
 
   const releaseNavigationGuard = () => {
@@ -241,11 +238,20 @@ export default function StatsScreen() {
       return;
     }
 
+    // Scrimmages have no result to combine, so View stats skips them; a combine's header notes
+    // how many, and the select bar already showed them when one game is left.
+    const combinedGames = selectedGames.filter((game) => !isScrimmage(game));
+    if (combinedGames.length === 1) {
+      void handleSelectGame(combinedGames[0]);
+      return;
+    }
+
     router.push({
       pathname: '/combined-stats',
       params: {
-        kind: getSelectionKind(selectedGames),
-        gameIds: selectedGames.map((game) => game.id).join(','),
+        kind: getSelectionKind(combinedGames),
+        gameIds: combinedGames.map((game) => game.id).join(','),
+        excludedScrimmageCount: String(selectedGames.length - combinedGames.length),
       },
     });
   };
@@ -336,8 +342,8 @@ export default function StatsScreen() {
             onToggleGameSelection={handleToggleSavedGameSelection}
             onEnterSelectionWithGame={handleEnterSelectionWithGame}
             onClearSelection={() => setSelectedSavedGameIds(new Set())}
+            onSelectGames={(gameIds) => setSelectedSavedGameIds(new Set(gameIds))}
             selectionMode={selectionMode}
-            summaryAction={canCombineGames ? <CombineGamesButton /> : null}
             searchQuery={searchQuery}
             onChangeSearchQuery={setSearchQuery}
             otherTeams={otherTeams}

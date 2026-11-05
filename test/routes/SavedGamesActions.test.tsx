@@ -107,7 +107,11 @@ it.each(['basic', 'advanced'] as const)(
     await user.press(screen.getByText('View stats'));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/combined-stats',
-      params: { kind, gameIds: expect.stringMatching(/^(first,second|second,first)$/) },
+      params: {
+        kind,
+        gameIds: expect.stringMatching(/^(first,second|second,first)$/),
+        excludedScrimmageCount: '0',
+      },
     });
     expect(screen.getByText(/^2 selected/)).toBeVisible();
   },
@@ -127,6 +131,41 @@ it.each([
     expect(router.push).toHaveBeenCalledWith({ pathname, params: { gameId: 'first' } }),
   );
   expect(screen.getByText(/^1 selected/)).toBeVisible();
+});
+
+it('selects and deselects every listed game, respecting the search', async () => {
+  await arrangeGames('basic');
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  expect(screen.queryByText('Select all')).not.toBeOnTheScreen();
+
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Select all'));
+  expect(screen.getByText(/^2 selected/)).toBeVisible();
+
+  await user.press(screen.getByText('Deselect all'));
+  expect(screen.queryByText(/selected/)).not.toBeOnTheScreen();
+
+  await user.type(screen.getByPlaceholderText('Search'), 'First');
+  await user.press(screen.getByText('Select all'));
+  expect(screen.getByText(/^1 selected/)).toBeVisible();
+  expect(screen.getByText('Deselect all')).toBeVisible();
+});
+
+it('offers Select all again when a selected game is deleted elsewhere', async () => {
+  await arrangeGames('basic');
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('First Rival'));
+
+  await act(() =>
+    useGameStore.setState((state) => ({
+      savedGames: state.savedGames.filter((game) => game.id !== 'first'),
+    })),
+  );
+
+  expect(screen.getByText('Select all')).toBeVisible();
 });
 
 it('caps advanced game shares at four while basic shares allow more', async () => {
@@ -470,6 +509,57 @@ it('explains why a selection of both kinds cannot be shared instead of sharing i
   expect(screen.getByText('Share basic games or advanced games separately.')).toBeVisible();
   expect(screen.queryByText('Share Data?')).not.toBeOnTheScreen();
   expect(fetchSpy).not.toHaveBeenCalled();
+});
+
+it('opens the one game left when View stats skips a selected scrimmage', async () => {
+  await arrangeMixedKinds();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Advanced game'));
+  await user.press(screen.getByText('Advanced scrimmage'));
+  await user.press(screen.getByText('View stats'));
+
+  await waitFor(() =>
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/advanced-tracking/analytics/[gameId]',
+      params: { gameId: 'game' },
+    }),
+  );
+});
+
+it('combines the selected games without their scrimmages and counts what it skipped', async () => {
+  for (const [id, gameType] of [
+    ['first', 'game'],
+    ['second', 'game'],
+    ['scrim', 'scrimmage'],
+  ] as const) {
+    await useSavedAdvancedGamesStore.getState().saveGame(
+      createAdvancedGameScenario({
+        id,
+        gameType,
+        status: 'final',
+        sides: [
+          { id: 'focus', label: 'Focus', trackingMode: 'full-roster' },
+          { id: 'opponent', label: `${id} Rival`, trackingMode: 'full-roster' },
+        ],
+      }).build(),
+    );
+  }
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Select all'));
+  await user.press(screen.getByText('View stats'));
+
+  expect(router.push).toHaveBeenCalledWith({
+    pathname: '/combined-stats',
+    params: {
+      kind: 'advanced',
+      gameIds: expect.stringMatching(/^(first,second|second,first)$/),
+      excludedScrimmageCount: '1',
+    },
+  });
 });
 
 it('adds the selected games to a tournament and leaves selection mode', async () => {

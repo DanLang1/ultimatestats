@@ -2,6 +2,7 @@ import type { AdvancedGameHistorySnapshot } from '@/lib/advancedTracking/persist
 import {
   loadAdvancedGame,
   loadAdvancedGameHistorySnapshot,
+  loadAdvancedGameSummaries,
   upsertAdvancedGame,
   upsertAdvancedLiveSnapshot,
 } from '@/lib/advancedTracking/storage';
@@ -162,5 +163,47 @@ describe('advanced tracking storage migration boundary', () => {
     await expect(first).rejects.toThrow('write failed');
     await expect(second).resolves.toMatchObject({ id: 'second-game' });
     expect(getRecordWrite()?.[1]).toBe('second-game');
+  });
+});
+
+describe('advanced game summaries', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    mockGetAllAsync.mockImplementation(async () => [{ name: 'data_json' }]);
+  });
+
+  const summaryRow = (id: string, focusSourceTeamId: string | null) => ({
+    id,
+    schema_version: ADVANCED_TRACKING_SCHEMA_VERSION,
+    created_at: 1,
+    updated_at: 2,
+    imported_at: null,
+    played_at: null,
+    sort_timestamp: 1,
+    status: 'final',
+    game_type: 'game',
+    focus_side_id: 'home',
+    focus_source_team_id: focusSourceTeamId,
+    my_team_name: 'Home',
+    opponent_name: 'Away',
+    my_score: 1,
+    opponent_score: 0,
+    points_tracked: 1,
+  });
+
+  it('skips and reports a summary without a focus team instead of failing the whole list', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockGetAllAsync.mockImplementation((async (sql: string) =>
+      sql.includes('advanced_game_summaries')
+        ? [summaryRow('good', 'team-1'), summaryRow('bad', null)]
+        : [{ name: 'data_json' }]) as never);
+
+    const summaries = await loadAdvancedGameSummaries();
+
+    expect(summaries.map((summary) => summary.id)).toEqual(['good']);
+    expect(consoleError).toHaveBeenCalledWith(
+      '[advanced-game-summary-missing-team]',
+      expect.any(Error),
+    );
   });
 });

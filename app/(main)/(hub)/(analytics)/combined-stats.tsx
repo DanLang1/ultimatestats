@@ -15,20 +15,40 @@ function isGameKind(value: string | undefined): value is GameKind {
   return value === 'basic' || value === 'advanced';
 }
 
-/** Combined stats for one team's games of one kind; `gameIds` is comma-separated. */
+/**
+ * Combined stats for one team's games of one kind; `gameIds` is comma-separated and
+ * `excludedScrimmageCount` counts the selected scrimmages left out.
+ */
 export default function CombinedStatsScreen() {
-  const { kind, gameIds } = useLocalSearchParams<{ kind?: string; gameIds?: string }>();
+  const {
+    kind,
+    gameIds,
+    excludedScrimmageCount: excludedScrimmageCountParam,
+  } = useLocalSearchParams<{
+    kind?: string;
+    gameIds?: string;
+    excludedScrimmageCount?: string;
+  }>();
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const combinedGameIds = gameIds ? gameIds.split(',') : [];
-  const hasValidLink = isGameKind(kind) && combinedGameIds.length > 0;
+  const excludedScrimmageCount = Number(excludedScrimmageCountParam);
+  const hasValidLink =
+    isGameKind(kind) &&
+    combinedGameIds.length > 0 &&
+    Number.isInteger(excludedScrimmageCount) &&
+    excludedScrimmageCount >= 0;
 
   if (hasValidLink) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <CombinedStatsView kind={kind} gameIds={combinedGameIds} />
+        <CombinedStatsView
+          kind={kind}
+          gameIds={combinedGameIds}
+          excludedScrimmageCount={excludedScrimmageCount}
+        />
       </>
     );
   }

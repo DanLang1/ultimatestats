@@ -10,17 +10,25 @@ import { Fonts } from '@/theme/theme';
 interface CombinedGamesHeaderProps {
   myTeamName: string;
   games: GameListItem[];
+  /** Selected scrimmages left out of the combine. */
+  excludedScrimmageCount: number;
 }
 
 /** Team and game count on one left edge with the combined record on the right. */
-export default function CombinedGamesHeader({ myTeamName, games }: CombinedGamesHeaderProps) {
+export default function CombinedGamesHeader({
+  myTeamName,
+  games,
+  excludedScrimmageCount,
+}: CombinedGamesHeaderProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
   // The same record the team list and selection bar show.
   const record = formatRecord(games);
-  const gameCountLabel = `${games.length} ${pluralize(games.length, 'game', 'games')}`;
+  const gameCount = `${games.length} ${pluralize(games.length, 'game', 'games')}`;
+  const excludedLabel = `${excludedScrimmageCount} ${pluralize(excludedScrimmageCount, 'scrimmage', 'scrimmages')} excluded`;
+  const gameCountLabel = excludedScrimmageCount > 0 ? `${gameCount} · ${excludedLabel}` : gameCount;
 
   return (
     <View style={styles.row}>

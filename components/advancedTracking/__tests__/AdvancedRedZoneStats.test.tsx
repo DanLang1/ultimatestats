@@ -80,7 +80,9 @@ function renderStats(
       perspectiveSideId={sideId}
       participantNames={game.participantNames}
       routeScope="saved"
-      aggregateInfo={combinedGames && { games: combinedGames.map(toListItem) }}
+      aggregateInfo={
+        combinedGames && { games: combinedGames.map(toListItem), excludedScrimmageCount: 0 }
+      }
     />,
   );
 }

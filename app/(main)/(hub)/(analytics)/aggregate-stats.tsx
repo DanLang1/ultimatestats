@@ -159,7 +159,12 @@ export default function AggregateStatsScreen() {
   const handleViewStats = () => {
     router.push({
       pathname: '/combined-stats',
-      params: { kind: aggregateMode, gameIds: [...selectedGameIds].join(',') },
+      params: {
+        kind: aggregateMode,
+        gameIds: [...selectedGameIds].join(','),
+        // The picker only lists combinable games.
+        excludedScrimmageCount: '0',
+      },
     });
   };
 

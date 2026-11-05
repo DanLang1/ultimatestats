@@ -42,7 +42,7 @@ interface AdvancedStatsContentProps {
   participantNames: Map<string, string>;
   routeScope: StatsRouteScope;
   /** The combined games, for a stats view that merges several games into one. */
-  aggregateInfo?: { games: GameListItem[] };
+  aggregateInfo?: { games: GameListItem[]; excludedScrimmageCount: number };
   initialPullWinStats?: AdvancedInitialPullWinStats;
   flipStats?: AdvancedFlipStats;
 }
@@ -83,7 +83,11 @@ export default function AdvancedStatsContent({
         ]}>
         {aggregateInfo ? (
           <>
-            <CombinedGamesHeader myTeamName={myTeamName} games={aggregateInfo.games} />
+            <CombinedGamesHeader
+              myTeamName={myTeamName}
+              games={aggregateInfo.games}
+              excludedScrimmageCount={aggregateInfo.excludedScrimmageCount}
+            />
             <GameMarginsSection games={aggregateInfo.games} />
           </>
         ) : (

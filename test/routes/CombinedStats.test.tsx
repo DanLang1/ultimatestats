@@ -72,8 +72,16 @@ async function arrangeGames(kind: 'basic' | 'advanced') {
       );
     }
   }
-  setMockSearchParams({ kind, gameIds: 'first,second' });
+  setMockSearchParams({ kind, gameIds: 'first,second', excludedScrimmageCount: '0' });
 }
+
+it('notes the scrimmages left out of an advanced combine', async () => {
+  await arrangeGames('advanced');
+  setMockSearchParams({ kind: 'advanced', gameIds: 'first,second', excludedScrimmageCount: '1' });
+  await renderScreen(<CombinedStatsScreen />);
+
+  expect(await screen.findByText('2 games · 1 scrimmage excluded')).toBeVisible();
+});
 
 it('combines basic games into one box score', async () => {
   await arrangeGames('basic');
@@ -153,10 +161,16 @@ it('refuses to show combined math when an advanced game has no full record', asy
 
 it('refuses to combine basic games when one of them no longer exists', async () => {
   await arrangeGames('basic');
-  setMockSearchParams({ kind: 'basic', gameIds: 'first,missing' });
+  setMockSearchParams({ kind: 'basic', gameIds: 'first,missing', excludedScrimmageCount: '0' });
   await renderScreen(<CombinedStatsScreen />);
   expect(screen.getByText('Combined stats unavailable')).toBeVisible();
   expect(screen.getByText('The selected games could not be found.')).toBeVisible();
+});
+
+it('treats a link without a valid scrimmage count as broken', async () => {
+  setMockSearchParams({ kind: 'basic', gameIds: 'first,second', excludedScrimmageCount: 'abc' });
+  await renderScreen(<CombinedStatsScreen />);
+  expect(screen.getByText('Missing games link.')).toBeVisible();
 });
 
 it('offers a way back to Saved Games when the link names no games', async () => {

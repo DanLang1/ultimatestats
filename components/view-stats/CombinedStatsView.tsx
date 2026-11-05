@@ -29,10 +29,16 @@ import { Fonts } from '@/theme/theme';
 interface CombinedStatsViewProps {
   kind: GameKind;
   gameIds: string[];
+  /** Selected scrimmages left out of the combine. */
+  excludedScrimmageCount: number;
 }
 
 /** The Combined Stats screen for one team's games of one kind. */
-export default function CombinedStatsView({ kind, gameIds }: CombinedStatsViewProps) {
+export default function CombinedStatsView({
+  kind,
+  gameIds,
+  excludedScrimmageCount,
+}: CombinedStatsViewProps) {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
@@ -162,7 +168,7 @@ export default function CombinedStatsView({ kind, gameIds }: CombinedStatsViewPr
         perspectiveSideId={stats.aggregatedGame.focusSideId}
         participantNames={stats.aggregatedGame.participantNames}
         routeScope="saved"
-        aggregateInfo={{ games: stats.gameItems }}
+        aggregateInfo={{ games: stats.gameItems, excludedScrimmageCount }}
         initialPullWinStats={stats.initialPullWinStats}
         flipStats={stats.flipStats ?? undefined}
       />

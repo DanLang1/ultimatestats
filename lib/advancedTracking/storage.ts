@@ -8,6 +8,7 @@ import {
 } from '@/lib/advancedTracking/persistenceTypes';
 import { AdvancedGameSummary, deriveAdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedGameType, AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { reportError } from '@/lib/sentry';
 
 const DATABASE_NAME = 'ultimatestats_advanced_tracking.db';
 
@@ -118,11 +119,7 @@ async function migrateAdvancedTrackingDb(db: SQLite.SQLiteDatabase) {
   }
 }
 
-function rowToSummary(row: SummaryRow): AdvancedGameSummary {
-  // Saving derives the summary, which requires the focus source team.
-  if (row.focus_source_team_id === null) {
-    throw new Error(`Advanced game ${row.id} summary has no focus source team`);
-  }
+function rowToSummary(row: SummaryRow, focusSourceTeamId: string): AdvancedGameSummary {
   return {
     id: row.id,
     schemaVersion: row.schema_version,
@@ -134,7 +131,7 @@ function rowToSummary(row: SummaryRow): AdvancedGameSummary {
     status: row.status,
     gameType: row.game_type,
     focusSideId: row.focus_side_id,
-    focusSourceTeamId: row.focus_source_team_id,
+    focusSourceTeamId,
     myTeamName: row.my_team_name,
     opponentName: row.opponent_name,
     myScore: row.my_score,
@@ -148,7 +145,18 @@ export async function loadAdvancedGameSummaries(): Promise<AdvancedGameSummary[]
   const rows = await db.getAllAsync<SummaryRow>(
     'SELECT * FROM advanced_game_summaries ORDER BY sort_timestamp DESC, updated_at DESC',
   );
-  return rows.map(rowToSummary);
+  return rows.flatMap((row) => {
+    // Saving requires the focus source team, so a row without one is unexpected. Skip just that game
+    // rather than failing the whole list and hiding every advanced game.
+    if (row.focus_source_team_id === null) {
+      reportError(
+        'advanced-game-summary-missing-team',
+        new Error(`Advanced game ${row.id} summary has no focus source team`),
+      );
+      return [];
+    }
+    return [rowToSummary(row, row.focus_source_team_id)];
+  });
 }
 
 export async function loadAdvancedGame(gameId: string): Promise<AdvancedTrackedGame | null> {

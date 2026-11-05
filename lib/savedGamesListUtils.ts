@@ -129,10 +129,10 @@ export function getSelectionActionBlocks(games: GameListItem[]): SelectionAction
     };
   }
 
-  // One game opens its own stats, so only a combine is blocked by a scrimmage.
-  const combinesScrimmage = games.length > 1 && games.some(isScrimmage);
+  // One game opens its own stats; a combine skips scrimmages, so only an all-scrimmage one is blocked.
+  const hasOnlyScrimmagesToCombine = games.length > 1 && games.every(isScrimmage);
   return {
-    viewStats: combinesScrimmage ? "Scrimmages can't be combined." : null,
+    viewStats: hasOnlyScrimmagesToCombine ? "Scrimmages can't be combined." : null,
     share: getShareLimitBlock(kind, games.length),
     addToTournament: null,
   };

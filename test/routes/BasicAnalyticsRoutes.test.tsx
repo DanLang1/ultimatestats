@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { act, screen, userEvent } from '@testing-library/react-native';
+import { screen, userEvent } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import CreateTournamentScreen from '@/app/(main)/(hub)/(analytics)/create-tournament';
@@ -43,28 +43,7 @@ describe('basic analytics routes', () => {
     expect(screen.getByText('No saved games yet')).toBeVisible();
     expect(screen.getByText('See what full game stats look like')).toBeVisible();
     expect(screen.queryByPlaceholderText('Search')).not.toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Combine games' })).not.toBeOnTheScreen();
     expect(screen.queryByTestId('stats-live-game')).not.toBeOnTheScreen();
-  });
-
-  it('offers to combine games only once two are saved', async () => {
-    const savedGame = createSavedBasicGame();
-    useGameStore.setState({ savedGames: [savedGame], savedTeams: [testTeam] });
-    const user = userEvent.setup();
-    await renderScreen(<StatsScreen />);
-
-    expect(screen.getByText('1 GAME')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Combine games' })).not.toBeOnTheScreen();
-
-    await act(() =>
-      useGameStore.setState({
-        savedGames: [savedGame, { ...savedGame, id: 'saved-basic-game-2' }],
-      }),
-    );
-    expect(screen.getByText('2 GAMES')).toBeVisible();
-    await user.press(screen.getByRole('button', { name: 'Combine games' }));
-
-    expect(router.push).toHaveBeenCalledWith('/aggregate-stats');
   });
 
   const liveGameCases = [

@@ -91,7 +91,11 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     await user.press(screen.getByText('View stats'));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/combined-stats',
-      params: { kind, gameIds: expect.stringMatching(/^(first,second|second,first)$/) },
+      params: {
+        kind,
+        gameIds: expect.stringMatching(/^(first,second|second,first)$/),
+        excludedScrimmageCount: '0',
+      },
     });
     await user.press(screen.getByTestId('screen-header-back'));
     expect(screen.getByText('AGGREGATE STATS')).toBeVisible();
