@@ -195,6 +195,30 @@ export function filterSavedGames(
   return filtered;
 }
 
+/** A team and how many of its games match a search. */
+export interface SavedGameTeamSearchMatch {
+  team: SavedGameTeam;
+  matchCount: number;
+}
+
+/**
+ * The teams with games matching the search query, in the given team order. Ignores the tournament
+ * filter, so it finds every match a switch to that team could show.
+ */
+export function countTeamSearchMatches(
+  teams: SavedGameTeam[],
+  games: LinkedGameListItem[],
+  query: string,
+): SavedGameTeamSearchMatch[] {
+  const matches = filterSavedGames(games, { tournament: null, query });
+  return teams
+    .map((team) => ({
+      team,
+      matchCount: matches.filter((game) => game.teamId === team.id).length,
+    }))
+    .filter(({ matchCount }) => matchCount > 0);
+}
+
 /** Ascending order for each sort field; typed by field so a new field needs its own comparator. */
 const SORT_FIELD_COMPARATORS: Record<
   SavedGamesSortField,

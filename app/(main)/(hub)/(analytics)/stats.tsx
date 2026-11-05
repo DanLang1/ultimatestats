@@ -13,6 +13,7 @@ import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { TournamentPickerModal } from '@/components/ui/TournamentPickerModal';
 import CombineGamesButton from '@/components/view-stats/CombineGamesButton';
 import LiveGameRow from '@/components/view-stats/LiveGameRow';
+import SavedGamesEmptyState from '@/components/view-stats/SavedGamesEmptyState';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import SavedGamesSelectBar from '@/components/view-stats/SavedGamesSelectBar';
 import { SavedGamesTeamSheet } from '@/components/view-stats/SavedGamesTeamSheet';
@@ -26,6 +27,7 @@ import {
   GameListItem,
 } from '@/lib/gameListUtils';
 import {
+  countTeamSearchMatches,
   getSelectionKind,
   SavedGamesSortKey,
   summarizeSavedGameTeams,
@@ -64,6 +66,8 @@ export default function StatsScreen() {
   const [showTeamSheet, setShowTeamSheet] = useState(false);
   // Lives here so the sort survives the list remounting on a team switch.
   const [sortKey, setSortKey] = useState<SavedGamesSortKey>('newest');
+  // Lives here so a search can carry over to another team that has matches.
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [showTournamentPicker, setShowTournamentPicker] = useState(false);
@@ -86,6 +90,11 @@ export default function StatsScreen() {
   const currentTeam =
     savedGameTeams.find((team) => team.id === selectedTeamId) ?? savedGameTeams[0] ?? null;
   const hasMultipleTeams = savedGameTeams.length > 1;
+  const otherTeams = savedGameTeams.filter((team) => team.id !== currentTeam?.id);
+  const isSearching = searchQuery.trim() !== '';
+  const otherTeamSearchMatches = isSearching
+    ? countTeamSearchMatches(otherTeams, allGames, searchQuery)
+    : [];
   const teamGames = allGames.filter((game) => game.teamId === currentTeam?.id);
   const canCombineGames = teamGames.length >= MIN_GAMES_TO_COMBINE;
   const selectedGames = teamGames.filter((game) => selectedSavedGameIds.has(game.id));
@@ -130,6 +139,13 @@ export default function StatsScreen() {
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeamId(teamId);
     setSelectedSavedGameIds(new Set());
+    setSearchQuery('');
+  };
+
+  // Keeps the search so the team's matches show.
+  const handleSearchTeam = (teamId: string) => {
+    setSelectedTeamId(teamId);
+    setSelectedSavedGameIds(new Set());
   };
 
   const handleToggleSelectionMode = () => {
@@ -150,6 +166,8 @@ export default function StatsScreen() {
   const handleBulkDeleteGames = async () => {
     const count = selectedGames.length;
     if (count === 0) return;
+    // The list then falls back to another team, where this team's search would be stale.
+    const emptiesShownTeam = count === teamGames.length;
 
     showAlert({
       title: 'Delete Games?',
@@ -178,6 +196,9 @@ export default function StatsScreen() {
               for (const gameId of advancedIds) {
                 await removeGameFromTournament('advanced', gameId);
                 await deleteAdvancedSavedGame(gameId);
+              }
+              if (emptiesShownTeam) {
+                setSearchQuery('');
               }
             } catch (error) {
               reportError('saved-games-bulk-delete', error);
@@ -300,20 +321,32 @@ export default function StatsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {hasLiveStats ? <LiveGameRow /> : null}
-        <SavedGamesList
-          // Remounting resets search and the tournament filter when the team changes.
-          key={currentTeam?.id}
-          games={teamGames}
-          sortKey={sortKey}
-          onChangeSortKey={setSortKey}
-          onSelectGame={handleSelectGame}
-          selectedGameIds={selectedSavedGameIds}
-          onToggleGameSelection={handleToggleSavedGameSelection}
-          onEnterSelectionWithGame={handleEnterSelectionWithGame}
-          onClearSelection={() => setSelectedSavedGameIds(new Set())}
-          selectionMode={selectionMode}
-          summaryAction={canCombineGames ? <CombineGamesButton /> : null}
-        />
+        {currentTeam === null ? (
+          <SavedGamesEmptyState />
+        ) : (
+          <SavedGamesList
+            // Remounting resets the tournament filter when the team changes.
+            key={currentTeam.id}
+            games={teamGames}
+            teamName={currentTeam.name}
+            sortKey={sortKey}
+            onChangeSortKey={setSortKey}
+            onSelectGame={handleSelectGame}
+            selectedGameIds={selectedSavedGameIds}
+            onToggleGameSelection={handleToggleSavedGameSelection}
+            onEnterSelectionWithGame={handleEnterSelectionWithGame}
+            onClearSelection={() => setSelectedSavedGameIds(new Set())}
+            selectionMode={selectionMode}
+            summaryAction={canCombineGames ? <CombineGamesButton /> : null}
+            searchQuery={searchQuery}
+            onChangeSearchQuery={setSearchQuery}
+            otherTeams={otherTeams}
+            onSelectTeam={handleSelectTeam}
+            onShowAllTeams={() => setShowTeamSheet(true)}
+            otherTeamSearchMatches={otherTeamSearchMatches}
+            onSearchTeam={handleSearchTeam}
+          />
+        )}
       </ScrollView>
 
       <SavedGamesSelectBar

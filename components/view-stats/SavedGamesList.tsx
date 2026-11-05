@@ -1,10 +1,12 @@
 import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
-import { router } from 'expo-router';
 import { ReactNode, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import SavedGameResultRow from '@/components/view-stats/SavedGameResultRow';
+import SavedGamesOtherTeamRow from '@/components/view-stats/SavedGamesOtherTeamRow';
+import SavedGamesOtherTeamsFooter from '@/components/view-stats/SavedGamesOtherTeamsFooter';
+import SavedGamesOtherTeamsSection from '@/components/view-stats/SavedGamesOtherTeamsSection';
 import { SavedGamesSortSheet } from '@/components/view-stats/SavedGamesSortSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
@@ -16,13 +18,19 @@ import {
   groupSavedGames,
   SAVED_GAMES_SORT_OPTIONS,
   SavedGamesSortKey,
+  SavedGameTeam,
+  SavedGameTeamSearchMatch,
   sortSavedGames,
   summarizeTournaments,
 } from '@/lib/savedGamesListUtils';
+import { Tournament } from '@/lib/storage/types';
+import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
 interface SavedGamesListProps {
+  /** The shown team's games. */
   games: LinkedGameListItem[];
+  teamName: string;
   onSelectGame: (game: LinkedGameListItem) => void;
   selectedGameIds?: Set<string>;
   onToggleGameSelection?: (gameId: string) => void;
@@ -33,6 +41,17 @@ interface SavedGamesListProps {
   summaryAction?: ReactNode;
   sortKey: SavedGamesSortKey;
   onChangeSortKey: (sortKey: SavedGamesSortKey) => void;
+  searchQuery: string;
+  onChangeSearchQuery: (query: string) => void;
+  /** Teams other than the shown one, newest first; listed after the last game. */
+  otherTeams: SavedGameTeam[];
+  /** Switches to the team and clears the search. */
+  onSelectTeam: (teamId: string) => void;
+  onShowAllTeams: () => void;
+  /** Other teams with games matching the search, offered when this team has none. */
+  otherTeamSearchMatches: SavedGameTeamSearchMatch[];
+  /** Switches to the team and keeps the search. */
+  onSearchTeam: (teamId: string) => void;
 }
 
 const EMPTY_GAME_IDS = new Set<string>();
@@ -43,8 +62,33 @@ function getGameModeLabel(game: GameListItem): string | null {
   return isScrimmage(game) ? 'Scrimmage' : null;
 }
 
+interface NoResultsContext {
+  teamName: string;
+  tournament: Tournament | null;
+  query: string;
+  /** Whether any of the team's games match the query, ignoring the tournament filter. */
+  teamHasSearchMatches: boolean;
+}
+
+/** Why a list with no listed games is empty. */
+function getNoResultsMessage({
+  teamName,
+  tournament,
+  query,
+  teamHasSearchMatches,
+}: NoResultsContext): string {
+  // The team has games, so without a search only the tournament filter can empty the list.
+  if (query.trim() === '') return 'No games in this tournament';
+  const quotedQuery = `"${query}"`;
+  if (tournament !== null && teamHasSearchMatches) {
+    return `No games in ${tournament.name} match ${quotedQuery}`;
+  }
+  return `No games in ${teamName} match ${quotedQuery}`;
+}
+
 export default function SavedGamesList({
   games,
+  teamName,
   onSelectGame,
   selectedGameIds = EMPTY_GAME_IDS,
   onToggleGameSelection,
@@ -54,12 +98,18 @@ export default function SavedGamesList({
   summaryAction,
   sortKey,
   onChangeSortKey,
+  searchQuery,
+  onChangeSearchQuery,
+  otherTeams,
+  onSelectTeam,
+  onShowAllTeams,
+  otherTeamSearchMatches,
+  onSearchTeam,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
 
@@ -75,39 +125,33 @@ export default function SavedGamesList({
   );
   const sortOption = SAVED_GAMES_SORT_OPTIONS[sortKey];
 
-  if (games.length === 0) {
-    return (
-      <View style={styles.emptyState}>
-        <MaterialCommunityIcons
-          name="history"
-          size={scaleBySizeClass(48, sizeClass)}
-          color={palette.textMuted}
-        />
-        <ThemedText style={[styles.emptyText, { color: palette.textMuted }]}>
-          No saved games yet
-        </ThemedText>
-        <Pressable
-          testID="saved-games-showcase"
-          accessibilityRole="button"
-          accessibilityLabel="See what full game stats look like"
-          onPress={() => router.push('/showcase')}
-          style={({ pressed }) => [styles.showcaseLink, pressed && styles.showcaseLinkPressed]}>
-          <ThemedText style={[styles.showcaseLinkText, { color: palette.accent }]}>
-            See what full game stats look like
-          </ThemedText>
-          <MaterialCommunityIcons
-            name="chevron-right"
-            size={scaleBySizeClass(18, sizeClass)}
-            color={palette.accent}
-          />
-        </Pressable>
-      </View>
-    );
-  }
-
   const listedGamesCount = filteredAndSortedGames.length;
   const isGroupedByDay = sortOption.field === 'date';
   const gameGroups = groupSavedGames(filteredAndSortedGames, isGroupedByDay);
+  const isSearching = searchQuery.trim() !== '';
+  // Without a tournament filter the listed games are exactly the team's matches; with one, a
+  // filter hiding the team's matches mustn't read as the team having none.
+  const teamHasSearchMatches =
+    activeTournament === null
+      ? listedGamesCount > 0
+      : filterSavedGames(games, { tournament: null, query: searchQuery }).length > 0;
+  const noResultsMessage =
+    listedGamesCount === 0
+      ? getNoResultsMessage({
+          teamName,
+          tournament: activeTournament,
+          query: searchQuery,
+          teamHasSearchMatches,
+        })
+      : null;
+
+  // Switching teams would drop the selection, so neither team list shows while selecting.
+  const canSwitchTeams = !selectionMode;
+  const showsOtherTeamSearchMatches =
+    canSwitchTeams && isSearching && !teamHasSearchMatches && otherTeamSearchMatches.length > 0;
+  // One list of other teams at a time: search matches replace the footer.
+  const showsOtherTeamsFooter =
+    canSwitchTeams && otherTeams.length > 0 && !showsOtherTeamSearchMatches;
 
   return (
     <View style={styles.container}>
@@ -124,7 +168,7 @@ export default function SavedGamesList({
             placeholderTextColor={palette.textMuted}
             value={searchQuery}
             onChangeText={(text) => {
-              setSearchQuery(text);
+              onChangeSearchQuery(text);
               onClearSelection?.();
             }}
             clearButtonMode="while-editing"
@@ -254,18 +298,39 @@ export default function SavedGamesList({
         })}
       </View>
 
-      {filteredAndSortedGames.length === 0 && activeTournament && searchQuery.trim() === '' && (
+      {noResultsMessage != null && (
         <View style={styles.noResults}>
-          <ThemedText style={{ color: palette.textMuted }}>No games in this tournament</ThemedText>
+          <ThemedText style={{ color: palette.textMuted }}>{noResultsMessage}</ThemedText>
         </View>
       )}
 
-      {filteredAndSortedGames.length === 0 && searchQuery.trim() !== '' && (
-        <View style={styles.noResults}>
-          <ThemedText style={{ color: palette.textMuted }}>
-            No games match &quot;{searchQuery}&quot;
-          </ThemedText>
-        </View>
+      {showsOtherTeamSearchMatches && (
+        <SavedGamesOtherTeamsSection
+          title="Found in other teams"
+          testID="saved-games-search-other-teams">
+          {otherTeamSearchMatches.map(({ team, matchCount }, index) => {
+            const matchLabel = `${matchCount} ${pluralize(matchCount, 'match', 'matches')}`;
+            return (
+              <SavedGamesOtherTeamRow
+                key={team.id}
+                testID={`saved-games-search-team-${team.id}`}
+                label={team.name}
+                detail={matchLabel}
+                accessibilityLabel={`Switch to ${team.name}, ${matchLabel}`}
+                showDivider={index < otherTeamSearchMatches.length - 1}
+                onPress={() => onSearchTeam(team.id)}
+              />
+            );
+          })}
+        </SavedGamesOtherTeamsSection>
+      )}
+
+      {showsOtherTeamsFooter && (
+        <SavedGamesOtherTeamsFooter
+          otherTeams={otherTeams}
+          onSelectTeam={onSelectTeam}
+          onShowAllTeams={onShowAllTeams}
+        />
       )}
 
       <SavedGamesSortSheet
@@ -345,29 +410,6 @@ function createStyles(sizeClass: SizeClass) {
     },
     filterChipText: {
       flexShrink: 1,
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    emptyState: {
-      padding: 40,
-      alignItems: 'center',
-      gap: 16,
-      marginTop: 40,
-    },
-    emptyText: {
-      fontSize: scaleBySizeClass(16, sizeClass),
-      textAlign: 'center',
-    },
-    showcaseLink: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scaleBySizeClass(2, sizeClass),
-      minHeight: scaleBySizeClass(44, sizeClass),
-    },
-    showcaseLinkPressed: {
-      opacity: 0.6,
-    },
-    showcaseLinkText: {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },

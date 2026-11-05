@@ -381,7 +381,7 @@ it('finds games by the weekday shown in day headings and dates rows when ungroup
   await user.press(screen.getByTestId('saved-games-sort-option-points-desc'));
   expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}(, \d{4})? · Basic$/)).toHaveLength(3);
   await user.type(screen.getByPlaceholderText('Search'), 'missing');
-  expect(screen.getByText('No games match "missing"')).toBeVisible();
+  expect(screen.getByText('No games in Hybrid match "missing"')).toBeVisible();
 });
 
 it.each([
@@ -586,11 +586,158 @@ describe('team scope', () => {
     expect(screen.queryByTestId('saved-games-team-switcher')).not.toBeOnTheScreen();
   });
 
-  it('shows the team name without a switcher when there is one team', async () => {
+  it('clears the search when deleting the shown team’s last game moves to another team', async () => {
+    await arrangeTwoTeams();
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    await user.type(screen.getByPlaceholderText('Search'), 'Owls');
+    await user.press(screen.getByTestId('header-action-select'));
+    await user.press(screen.getByText('Owls Rival'));
+    await user.press(screen.getByLabelText('Delete games'));
+    await user.press(screen.getByText('Delete'));
+
+    expect(await screen.findByText('Basic Rival')).toBeVisible();
+    expect(screen.getByPlaceholderText('Search')).toHaveDisplayValue('');
+  });
+
+  it('shows the team name without a switcher or other teams when there is one team', async () => {
     await arrangeGames('basic');
     await renderScreen(<StatsScreen />);
 
     expect(screen.queryByTestId('saved-games-team-switcher')).not.toBeOnTheScreen();
     expect(screen.queryByText('SAVED GAMES')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('saved-games-other-teams')).not.toBeOnTheScreen();
+  });
+
+  it('switches to another team from the end of the list', async () => {
+    await arrangeTwoTeams();
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    expect(screen.getByLabelText('Switch to Windchill, 2 games')).toBeVisible();
+    await user.press(screen.getByTestId('header-action-select'));
+    expect(screen.queryByTestId('saved-games-other-teams')).not.toBeOnTheScreen();
+    await user.press(screen.getByTestId('header-action-select'));
+    await user.type(screen.getByPlaceholderText('Search'), 'Owls');
+
+    await user.press(screen.getByTestId(`saved-games-other-team-${testTeam.id}`));
+
+    expect(
+      within(screen.getByTestId('saved-games-team-switcher')).getByText('Windchill'),
+    ).toBeVisible();
+    expect(screen.getByText('Basic Rival')).toBeVisible();
+    expect(screen.queryByText('Owls Rival')).not.toBeOnTheScreen();
+    expect(screen.getByLabelText('Switch to Owls, 1 game')).toBeVisible();
+    expect(screen.getByPlaceholderText('Search')).toHaveDisplayValue('');
+  });
+
+  it('lists up to four other teams in full', async () => {
+    const teams = ['Ants', 'Bees', 'Crows', 'Doves', 'Eagles'].map((name) => ({
+      id: `team-${name}`,
+      name,
+      roster: [],
+    }));
+    useGameStore.setState({
+      savedTeams: teams,
+      savedGames: teams.map((team, i) => ({
+        ...createSavedBasicGame(),
+        id: `${team.name}-game`,
+        team1: team,
+        team2Name: `${team.name} Rival`,
+        createdAt: Date.UTC(2026, 0, 10 - i),
+      })),
+    });
+    await renderScreen(<StatsScreen />);
+
+    const footer = screen.getByTestId('saved-games-other-teams');
+    for (const name of ['Bees', 'Crows', 'Doves', 'Eagles']) {
+      expect(within(footer).getByText(name)).toBeVisible();
+    }
+    expect(screen.queryByTestId('saved-games-other-teams-all')).not.toBeOnTheScreen();
+  });
+
+  it('lists the three newest of five other teams and opens the team sheet for the rest', async () => {
+    const teams = ['Ants', 'Bees', 'Crows', 'Doves', 'Eagles', 'Finches'].map((name) => ({
+      id: `team-${name}`,
+      name,
+      roster: [],
+    }));
+    useGameStore.setState({
+      savedTeams: teams,
+      savedGames: teams.map((team, i) => ({
+        ...createSavedBasicGame(),
+        id: `${team.name}-game`,
+        team1: team,
+        team2Name: `${team.name} Rival`,
+        createdAt: Date.UTC(2026, 0, 10 - i),
+      })),
+    });
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    const footer = screen.getByTestId('saved-games-other-teams');
+    expect(within(footer).getByText('Bees')).toBeVisible();
+    expect(within(footer).getByText('Doves')).toBeVisible();
+    expect(within(footer).queryByText('Eagles')).not.toBeOnTheScreen();
+
+    await user.press(screen.getByLabelText('See all 5 teams'));
+
+    expect(screen.getByTestId('saved-games-team-option-team-Finches')).toBeVisible();
+  });
+
+  it('blames the tournament filter, not the team, when it hides the team’s matches', async () => {
+    await arrangeTwoTeams();
+    useGameStore.setState((state) => ({
+      savedGames: [
+        ...state.savedGames,
+        {
+          ...createSavedBasicGame(),
+          id: 'owls-unfiled',
+          team1: owls,
+          team2Name: 'Basic Hawks',
+          createdAt: Date.UTC(2026, 0, 4),
+        },
+      ],
+    }));
+    const tournamentId = await useTournamentStore
+      .getState()
+      .addTournament('Regionals', '2026-01-05', '2026-01-05');
+    await useTournamentStore.getState().addGamesToTournament(tournamentId, 'basic', ['owls-basic']);
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    await user.press(screen.getByTestId('saved-games-sort'));
+    await user.press(screen.getByTestId(`saved-games-tournament-option-${tournamentId}`));
+    await user.type(screen.getByPlaceholderText('Search'), 'Basic');
+
+    expect(screen.getByText('No games in Regionals match "Basic"')).toBeVisible();
+    expect(screen.queryByText('No games in Owls match "Basic"')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('saved-games-search-other-teams')).not.toBeOnTheScreen();
+  });
+
+  it('offers other teams’ search matches and keeps the search after switching', async () => {
+    await arrangeTwoTeams();
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    await user.type(screen.getByPlaceholderText('Search'), 'Basic');
+
+    expect(screen.getByText('No games in Owls match "Basic"')).toBeVisible();
+    expect(
+      within(screen.getByTestId('saved-games-search-other-teams')).getByText(
+        'Found in other teams',
+      ),
+    ).toBeVisible();
+    expect(screen.queryByTestId('saved-games-other-teams')).not.toBeOnTheScreen();
+
+    await user.press(screen.getByLabelText('Switch to Windchill, 1 match'));
+
+    expect(
+      within(screen.getByTestId('saved-games-team-switcher')).getByText('Windchill'),
+    ).toBeVisible();
+    expect(screen.getByPlaceholderText('Search')).toHaveDisplayValue('Basic');
+    expect(screen.getByText('Basic Rival')).toBeVisible();
+    expect(screen.queryByText('Advanced Rival')).not.toBeOnTheScreen();
   });
 });

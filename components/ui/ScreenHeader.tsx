@@ -56,7 +56,10 @@ export function ScreenHeader({
       accessibilityRole="button"
       accessibilityLabel={titleAction.accessibilityLabel}
       onPress={titleAction.onPress}
-      style={({ pressed }) => [styles.titleButton, pressed && styles.titleButtonPressed]}>
+      style={({ pressed }) => [
+        styles.titleButton,
+        { backgroundColor: pressed ? palette.overlay12 : palette.overlay08 },
+      ]}>
       <ThemedText
         style={[styles.title, styles.titleButtonText, { color: resolvedTitleColor }]}
         numberOfLines={1}
@@ -167,9 +170,9 @@ function createStyles(sizeClass: SizeClass) {
       alignItems: 'center',
       gap: scaleBySizeClass(4, sizeClass),
       minHeight: scaleBySizeClass(44, sizeClass),
-    },
-    titleButtonPressed: {
-      opacity: 0.6,
+      paddingLeft: scaleBySizeClass(16, sizeClass),
+      paddingRight: scaleBySizeClass(10, sizeClass),
+      borderRadius: 999,
     },
     titleButtonText: {
       flexShrink: 1,

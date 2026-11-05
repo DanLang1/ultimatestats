@@ -1,6 +1,7 @@
 import { MAX_SHARE_GAMES_BY_KIND } from '../constants';
 import type { LinkedGameListItem } from '../gameListUtils';
 import {
+  countTeamSearchMatches,
   filterSavedGames,
   getSelectionActionBlocks,
   getSelectionKind,
@@ -194,6 +195,27 @@ describe('filterSavedGames', () => {
     for (const query of [weekday, monthDay, '2024']) {
       expect(ids(filterSavedGames(dated, { tournament: null, query }))).toEqual(['old']);
     }
+  });
+});
+
+describe('countTeamSearchMatches', () => {
+  it('counts each listed team’s matches in team order and drops teams without one', () => {
+    const [owls, zoo, hawks] = summarizeSavedGameTeams([
+      game('owls', { teamId: 'owls', myTeamName: 'Owls', timestamp: 3 }),
+      game('zoo', { teamId: 'zoo', timestamp: 2 }),
+      game('hawks', { teamId: 'hawks', myTeamName: 'Hawks', timestamp: 1 }),
+    ]);
+    const games = [
+      game('zoo-1', { teamId: 'zoo', opponentName: 'Beta' }),
+      game('zoo-2', { teamId: 'zoo', opponentName: 'Beta', tournament: tournament('a') }),
+      game('owls-1', { teamId: 'owls', myTeamName: 'Owls', opponentName: 'Beta' }),
+      game('hawks-1', { teamId: 'hawks', myTeamName: 'Hawks', opponentName: 'Gamma' }),
+    ];
+
+    expect(countTeamSearchMatches([owls, zoo, hawks], games, 'beta')).toEqual([
+      { team: owls, matchCount: 1 },
+      { team: zoo, matchCount: 2 },
+    ]);
   });
 });
 
