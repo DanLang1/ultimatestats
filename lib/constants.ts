@@ -1,3 +1,5 @@
+import type { GameKind } from '@/lib/storage/types';
+
 /** Maximum character length for team names (inputs + import truncation). */
 export const MAX_TEAM_NAME_LENGTH = 30;
 
@@ -43,6 +45,12 @@ export const MAX_SHARE_GAMES = 10;
  * still accepts up to `MAX_SHARE_GAMES` so existing links keep working.
  */
 export const MAX_SHARE_ADVANCED_GAMES = 4;
+
+/** The most games one share link may hold, per kind. */
+export const MAX_SHARE_GAMES_BY_KIND: Record<GameKind, number> = {
+  basic: MAX_SHARE_GAMES,
+  advanced: MAX_SHARE_ADVANCED_GAMES,
+};
 
 export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 

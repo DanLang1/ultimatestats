@@ -72,7 +72,8 @@ tags:
 - tapOn:
     id: 'hub-tab-stats'
 - extendedWaitUntil:
-    visible: 'SAVED GAMES'
+    visible:
+      id: 'saved-games-screen'
     timeout: 5000
 
 - takeScreenshot:

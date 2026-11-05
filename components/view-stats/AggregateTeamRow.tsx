@@ -23,14 +23,7 @@ export default function AggregateTeamRow({ team, showDivider, onPress }: Aggrega
   const gameCount = `${team.games.length} ${team.games.length === 1 ? 'game' : 'games'}`;
   const lastPlayed = formatRecentDay(team.games[0].timestamp);
   const record = formatRecord(team.games);
-  const accessibilityLabel = [
-    team.name,
-    gameCount,
-    record != null ? `record ${record}` : null,
-    `last played ${lastPlayed}`,
-  ]
-    .filter((part) => part != null)
-    .join(', ');
+  const accessibilityLabel = `${team.name}, ${gameCount}, record ${record}, last played ${lastPlayed}`;
 
   return (
     <Pressable
@@ -50,9 +43,7 @@ export default function AggregateTeamRow({ team, showDivider, onPress }: Aggrega
           {`${gameCount} · last ${lastPlayed}`}
         </ThemedText>
       </View>
-      {record != null && (
-        <ThemedText style={[styles.record, { color: palette.textInverse }]}>{record}</ThemedText>
-      )}
+      <ThemedText style={[styles.record, { color: palette.textInverse }]}>{record}</ThemedText>
       <MaterialCommunityIcons
         name="chevron-right"
         size={scaleBySizeClass(22, sizeClass)}

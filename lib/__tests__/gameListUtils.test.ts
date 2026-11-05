@@ -43,6 +43,7 @@ describe('basicGameToListItem', () => {
     expect(item.myScore).toBe(13);
     expect(item.opponentScore).toBe(7);
     expect(item.opponentName).toBe('Their Team');
+    expect(item.teamId).toBe('team1');
   });
 
   it('uses createdAt as timestamp when playedAt is absent', () => {
@@ -134,6 +135,17 @@ describe('advancedGameToListItem', () => {
     expect(item.gameType).toBe('game');
   });
 
+  it("identifies the team by the focus side's source team, else the focus side", () => {
+    expect(advancedGameToListItem(baseAdvancedGame).teamId).toBe(ZOO);
+    const linkedGame: AdvancedTrackedGame = {
+      ...baseAdvancedGame,
+      sides: baseAdvancedGame.sides.map((side) =>
+        side.id === ZOO ? { ...side, sourceTeamId: 'team-zoo' } : side,
+      ),
+    };
+    expect(advancedGameToListItem(linkedGame).teamId).toBe('team-zoo');
+  });
+
   it('derives myTeamName from focusSide label', () => {
     const item = advancedGameToListItem(baseAdvancedGame);
     expect(item.myTeamName).toBe('Zoo');
@@ -209,6 +221,7 @@ describe('advancedGameSummaryToListItem', () => {
       kind: 'advanced',
       gameType: 'game',
       id: 'summary1',
+      teamId: ZOO,
       timestamp: 1500,
       myTeamName: 'Zoo',
       opponentName: 'Rivals',
@@ -283,6 +296,7 @@ describe('formatRecord', () => {
     kind: 'advanced',
     gameType: 'scrimmage',
     id: 's',
+    teamId: 'zoo',
     timestamp: 1,
     myTeamName: 'Light',
     opponentName: 'Dark',
@@ -295,12 +309,6 @@ describe('formatRecord', () => {
     expect(formatRecord([listItem('w', 1, 2, 1), listItem('t', 2, 2, 2)])).toBe('1–0–1');
     expect(formatRecord([listItem('w', 1, 2, 1), scrimmage])).toBe('1–0 · 1 scrim');
     expect(formatRecord([scrimmage, { ...scrimmage, id: 's2' }])).toBe('2 scrims');
-  });
-
-  it('is null when the games mix tracked teams', () => {
-    expect(
-      formatRecord([listItem('a', 1), { ...listItem('b', 2), myTeamName: 'Other' }]),
-    ).toBeNull();
   });
 });
 
@@ -351,6 +359,7 @@ function listItem(id: string, timestamp: number, myScore = 1, opponentScore = 0)
   return {
     kind: 'basic',
     id,
+    teamId: 'zoo',
     timestamp,
     myTeamName: 'Zoo',
     opponentName: 'Rivals',

@@ -1,41 +1,20 @@
-import MaterialCommunityIcons from '@react-native-vector-icons/material-design-icons/static';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import AdvancedAggregateGamesList from '@/components/advancedTracking/AdvancedAggregateGamesList';
-import AdvancedStatsContent from '@/components/advancedTracking/AdvancedStatsContent';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
-import {
-  ResponsiveHeaderAction,
-  ResponsiveHeaderActions,
-} from '@/components/ui/ResponsiveHeaderActions';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { TournamentPickerModal } from '@/components/ui/TournamentPickerModal';
 import AggregateBottomBar from '@/components/view-stats/AggregateBottomBar';
 import AggregateGamesList from '@/components/view-stats/AggregateGamesList';
-import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
-import {
-  useCompletedAdvancedGameSummaries,
-  useAdvancedGames,
-} from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import {
-  AdvancedFlipStats,
-  AdvancedInitialPullWinStats,
-  computeFlipStats,
-  computeInitialPullWinStats,
-} from '@/lib/advancedTracking/advancedAggregateStatsUtils';
-import { generateAggregateAdvancedCSV } from '@/lib/advancedTracking/advancedCSVUtils';
-import { aggregateAnalyticsGames } from '@/lib/advancedTracking/aggregateAnalyticsGames';
-import type { AnalyticsGame } from '@/lib/advancedTracking/analyticsTypes';
-import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { isAdvancedGameAggregateEligible } from '@/lib/advancedTracking/summary';
-import { generateAggregateCSV } from '@/lib/basic/statsUtils';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import {
   advancedGameSummaryToTeamListItem,
@@ -44,32 +23,17 @@ import {
 } from '@/lib/gameListUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { reportError } from '@/lib/sentry';
-import { shareCsvExport } from '@/lib/shareCsvExport';
 import { serializeGames, uploadPayload } from '@/lib/sharing';
 import {
   runPendingShareAction,
   SHARE_DATA_UPLOAD_ERROR_MESSAGE,
 } from '@/lib/sharing/shareActionUtils';
 import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
-import { GameEvent, Player, SavedGame } from '@/lib/storage';
 import { GameKind } from '@/lib/storage/types';
 import { buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
-
-function getAdvancedAggregateErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.includes('same focus side')) {
-    return 'These games cannot be combined because they use incompatible advanced team records.';
-  }
-  return 'Could not combine the selected advanced games.';
-}
-
-function getRecordedFlipStats(games: AnalyticsGame[]): AdvancedFlipStats | null {
-  const stats = computeFlipStats(games);
-  if (stats.recorded === 0) return null;
-  return stats;
-}
 
 export default function AggregateStatsScreen() {
   const { from } = useLocalSearchParams<{ from?: StatsScreenOrigin }>();
@@ -87,7 +51,6 @@ export default function AggregateStatsScreen() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedAdvancedTeamId, setSelectedAdvancedTeamId] = useState<string | null>(null);
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(new Set());
-  const [showingAggregatedStats, setShowingAggregatedStats] = useState(false);
   const [showTournamentPicker, setShowTournamentPicker] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
@@ -102,90 +65,14 @@ export default function AggregateStatsScreen() {
           .filter((game) => selectedGameIds.has(game.id))
           .map((game) => basicGameToListItem(game, savedTeams));
 
-  let aggregatedData: {
-    teamName: string;
-    gameCount: number;
-    events: GameEvent[];
-    games: SavedGame[];
-    roster: Player[];
-  } | null = null;
-
-  if (selectedGameIds.size > 0) {
-    const games = savedGames.filter((game) => selectedGameIds.has(game.id));
-    if (games.length > 0) {
-      const mergedEvents = games.flatMap((game) => game.events);
-      const rosterMap = new Map<string, Player>();
-      games.forEach((game) =>
-        game.team1.roster.forEach((player) => rosterMap.set(player.id, player)),
-      );
-      const mergedRoster = Array.from(rosterMap.values());
-      const firstGame = games[0];
-      const resolvedName = selectedTeam
-        ? resolveTeamName(selectedTeam, firstGame.team1.name, savedTeams)
-        : 'Combined';
-
-      aggregatedData = {
-        teamName: resolvedName,
-        gameCount: games.length,
-        events: mergedEvents,
-        games,
-        roster: mergedRoster,
-      };
-    }
-  }
-
-  const selectedAdvancedGameIds = aggregateMode === 'advanced' ? [...selectedGameIds].sort() : [];
-  const {
-    data: selectedAdvancedGames,
-    isLoading: selectedAdvancedGamesLoading,
-    isError: selectedAdvancedGamesError,
-    isComplete: selectedAdvancedGamesComplete,
-  } = useAdvancedGames(selectedAdvancedGameIds);
-
-  const advancedFullRecordsLoading =
-    selectedAdvancedGameIds.length > 0 &&
-    !selectedAdvancedGamesComplete &&
-    selectedAdvancedGamesLoading;
-  const advancedFullRecordsMissing =
-    selectedAdvancedGameIds.length > 0 &&
-    !selectedAdvancedGamesComplete &&
-    !advancedFullRecordsLoading;
-
-  let advancedAnalyticsGames: AnalyticsGame[] = [];
-  let aggregatedAdvancedGame: AnalyticsGame | null = null;
-  let initialPullWinStats: AdvancedInitialPullWinStats | null = null;
-  let flipStats: AdvancedFlipStats | null = null;
-  let advancedAggregateError: string | null = null;
-
-  if (!advancedFullRecordsLoading && !advancedFullRecordsMissing && !selectedAdvancedGamesError) {
-    try {
-      advancedAnalyticsGames = selectedAdvancedGames.map(buildAnalyticsGame);
-      if (advancedAnalyticsGames.length > 0) {
-        aggregatedAdvancedGame = aggregateAnalyticsGames(advancedAnalyticsGames);
-        initialPullWinStats = computeInitialPullWinStats(advancedAnalyticsGames);
-        flipStats = getRecordedFlipStats(advancedAnalyticsGames);
-      }
-    } catch (error) {
-      advancedAggregateError = getAdvancedAggregateErrorMessage(error);
-    }
-  }
-
-  const advancedAggregateUnavailable =
-    selectedAdvancedGamesError || advancedFullRecordsMissing || advancedAggregateError != null;
-
-  const advancedTeamName =
-    aggregatedAdvancedGame?.sideLabels[aggregatedAdvancedGame.focusSideId] ?? 'My Team';
-
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeam(teamId);
     setSelectedGameIds(new Set());
-    setShowingAggregatedStats(false);
   };
 
   const handleSelectAdvancedTeam = (teamId: string) => {
     setSelectedAdvancedTeamId(teamId);
     setSelectedGameIds(new Set());
-    setShowingAggregatedStats(false);
   };
 
   const handleSetAggregateMode = (mode: GameKind) => {
@@ -193,13 +80,11 @@ export default function AggregateStatsScreen() {
     setSelectedTeam(null);
     setSelectedAdvancedTeamId(null);
     setSelectedGameIds(new Set());
-    setShowingAggregatedStats(false);
   };
 
   const handleBackToTeams = () => {
     setSelectedTeam(null);
     setSelectedGameIds(new Set());
-    setShowingAggregatedStats(false);
   };
 
   const handleTournamentSelected = async (tournamentId: string) => {
@@ -271,45 +156,14 @@ export default function AggregateStatsScreen() {
     setPendingShareAction(null);
   };
 
-  const handleExportCSV = async () => {
-    if (aggregateMode === 'advanced') {
-      if (!aggregatedAdvancedGame || selectedAdvancedGames.length === 0) return;
-
-      await shareCsvExport(
-        () => ({
-          csv: generateAggregateAdvancedCSV(
-            advancedAnalyticsGames,
-            aggregatedAdvancedGame,
-            advancedTeamName,
-          ),
-          filename: `${advancedTeamName.replace(/[^a-zA-Z0-9]/g, '_')}_${selectedAdvancedGames.length}_games_advanced`,
-        }),
-        showAlert,
-      );
-      return;
-    }
-
-    if (!aggregatedData) return;
-
-    await shareCsvExport(
-      () => ({
-        csv: generateAggregateCSV(
-          aggregatedData.games,
-          aggregatedData.teamName,
-          aggregatedData.roster,
-        ),
-        filename: `${aggregatedData.teamName.replace(/[^a-zA-Z0-9]/g, '_')}_${aggregatedData.gameCount}_games`,
-      }),
-      showAlert,
-    );
+  const handleViewStats = () => {
+    router.push({
+      pathname: '/combined-stats',
+      params: { kind: aggregateMode, gameIds: [...selectedGameIds].join(',') },
+    });
   };
 
   const handleScreenBack = () => {
-    if (showingAggregatedStats) {
-      setShowingAggregatedStats(false);
-      return;
-    }
-
     if (selectedTeam) {
       handleBackToTeams();
       return;
@@ -318,7 +172,6 @@ export default function AggregateStatsScreen() {
     if (selectedAdvancedTeamId) {
       setSelectedAdvancedTeamId(null);
       setSelectedGameIds(new Set());
-      setShowingAggregatedStats(false);
       return;
     }
 
@@ -326,7 +179,6 @@ export default function AggregateStatsScreen() {
   };
 
   const getHeaderTitle = () => {
-    if (showingAggregatedStats) return 'COMBINED STATS';
     if (aggregateMode === 'advanced' && selectedAdvancedTeamId) {
       const gameForSide = aggregateEligibleAdvancedGameSummaries.find(
         (game) => (game.focusSourceTeamId ?? game.focusSideId) === selectedAdvancedTeamId,
@@ -347,109 +199,10 @@ export default function AggregateStatsScreen() {
     return teamName.toUpperCase();
   };
 
-  const headerActions: ResponsiveHeaderAction[] = [
-    {
-      key: 'csv',
-      label: 'Export CSV',
-      onPress: handleExportCSV,
-      visible: showingAggregatedStats,
-      inlineIcon: (
-        <MaterialCommunityIcons
-          name="file-delimited-outline"
-          size={scaleBySizeClass(20, sizeClass)}
-          color={palette.accent}
-        />
-      ),
-      menuIcon: (
-        <MaterialCommunityIcons
-          name="file-delimited-outline"
-          size={scaleBySizeClass(18, sizeClass)}
-          color={palette.accent}
-        />
-      ),
-    },
-  ];
-
-  const scrollKey = `aggregate-${aggregateMode}-${showingAggregatedStats ? 'stats' : 'picker'}-${selectedTeam ?? selectedAdvancedTeamId ?? ''}`;
+  const scrollKey = `aggregate-${aggregateMode}-${selectedTeam ?? selectedAdvancedTeamId ?? ''}`;
 
   let mainContent: React.ReactNode;
-  if (showingAggregatedStats && aggregateMode === 'advanced' && advancedFullRecordsLoading) {
-    mainContent = (
-      <View style={styles.statusState}>
-        <ActivityIndicator color={palette.accent} />
-        <ThemedText style={[styles.statusTitle, { color: palette.textInverse }]}>
-          Loading combined stats
-        </ThemedText>
-        <ThemedText style={[styles.statusText, { color: palette.textMuted }]}>
-          Fetching full advanced game records...
-        </ThemedText>
-      </View>
-    );
-  } else if (
-    showingAggregatedStats &&
-    aggregateMode === 'advanced' &&
-    advancedAggregateUnavailable
-  ) {
-    const message = selectedAdvancedGamesError
-      ? 'Could not load the selected advanced games.'
-      : (advancedAggregateError ?? 'Some selected advanced games could not be loaded.');
-
-    mainContent = (
-      <View style={styles.statusState}>
-        <MaterialCommunityIcons
-          name="alert"
-          size={scaleBySizeClass(28, sizeClass)}
-          color={palette.accent}
-        />
-        <ThemedText style={[styles.statusTitle, { color: palette.textInverse }]}>
-          Combined stats unavailable
-        </ThemedText>
-        <ThemedText style={[styles.statusText, { color: palette.textMuted }]}>{message}</ThemedText>
-        <Pressable
-          style={[styles.statusButton, { backgroundColor: palette.accent }]}
-          onPress={() => setShowingAggregatedStats(false)}>
-          <ThemedText style={[styles.statusButtonText, { color: palette.textOnAccent }]}>
-            Back to Games
-          </ThemedText>
-        </Pressable>
-      </View>
-    );
-  } else if (showingAggregatedStats && aggregatedAdvancedGame && aggregateMode === 'advanced') {
-    mainContent = (
-      <AdvancedStatsContent
-        game={aggregatedAdvancedGame}
-        gameId="aggregate"
-        myTeamName={advancedTeamName}
-        opponentName="Opponents"
-        myScore={0}
-        opponentScore={0}
-        perspectiveSideId={aggregatedAdvancedGame.focusSideId}
-        participantNames={aggregatedAdvancedGame.participantNames}
-        routeScope="saved"
-        aggregateInfo={{ games: selectedGameItems }}
-        initialPullWinStats={initialPullWinStats ?? undefined}
-        flipStats={flipStats ?? undefined}
-      />
-    );
-  } else if (showingAggregatedStats && aggregatedData) {
-    mainContent = (
-      <StatsContent
-        team1Name={aggregatedData.teamName}
-        team2Name=""
-        events={aggregatedData.events}
-        roster={aggregatedData.roster}
-        routeScope="saved"
-        aggregateInfo={{
-          teamName: aggregatedData.teamName,
-          gameCount: aggregatedData.gameCount,
-        }}
-        startingPossession={null}
-        gameTo={15}
-        games={aggregatedData.games}
-        pointLines={aggregatedData.games.flatMap((game) => game.pointLines ?? [])}
-      />
-    );
-  } else if (aggregateMode === 'advanced') {
+  if (aggregateMode === 'advanced') {
     mainContent = (
       <AdvancedAggregateGamesList
         games={aggregateEligibleAdvancedGameSummaries}
@@ -487,51 +240,44 @@ export default function AggregateStatsScreen() {
         titleColor={palette.textMuted}
         backButtonBackgroundColor={palette.overlay10}
         centerTitleInLandscape={false}
-        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
 
       <ScrollView key={scrollKey} contentContainerStyle={styles.scrollContent}>
-        {!showingAggregatedStats && (
-          <View
-            accessibilityRole="tablist"
-            style={[styles.modeSwitch, { backgroundColor: palette.overlay05 }]}>
-            {(['advanced', 'basic'] as const).map((mode) => {
-              const isActive = aggregateMode === mode;
-              return (
-                <Pressable
-                  key={mode}
-                  testID={`aggregate-mode-${mode}`}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: isActive }}
-                  onPress={() => handleSetAggregateMode(mode)}
+        <View
+          accessibilityRole="tablist"
+          style={[styles.modeSwitch, { backgroundColor: palette.overlay05 }]}>
+          {(['advanced', 'basic'] as const).map((mode) => {
+            const isActive = aggregateMode === mode;
+            return (
+              <Pressable
+                key={mode}
+                testID={`aggregate-mode-${mode}`}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isActive }}
+                onPress={() => handleSetAggregateMode(mode)}
+                style={[styles.modeButton, isActive && { backgroundColor: palette.segmentActive }]}>
+                <ThemedText
                   style={[
-                    styles.modeButton,
-                    isActive && { backgroundColor: palette.segmentActive },
+                    styles.modeButtonText,
+                    { color: isActive ? palette.textInverse : palette.textMuted },
                   ]}>
-                  <ThemedText
-                    style={[
-                      styles.modeButtonText,
-                      { color: isActive ? palette.textInverse : palette.textMuted },
-                    ]}>
-                    {mode === 'basic' ? 'Basic' : 'Advanced'}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+                  {mode === 'basic' ? 'Basic' : 'Advanced'}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
 
         {mainContent}
       </ScrollView>
 
       <AggregateBottomBar
         isVisible={
-          ((aggregateMode === 'basic' && !!selectedTeam) ||
-            (aggregateMode === 'advanced' && !!selectedAdvancedTeamId)) &&
-          !showingAggregatedStats
+          (aggregateMode === 'basic' && !!selectedTeam) ||
+          (aggregateMode === 'advanced' && !!selectedAdvancedTeamId)
         }
         selectedGames={selectedGameItems}
-        onViewStats={() => setShowingAggregatedStats(true)}
+        onViewStats={handleViewStats}
         onAddToTournament={() => setShowTournamentPicker(true)}
         showShare={aggregateMode === 'basic'}
         onShare={handleShareGames}
@@ -579,33 +325,6 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       alignItems: 'center',
     },
     modeButtonText: {
-      fontSize: scaleBySizeClass(13, sizeClass),
-      fontFamily: Fonts.semiBold,
-    },
-    statusState: {
-      alignItems: 'center',
-      gap: 12,
-      paddingHorizontal: 24,
-      paddingVertical: 48,
-    },
-    statusTitle: {
-      fontSize: scaleBySizeClass(18, sizeClass),
-      fontFamily: Fonts.bold,
-      textAlign: 'center',
-    },
-    statusText: {
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontFamily: Fonts.regular,
-      lineHeight: scaleBySizeClass(20, sizeClass),
-      textAlign: 'center',
-    },
-    statusButton: {
-      borderRadius: 8,
-      marginTop: 4,
-      paddingHorizontal: 18,
-      paddingVertical: 10,
-    },
-    statusButtonText: {
       fontSize: scaleBySizeClass(13, sizeClass),
       fontFamily: Fonts.semiBold,
     },

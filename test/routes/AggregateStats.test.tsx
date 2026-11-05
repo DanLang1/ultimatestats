@@ -9,7 +9,6 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { createFinalAdvancedGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
-import { resetAdvancedTrackingStorage } from '@/test/mocks/advancedTrackingStorage';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
 
@@ -56,7 +55,7 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
     await AsyncStorage.clear();
   });
 
-  it('groups teams, selects games by row and tournament section, and returns from combined stats', async () => {
+  it('groups teams, selects games by row and tournament section, and opens combined stats', async () => {
     await arrangeGames(kind);
     const user = userEvent.setup();
     await renderScreen(<AggregateStatsScreen />);
@@ -90,10 +89,10 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
 
     await user.press(screen.getByText('Select all'));
     await user.press(screen.getByText('View stats'));
-    expect(screen.getByText('COMBINED STATS')).toBeVisible();
-    expect(screen.getByText('Windchill')).toBeVisible();
-    await user.press(screen.getByTestId('screen-header-back'));
-    expect(screen.getByText('WINDCHILL')).toBeVisible();
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/combined-stats',
+      params: { kind, gameIds: expect.stringMatching(/^(first,second|second,first)$/) },
+    });
     await user.press(screen.getByTestId('screen-header-back'));
     expect(screen.getByText('AGGREGATE STATS')).toBeVisible();
     expect(router.back).not.toHaveBeenCalled();
@@ -167,7 +166,7 @@ describe.each(['basic', 'advanced'] as const)('%s aggregate selection', (kind) =
   });
 });
 
-describe('advanced aggregate recovery', () => {
+describe('aggregate picker', () => {
   beforeEach(async () => {
     resetAllStores();
     resetMockRouter();
@@ -190,51 +189,5 @@ describe('advanced aggregate recovery', () => {
     expect(screen.getByText('No advanced games yet')).toBeVisible();
     await user.press(screen.getByText('Basic'));
     expect(screen.getByText('No saved games yet')).toBeVisible();
-  });
-
-  it('refuses to show combined math when a catalog game has no full record', async () => {
-    await arrangeGames('advanced');
-    resetAdvancedTrackingStorage();
-    useSavedAdvancedGamesStore.setState({ gamesById: {} });
-    const user = userEvent.setup();
-    await renderScreen(<AggregateStatsScreen />);
-    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
-    await user.press(screen.getByLabelText(/versus Falcons/));
-    await user.press(screen.getByText('View stats'));
-    expect(await screen.findByText('Combined stats unavailable')).toBeVisible();
-    expect(screen.getByText('Some selected advanced games could not be loaded.')).toBeVisible();
-    await user.press(screen.getByText('Back to Games'));
-    expect(screen.getByLabelText(/versus Falcons/)).toBeVisible();
-  });
-});
-
-describe('advanced combined stats', () => {
-  beforeEach(async () => {
-    resetAllStores();
-    resetMockRouter();
-    await AsyncStorage.clear();
-  });
-
-  it('shows the record and per-game margins, and opens a player across the combined games', async () => {
-    await arrangeGames('advanced');
-    const user = userEvent.setup();
-    await renderScreen(<AggregateStatsScreen />);
-    await user.press(screen.getByLabelText(/^Windchill, 2 games/));
-    await user.press(screen.getByText('Select all'));
-    await user.press(screen.getByText('View stats'));
-
-    expect(screen.getByTestId('advanced-stats-combined-record')).toHaveTextContent('2–0');
-    expect(screen.getByTestId('game-margins-section')).toBeVisible();
-
-    await user.press(screen.getByTestId('advanced-stats-row-blair'));
-    expect(router.push).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({
-          gameId: 'aggregate',
-          // Both combined games, in either order.
-          aggregateGameIds: expect.stringMatching(/^(first,second|second,first)$/),
-        }),
-      }),
-    );
   });
 });

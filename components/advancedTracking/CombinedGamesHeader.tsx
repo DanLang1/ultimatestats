@@ -18,7 +18,7 @@ export default function CombinedGamesHeader({ myTeamName, games }: CombinedGames
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
 
-  // The same record the team list and selection bar show, including hiding it for mixed teams.
+  // The same record the team list and selection bar show.
   const record = formatRecord(games);
   const gameCountLabel = `${games.length} ${pluralize(games.length, 'game', 'games')}`;
 
@@ -35,14 +35,12 @@ export default function CombinedGamesHeader({ myTeamName, games }: CombinedGames
           {gameCountLabel}
         </ThemedText>
       </View>
-      {record != null && (
-        <ThemedText
-          testID="advanced-stats-combined-record"
-          accessibilityLabel={`Record ${record}`}
-          style={[styles.record, { color: palette.textInverse }]}>
-          {record}
-        </ThemedText>
-      )}
+      <ThemedText
+        testID="advanced-stats-combined-record"
+        accessibilityLabel={`Record ${record}`}
+        style={[styles.record, { color: palette.textInverse }]}>
+        {record}
+      </ThemedText>
     </View>
   );
 }

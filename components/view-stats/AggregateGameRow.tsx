@@ -41,7 +41,7 @@ export default function AggregateGameRow({
         isSelected && { backgroundColor: palette.accentOverlay10 },
         pressed && !isSelected && { backgroundColor: palette.overlay05 },
       ]}>
-      <GameSelectionCheckbox isSelected={isSelected} isSelectable />
+      <GameSelectionCheckbox isSelected={isSelected} />
       <ThemedText style={[styles.opponent, { color: palette.textInverse }]} numberOfLines={1}>
         {game.opponentName}
         {dateLabel != null && (

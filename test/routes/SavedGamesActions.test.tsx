@@ -71,7 +71,7 @@ it.each(['basic', 'advanced'] as const)(
     await user.press(screen.getByText('First Rival'));
     await user.press(screen.getByText('Second Rival'));
     await user.press(screen.getByText('Second Rival'));
-    await user.press(screen.getByText('Share (1)'));
+    await user.press(screen.getByLabelText('Share games'));
     expect(fetchSpy).not.toHaveBeenCalled();
     await user.press(screen.getByText('Proceed'));
     expect(await screen.findByText('Share Link Ready')).toBeVisible();
@@ -85,10 +85,44 @@ it.each(['basic', 'advanced'] as const)(
       screen.getByText(`https://u-stat.app/s/${upload.payload.type}/${upload.id}`),
     ).toBeVisible();
     await user.press(screen.getByText('Close'));
-    expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
     expect(screen.getByText('Second Rival')).toBeVisible();
   },
 );
+
+it.each(['basic', 'advanced'] as const)(
+  'opens combined stats for the selected %s games and keeps the selection',
+  async (kind) => {
+    await arrangeGames(kind);
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+    await user.press(screen.getByTestId('header-action-select'));
+    await user.press(screen.getByText('First Rival'));
+    await user.press(screen.getByText('Second Rival'));
+    await user.press(screen.getByText('View stats'));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/combined-stats',
+      params: { kind, gameIds: expect.stringMatching(/^(first,second|second,first)$/) },
+    });
+    expect(screen.getByText(/^2 selected/)).toBeVisible();
+  },
+);
+
+it.each([
+  ['basic', '/saved-games/[gameId]'],
+  ['advanced', '/advanced-tracking/analytics/[gameId]'],
+] as const)('opens a single selected %s game in its own stats', async (kind, pathname) => {
+  await arrangeGames(kind);
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('First Rival'));
+  await user.press(screen.getByText('View stats'));
+  await waitFor(() =>
+    expect(router.push).toHaveBeenCalledWith({ pathname, params: { gameId: 'first' } }),
+  );
+  expect(screen.getByText(/^1 selected/)).toBeVisible();
+});
 
 it('caps advanced game shares at four while basic shares allow more', async () => {
   const rivals = ['Rival A', 'Rival B', 'Rival C', 'Rival D', 'Rival E'];
@@ -115,18 +149,24 @@ it('caps advanced game shares at four while basic shares allow more', async () =
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByTestId('saved-games-team-switcher'));
+  await user.press(screen.getByTestId('saved-games-team-option-focus'));
 
   for (const label of rivals) await user.press(screen.getByText(`Advanced ${label}`));
-  await user.press(screen.getByText('Share (5)'));
+  await user.press(screen.getByLabelText('Share games'));
+  expect(screen.getByText("Can't share these games")).toBeVisible();
+  expect(screen.getByText('You can share up to 4 advanced games at a time.')).toBeVisible();
+  await user.press(screen.getByText('OK'));
   expect(screen.queryByText('Share Data?')).not.toBeOnTheScreen();
   await user.press(screen.getByText('Advanced Rival E'));
-  await user.press(screen.getByText('Share (4)'));
+  await user.press(screen.getByLabelText('Share games'));
   expect(screen.getByText('Share Data?')).toBeVisible();
   await user.press(screen.getByTestId('share-confirm-cancel'));
 
-  for (const label of rivals.slice(0, 4)) await user.press(screen.getByText(`Advanced ${label}`));
+  await user.press(screen.getByTestId('saved-games-team-switcher'));
+  await user.press(screen.getByTestId(`saved-games-team-option-${testTeam.id}`));
   for (const label of rivals) await user.press(screen.getByText(`Basic ${label}`));
-  await user.press(screen.getByText('Share (5)'));
+  await user.press(screen.getByLabelText('Share games'));
   expect(screen.getByText('Share Data?')).toBeVisible();
 });
 
@@ -144,7 +184,7 @@ it.each(['basic', 'advanced'] as const)(
     await renderScreen(<StatsScreen />);
     await user.press(screen.getByTestId('header-action-select'));
     await user.press(screen.getByText('First Rival'));
-    await user.press(screen.getByText('Delete (1)'));
+    await user.press(screen.getByLabelText('Delete games'));
     expect(screen.getByText('Delete Games?')).toBeVisible();
     await user.press(screen.getByText('Delete'));
     await waitFor(() => {
@@ -173,11 +213,11 @@ it('cancels sharing without losing selection and clears selection when search ch
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
-  await user.press(screen.getByText('Share (1)'));
+  await user.press(screen.getByLabelText('Share games'));
   await user.press(screen.getByTestId('share-confirm-cancel'));
-  expect(screen.getByText('Share (1)')).toBeVisible();
+  expect(screen.getByTestId('saved-games-select-bar')).toHaveTextContent(/1 selected/);
   await user.type(screen.getByPlaceholderText('Search'), 'Second');
-  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+  expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
   expect(screen.queryByText('First Rival')).not.toBeOnTheScreen();
 });
 
@@ -208,7 +248,7 @@ it('waits for upload and clipboard completion before showing share results', asy
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
-  await user.press(screen.getByText('Share (1)'));
+  await user.press(screen.getByLabelText('Share games'));
   expect(screen.getByText(/names, lines, and stats/)).toBeVisible();
   await user.press(screen.getByText('Proceed'));
   await user.press(screen.getByTestId('share-confirm-cancel'));
@@ -224,7 +264,7 @@ it('waits for upload and clipboard completion before showing share results', asy
   expect(screen.getByText('Copied')).toBeVisible();
   await user.press(screen.getByText('Close'));
   expect(screen.queryByText('Share Link Ready')).not.toBeOnTheScreen();
-  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+  expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
   expect(fetchSpy).toHaveBeenCalledTimes(1);
 });
 
@@ -239,7 +279,7 @@ it('keeps a failed upload open and clears the error after a successful retry', a
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('First Rival'));
-  await user.press(screen.getByText('Share (1)'));
+  await user.press(screen.getByLabelText('Share games'));
   await user.press(screen.getByText('Proceed'));
   expect(
     await screen.findByText('Could not upload data for sharing. Please try again.'),
@@ -260,7 +300,8 @@ function arrangeSortableGames() {
     ].map(({ name, opponent, day, score }) => ({
       ...createSavedBasicGame(),
       id: name,
-      team1: { ...testTeam, id: name, name },
+      // One team whose snapshot name changed between games.
+      team1: { ...testTeam, name },
       team2Name: opponent,
       createdAt: Date.UTC(2026, 0, day),
       team1Score: score,
@@ -269,24 +310,23 @@ function arrangeSortableGames() {
   });
 }
 
-it.each([
-  ['team-asc', 'Team A–Z', ['Beta', 'Rivals', 'Dark']],
-  ['oldest', 'Oldest', ['Beta', 'Dark', 'Rivals']],
-])('sorts saved games by %s and clears selection', async (key, buttonLabel, expected) => {
+it('sorts saved games oldest first and clears selection', async () => {
   arrangeSortableGames();
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
   await user.press(screen.getByText('Rivals'));
-  expect(screen.getByText('Share (1)')).toBeVisible();
+  expect(screen.getByTestId('saved-games-select-bar')).toHaveTextContent(/1 selected/);
   await user.press(screen.getByTestId('saved-games-sort'));
-  await user.press(screen.getByTestId(`saved-games-sort-option-${key}`));
-  expect(screen.getAllByText(/^(Beta|Rivals|Dark)$/).map((node) => node.props.children)).toEqual(
-    expected,
-  );
+  await user.press(screen.getByTestId('saved-games-sort-option-oldest'));
+  expect(screen.getAllByText(/^(Beta|Rivals|Dark)$/).map((node) => node.props.children)).toEqual([
+    'Beta',
+    'Dark',
+    'Rivals',
+  ]);
   expect(screen.queryByTestId('saved-games-sort-sheet')).not.toBeOnTheScreen();
-  expect(within(screen.getByTestId('saved-games-sort')).getByText(buttonLabel)).toBeVisible();
-  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+  expect(within(screen.getByTestId('saved-games-sort')).getByText('Oldest')).toBeVisible();
+  expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
 });
 
 it('filters to a tournament from the sort sheet, clears it with the chip, and searches by tournament name', async () => {
@@ -328,7 +368,7 @@ it('finds games by the weekday shown in day headings and dates rows when ungroup
 
   await user.clear(screen.getByPlaceholderText('Search'));
   await user.press(screen.getByTestId('saved-games-sort'));
-  await user.press(screen.getByTestId('saved-games-sort-option-team-asc'));
+  await user.press(screen.getByTestId('saved-games-sort-option-points-desc'));
   expect(screen.getAllByText(/^[A-Z][a-z]{2} \d{1,2}(, \d{4})? · Basic$/)).toHaveLength(3);
   await user.type(screen.getByPlaceholderText('Search'), 'missing');
   expect(screen.getByText('No games match "missing"')).toBeVisible();
@@ -336,14 +376,13 @@ it('finds games by the weekday shown in day headings and dates rows when ungroup
 
 it.each([
   ['one tracked team', ['Light', 'Light'], '1–1'],
-  ['mixed tracked teams', ['Light', 'Hybrid'], null],
   ['a single game', ['Light'], null],
 ] as const)('shows a day record only for %s', async (_case, teamNames, expectedRecord) => {
   useGameStore.setState({
     savedGames: teamNames.map((name, i) => ({
       ...createSavedBasicGame(),
       id: `game-${i}`,
-      team1: { ...testTeam, id: name, name },
+      team1: { ...testTeam, name },
       team2Name: `Rival ${i}`,
       createdAt: Date.UTC(2026, 0, 1, 12 + i),
       team1Score: i === 0 ? 5 : 1,
@@ -358,7 +397,10 @@ it.each([
   }
 });
 
-it('enters bulk selection by long press and excludes the other tracking kind', async () => {
+async function arrangeMixedKinds() {
+  const tournamentId = await useTournamentStore
+    .getState()
+    .addTournament('Invite', '2026-01-01', '2026-01-02');
   for (const gameType of ['game', 'scrimmage'] as const) {
     await useSavedAdvancedGamesStore.getState().saveGame(
       createAdvancedGameScenario({
@@ -366,32 +408,179 @@ it('enters bulk selection by long press and excludes the other tracking kind', a
         gameType,
         status: 'final',
         sides: [
-          { id: 'focus', label: 'Light', trackingMode: 'full-roster' },
-          { id: 'opponent', label: 'Dark', trackingMode: 'full-roster' },
+          {
+            id: 'focus',
+            label: 'Light',
+            trackingMode: 'full-roster',
+            sourceTeamId: testTeam.id,
+          },
+          { id: 'opponent', label: `Advanced ${gameType}`, trackingMode: 'full-roster' },
         ],
       }).build(),
     );
   }
-  useGameStore.setState({ savedGames: [createSavedBasicGame()] });
+  useGameStore.setState({ savedTeams: [testTeam], savedGames: [createSavedBasicGame()] });
+  return tournamentId;
+}
+
+it('enters bulk selection by long press and selects games of both kinds', async () => {
+  await arrangeMixedKinds();
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
   expect(screen.getByText('Scrimmage')).toBeVisible();
   expect(screen.getByText('Basic')).toBeVisible();
-  expect(screen.queryByText(/Advanced/)).not.toBeOnTheScreen();
   expect(screen.getByTestId('header-action-select')).toHaveTextContent('Select');
   await user.longPress(screen.getByText('Rivals'), { duration: 400 });
-  expect(screen.getByText('Share (1)')).toBeVisible();
+  expect(screen.getByTestId('saved-games-select-bar')).toHaveTextContent(/1 selected/);
   expect(screen.getByTestId('header-action-select')).toHaveTextContent('Cancel');
-  for (const advancedRowOpponent of screen.getAllByText('Dark')) {
-    await user.press(advancedRowOpponent);
-  }
-  expect(screen.getByText('Share (1)')).toBeVisible();
+  await user.press(screen.getByText('Advanced game'));
+  expect(screen.getByTestId('saved-games-select-bar')).toHaveTextContent(/2 selected/);
   expect(router.push).not.toHaveBeenCalled();
   await user.press(screen.getByText('Rivals'));
-  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
-  await user.press(screen.getByText('Rivals'));
-  expect(screen.getByText('Share (1)')).toBeVisible();
+  expect(screen.getByTestId('saved-games-select-bar')).toHaveTextContent(/1 selected/);
   await user.press(screen.getByTestId('header-action-select'));
-  expect(screen.queryByText('Share (1)')).not.toBeOnTheScreen();
+  expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
   expect(screen.getByTestId('header-action-select')).toHaveTextContent('Select');
+});
+
+it('explains why a selection of both kinds cannot be shared instead of sharing it', async () => {
+  await arrangeMixedKinds();
+  const fetchSpy = jest.spyOn(global, 'fetch');
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Rivals'));
+  await user.press(screen.getByText('Advanced game'));
+  expect(screen.getByLabelText('Share games')).toHaveProp(
+    'accessibilityHint',
+    'Share basic games or advanced games separately.',
+  );
+  await user.press(screen.getByLabelText('Share games'));
+  expect(screen.getByText("Can't share these games")).toBeVisible();
+  expect(screen.getByText('Share basic games or advanced games separately.')).toBeVisible();
+  expect(screen.queryByText('Share Data?')).not.toBeOnTheScreen();
+  expect(fetchSpy).not.toHaveBeenCalled();
+});
+
+it('adds the selected games to a tournament and leaves selection mode', async () => {
+  const tournamentId = await arrangeMixedKinds();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Advanced game'));
+  await user.press(screen.getByText('Advanced scrimmage'));
+  await user.press(screen.getByLabelText('Add to tournament'));
+  await user.press(screen.getByText('Invite'));
+  await waitFor(() => {
+    expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
+  });
+  expect(screen.getByTestId('header-action-select')).toHaveTextContent('Select');
+  expect(
+    useTournamentStore
+      .getState()
+      .gameLinks.filter((link) => link.tournamentId === tournamentId)
+      .map((link) => `${link.gameKind}:${link.gameId}`)
+      .sort((a, b) => a.localeCompare(b)),
+  ).toEqual(['advanced:game', 'advanced:scrimmage']);
+});
+
+it('deletes a selection of both kinds', async () => {
+  await arrangeMixedKinds();
+  const basicGameId = useGameStore.getState().savedGames[0].id;
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Rivals'));
+  await user.press(screen.getByText('Advanced game'));
+  await user.press(screen.getByLabelText('Delete games'));
+  await user.press(screen.getByText('Delete'));
+  await waitFor(() => {
+    expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
+  });
+  expect(screen.queryByText('Advanced game')).not.toBeOnTheScreen();
+  expect(screen.getByText('Advanced scrimmage')).toBeVisible();
+  expect(useGameStore.getState().savedGames.map((game) => game.id)).not.toContain(basicGameId);
+  expect(await useSavedAdvancedGamesStore.getState().loadGame('game')).toBeNull();
+});
+
+describe('team scope', () => {
+  const owls = { id: 'team-owls', name: 'Owls', roster: [] };
+
+  async function arrangeTwoTeams() {
+    useGameStore.setState({
+      savedTeams: [testTeam, owls],
+      savedGames: [
+        { ...createSavedBasicGame(), id: 'windchill-basic', team2Name: 'Basic Rival' },
+        {
+          ...createSavedBasicGame(),
+          id: 'owls-basic',
+          team1: owls,
+          team2Name: 'Owls Rival',
+          createdAt: Date.UTC(2026, 0, 5),
+        },
+      ],
+    });
+    await useSavedAdvancedGamesStore.getState().saveGame(
+      createAdvancedGameScenario({
+        id: 'windchill-advanced',
+        status: 'final',
+        sides: [
+          {
+            id: 'focus',
+            label: 'Old Windchill',
+            trackingMode: 'full-roster',
+            sourceTeamId: testTeam.id,
+          },
+          { id: 'opponent', label: 'Advanced Rival', trackingMode: 'anonymous' },
+        ],
+      }).build(),
+    );
+  }
+
+  it('opens on the newest game’s team and switches teams from the title', async () => {
+    await arrangeTwoTeams();
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    expect(within(screen.getByTestId('saved-games-team-switcher')).getByText('Owls')).toBeVisible();
+    expect(screen.getByText('Owls Rival')).toBeVisible();
+    expect(screen.queryByText('Basic Rival')).not.toBeOnTheScreen();
+    await user.type(screen.getByPlaceholderText('Search'), 'Owls');
+
+    await user.press(screen.getByTestId('saved-games-team-switcher'));
+    expect(screen.getByTestId(`saved-games-team-option-${testTeam.id}`)).toHaveTextContent(
+      /2 games/,
+    );
+    await user.press(screen.getByTestId(`saved-games-team-option-${testTeam.id}`));
+
+    expect(
+      within(screen.getByTestId('saved-games-team-switcher')).getByText('Windchill'),
+    ).toBeVisible();
+    expect(screen.getByText('Basic Rival')).toBeVisible();
+    expect(screen.getByText('Advanced Rival')).toBeVisible();
+    expect(screen.queryByText('Owls Rival')).not.toBeOnTheScreen();
+    expect(screen.getByPlaceholderText('Search')).toHaveDisplayValue('');
+  });
+
+  it('falls back to the next newest team after deleting the shown team’s last game', async () => {
+    await arrangeTwoTeams();
+    const user = userEvent.setup();
+    await renderScreen(<StatsScreen />);
+
+    await user.press(screen.getByTestId('header-action-select'));
+    await user.press(screen.getByText('Owls Rival'));
+    await user.press(screen.getByLabelText('Delete games'));
+    await user.press(screen.getByText('Delete'));
+
+    expect(await screen.findByText('Basic Rival')).toBeVisible();
+    expect(screen.queryByTestId('saved-games-team-switcher')).not.toBeOnTheScreen();
+  });
+
+  it('shows the team name without a switcher when there is one team', async () => {
+    await arrangeGames('basic');
+    await renderScreen(<StatsScreen />);
+
+    expect(screen.queryByTestId('saved-games-team-switcher')).not.toBeOnTheScreen();
+    expect(screen.queryByText('SAVED GAMES')).not.toBeOnTheScreen();
+  });
 });

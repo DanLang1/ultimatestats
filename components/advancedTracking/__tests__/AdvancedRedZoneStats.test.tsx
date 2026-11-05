@@ -55,6 +55,7 @@ function toListItem(game: AnalyticsGame, index: number): GameListItem {
     kind: 'advanced',
     gameType: game.gameType,
     id: `game-${index}`,
+    teamId: game.focusSideId,
     timestamp: index,
     myTeamName: perspective.sideName,
     opponentName: perspective.opposingSideName,

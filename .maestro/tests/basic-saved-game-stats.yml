@@ -10,10 +10,12 @@ tags:
 - tapOn:
     id: 'hub-tab-stats'
 - extendedWaitUntil:
-    visible: 'SAVED GAMES'
+    visible:
+      id: 'saved-games-screen'
     timeout: 5000
 
-# The simulator may hold other saved games; search narrows the list to the seeded one.
+# The seeded game is the newest, so the list opens on its team; search narrows past any other
+# saved games for that team.
 - tapOn: 'Search'
 - inputText: 'Rivals'
 - hideKeyboard

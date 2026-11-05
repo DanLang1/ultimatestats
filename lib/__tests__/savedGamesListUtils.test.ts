@@ -1,11 +1,12 @@
 import type { LinkedGameListItem } from '../gameListUtils';
 import {
   filterSavedGames,
+  getSelectionActionBlocks,
   getSharedTournament,
-  getTournamentFilterOptions,
   groupSavedGames,
   SavedGamesSortKey,
   sortSavedGames,
+  summarizeSavedGameTeams,
   summarizeTournaments,
 } from '../savedGamesListUtils';
 import type { GameKind, Tournament } from '../storage/types';
@@ -30,6 +31,7 @@ function game(
   return {
     kind: 'basic',
     id,
+    teamId: 'zoo',
     timestamp: new Date(2026, 0, 1, 12).getTime(),
     myTeamName: 'Zoo',
     opponentName: 'Rivals',
@@ -60,21 +62,91 @@ describe('summarizeTournaments', () => {
   });
 });
 
-describe('getTournamentFilterOptions', () => {
-  const summaries = [tournament('basic', 'basic'), tournament('adv', 'advanced')].map((t) => ({
-    tournament: t,
-    gameCount: 1,
-    latestTimestamp: 0,
-  }));
-  const optionIds = (kind: GameKind | null) =>
-    getTournamentFilterOptions(summaries, kind).map((option) => option.tournament.id);
+describe('summarizeSavedGameTeams', () => {
+  it('counts each team’s games and record and lists the team with the newest game first', () => {
+    const teams = summarizeSavedGameTeams([
+      game('zoo-win', { teamId: 'zoo', timestamp: 1, myScore: 13, opponentScore: 10 }),
+      game('owls-win', { teamId: 'owls', myTeamName: 'Owls', timestamp: 2 }),
+      game('zoo-loss', { teamId: 'zoo', timestamp: 3, myScore: 8, opponentScore: 13 }),
+    ]);
 
-  it('keeps every tournament when no selection kind is given', () => {
-    expect(optionIds(null)).toEqual(['basic', 'adv']);
+    expect(teams).toEqual([
+      { id: 'zoo', name: 'Zoo', gameCount: 2, record: '1–1', latestTimestamp: 3 },
+      { id: 'owls', name: 'Owls', gameCount: 1, record: '1–0', latestTimestamp: 2 },
+    ]);
   });
 
-  it('keeps only tournaments of the selection kind', () => {
-    expect(optionIds('advanced')).toEqual(['adv']);
+  it('names a team from its newest game', () => {
+    const [team] = summarizeSavedGameTeams([
+      game('new', { timestamp: 2, myTeamName: 'New Name' }),
+      game('old', { timestamp: 1, myTeamName: 'Old Name' }),
+    ]);
+
+    expect(team.name).toBe('New Name');
+  });
+
+  it('skips a newer scrimmage’s side label when naming the team', () => {
+    const scrimmage: LinkedGameListItem = {
+      ...game('scrim', { timestamp: 2, myTeamName: 'Light', opponentName: 'Dark' }),
+      kind: 'advanced',
+      gameType: 'scrimmage',
+    };
+    const [team] = summarizeSavedGameTeams([scrimmage, game('game', { timestamp: 1 })]);
+
+    expect(team).toMatchObject({ name: 'Zoo', record: '1–0 · 1 scrim', latestTimestamp: 2 });
+  });
+});
+
+describe('getSelectionActionBlocks', () => {
+  const shareLimits = { basic: 3, advanced: 2 };
+  const advanced = (id: string, gameType: 'game' | 'scrimmage' = 'game'): LinkedGameListItem => ({
+    ...game(id),
+    kind: 'advanced',
+    gameType,
+  });
+
+  it('allows every action for a shareable selection of one kind', () => {
+    expect(getSelectionActionBlocks([game('a'), game('b')], shareLimits)).toEqual({
+      viewStats: null,
+      share: null,
+      addToTournament: null,
+    });
+  });
+
+  it('blocks combining, sharing, and adding a selection of both kinds', () => {
+    expect(getSelectionActionBlocks([game('a'), advanced('b')], shareLimits)).toEqual({
+      viewStats: "Basic and advanced games can't be combined.",
+      share: 'Share basic games or advanced games separately.',
+      addToTournament: 'Add basic and advanced games to tournaments separately.',
+    });
+  });
+
+  it('blocks combining scrimmages but still shares and adds them', () => {
+    expect(
+      getSelectionActionBlocks([advanced('a'), advanced('b', 'scrimmage')], shareLimits),
+    ).toEqual({ viewStats: "Scrimmages can't be combined.", share: null, addToTournament: null });
+  });
+
+  it('lets a lone scrimmage open its own stats', () => {
+    expect(
+      getSelectionActionBlocks([advanced('a', 'scrimmage')], shareLimits).viewStats,
+    ).toBeNull();
+  });
+
+  it.each([
+    [
+      'basic',
+      [game('a'), game('b'), game('c'), game('d')],
+      'You can share up to 3 games at a time.',
+    ],
+    [
+      'advanced',
+      [advanced('a'), advanced('b'), advanced('c')],
+      'You can share up to 2 advanced games at a time.',
+    ],
+  ])('blocks sharing more %s games than the share limit', (_kind, games, reason) => {
+    expect(getSelectionActionBlocks(games, shareLimits).share).toBe(reason);
+    expect(getSelectionActionBlocks(games.slice(1), shareLimits).share).toBeNull();
   });
 });
 
@@ -123,8 +195,6 @@ describe('sortSavedGames', () => {
   it.each<[SavedGamesSortKey, string[]]>([
     ['newest', ['high', 'mid', 'low']],
     ['oldest', ['low', 'mid', 'high']],
-    ['team-asc', ['high', 'mid', 'low']],
-    ['team-desc', ['low', 'mid', 'high']],
     ['points-desc', ['high', 'mid', 'low']],
     ['points-asc', ['low', 'mid', 'high']],
   ])('orders %s', (key, expected) => {

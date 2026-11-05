@@ -1,16 +1,10 @@
 import { formatDayTitle } from '@/lib/dateUtils';
-import { LinkedGameListItem } from '@/lib/gameListUtils';
+import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/lib/gameListUtils';
 import { GameKind, Tournament } from '@/lib/storage/types';
 
-export type SavedGamesSortField = 'date' | 'team' | 'score';
+export type SavedGamesSortField = 'date' | 'score';
 export type SavedGamesSortDirection = 'asc' | 'desc';
-export type SavedGamesSortKey =
-  | 'newest'
-  | 'oldest'
-  | 'team-asc'
-  | 'team-desc'
-  | 'points-desc'
-  | 'points-asc';
+export type SavedGamesSortKey = 'newest' | 'oldest' | 'points-desc' | 'points-asc';
 
 export interface SavedGamesSortOption {
   key: SavedGamesSortKey;
@@ -36,20 +30,6 @@ export const SAVED_GAMES_SORT_OPTIONS: Record<SavedGamesSortKey, SavedGamesSortO
     direction: 'asc',
     label: 'Oldest first',
     shortLabel: 'Oldest',
-  },
-  'team-asc': {
-    key: 'team-asc',
-    field: 'team',
-    direction: 'asc',
-    label: 'Team A–Z',
-    shortLabel: 'Team A–Z',
-  },
-  'team-desc': {
-    key: 'team-desc',
-    field: 'team',
-    direction: 'desc',
-    label: 'Team Z–A',
-    shortLabel: 'Team Z–A',
   },
   'points-desc': {
     key: 'points-desc',
@@ -91,14 +71,88 @@ export function summarizeTournaments(games: LinkedGameListItem[]): TournamentSum
   return [...summaries.values()].sort((a, b) => b.latestTimestamp - a.latestTimestamp);
 }
 
-/** Tournaments the list can be filtered to: all of them, or only the selected kind's while selecting. */
-export function getTournamentFilterOptions(
-  summaries: TournamentSummary[],
-  selectionKind: GameKind | null,
-): TournamentSummary[] {
-  return summaries.filter(
-    ({ tournament }) => selectionKind === null || tournament.kind === selectionKind,
-  );
+/** A tracked team with saved games, for the Saved Games team switcher. */
+export interface SavedGameTeam {
+  id: string;
+  /** The name on the team's newest game, preferring one that isn't a scrimmage. */
+  name: string;
+  gameCount: number;
+  /** As `formatRecord`, e.g. "4–2" or "4–2 · 1 scrim". */
+  record: string;
+  latestTimestamp: number;
+}
+
+/** One entry per tracked team, the team with the newest game first. */
+export function summarizeSavedGameTeams(games: GameListItem[]): SavedGameTeam[] {
+  const gamesByTeam = new Map<string, GameListItem[]>();
+  for (const game of games) {
+    const teamGames = gamesByTeam.get(game.teamId);
+    if (teamGames) teamGames.push(game);
+    else gamesByTeam.set(game.teamId, [game]);
+  }
+  return [...gamesByTeam.entries()]
+    .map(([id, teamGames]) => {
+      const newestFirst = [...teamGames].sort((a, b) => b.timestamp - a.timestamp);
+      // A scrimmage names its side ("Light"), which only stands in for the team when the saved
+      // team is gone.
+      const namingGame = newestFirst.find((game) => !isScrimmage(game)) ?? newestFirst[0];
+      return {
+        id,
+        name: namingGame.myTeamName,
+        gameCount: teamGames.length,
+        record: formatRecord(teamGames),
+        latestTimestamp: newestFirst[0].timestamp,
+      };
+    })
+    .sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+}
+
+/** The most games one share link may hold, per kind. */
+export type ShareGameLimits = Record<GameKind, number>;
+
+/**
+ * Why each select-bar action can't run on the selected games, or null when it can. Delete runs on
+ * any selection, so it has no entry.
+ */
+export interface SelectionActionBlocks {
+  viewStats: string | null;
+  share: string | null;
+  addToTournament: string | null;
+}
+
+/** The Saved Games select bar's action rules for a non-empty selection. */
+export function getSelectionActionBlocks(
+  games: GameListItem[],
+  shareLimits: ShareGameLimits,
+): SelectionActionBlocks {
+  const kind = games[0].kind;
+  if (games.some((game) => game.kind !== kind)) {
+    return {
+      viewStats: "Basic and advanced games can't be combined.",
+      share: 'Share basic games or advanced games separately.',
+      addToTournament: 'Add basic and advanced games to tournaments separately.',
+    };
+  }
+
+  // One game opens its own stats, so only a combine is blocked by a scrimmage.
+  const combinesScrimmage = games.length > 1 && games.some(isScrimmage);
+  return {
+    viewStats: combinesScrimmage ? "Scrimmages can't be combined." : null,
+    share: getShareLimitBlock(kind, games.length, shareLimits),
+    addToTournament: null,
+  };
+}
+
+/** Why `count` games of one kind can't go in one share link, or null when they can. */
+export function getShareLimitBlock(
+  kind: GameKind,
+  count: number,
+  shareLimits: ShareGameLimits,
+): string | null {
+  const shareLimit = shareLimits[kind];
+  if (count <= shareLimit) return null;
+  const gameLabel = kind === 'advanced' ? 'advanced games' : 'games';
+  return `You can share up to ${shareLimit} ${gameLabel} at a time.`;
 }
 
 export interface SavedGamesFilter {
@@ -146,7 +200,6 @@ const SORT_FIELD_COMPARATORS: Record<
   (a: LinkedGameListItem, b: LinkedGameListItem) => number
 > = {
   date: (a, b) => a.timestamp - b.timestamp,
-  team: (a, b) => a.myTeamName.localeCompare(b.myTeamName),
   score: (a, b) => a.myScore + a.opponentScore - (b.myScore + b.opponentScore),
 };
 

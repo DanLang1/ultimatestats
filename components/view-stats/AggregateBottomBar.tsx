@@ -32,7 +32,7 @@ export default function AggregateBottomBar({
   if (!isVisible || selectedGames.length === 0) return null;
 
   const record = formatRecord(selectedGames);
-  const selectionSummary = `${selectedGames.length} selected${record != null ? ` · ${record}` : ''}`;
+  const selectionSummary = `${selectedGames.length} selected · ${record}`;
 
   return (
     <View

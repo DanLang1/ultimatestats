@@ -14,7 +14,6 @@ interface SavedGameResultRowProps {
   detailLabel: string | null;
   showDivider: boolean;
   selectionMode: boolean;
-  isSelectable?: boolean;
   isSelected?: boolean;
   onPress: () => void;
   onLongPress?: () => void;
@@ -26,7 +25,6 @@ export default function SavedGameResultRow({
   detailLabel,
   showDivider,
   selectionMode,
-  isSelectable = true,
   isSelected = false,
   onPress,
   onLongPress,
@@ -38,7 +36,6 @@ export default function SavedGameResultRow({
   const gameIsScrimmage = isScrimmage(game);
   // In a scrimmage neither side is the opponent, so both names keep full weight.
   const opponentColor = gameIsScrimmage ? palette.textInverse : palette.textMuted;
-  const isSelectionDisabled = selectionMode && !isSelectable;
 
   return (
     <Pressable
@@ -53,11 +50,8 @@ export default function SavedGameResultRow({
         showDivider && { borderBottomColor: palette.overlay08, borderBottomWidth: 1 },
         isSelected && { backgroundColor: palette.accentOverlay10 },
         pressed && !selectionMode && { backgroundColor: palette.overlay05 },
-        isSelectionDisabled && styles.disabled,
       ]}>
-      {selectionMode && (
-        <GameSelectionCheckbox isSelected={isSelected} isSelectable={isSelectable} />
-      )}
+      {selectionMode && <GameSelectionCheckbox isSelected={isSelected} />}
 
       <View style={styles.details}>
         <ThemedText style={[styles.matchup, { color: palette.textInverse }]} numberOfLines={1}>
@@ -94,9 +88,6 @@ function createStyles(sizeClass: SizeClass) {
       paddingHorizontal: scaleBySizeClass(14, sizeClass),
       paddingVertical: scaleBySizeClass(12, sizeClass),
       minHeight: scaleBySizeClass(64, sizeClass),
-    },
-    disabled: {
-      opacity: 0.45,
     },
     details: {
       flex: 1,

@@ -41,13 +41,9 @@ export default function AggregateGamePicker({
     <View style={styles.container}>
       <View style={styles.summaryRow}>
         <ThemedText style={styles.summaryText} numberOfLines={1}>
-          {record != null && (
-            <ThemedText style={[styles.record, { color: palette.textInverse }]}>
-              {record}
-            </ThemedText>
-          )}
+          <ThemedText style={[styles.record, { color: palette.textInverse }]}>{record}</ThemedText>
           <ThemedText style={[styles.summaryMeta, { color: palette.textMuted }]}>
-            {record != null ? ` in ${gameCount}` : gameCount}
+            {` in ${gameCount}`}
           </ThemedText>
         </ThemedText>
         <Pressable

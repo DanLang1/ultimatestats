@@ -8,22 +8,25 @@ import {
   ResponsiveHeaderAction,
   ResponsiveHeaderActions,
 } from '@/components/ui/ResponsiveHeaderActions';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ScreenHeader, ScreenHeaderTitleAction } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
+import { TournamentPickerModal } from '@/components/ui/TournamentPickerModal';
 import CombineGamesButton from '@/components/view-stats/CombineGamesButton';
 import LiveGameRow from '@/components/view-stats/LiveGameRow';
-import SavedGamesBulkActions from '@/components/view-stats/SavedGamesBulkActions';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
+import SavedGamesSelectBar from '@/components/view-stats/SavedGamesSelectBar';
+import { SavedGamesTeamSheet } from '@/components/view-stats/SavedGamesTeamSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
 import { useHasLiveStats } from '@/hooks/useActiveGameSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { MAX_SHARE_ADVANCED_GAMES, MAX_SHARE_GAMES } from '@/lib/constants';
 import {
-  advancedGameSummaryToListItem,
+  advancedGameSummaryToTeamListItem,
   basicGameToListItem,
   GameListItem,
 } from '@/lib/gameListUtils';
+import { SavedGamesSortKey, summarizeSavedGameTeams } from '@/lib/savedGamesListUtils';
+import { reportError } from '@/lib/sentry';
 import { serializeAdvancedGames, serializeGames, uploadPayload } from '@/lib/sharing';
 import {
   runPendingShareAction,
@@ -50,9 +53,16 @@ export default function StatsScreen() {
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);
   const { showAlert } = useAlert();
-  const { tournaments, gameLinks, removeGameFromTournament } = useTournamentStore();
+  const { tournaments, gameLinks, addGamesToTournament, removeGameFromTournament } =
+    useTournamentStore();
+  // Null shows the team with the newest game.
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [showTeamSheet, setShowTeamSheet] = useState(false);
+  // Lives here so the sort survives the list remounting on a team switch.
+  const [sortKey, setSortKey] = useState<SavedGamesSortKey>('newest');
   const [selectedSavedGameIds, setSelectedSavedGameIds] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
+  const [showTournamentPicker, setShowTournamentPicker] = useState(false);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
   );
@@ -61,15 +71,20 @@ export default function StatsScreen() {
   const allGames = attachTournaments(
     [
       ...savedGames.map((g) => basicGameToListItem(g, savedTeams)),
-      ...completedAdvancedSavedGameSummaries.map(advancedGameSummaryToListItem),
+      ...completedAdvancedSavedGameSummaries.map((summary) =>
+        advancedGameSummaryToTeamListItem(summary, savedTeams),
+      ),
     ],
     buildTournamentIndex(tournaments, gameLinks),
   ).sort((a, b) => b.timestamp - a.timestamp);
-  const canCombineGames = allGames.length >= MIN_GAMES_TO_COMBINE;
-  const selectedGames = allGames.filter((game) => selectedSavedGameIds.has(game.id));
-  const selectedGameKind = selectedGames[0]?.kind ?? null;
-  const isAdvancedSelection = selectedGameKind === 'advanced';
-  const maxShareCount = isAdvancedSelection ? MAX_SHARE_ADVANCED_GAMES : MAX_SHARE_GAMES;
+  const savedGameTeams = summarizeSavedGameTeams(allGames);
+  // Falls back to the newest team when the selected team has no games left.
+  const currentTeam =
+    savedGameTeams.find((team) => team.id === selectedTeamId) ?? savedGameTeams[0] ?? null;
+  const hasMultipleTeams = savedGameTeams.length > 1;
+  const teamGames = allGames.filter((game) => game.teamId === currentTeam?.id);
+  const canCombineGames = teamGames.length >= MIN_GAMES_TO_COMBINE;
+  const selectedGames = teamGames.filter((game) => selectedSavedGameIds.has(game.id));
 
   const releaseNavigationGuard = () => {
     setTimeout(() => {
@@ -100,24 +115,17 @@ export default function StatsScreen() {
   };
 
   const handleToggleSavedGameSelection = (gameId: string) => {
-    const game = allGames.find((item) => item.id === gameId);
-    if (!game) return;
-
     setSelectedSavedGameIds((prev) => {
       const next = new Set(prev);
-      if (next.has(gameId)) {
-        next.delete(gameId);
-        return next;
-      }
-
-      const firstSelectedGame = allGames.find((item) => next.has(item.id));
-      if (firstSelectedGame && firstSelectedGame.kind !== game.kind) {
-        return next;
-      }
-
-      next.add(gameId);
+      if (next.has(gameId)) next.delete(gameId);
+      else next.add(gameId);
       return next;
     });
+  };
+
+  const handleSelectTeam = (teamId: string) => {
+    setSelectedTeamId(teamId);
+    setSelectedSavedGameIds(new Set());
   };
 
   const handleToggleSelectionMode = () => {
@@ -136,7 +144,7 @@ export default function StatsScreen() {
   };
 
   const handleBulkDeleteGames = async () => {
-    const count = selectedSavedGameIds.size;
+    const count = selectedGames.length;
     if (count === 0) return;
 
     showAlert({
@@ -148,58 +156,46 @@ export default function StatsScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const basicIds = selectedGames
-              .filter((game) => game.kind === 'basic')
-              .map((game) => game.id);
-            const advancedIds = selectedGames
-              .filter((game) => game.kind === 'advanced')
-              .map((game) => game.id);
+            try {
+              const basicIds = selectedGames
+                .filter((game) => game.kind === 'basic')
+                .map((game) => game.id);
+              const advancedIds = selectedGames
+                .filter((game) => game.kind === 'advanced')
+                .map((game) => game.id);
 
-            if (basicIds.length > 0) {
-              await Promise.all(
-                basicIds.map((gameId) => removeGameFromTournament('basic', gameId)),
-              );
-              await deleteSavedGames(basicIds);
+              if (basicIds.length > 0) {
+                await Promise.all(
+                  basicIds.map((gameId) => removeGameFromTournament('basic', gameId)),
+                );
+                await deleteSavedGames(basicIds);
+              }
+              // Advanced game deletion is synchronous in the advanced tracking store.
+              for (const gameId of advancedIds) {
+                await removeGameFromTournament('advanced', gameId);
+                await deleteAdvancedSavedGame(gameId);
+              }
+            } catch (error) {
+              reportError('saved-games-bulk-delete', error);
+              showAlert({
+                title: 'Delete failed',
+                message: 'Some games could not be deleted. Please try again.',
+              });
+            } finally {
+              setSelectedSavedGameIds(new Set());
             }
-            // Advanced game deletion is synchronous in the advanced tracking store.
-            for (const gameId of advancedIds) {
-              await removeGameFromTournament('advanced', gameId);
-              await deleteAdvancedSavedGame(gameId);
-            }
-            setSelectedSavedGameIds(new Set());
           },
         },
       ],
     });
   };
 
+  // The select bar only shares a selection of one kind within the share limit.
   const handleBulkShareGames = () => {
-    const count = selectedSavedGameIds.size;
-    if (count === 0) return;
-
-    if (count > maxShareCount) {
-      const gameLabel = isAdvancedSelection ? 'advanced games' : 'games';
-      showAlert({
-        title: 'Too many games',
-        message: `You can share up to ${maxShareCount} ${gameLabel} at a time.`,
-      });
-      return;
-    }
-
-    const hasBasicGames = selectedGames.some((game) => game.kind === 'basic');
-    const hasAdvancedGames = selectedGames.some((game) => game.kind === 'advanced');
-
-    if (hasBasicGames && hasAdvancedGames) {
-      showAlert({
-        title: 'Choose one game type',
-        message: 'Share basic games or advanced games separately.',
-      });
-      return;
-    }
-
+    const isAdvancedSelection = selectedGames[0].kind === 'advanced';
     const gameIds = new Set(selectedGames.map((game) => game.id));
     setPendingShareAction(() => async () => {
-      if (hasAdvancedGames) {
+      if (isAdvancedSelection) {
         const games = await loadAdvancedGames([...gameIds]);
         const payload = serializeAdvancedGames(games);
         const { url } = await uploadPayload(payload);
@@ -211,6 +207,48 @@ export default function StatsScreen() {
       const { url } = await uploadPayload(payload);
       return url;
     });
+  };
+
+  // The select bar only combines a selection of one kind. The selection stays for Back.
+  const handleViewStats = () => {
+    // One game has nothing to combine, so it opens like a row tap.
+    if (selectedGames.length === 1) {
+      void handleSelectGame(selectedGames[0]);
+      return;
+    }
+
+    router.push({
+      pathname: '/combined-stats',
+      params: {
+        kind: selectedGames[0].kind,
+        gameIds: selectedGames.map((game) => game.id).join(','),
+      },
+    });
+  };
+
+  // The select bar only adds a selection of one kind.
+  const handleTournamentSelected = async (tournamentId: string) => {
+    try {
+      const didAdd = await addGamesToTournament(
+        tournamentId,
+        selectedGames[0].kind,
+        selectedGames.map((game) => game.id),
+      );
+      if (!didAdd) {
+        showAlert({
+          title: 'Tournament unavailable',
+          message: 'Could not add the selected games to this tournament.',
+        });
+        return;
+      }
+      handleExitSelectionMode();
+    } catch (error) {
+      reportError('tournament-add-games', error);
+      showAlert({
+        title: 'Save failed',
+        message: 'Could not assign all games to the tournament. Please try again.',
+      });
+    }
   };
 
   const handleConfirmShare = () => runPendingShareAction(pendingShareAction);
@@ -234,12 +272,24 @@ export default function StatsScreen() {
     },
   ];
 
+  const teamTitleAction: ScreenHeaderTitleAction | undefined =
+    currentTeam && hasMultipleTeams
+      ? {
+          onPress: () => setShowTeamSheet(true),
+          accessibilityLabel: `${currentTeam.name}, switch team`,
+          testID: 'saved-games-team-switcher',
+        }
+      : undefined;
+
   return (
-    <ThemedView style={[styles.container, { backgroundColor: palette.primary }]}>
+    <ThemedView
+      testID="saved-games-screen"
+      style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScreenHeader
-        title="SAVED GAMES"
+        title={currentTeam?.name ?? 'SAVED GAMES'}
+        titleAction={teamTitleAction}
         onBack={() => router.back()}
         titleColor={palette.textMuted}
         centerTitleInLandscape={false}
@@ -249,10 +299,13 @@ export default function StatsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {hasLiveStats ? <LiveGameRow /> : null}
         <SavedGamesList
-          games={allGames}
+          // Remounting resets search and the tournament filter when the team changes.
+          key={currentTeam?.id}
+          games={teamGames}
+          sortKey={sortKey}
+          onChangeSortKey={setSortKey}
           onSelectGame={handleSelectGame}
           selectedGameIds={selectedSavedGameIds}
-          selectedGameKind={selectedGameKind}
           onToggleGameSelection={handleToggleSavedGameSelection}
           onEnterSelectionWithGame={handleEnterSelectionWithGame}
           onClearSelection={() => setSelectedSavedGameIds(new Set())}
@@ -261,14 +314,33 @@ export default function StatsScreen() {
         />
       </ScrollView>
 
-      <SavedGamesBulkActions
-        isVisible={selectedSavedGameIds.size > 0}
-        selectedCount={selectedSavedGameIds.size}
-        maxShareCount={maxShareCount}
-        onDelete={handleBulkDeleteGames}
+      <SavedGamesSelectBar
+        selectedGames={selectedGames}
+        onViewStats={handleViewStats}
+        onAddToTournament={() => setShowTournamentPicker(true)}
         onShare={handleBulkShareGames}
-        onCancel={handleExitSelectionMode}
+        onDelete={handleBulkDeleteGames}
       />
+
+      {selectedGames.length > 0 && (
+        <TournamentPickerModal
+          visible={showTournamentPicker}
+          gameKind={selectedGames[0].kind}
+          gameIds={selectedGames.map((game) => game.id)}
+          onSelect={handleTournamentSelected}
+          onClose={() => setShowTournamentPicker(false)}
+        />
+      )}
+
+      {currentTeam && (
+        <SavedGamesTeamSheet
+          visible={showTeamSheet}
+          teams={savedGameTeams}
+          selectedTeamId={currentTeam.id}
+          onSelectTeam={handleSelectTeam}
+          onClose={() => setShowTeamSheet(false)}
+        />
+      )}
 
       <ShareConfirmModal
         visible={pendingShareAction !== null}
@@ -289,7 +361,6 @@ function createStyles(sizeClass: SizeClass) {
     scrollContent: {
       padding: 16,
       paddingTop: 8,
-      paddingBottom: 100,
       gap: scaleBySizeClass(16, sizeClass),
     },
   });

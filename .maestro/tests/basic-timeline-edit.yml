@@ -123,7 +123,8 @@ tags:
     timeout: 5000
 - tapOn: 'Delete'
 - extendedWaitUntil:
-    visible: 'SAVED GAMES'
+    visible:
+      id: 'saved-games-screen'
     timeout: 5000
 - assertNotVisible: '.*Rivals.*'
 - takeScreenshot:

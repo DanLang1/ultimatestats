@@ -13,28 +13,26 @@ import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/l
 import {
   filterSavedGames,
   getSharedTournament,
-  getTournamentFilterOptions,
   groupSavedGames,
   SAVED_GAMES_SORT_OPTIONS,
   SavedGamesSortKey,
   sortSavedGames,
   summarizeTournaments,
 } from '@/lib/savedGamesListUtils';
-import { GameKind } from '@/lib/storage/types';
 import { Fonts } from '@/theme/theme';
 
 interface SavedGamesListProps {
   games: LinkedGameListItem[];
   onSelectGame: (game: LinkedGameListItem) => void;
   selectedGameIds?: Set<string>;
-  /** Required by selection-mode callers to keep basic and advanced bulk actions separate. */
-  selectedGameKind?: GameKind | null;
   onToggleGameSelection?: (gameId: string) => void;
   onEnterSelectionWithGame?: (gameId: string) => void;
   onClearSelection?: () => void;
   selectionMode?: boolean;
   /** Shown at the end of the row that counts the listed games. */
   summaryAction?: ReactNode;
+  sortKey: SavedGamesSortKey;
+  onChangeSortKey: (sortKey: SavedGamesSortKey) => void;
 }
 
 const EMPTY_GAME_IDS = new Set<string>();
@@ -49,27 +47,24 @@ export default function SavedGamesList({
   games,
   onSelectGame,
   selectedGameIds = EMPTY_GAME_IDS,
-  selectedGameKind = null,
   onToggleGameSelection,
   onEnterSelectionWithGame,
   onClearSelection,
   selectionMode = false,
   summaryAction,
+  sortKey,
+  onChangeSortKey,
 }: SavedGamesListProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortKey, setSortKey] = useState<SavedGamesSortKey>('newest');
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
 
   // Newest tournament first, so the current one sits at the top of the sheet.
-  const tournamentOptions = getTournamentFilterOptions(
-    summarizeTournaments(games),
-    selectionMode ? selectedGameKind : null,
-  );
+  const tournamentOptions = summarizeTournaments(games);
   const activeTournament =
     tournamentOptions.find(({ tournament }) => tournament.id === tournamentFilter)?.tournament ??
     null;
@@ -222,7 +217,6 @@ export default function SavedGamesList({
               )}
               <View style={[styles.groupSurface, { backgroundColor: palette.overlay05 }]}>
                 {group.games.map((game, index) => {
-                  const isSelectable = selectedGameKind == null || selectedGameKind === game.kind;
                   // Day headers already carry the date, so rows only repeat it when ungrouped.
                   const detailParts = isGroupedByDay ? [] : [formatRecentDay(game.timestamp)];
                   const modeLabel = getGameModeLabel(game);
@@ -238,12 +232,11 @@ export default function SavedGamesList({
                       detailLabel={detailLabel}
                       showDivider={index < group.games.length - 1}
                       selectionMode={selectionMode}
-                      isSelectable={isSelectable}
                       isSelected={selectedGameIds.has(game.id)}
                       onPress={() => {
-                        if (selectionMode && isSelectable) {
+                        if (selectionMode) {
                           onToggleGameSelection?.(game.id);
-                        } else if (!selectionMode) {
+                        } else {
                           onSelectGame(game);
                         }
                       }}
@@ -279,7 +272,7 @@ export default function SavedGamesList({
         visible={showSortSheet}
         selectedKey={sortKey}
         onSelect={(key) => {
-          setSortKey(key);
+          onChangeSortKey(key);
           onClearSelection?.();
         }}
         tournamentOptions={tournamentOptions}

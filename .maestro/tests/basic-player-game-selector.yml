@@ -3,7 +3,7 @@ name: Basic Player Game Selector
 tags:
   - basic
 ---
-# Aggregate Stats (both games combined) -> player stats -> game selector: picking a game returns to the player's stats
+# Aggregate Stats -> Combined Stats (both games) -> player stats -> game selector: picking a game returns to the player's stats
 # with that game in the impact chart, and the player screen's back still returns to the box score.
 - runFlow: ../flows/setup-basic-saved-games.yaml
 # Aggregate Stats opens on the Advanced tab.
@@ -18,6 +18,9 @@ tags:
     timeout: 5000
 - tapOn: 'Select all'
 - tapOn: 'View stats'
+- extendedWaitUntil:
+    visible: 'COMBINED STATS'
+    timeout: 5000
 
 # Rows are wider than the screen, so tap near the leading name cell.
 - scrollUntilVisible:

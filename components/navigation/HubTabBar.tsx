@@ -42,7 +42,13 @@ const TAB_CONFIG: Record<HubTabRouteName, TabConfig> = {
   },
   '(analytics)': {
     activeIcon: 'chart-bar',
-    activePathnames: ['/player-stats', '/stats', '/aggregate-stats', '/game-timeline'],
+    activePathnames: [
+      '/player-stats',
+      '/stats',
+      '/aggregate-stats',
+      '/combined-stats',
+      '/game-timeline',
+    ],
     activePathPrefixes: ['/advanced-tracking/analytics/', '/saved-games/'],
     href: '/stats',
     inactiveIcon: 'chart-bar',

@@ -9,8 +9,16 @@ import { Fonts } from '@/theme/theme';
 
 const TITLE_FONT_SIZE: Record<SizeClass, number> = { small: 14, medium: 16, large: 20 };
 
+/** Makes the title a button, e.g. a switcher, marked with a chevron. */
+export type ScreenHeaderTitleAction = {
+  onPress: () => void;
+  accessibilityLabel: string;
+  testID: string;
+};
+
 type ScreenHeaderProps = {
   title: string;
+  titleAction?: ScreenHeaderTitleAction;
   onBack?: () => void;
   rightSlot?: ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
@@ -23,6 +31,7 @@ type ScreenHeaderProps = {
 
 export function ScreenHeader({
   title,
+  titleAction,
   onBack,
   rightSlot,
   containerStyle,
@@ -39,6 +48,28 @@ export function ScreenHeader({
   const useTitleOverlay = !isLandscape || centerTitleInLandscape;
   const effectiveBackHitSlop = scaleBySizeClass(backHitSlop, sizeClass);
   const titlePaddingPortrait = scaleBySizeClass(titleOverlayPaddingPortrait, sizeClass);
+  const resolvedTitleColor = titleColor ?? palette.textMuted;
+
+  const titleButton = titleAction ? (
+    <Pressable
+      testID={titleAction.testID}
+      accessibilityRole="button"
+      accessibilityLabel={titleAction.accessibilityLabel}
+      onPress={titleAction.onPress}
+      style={({ pressed }) => [styles.titleButton, pressed && styles.titleButtonPressed]}>
+      <ThemedText
+        style={[styles.title, styles.titleButtonText, { color: resolvedTitleColor }]}
+        numberOfLines={1}
+        ellipsizeMode="tail">
+        {title}
+      </ThemedText>
+      <MaterialCommunityIcons
+        name="chevron-down"
+        size={metrics.titleChevronSize}
+        color={resolvedTitleColor}
+      />
+    </Pressable>
+  ) : null;
 
   return (
     <View style={[styles.header, containerStyle]}>
@@ -69,24 +100,26 @@ export function ScreenHeader({
 
       {useTitleOverlay ? (
         <View
-          pointerEvents="none"
+          pointerEvents={titleButton ? 'box-none' : 'none'}
           style={[
             styles.titleOverlay,
             {
               paddingHorizontal: titlePaddingPortrait,
             },
           ]}>
-          <ThemedText
-            style={[styles.title, styles.titleCentered, { color: titleColor ?? palette.textMuted }]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {title}
-          </ThemedText>
+          {titleButton ?? (
+            <ThemedText
+              style={[styles.title, styles.titleCentered, { color: resolvedTitleColor }]}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {title}
+            </ThemedText>
+          )}
         </View>
       ) : (
-        <ThemedText style={[styles.title, { color: titleColor ?? palette.textMuted }]}>
-          {title}
-        </ThemedText>
+        (titleButton ?? (
+          <ThemedText style={[styles.title, { color: resolvedTitleColor }]}>{title}</ThemedText>
+        ))
       )}
 
       <View style={styles.rightSlot}>{rightSlot ?? <View style={styles.headerSpacer} />}</View>
@@ -127,6 +160,20 @@ function createStyles(sizeClass: SizeClass) {
       textAlign: 'center',
       width: '100%',
     },
+    titleButton: {
+      flexShrink: 1,
+      maxWidth: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(4, sizeClass),
+      minHeight: scaleBySizeClass(44, sizeClass),
+    },
+    titleButtonPressed: {
+      opacity: 0.6,
+    },
+    titleButtonText: {
+      flexShrink: 1,
+    },
     rightSlot: {
       minWidth: scaleBySizeClass(40, sizeClass),
       flexDirection: 'row',
@@ -142,5 +189,6 @@ function createStyles(sizeClass: SizeClass) {
 function createMetrics(sizeClass: SizeClass) {
   return {
     backIconSize: scaleBySizeClass(24, sizeClass),
+    titleChevronSize: scaleBySizeClass(20, sizeClass),
   };
 }

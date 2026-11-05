@@ -6,14 +6,10 @@ import { scaleBySizeClass, useLayout } from '@/hooks/useLayout';
 
 interface GameSelectionCheckboxProps {
   isSelected: boolean;
-  isSelectable: boolean;
 }
 
 /** The leading checkbox of a game row in selection mode. */
-export default function GameSelectionCheckbox({
-  isSelected,
-  isSelectable,
-}: GameSelectionCheckboxProps) {
+export default function GameSelectionCheckbox({ isSelected }: GameSelectionCheckboxProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
 
@@ -21,7 +17,7 @@ export default function GameSelectionCheckbox({
     <View
       style={[
         styles.checkbox,
-        { borderColor: isSelectable ? palette.overlay20 : palette.overlay10 },
+        { borderColor: palette.overlay20 },
         isSelected && { backgroundColor: palette.accent, borderColor: palette.accent },
       ]}>
       {isSelected && (

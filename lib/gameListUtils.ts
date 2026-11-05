@@ -9,6 +9,8 @@ export type GameListItem =
   | {
       kind: 'basic';
       id: string;
+      /** The tracked team; groups a team's games across renames. */
+      teamId: string;
       timestamp: number;
       myTeamName: string;
       opponentName: string;
@@ -19,6 +21,8 @@ export type GameListItem =
       kind: 'advanced';
       gameType: AdvancedGameType;
       id: string;
+      /** The focus side's source team, or the focus side when it has none. */
+      teamId: string;
       timestamp: number;
       myTeamName: string;
       opponentName: string;
@@ -33,6 +37,7 @@ export function basicGameToListItem(game: SavedGame, savedTeams: SavedTeam[]): G
   return {
     kind: 'basic',
     id: game.id,
+    teamId: game.team1.id,
     timestamp: getGameDisplayTimestamp(game),
     myTeamName: resolveTeamName(game.team1.id, game.team1.name, savedTeams),
     opponentName: game.team2Name,
@@ -61,6 +66,7 @@ export function advancedGameToListItem(game: AdvancedTrackedGame): GameListItem 
     kind: 'advanced',
     gameType: game.gameType,
     id: game.id,
+    teamId: focusSide?.sourceTeamId ?? game.focusSideId,
     timestamp,
     myTeamName,
     opponentName,
@@ -74,6 +80,7 @@ export function advancedGameSummaryToListItem(summary: AdvancedGameSummary): Gam
     kind: 'advanced',
     gameType: summary.gameType,
     id: summary.id,
+    teamId: summary.focusSourceTeamId ?? summary.focusSideId,
     timestamp: summary.sortTimestamp,
     myTeamName: summary.myTeamName,
     opponentName: summary.opponentName,
@@ -113,16 +120,10 @@ export function getGameResult(game: GameListItem): GameResult {
 }
 
 /**
- * Win–loss(–tie) record for a group of games; scrimmages are counted separately since they have no
- * result. Null when the group mixes tracked teams, since one combined record would credit neither.
+ * Win–loss(–tie) record for one tracked team's games; scrimmages are counted separately since they
+ * have no result.
  */
-export function formatRecord(games: GameListItem[]): string | null {
-  // Scrimmage sides are labels like "Light", not tracked teams, so they don't count as a mix.
-  const trackedTeams = new Set(
-    games.filter((game) => !isScrimmage(game)).map((game) => game.myTeamName),
-  );
-  if (trackedTeams.size > 1) return null;
-
+export function formatRecord(games: GameListItem[]): string {
   const scrimmages = games.filter(isScrimmage).length;
   const scrimmageLabel = formatScrimmageCount(scrimmages);
   const record = formatWinLossRecord(games);

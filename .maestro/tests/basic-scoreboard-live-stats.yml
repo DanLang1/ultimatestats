@@ -49,5 +49,6 @@ tags:
 - tapOn:
     id: 'screen-header-back'
 - extendedWaitUntil:
-    visible: 'SAVED GAMES'
+    visible:
+      id: 'saved-games-screen'
     timeout: 5000
