@@ -1,4 +1,4 @@
-import { MAX_SHARE_GAMES_BY_KIND } from '../constants';
+import { MAX_SHARE_GAMES } from '../constants';
 import type { LinkedGameListItem } from '../gameListUtils';
 import {
   countTeamSearchMatches,
@@ -147,15 +147,11 @@ describe('getSelectionActionBlocks', () => {
   });
 
   it.each([
-    ['basic', `You can share up to ${MAX_SHARE_GAMES_BY_KIND.basic} games at a time.`],
-    [
-      'advanced',
-      `You can share up to ${MAX_SHARE_GAMES_BY_KIND.advanced} advanced games at a time.`,
-    ],
+    ['basic', `You can share up to ${MAX_SHARE_GAMES} games at a time.`],
+    ['advanced', `You can share up to ${MAX_SHARE_GAMES} advanced games at a time.`],
   ] as const)('blocks sharing more %s games than the share limit', (kind, reason) => {
-    const limit = MAX_SHARE_GAMES_BY_KIND[kind];
-    expect(getSelectionActionBlocks(gamesOfKind(kind, limit + 1)).share).toBe(reason);
-    expect(getSelectionActionBlocks(gamesOfKind(kind, limit)).share).toBeNull();
+    expect(getSelectionActionBlocks(gamesOfKind(kind, MAX_SHARE_GAMES + 1)).share).toBe(reason);
+    expect(getSelectionActionBlocks(gamesOfKind(kind, MAX_SHARE_GAMES)).share).toBeNull();
   });
 });
 

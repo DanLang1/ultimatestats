@@ -7,6 +7,8 @@ Reusable UI conventions for screens and modals. For orientation and sizing, see
 
 Use `components/ui/ScreenHeader.tsx` for main screens and `components/ui/ResponsiveHeaderActions.tsx`
 for right-slot actions, so every screen shares one inline-vs-overflow implementation.
+Saved Games is the exception: `SavedGamesHeader` uses fixed-width side buttons so its team
+switcher pill can stay centered without measuring.
 
 ## Modals
 

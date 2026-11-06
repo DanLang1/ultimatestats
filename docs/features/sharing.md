@@ -61,17 +61,15 @@ Current limits are defined in `lib/sharing/validate.ts`:
 - 500 events per basic game
 - 50 players per basic roster
 - 100 points, 1,000 possessions, 5,000 actions, and 100 participants per advanced game
-- 10 games per bulk payload
+- 10 games per bulk payload (`MAX_SHARE_GAMES` in `lib/constants.ts`)
 - 20 line presets per shared team
 - 200 characters for validated strings
 
 When these limits change, update validation tests and this document together.
 
-Sharing is stricter than import: the saved-games screen allows up to `MAX_SHARE_GAMES` (10) basic
-games but only `MAX_SHARE_ADVANCED_GAMES` (4) advanced games per link, because larger advanced
-payloads exceed the server's `payload_size_limit` constraint. Import keeps accepting 10 advanced
-games so links created before the cap still work. Shared payloads are purged after 30 days, so the
-import limit can drop to 4 once pre-cap links have expired; see `docs/tech-debt.md`.
+Sharing and import use the same `MAX_SHARE_GAMES` (10) cap for basic and advanced games. The
+server's `payload_size_limit` constraint caps a payload at 4 MB of uncompressed JSONB, which fits 10
+advanced games with room to spare.
 
 `uploadPayload()` runs `validatePayload()` on outgoing payloads too, so a share the recipient could
 never import is blocked before upload.

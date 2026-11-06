@@ -19,6 +19,7 @@ import {
   getEligibleThrowTypes,
   hasRequiredThrowDefender,
 } from '@/lib/advancedTracking/types';
+import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import type { LinePreset, SavedGame, SavedTeam } from '@/lib/storage/types';
 import { isRecord } from '@/lib/utils';
@@ -32,7 +33,6 @@ const MAX_ADVANCED_ACTIONS = 5000;
 const MAX_ADVANCED_PARTICIPANTS = 100;
 const MAX_ROSTER_SIZE = 50;
 const MAX_STRING_LENGTH = 200;
-const MAX_BULK_GAMES = 10;
 
 export type InvalidSharePayloadReason = 'malformed' | 'exceeds-limit' | 'newer-version';
 
@@ -479,9 +479,9 @@ function validateGamesPayload(
   if (payload.data.length === 0) {
     throw new InvalidSharePayloadError('Invalid payload: no games in payload');
   }
-  if (payload.data.length > MAX_BULK_GAMES) {
+  if (payload.data.length > MAX_SHARE_GAMES) {
     throw new InvalidSharePayloadError(
-      `Invalid payload: too many games (max ${MAX_BULK_GAMES})`,
+      `Invalid payload: too many games (max ${MAX_SHARE_GAMES})`,
       'exceeds-limit',
     );
   }
@@ -507,9 +507,9 @@ function validateAdvancedGamesPayload(
   if (payload.data.length === 0) {
     throw new InvalidSharePayloadError('Invalid payload: no games in payload');
   }
-  if (payload.data.length > MAX_BULK_GAMES) {
+  if (payload.data.length > MAX_SHARE_GAMES) {
     throw new InvalidSharePayloadError(
-      `Invalid payload: too many games (max ${MAX_BULK_GAMES})`,
+      `Invalid payload: too many games (max ${MAX_SHARE_GAMES})`,
       'exceeds-limit',
     );
   }

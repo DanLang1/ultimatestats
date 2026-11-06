@@ -4,15 +4,11 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
-import {
-  ResponsiveHeaderAction,
-  ResponsiveHeaderActions,
-} from '@/components/ui/ResponsiveHeaderActions';
-import { ScreenHeader, ScreenHeaderTitleAction } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import { TournamentPickerModal } from '@/components/ui/TournamentPickerModal';
 import LiveGameRow from '@/components/view-stats/LiveGameRow';
 import SavedGamesEmptyState from '@/components/view-stats/SavedGamesEmptyState';
+import SavedGamesHeader from '@/components/view-stats/SavedGamesHeader';
 import SavedGamesList from '@/components/view-stats/SavedGamesList';
 import SavedGamesSelectBar from '@/components/view-stats/SavedGamesSelectBar';
 import { SavedGamesTeamSheet } from '@/components/view-stats/SavedGamesTeamSheet';
@@ -291,38 +287,18 @@ export default function StatsScreen() {
     handleExitSelectionMode();
   };
 
-  const headerActions: ResponsiveHeaderAction[] = [
-    {
-      key: 'select',
-      label: selectionMode ? 'Cancel' : 'Select',
-      accessibilityLabel: selectionMode ? 'Cancel selection' : 'Select games',
-      onPress: handleToggleSelectionMode,
-      inlineStyle: 'text',
-    },
-  ];
-
-  const teamTitleAction: ScreenHeaderTitleAction | undefined =
-    currentTeam && hasMultipleTeams
-      ? {
-          onPress: () => setShowTeamSheet(true),
-          accessibilityLabel: `${currentTeam.name}, switch team`,
-          testID: 'saved-games-team-switcher',
-        }
-      : undefined;
-
   return (
     <ThemedView
       testID="saved-games-screen"
       style={[styles.container, { backgroundColor: palette.primary }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <ScreenHeader
+      <SavedGamesHeader
         title={currentTeam?.name ?? 'SAVED GAMES'}
-        titleAction={teamTitleAction}
+        onSwitchTeam={hasMultipleTeams ? () => setShowTeamSheet(true) : null}
+        selectionMode={selectionMode}
+        onToggleSelectionMode={handleToggleSelectionMode}
         onBack={() => router.back()}
-        titleColor={palette.textMuted}
-        centerTitleInLandscape={false}
-        rightSlot={<ResponsiveHeaderActions actions={headerActions} />}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>

@@ -1,5 +1,3 @@
-import type { GameKind } from '@/lib/storage/types';
-
 /** Maximum character length for team names (inputs + import truncation). */
 export const MAX_TEAM_NAME_LENGTH = 30;
 
@@ -37,20 +35,8 @@ export const STOPWATCH_TICK_MS = 100;
 /** Earliest valid year for recorded Ultimate games in the played-at editor. */
 export const MIN_PLAYED_AT_YEAR = 1968;
 
+/** The most games, basic or advanced, one share link may hold. */
 export const MAX_SHARE_GAMES = 10;
-
-/**
- * Maximum number of advanced games that can be shared at once. Advanced games are much larger than
- * basic games and more than a day's worth exceeds the share server's payload size limit. Import
- * still accepts up to `MAX_SHARE_GAMES` so existing links keep working.
- */
-export const MAX_SHARE_ADVANCED_GAMES = 4;
-
-/** The most games one share link may hold, per kind. */
-export const MAX_SHARE_GAMES_BY_KIND: Record<GameKind, number> = {
-  basic: MAX_SHARE_GAMES,
-  advanced: MAX_SHARE_ADVANCED_GAMES,
-};
 
 export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 

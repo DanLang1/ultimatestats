@@ -4,6 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 
 import StatsScreen from '@/app/(main)/(hub)/(analytics)/stats';
+import { MAX_SHARE_GAMES } from '@/lib/constants';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -168,16 +169,8 @@ it('offers Select all again when a selected game is deleted elsewhere', async ()
   expect(screen.getByText('Select all')).toBeVisible();
 });
 
-it('caps advanced game shares at four while basic shares allow more', async () => {
-  const rivals = ['Rival A', 'Rival B', 'Rival C', 'Rival D', 'Rival E'];
-  useGameStore.setState({
-    savedTeams: [testTeam],
-    savedGames: rivals.map((team2Name, i) => ({
-      ...createSavedBasicGame(),
-      id: `basic-${i}`,
-      team2Name: `Basic ${team2Name}`,
-    })),
-  });
+it('blocks sharing more advanced games than the share limit', async () => {
+  const rivals = Array.from({ length: MAX_SHARE_GAMES + 1 }, (_, i) => `Rival ${i + 1}`);
   for (const [i, label] of rivals.entries()) {
     await useSavedAdvancedGamesStore.getState().saveGame(
       createAdvancedGameScenario({
@@ -198,23 +191,17 @@ it('caps advanced game shares at four while basic shares allow more', async () =
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
-  await user.press(screen.getByTestId('saved-games-team-switcher'));
-  await user.press(screen.getByTestId('saved-games-team-option-advanced-team'));
 
   for (const label of rivals) await user.press(screen.getByText(`Advanced ${label}`));
   await user.press(screen.getByLabelText('Share games'));
   expect(screen.getByText("Can't share these games")).toBeVisible();
-  expect(screen.getByText('You can share up to 4 advanced games at a time.')).toBeVisible();
+  expect(
+    screen.getByText(`You can share up to ${MAX_SHARE_GAMES} advanced games at a time.`),
+  ).toBeVisible();
   await user.press(screen.getByText('OK'));
   expect(screen.queryByText('Share Data?')).not.toBeOnTheScreen();
-  await user.press(screen.getByText('Advanced Rival E'));
-  await user.press(screen.getByLabelText('Share games'));
-  expect(screen.getByText('Share Data?')).toBeVisible();
-  await user.press(screen.getByTestId('share-confirm-cancel'));
 
-  await user.press(screen.getByTestId('saved-games-team-switcher'));
-  await user.press(screen.getByTestId(`saved-games-team-option-${testTeam.id}`));
-  for (const label of rivals) await user.press(screen.getByText(`Basic ${label}`));
+  await user.press(screen.getByText(`Advanced ${rivals[0]}`));
   await user.press(screen.getByLabelText('Share games'));
   expect(screen.getByText('Share Data?')).toBeVisible();
 });

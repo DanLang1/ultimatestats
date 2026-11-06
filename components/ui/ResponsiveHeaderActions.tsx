@@ -15,25 +15,17 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-type ResponsiveHeaderActionBase = {
+export type ResponsiveHeaderAction = {
   key: string;
   label: string;
   onPress: () => void;
-  /** For when the visible label needs more context, e.g. "Select" read as "Select games". */
-  accessibilityLabel?: string;
+  inlineIcon: React.ReactNode;
   menuIcon?: React.ReactNode;
   advancedMenuIcon?: MaterialDesignIconsIconName;
   advancedMenuTone?: BottomSheetActionRowTone;
   visible?: boolean;
   disabled?: boolean;
 };
-
-/** Inline, an action shows its icon, or its `label` as a text pill when no icon says it clearly. */
-export type ResponsiveHeaderAction = ResponsiveHeaderActionBase &
-  (
-    | { inlineStyle?: 'icon'; inlineIcon: React.ReactNode }
-    | { inlineStyle: 'text'; inlineIcon?: never }
-  );
 
 type ResponsiveHeaderActionsProps = {
   actions: ResponsiveHeaderAction[];
@@ -89,28 +81,15 @@ export function ResponsiveHeaderActions({
               key={action.key}
               testID={`header-action-${action.key}`}
               accessibilityRole="button"
-              accessibilityLabel={action.accessibilityLabel ?? action.label}
               onPress={action.onPress}
               style={({ pressed }) => [
-                action.inlineStyle === 'text' ? styles.textButton : styles.iconButton,
+                styles.iconButton,
                 { backgroundColor: palette.overlay10 },
                 pressed && !action.disabled && styles.buttonPressed,
               ]}
               hitSlop={12}
               disabled={action.disabled}>
-              {action.inlineStyle === 'text' ? (
-                // Capped so large text sizes don't push the pill over the centered title.
-                <ThemedText
-                  style={[
-                    styles.textButtonLabel,
-                    { color: action.disabled ? palette.textMuted : palette.accent },
-                  ]}
-                  maxFontSizeMultiplier={1.2}>
-                  {action.label}
-                </ThemedText>
-              ) : (
-                action.inlineIcon
-              )}
+              {action.inlineIcon}
             </Pressable>
           ))}
         </View>
@@ -214,7 +193,7 @@ export function ResponsiveHeaderActions({
                   ]}
                   disabled={action.disabled}
                   onPress={() => handleMenuAction(action.onPress)}>
-                  {action.menuIcon ?? (action.inlineStyle === 'text' ? null : action.inlineIcon)}
+                  {action.menuIcon ?? action.inlineIcon}
                   <ThemedText style={[styles.menuActionText, { color: palette.modalText }]}>
                     {action.label}
                   </ThemedText>
@@ -244,17 +223,6 @@ function createStyles(sizeClass: SizeClass) {
     iconButton: {
       padding: 8,
       borderRadius: 20,
-    },
-    // Matches the height of ScreenHeader's round back button.
-    textButton: {
-      minHeight: scaleBySizeClass(40, sizeClass),
-      paddingHorizontal: scaleBySizeClass(14, sizeClass),
-      borderRadius: scaleBySizeClass(20, sizeClass),
-      justifyContent: 'center',
-    },
-    textButtonLabel: {
-      fontSize: scaleBySizeClass(15, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     headerSpacer: {
       width: 40,

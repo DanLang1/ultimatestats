@@ -1,4 +1,4 @@
-import { MAX_SHARE_GAMES_BY_KIND } from '@/lib/constants';
+import { MAX_SHARE_GAMES } from '@/lib/constants';
 import { formatDayTitle } from '@/lib/dateUtils';
 import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/lib/gameListUtils';
 import { GameKind, Tournament } from '@/lib/storage/types';
@@ -140,10 +140,9 @@ export function getSelectionActionBlocks(games: GameListItem[]): SelectionAction
 
 /** Why `count` games of one kind can't go in one share link, or null when they can. */
 export function getShareLimitBlock(kind: GameKind, count: number): string | null {
-  const shareLimit = MAX_SHARE_GAMES_BY_KIND[kind];
-  if (count <= shareLimit) return null;
+  if (count <= MAX_SHARE_GAMES) return null;
   const gameLabel = kind === 'advanced' ? 'advanced games' : 'games';
-  return `You can share up to ${shareLimit} ${gameLabel} at a time.`;
+  return `You can share up to ${MAX_SHARE_GAMES} ${gameLabel} at a time.`;
 }
 
 /** The one kind of a selection the select bar allows an action on. */
