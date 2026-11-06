@@ -29,6 +29,13 @@ interface BlockedAlert {
   message: string;
 }
 
+interface SelectBarAction {
+  label: string;
+  /** The alert explaining why the selection can't run this action, or null when it can. */
+  blockedAlert: BlockedAlert | null;
+  onPress: () => void;
+}
+
 function toBlockedAlert(title: string, reason: string | null): BlockedAlert | null {
   return reason == null ? null : { title, message: reason };
 }
@@ -53,83 +60,67 @@ export default function SavedGamesSelectBar({
 
   const blocks = getSelectionActionBlocks(selectedGames);
   const selectionSummary = `${selectedGames.length} selected · ${formatRecord(selectedGames)}`;
-  const viewStatsBlockedAlert = toBlockedAlert("Can't combine these games", blocks.viewStats);
   const hasScoredGames = selectedGames.some((game) => !isScrimmage(game));
 
-  const iconActions: {
+  const viewStatsAction: SelectBarAction = {
+    label: 'View stats',
+    blockedAlert: toBlockedAlert("Can't combine these games", blocks.viewStats),
+    onPress: onViewStats,
+  };
+  const tournamentAction: SelectBarAction = {
+    label: 'Add to tournament',
+    blockedAlert: toBlockedAlert("Can't add these games", blocks.addToTournament),
+    onPress: onAddToTournament,
+  };
+  // Share and delete are familiar enough to stay icons beside the count.
+  const iconActions: (SelectBarAction & {
     key: string;
     icon: MaterialDesignIconsIconName;
-    label: string;
     color: string;
-    /** The alert explaining why the selection can't run this action, or null when it can. */
-    blockedAlert: BlockedAlert | null;
-    onPress: () => void;
-  }[] = [
-    {
-      key: 'add-to-tournament',
-      icon: 'trophy-outline',
-      label: 'Add to tournament',
-      color: palette.accent,
-      blockedAlert: toBlockedAlert("Can't add these games", blocks.addToTournament),
-      onPress: onAddToTournament,
-    },
+  })[] = [
     {
       key: 'share',
-      icon: 'share-variant',
       label: 'Share games',
+      icon: 'share-variant',
       color: palette.accent,
       blockedAlert: toBlockedAlert("Can't share these games", blocks.share),
       onPress: onShare,
     },
     {
       key: 'delete',
-      icon: 'delete-outline',
       label: 'Delete games',
+      icon: 'delete-outline',
       color: palette.danger,
       blockedAlert: null,
       onPress: onDelete,
     },
   ];
 
+  const handlePress = (action: SelectBarAction) => {
+    if (action.blockedAlert != null) {
+      showAlert(action.blockedAlert);
+      return;
+    }
+    action.onPress();
+  };
+
   return (
     <View
       testID="saved-games-select-bar"
       style={[styles.bar, { backgroundColor: palette.primary, borderTopColor: palette.overlay08 }]}>
       <View style={styles.summaryRow}>
-        <ThemedText style={[styles.summaryText, { color: palette.textInverse }]} numberOfLines={1}>
-          {selectionSummary}
-        </ThemedText>
-        {hasScoredGames && (
-          <ThemedText style={[styles.diffText, { color: palette.textMuted }]} numberOfLines={1}>
-            {`· ${formatPointDifferential(selectedGames)} point diff`}
-          </ThemedText>
-        )}
-      </View>
-
-      <View style={styles.actionRow}>
-        <Pressable
-          testID="saved-games-select-bar-view-stats"
-          accessibilityRole="button"
-          accessibilityHint={viewStatsBlockedAlert?.message}
-          onPress={() => {
-            if (viewStatsBlockedAlert != null) {
-              showAlert(viewStatsBlockedAlert);
-              return;
-            }
-            onViewStats();
-          }}
-          style={({ pressed }) => [
-            styles.viewStatsButton,
-            { backgroundColor: palette.accent },
-            pressed && styles.pressed,
-            viewStatsBlockedAlert != null && styles.blocked,
-          ]}>
+        <View style={styles.summaryTextRow}>
           <ThemedText
-            style={[styles.viewStatsText, { color: palette.textOnAccent }]}
+            style={[styles.summaryText, { color: palette.textInverse }]}
             numberOfLines={1}>
-            View stats
+            {selectionSummary}
           </ThemedText>
-        </Pressable>
+          {hasScoredGames && (
+            <ThemedText style={[styles.diffText, { color: palette.textMuted }]} numberOfLines={1}>
+              {`· ${formatPointDifferential(selectedGames)} point diff`}
+            </ThemedText>
+          )}
+        </View>
         {iconActions.map((action) => (
           <Pressable
             key={action.key}
@@ -137,16 +128,10 @@ export default function SavedGamesSelectBar({
             accessibilityRole="button"
             accessibilityLabel={action.label}
             accessibilityHint={action.blockedAlert?.message}
-            onPress={() => {
-              if (action.blockedAlert != null) {
-                showAlert(action.blockedAlert);
-                return;
-              }
-              action.onPress();
-            }}
+            hitSlop={4}
+            onPress={() => handlePress(action)}
             style={({ pressed }) => [
               styles.iconButton,
-              { backgroundColor: palette.overlay05 },
               pressed && styles.pressed,
               action.blockedAlert != null && styles.blocked,
             ]}>
@@ -157,6 +142,52 @@ export default function SavedGamesSelectBar({
             />
           </Pressable>
         ))}
+      </View>
+
+      <View style={styles.actionRow}>
+        <Pressable
+          testID="saved-games-select-bar-view-stats"
+          accessibilityRole="button"
+          accessibilityHint={viewStatsAction.blockedAlert?.message}
+          onPress={() => handlePress(viewStatsAction)}
+          style={({ pressed }) => [
+            styles.button,
+            { backgroundColor: palette.accent },
+            pressed && styles.pressed,
+            viewStatsAction.blockedAlert != null && styles.blocked,
+          ]}>
+          <ThemedText
+            style={[styles.buttonText, { color: palette.textOnAccent }]}
+            numberOfLines={1}>
+            {viewStatsAction.label}
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          testID="saved-games-select-bar-add-to-tournament"
+          accessibilityRole="button"
+          accessibilityLabel={tournamentAction.label}
+          accessibilityHint={tournamentAction.blockedAlert?.message}
+          onPress={() => handlePress(tournamentAction)}
+          style={({ pressed }) => [
+            styles.button,
+            { backgroundColor: palette.overlay05 },
+            pressed && styles.pressed,
+            tournamentAction.blockedAlert != null && styles.blocked,
+          ]}>
+          <MaterialCommunityIcons
+            name="trophy-outline"
+            size={scaleBySizeClass(18, sizeClass)}
+            color={palette.accent}
+          />
+          <ThemedText
+            style={[styles.buttonText, styles.buttonTextShrinkable, { color: palette.accent }]}
+            numberOfLines={1}
+            // Shrinks to fit narrow phones; very large text sizes may still truncate it.
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}>
+            {tournamentAction.label}
+          </ThemedText>
+        </Pressable>
       </View>
     </View>
   );
@@ -176,39 +207,48 @@ function createStyles(isLandscape: boolean, sizeClass: SizeClass) {
       alignItems: 'center',
       gap: scaleBySizeClass(6, sizeClass),
     },
+    // Takes the width the icons leave, so the summary truncates before pushing them off.
+    summaryTextRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaleBySizeClass(6, sizeClass),
+    },
     summaryText: {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
       fontVariant: ['tabular-nums'],
     },
-    // Takes the leftover width so the point diff truncates before the record.
+    // Shrinks first, so the point diff truncates before the record.
     diffText: {
-      flex: 1,
+      flexShrink: 1,
       fontSize: scaleBySizeClass(14, sizeClass),
       fontVariant: ['tabular-nums'],
     },
-    // Icon actions sit at the end; View stats, when shown, takes the rest of the row.
     actionRow: {
       flexDirection: 'row',
-      justifyContent: 'flex-end',
       gap: scaleBySizeClass(8, sizeClass),
     },
-    viewStatsButton: {
+    button: {
       flex: 1,
+      flexDirection: 'row',
       height: buttonSize,
       borderRadius: 10,
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
+      paddingHorizontal: scaleBySizeClass(10, sizeClass),
+      gap: scaleBySizeClass(6, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
     },
-    viewStatsText: {
+    buttonText: {
       fontSize: scaleBySizeClass(15, sizeClass),
       fontFamily: Fonts.semiBold,
     },
+    buttonTextShrinkable: {
+      flexShrink: 1,
+    },
     iconButton: {
-      width: buttonSize,
-      height: buttonSize,
-      borderRadius: 10,
+      width: scaleBySizeClass(40, sizeClass),
+      height: scaleBySizeClass(40, sizeClass),
       alignItems: 'center',
       justifyContent: 'center',
     },

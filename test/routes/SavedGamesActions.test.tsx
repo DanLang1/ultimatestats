@@ -528,6 +528,90 @@ it('opens the one game left when View stats skips a selected scrimmage', async (
   );
 });
 
+it('offers a game type filter only when the team has both kinds', async () => {
+  await arrangeGames('basic');
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('saved-games-sort'));
+
+  expect(screen.getByTestId('saved-games-sort-sheet')).toBeVisible();
+  expect(screen.queryByTestId('saved-games-kind-option-all')).not.toBeOnTheScreen();
+});
+
+it('filters to one game type, selects and views just those games, and clears it with the chip', async () => {
+  await arrangeMixedKinds();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId('saved-games-kind-option-advanced'));
+  expect(screen.getByText('Advanced game')).toBeVisible();
+  expect(screen.getByText('Advanced scrimmage')).toBeVisible();
+  expect(screen.queryByText('Rivals')).not.toBeOnTheScreen();
+  expect(screen.getByTestId('saved-games-kind-filter-chip')).toHaveTextContent(/Advanced/);
+
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Select all'));
+  expect(screen.getByText(/^2 selected/)).toBeVisible();
+  await user.press(screen.getByText('View stats'));
+  expect(screen.queryByText("Basic and advanced games can't be combined.")).not.toBeOnTheScreen();
+  await waitFor(() =>
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/advanced-tracking/analytics/[gameId]',
+      params: { gameId: 'game' },
+    }),
+  );
+
+  await user.press(screen.getByTestId('saved-games-kind-filter-chip'));
+  expect(screen.getByText('Rivals')).toBeVisible();
+  expect(screen.getByText('Advanced game')).toBeVisible();
+  expect(screen.queryByTestId('saved-games-kind-filter-chip')).not.toBeOnTheScreen();
+  expect(screen.queryByTestId('saved-games-select-bar')).not.toBeOnTheScreen();
+});
+
+it('drops the game type filter when the team no longer has games of that type', async () => {
+  await arrangeMixedKinds();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId('saved-games-kind-option-basic'));
+  expect(screen.getByText('Rivals')).toBeVisible();
+
+  await act(() => useGameStore.setState({ savedGames: [] }));
+
+  expect(screen.queryByTestId('saved-games-kind-filter-chip')).not.toBeOnTheScreen();
+  expect(screen.getByText('Advanced game')).toBeVisible();
+  expect(screen.getByText('Advanced scrimmage')).toBeVisible();
+});
+
+it('explains when a tournament has no games of the filtered type', async () => {
+  const tournamentId = await arrangeMixedKinds();
+  await useTournamentStore
+    .getState()
+    .addGamesToTournament(tournamentId, 'basic', [createSavedBasicGame().id]);
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId(`saved-games-tournament-option-${tournamentId}`));
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId('saved-games-kind-option-advanced'));
+
+  expect(screen.getByText('No advanced games in this tournament')).toBeVisible();
+});
+
+it('blames the game type filter, not the team, when it hides the team’s matches', async () => {
+  await arrangeMixedKinds();
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+
+  await user.press(screen.getByTestId('saved-games-sort'));
+  await user.press(screen.getByTestId('saved-games-kind-option-basic'));
+  await user.type(screen.getByPlaceholderText('Search'), 'Advanced');
+
+  expect(screen.getByText('No basic games match "Advanced"')).toBeVisible();
+});
+
 it('combines the selected games without their scrimmages and counts what it skipped', async () => {
   for (const [id, gameType] of [
     ['first', 'game'],

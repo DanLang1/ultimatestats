@@ -331,7 +331,7 @@ export default function StatsScreen() {
           <SavedGamesEmptyState />
         ) : (
           <SavedGamesList
-            // Remounting resets the tournament filter when the team changes.
+            // Remounting resets the tournament and game type filters when the team changes.
             key={currentTeam.id}
             games={teamGames}
             teamName={currentTeam.name}

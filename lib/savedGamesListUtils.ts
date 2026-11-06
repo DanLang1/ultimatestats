@@ -156,21 +156,35 @@ export function getSelectionKind(games: GameListItem[]): GameKind {
   return kind;
 }
 
+export const GAME_KIND_LABELS: Record<GameKind, string> = {
+  advanced: 'Advanced',
+  basic: 'Basic',
+};
+
 export interface SavedGamesFilter {
   /** Null lists games from every tournament and none. */
   tournament: Tournament | null;
+  /** Null lists games of both kinds. */
+  kind: GameKind | null;
   query: string;
 }
 
-/** Games in the filtered tournament whose teams, day, or tournament name match the search. */
+/**
+ * Games in the filtered tournament and of the filtered kind whose teams, day, or tournament name
+ * match the search.
+ */
 export function filterSavedGames(
   games: LinkedGameListItem[],
-  { tournament, query }: SavedGamesFilter,
+  { tournament, kind, query }: SavedGamesFilter,
 ): LinkedGameListItem[] {
   let filtered = games;
 
   if (tournament !== null) {
     filtered = filtered.filter((game) => game.tournament?.id === tournament.id);
+  }
+
+  if (kind !== null) {
+    filtered = filtered.filter((game) => game.kind === kind);
   }
 
   const normalizedQuery = query.toLowerCase().trim();
@@ -203,14 +217,14 @@ export interface SavedGameTeamSearchMatch {
 
 /**
  * The teams with games matching the search query, in the given team order. Ignores the tournament
- * filter, so it finds every match a switch to that team could show.
+ * and kind filters, so it finds every match a switch to that team could show.
  */
 export function countTeamSearchMatches(
   teams: SavedGameTeam[],
   games: LinkedGameListItem[],
   query: string,
 ): SavedGameTeamSearchMatch[] {
-  const matches = filterSavedGames(games, { tournament: null, query });
+  const matches = filterSavedGames(games, { tournament: null, kind: null, query });
   return teams
     .map((team) => ({
       team,

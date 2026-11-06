@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import SavedGameResultRow from '@/components/view-stats/SavedGameResultRow';
+import SavedGamesFilterChip from '@/components/view-stats/SavedGamesFilterChip';
 import SavedGamesOtherTeamRow from '@/components/view-stats/SavedGamesOtherTeamRow';
 import SavedGamesOtherTeamsFooter from '@/components/view-stats/SavedGamesOtherTeamsFooter';
 import SavedGamesOtherTeamsSection from '@/components/view-stats/SavedGamesOtherTeamsSection';
@@ -14,6 +15,7 @@ import { formatRecentDay } from '@/lib/dateUtils';
 import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/lib/gameListUtils';
 import {
   filterSavedGames,
+  GAME_KIND_LABELS,
   getSharedTournament,
   groupSavedGames,
   SAVED_GAMES_SORT_OPTIONS,
@@ -23,7 +25,7 @@ import {
   sortSavedGames,
   summarizeTournaments,
 } from '@/lib/savedGamesListUtils';
-import { Tournament } from '@/lib/storage/types';
+import { GameKind, Tournament } from '@/lib/storage/types';
 import { pluralize } from '@/lib/utils';
 import { Fonts } from '@/theme/theme';
 
@@ -65,8 +67,9 @@ function getGameModeLabel(game: GameListItem): string | null {
 interface NoResultsContext {
   teamName: string;
   tournament: Tournament | null;
+  kind: GameKind | null;
   query: string;
-  /** Whether any of the team's games match the query, ignoring the tournament filter. */
+  /** Whether any of the team's games match the query, ignoring the tournament and kind filters. */
   teamHasSearchMatches: boolean;
 }
 
@@ -74,16 +77,19 @@ interface NoResultsContext {
 function getNoResultsMessage({
   teamName,
   tournament,
+  kind,
   query,
   teamHasSearchMatches,
 }: NoResultsContext): string {
-  // The team has games, so without a search only the tournament filter can empty the list.
-  if (query.trim() === '') return 'No games in this tournament';
+  const filteredGames = kind === null ? 'games' : `${GAME_KIND_LABELS[kind].toLowerCase()} games`;
+  // The team has games of both kinds whenever a kind is filtered, so without a search only the
+  // tournament filter can empty the list.
+  if (query.trim() === '') return `No ${filteredGames} in this tournament`;
   const quotedQuery = `"${query}"`;
-  if (tournament !== null && teamHasSearchMatches) {
-    return `No games in ${tournament.name} match ${quotedQuery}`;
-  }
-  return `No games in ${teamName} match ${quotedQuery}`;
+  if (!teamHasSearchMatches) return `No games in ${teamName} match ${quotedQuery}`;
+  // The team has matches, so the filters hide them.
+  const tournamentScope = tournament === null ? '' : ` in ${tournament.name}`;
+  return `No ${filteredGames}${tournamentScope} match ${quotedQuery}`;
 }
 
 export default function SavedGamesList({
@@ -112,15 +118,20 @@ export default function SavedGamesList({
 
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [tournamentFilter, setTournamentFilter] = useState<string | null>(null);
+  const [kindFilter, setKindFilter] = useState<GameKind | null>(null);
 
   // Newest tournament first, so the current one sits at the top of the sheet.
   const tournamentOptions = summarizeTournaments(games);
   const activeTournament =
     tournamentOptions.find(({ tournament }) => tournament.id === tournamentFilter)?.tournament ??
     null;
+  const hasBothKinds =
+    games.some((game) => game.kind === 'basic') && games.some((game) => game.kind === 'advanced');
+  // A team left with one kind, after deletes, lists it all rather than keep a filter it can't change.
+  const activeKind = hasBothKinds ? kindFilter : null;
 
   const filteredAndSortedGames = sortSavedGames(
-    filterSavedGames(games, { tournament: activeTournament, query: searchQuery }),
+    filterSavedGames(games, { tournament: activeTournament, kind: activeKind, query: searchQuery }),
     sortKey,
   );
   const sortOption = SAVED_GAMES_SORT_OPTIONS[sortKey];
@@ -129,17 +140,18 @@ export default function SavedGamesList({
   const isGroupedByDay = sortOption.field === 'date';
   const gameGroups = groupSavedGames(filteredAndSortedGames, isGroupedByDay);
   const isSearching = searchQuery.trim() !== '';
-  // Without a tournament filter the listed games are exactly the team's matches; with one, a
-  // filter hiding the team's matches mustn't read as the team having none.
-  const teamHasSearchMatches =
-    activeTournament === null
-      ? listedGamesCount > 0
-      : filterSavedGames(games, { tournament: null, query: searchQuery }).length > 0;
+  const hasActiveFilter = activeTournament !== null || activeKind !== null;
+  // Without a filter the listed games are exactly the team's matches; with one, a filter hiding
+  // the team's matches mustn't read as the team having none.
+  const teamHasSearchMatches = hasActiveFilter
+    ? filterSavedGames(games, { tournament: null, kind: null, query: searchQuery }).length > 0
+    : listedGamesCount > 0;
   const noResultsMessage =
     listedGamesCount === 0
       ? getNoResultsMessage({
           teamName,
           tournament: activeTournament,
+          kind: activeKind,
           query: searchQuery,
           teamHasSearchMatches,
         })
@@ -208,31 +220,32 @@ export default function SavedGamesList({
         </Pressable>
       </View>
 
-      {activeTournament != null && (
-        <Pressable
-          testID="saved-games-tournament-chip"
-          // Reaches the 44pt touch target; the chip is the list's only way to clear the filter.
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={`Clear tournament filter, ${activeTournament.name}`}
-          onPress={() => {
-            setTournamentFilter(null);
-            onClearSelection();
-          }}
-          style={({ pressed }) => [
-            styles.filterChip,
-            { backgroundColor: palette.accentOverlay15 },
-            pressed && styles.filterChipPressed,
-          ]}>
-          <ThemedText style={[styles.filterChipText, { color: palette.accent }]} numberOfLines={1}>
-            {activeTournament.name}
-          </ThemedText>
-          <MaterialCommunityIcons
-            name="close"
-            size={scaleBySizeClass(16, sizeClass)}
-            color={palette.accent}
-          />
-        </Pressable>
+      {hasActiveFilter && (
+        <View style={styles.filterChips}>
+          {activeTournament != null && (
+            <SavedGamesFilterChip
+              testID="saved-games-tournament-chip"
+              label={activeTournament.name}
+              leadingIcon="trophy-outline"
+              accessibilityLabel={`Clear tournament filter, ${activeTournament.name}`}
+              onPress={() => {
+                setTournamentFilter(null);
+                onClearSelection();
+              }}
+            />
+          )}
+          {activeKind != null && (
+            <SavedGamesFilterChip
+              testID="saved-games-kind-filter-chip"
+              label={GAME_KIND_LABELS[activeKind]}
+              accessibilityLabel={`Clear game type filter, ${GAME_KIND_LABELS[activeKind]}`}
+              onPress={() => {
+                setKindFilter(null);
+                onClearSelection();
+              }}
+            />
+          )}
+        </View>
       )}
 
       <View style={styles.summaryRow}>
@@ -369,6 +382,12 @@ export default function SavedGamesList({
           setTournamentFilter(id);
           onClearSelection();
         }}
+        showsKindFilter={hasBothKinds}
+        selectedKind={activeKind}
+        onSelectKind={(kind) => {
+          setKindFilter(kind);
+          onClearSelection();
+        }}
         onClose={() => setShowSortSheet(false)}
       />
     </View>
@@ -416,25 +435,13 @@ function createStyles(sizeClass: SizeClass) {
       fontSize: scaleBySizeClass(14, sizeClass),
       fontFamily: Fonts.semiBold,
     },
-    filterChip: {
+    filterChips: {
       flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      maxWidth: '100%',
-      gap: scaleBySizeClass(6, sizeClass),
-      minHeight: scaleBySizeClass(32, sizeClass),
-      paddingHorizontal: scaleBySizeClass(12, sizeClass),
-      borderRadius: 999,
-      // Pulls the summary row closer than the container's 16pt gap so the chip reads as its label.
+      flexWrap: 'wrap',
+      // Twice the chips' 6pt hitSlop, so neighboring touch targets don't overlap.
+      gap: scaleBySizeClass(12, sizeClass),
+      // Pulls the summary row closer than the container's 16pt gap so the chips read as its label.
       marginBottom: -8,
-    },
-    filterChipPressed: {
-      opacity: 0.7,
-    },
-    filterChipText: {
-      flexShrink: 1,
-      fontSize: scaleBySizeClass(14, sizeClass),
-      fontFamily: Fonts.semiBold,
     },
     noResults: {
       padding: 20,

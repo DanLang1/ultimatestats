@@ -6,13 +6,21 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
+  GAME_KIND_LABELS,
   SAVED_GAMES_SORT_OPTIONS,
   SavedGamesSortKey,
   TournamentSummary,
 } from '@/lib/savedGamesListUtils';
+import { GameKind } from '@/lib/storage/types';
 import { Fonts } from '@/theme/theme';
 
 const SORT_OPTION_LIST = Object.values(SAVED_GAMES_SORT_OPTIONS);
+
+const KIND_ROWS: { kind: GameKind | null; label: string }[] = [
+  { kind: null, label: 'All game types' },
+  { kind: 'advanced', label: GAME_KIND_LABELS.advanced },
+  { kind: 'basic', label: GAME_KIND_LABELS.basic },
+];
 
 interface SavedGamesSortSheetProps {
   visible: boolean;
@@ -22,10 +30,14 @@ interface SavedGamesSortSheetProps {
   tournamentOptions: TournamentSummary[];
   selectedTournamentId: string | null;
   onSelectTournament: (tournamentId: string | null) => void;
+  /** Whether the game type section shows; only useful when the games include both kinds. */
+  showsKindFilter: boolean;
+  selectedKind: GameKind | null;
+  onSelectKind: (kind: GameKind | null) => void;
   onClose: () => void;
 }
 
-/** Sorts the saved games list and filters it to one tournament. */
+/** Sorts the saved games list and filters it to one tournament and game type. */
 export function SavedGamesSortSheet({
   visible,
   selectedKey,
@@ -33,6 +45,9 @@ export function SavedGamesSortSheet({
   tournamentOptions,
   selectedTournamentId,
   onSelectTournament,
+  showsKindFilter,
+  selectedKind,
+  onSelectKind,
   onClose,
 }: SavedGamesSortSheetProps) {
   const { palette } = useTheme();
@@ -46,6 +61,11 @@ export function SavedGamesSortSheet({
 
   const handleSelectTournament = (tournamentId: string | null) => {
     onSelectTournament(tournamentId);
+    onClose();
+  };
+
+  const handleSelectKind = (kind: GameKind | null) => {
+    onSelectKind(kind);
     onClose();
   };
 
@@ -153,6 +173,45 @@ export function SavedGamesSortSheet({
                         {option.gameCount}
                       </ThemedText>
                     )}
+                    {isSelected && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={scaleBySizeClass(20, sizeClass)}
+                        color={palette.accent}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </>
+          )}
+          {showsKindFilter && (
+            <>
+              <ThemedText
+                style={[styles.sectionLabel, styles.sectionGap, { color: palette.modalTextMuted }]}>
+                Game type
+              </ThemedText>
+              {KIND_ROWS.map((option) => {
+                const isSelected = option.kind === selectedKind;
+                return (
+                  <Pressable
+                    key={option.kind ?? 'all'}
+                    testID={`saved-games-kind-option-${option.kind ?? 'all'}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.label}
+                    accessibilityState={{ selected: isSelected }}
+                    onPress={() => handleSelectKind(option.kind)}
+                    style={({ pressed }) => [
+                      styles.row,
+                      pressed && { backgroundColor: palette.overlay08 },
+                    ]}>
+                    <ThemedText
+                      style={[
+                        styles.rowText,
+                        { color: isSelected ? palette.accent : palette.modalText },
+                      ]}>
+                      {option.label}
+                    </ThemedText>
                     {isSelected && (
                       <MaterialCommunityIcons
                         name="check"

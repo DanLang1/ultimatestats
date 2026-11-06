@@ -178,18 +178,35 @@ describe('filterSavedGames', () => {
   ];
 
   it('keeps only games in the filtered tournament', () => {
-    expect(ids(filterSavedGames(games, { tournament: a, query: '' }))).toEqual(['in-a']);
+    expect(ids(filterSavedGames(games, { tournament: a, kind: null, query: '' }))).toEqual([
+      'in-a',
+    ]);
+  });
+
+  it('keeps only games of the filtered kind, combined with the tournament filter', () => {
+    const mixed = [...games, { ...advanced('advanced-in-a'), tournament: a }];
+
+    expect(ids(filterSavedGames(mixed, { tournament: null, kind: 'advanced', query: '' }))).toEqual(
+      ['advanced-in-a'],
+    );
+    expect(ids(filterSavedGames(mixed, { tournament: a, kind: 'basic', query: '' }))).toEqual([
+      'in-a',
+    ]);
   });
 
   it.each([
     ['team name', ' HYBRID '],
     ['opponent name', 'beta'],
   ])('matches the %s with trimmed, case-insensitive search', (_field, query) => {
-    expect(ids(filterSavedGames(games, { tournament: null, query }))).toEqual(['other']);
+    expect(ids(filterSavedGames(games, { tournament: null, kind: null, query }))).toEqual([
+      'other',
+    ]);
   });
 
   it('matches the tournament name', () => {
-    expect(ids(filterSavedGames(games, { tournament: null, query: 'a open' }))).toEqual(['in-a']);
+    expect(ids(filterSavedGames(games, { tournament: null, kind: null, query: 'a open' }))).toEqual(
+      ['in-a'],
+    );
   });
 
   it('matches the weekday and date shown in day headings, and the year', () => {
@@ -199,7 +216,9 @@ describe('filterSavedGames', () => {
     const monthDay = played.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
     for (const query of [weekday, monthDay, '2024']) {
-      expect(ids(filterSavedGames(dated, { tournament: null, query }))).toEqual(['old']);
+      expect(ids(filterSavedGames(dated, { tournament: null, kind: null, query }))).toEqual([
+        'old',
+      ]);
     }
   });
 });
