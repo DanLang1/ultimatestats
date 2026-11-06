@@ -298,7 +298,9 @@ export default function StatsScreen() {
         onSwitchTeam={hasMultipleTeams ? () => setShowTeamSheet(true) : null}
         selectionMode={selectionMode}
         onToggleSelectionMode={handleToggleSelectionMode}
-        onBack={() => router.back()}
+        // Saved Games is the Stats tab's root, so Back leaves the tab. `router.back()` would rely
+        // on tab history, which is empty when Game Complete replaces straight into this tab.
+        onBack={() => router.navigate('/dashboard')}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>

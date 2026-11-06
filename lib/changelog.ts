@@ -6,6 +6,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.6.0',
+    date: 'Nov 6, 2026',
+    changes: [
+      'UI Updates for dashboard and saved games',
+      'Tournaments, combined stats, and sharing all available from a single screen now',
+      'Saved game page now shows games from one team at a time',
+      'Added game flow graphs to stats page for single games, and point differential for combined view',
+      'Upped combined share limit for games to 10',
+    ],
+  },
+  {
     version: '2.5.0',
     date: 'Oct 14, 2026',
     changes: [

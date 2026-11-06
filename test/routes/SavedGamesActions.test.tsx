@@ -134,6 +134,15 @@ it.each([
   expect(screen.getByText(/^1 selected/)).toBeVisible();
 });
 
+it('leaves the Stats tab for the Dashboard on Back', async () => {
+  await renderScreen(<StatsScreen />);
+
+  await userEvent.setup().press(screen.getByTestId('screen-header-back'));
+
+  expect(router.navigate).toHaveBeenCalledWith('/dashboard');
+  expect(router.back).not.toHaveBeenCalled();
+});
+
 it('selects and deselects every listed game, respecting the search', async () => {
   await arrangeGames('basic');
   const user = userEvent.setup();
