@@ -2,7 +2,7 @@ appId: com.langdk.ultimatestats.dev
 name: Seed Basic Saved Games
 ---
 # Two saved Zoboomafoo wins where Joe scores in both: the 2-1 Rivals game from
-# setup-basic-saved-game.yaml and an earlier 1-0 Hammers game. Lands on Aggregate Stats.
+# setup-basic-saved-game.yaml and an earlier 1-0 Hammers game. Lands on Saved Games.
 - launchApp
 # Retry once: a deep link sent during app cold start can be dropped.
 # maxRetries counts total attempts in maestro-runner but retries in Maestro; 2 retries in both.

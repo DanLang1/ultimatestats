@@ -5,6 +5,7 @@ import {
   getMaestroSeedPlayerId,
   MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
   MAESTRO_SEED_BASIC_GAME_ID,
+  MAESTRO_SEED_GAME_ID,
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
@@ -13,12 +14,15 @@ import {
   MaestroTrackerState,
   seedAdvancedTrackerTestGame,
   seedMaestroBasicSavedGame,
+  seedMaestroBasicSavedGames,
   seedMaestroTeamPrerequisites,
 } from '@/lib/maestroUtils';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
+import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useTutorialStore } from '@/store/tutorialStore';
+import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
 
 describe('seedAdvancedTrackerTestGame tracker state presets', () => {
   beforeEach(async () => {
@@ -170,6 +174,18 @@ describe('basic Maestro seeds', () => {
     const { savedGames, savedTeams } = useGameStore.getState();
     expect(savedGames.map((game) => game.id)).toEqual(['real-game']);
     expect(savedTeams.map((team) => team.id).sort()).toEqual([MAESTRO_SEED_TEAM_ID, 'real-team']);
+  });
+
+  it('removes the seed team’s completed advanced game so Saved Games lists only the basic seeds', async () => {
+    await useSavedAdvancedGamesStore
+      .getState()
+      .saveGame(createAdvancedGameScenario({ id: MAESTRO_SEED_GAME_ID, status: 'final' }).build());
+
+    await seedMaestroBasicSavedGames();
+
+    const { summaries, gamesById } = useSavedAdvancedGamesStore.getState();
+    expect(summaries.map((summary) => summary.id)).not.toContain(MAESTRO_SEED_GAME_ID);
+    expect(gamesById[MAESTRO_SEED_GAME_ID]).toBeUndefined();
   });
 
   it('marks onboarding as seen so relaunching flows skip the welcome screen', async () => {

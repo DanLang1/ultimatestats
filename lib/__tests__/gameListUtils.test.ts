@@ -3,6 +3,7 @@ import type { AdvancedGameSummary } from '../advancedTracking/summary';
 import type { AdvancedTrackedGame } from '../advancedTracking/types';
 import {
   advancedGameSummaryToListItem,
+  advancedGameSummaryToTeamListItem,
   advancedGameToListItem,
   basicGameToListItem,
   formatGameRowAccessibilityLabel,
@@ -11,12 +12,8 @@ import {
   getMarginsOldestFirst,
   getPointTotals,
   GameListItem,
-  groupAdvancedGamesByTeam,
-  groupBasicGamesByTeam,
-  groupGamesByTournament,
-  LinkedGameListItem,
 } from '../gameListUtils';
-import type { SavedGame, SavedTeam, Tournament } from '../storage';
+import type { SavedGame, SavedTeam } from '../storage';
 
 // ── basicGameToListItem ────────────────────────────────────────────────────────
 
@@ -243,44 +240,16 @@ describe('advancedGameSummaryToListItem', () => {
   });
 });
 
-describe('groupAdvancedGamesByTeam', () => {
-  it('groups by source team, newest game first, and sorts by game count', () => {
-    const groups = groupAdvancedGamesByTeam(
-      [
-        { ...advancedSummary, id: 'a', focusSourceTeamId: 'team-b', myTeamName: 'B' },
-        { ...advancedSummary, id: 'b', focusSourceTeamId: 'team-a', myTeamName: 'A' },
-        {
-          ...advancedSummary,
-          id: 'c',
-          focusSourceTeamId: 'team-a',
-          myTeamName: 'A',
-          sortTimestamp: 9,
-        },
-      ],
-      [],
-    );
-
-    expect(groups.map((group) => [group.id, group.name, group.games.map((g) => g.id)])).toEqual([
-      ['team-a', 'A', ['b', 'c']],
-      ['team-b', 'B', ['a']],
-    ]);
-  });
-});
-
 describe('advancedGameSummaryToTeamListItem', () => {
   const renamedTeams: SavedTeam[] = [{ id: 'team-a', name: 'New Name', roster: [] }];
 
-  it("names a renamed team's games by the live saved-team name so they share one record", () => {
-    const groups = groupAdvancedGamesByTeam(
-      [
-        { ...advancedSummary, id: 'old', focusSourceTeamId: 'team-a', myTeamName: 'Old Name' },
-        { ...advancedSummary, id: 'new', focusSourceTeamId: 'team-a', myTeamName: 'New Name' },
-      ],
+  it("names a renamed team's games by the live saved-team name", () => {
+    const item = advancedGameSummaryToTeamListItem(
+      { ...advancedSummary, focusSourceTeamId: 'team-a', myTeamName: 'Old Name' },
       renamedTeams,
     );
 
-    expect(groups[0].name).toBe('New Name');
-    expect(formatRecord(groups[0].games)).toBe('2–0');
+    expect(item.myTeamName).toBe('New Name');
   });
 });
 
@@ -332,22 +301,6 @@ describe('getMarginsOldestFirst', () => {
   });
 });
 
-describe('groupBasicGamesByTeam', () => {
-  it('groups by team ID under the saved team name', () => {
-    const groups = groupBasicGamesByTeam(
-      [
-        baseBasicGame,
-        { ...baseBasicGame, id: 'basic2', team1: { ...baseBasicGame.team1, name: 'Old' } },
-      ],
-      savedTeams,
-    );
-
-    expect(groups.map((group) => [group.id, group.name, group.games.length])).toEqual([
-      ['team1', 'Saved Name', 2],
-    ]);
-  });
-});
-
 function listItem(id: string, timestamp: number, myScore = 1, opponentScore = 0): GameListItem {
   return {
     kind: 'basic',
@@ -360,49 +313,6 @@ function listItem(id: string, timestamp: number, myScore = 1, opponentScore = 0)
     opponentScore,
   };
 }
-
-function tournament(id: string): Tournament {
-  return {
-    id,
-    schemaVersion: 1,
-    kind: 'basic',
-    name: id,
-    startDate: '2026-01-01',
-    endDate: '2026-01-01',
-    createdAt: 0,
-    updatedAt: 0,
-  };
-}
-
-function linkedItem(
-  id: string,
-  timestamp: number,
-  linkedTournament: Tournament | null,
-): LinkedGameListItem {
-  return { ...listItem(id, timestamp), tournament: linkedTournament };
-}
-
-describe('groupGamesByTournament', () => {
-  it('orders tournaments by their newest game and lists unlinked games last, newest first', () => {
-    const a = tournament('a');
-    const b = tournament('b');
-    const sections = groupGamesByTournament([
-      linkedItem('a1', 1, a),
-      linkedItem('none1', 2, null),
-      linkedItem('b1', 3, b),
-      linkedItem('a2', 4, a),
-      linkedItem('none2', 5, null),
-    ]);
-
-    expect(
-      sections.map((section) => [section.tournament?.id ?? null, section.games.map((g) => g.id)]),
-    ).toEqual([
-      ['a', ['a2', 'a1']],
-      ['b', ['b1']],
-      [null, ['none2', 'none1']],
-    ]);
-  });
-});
 
 describe('formatPointDifferential', () => {
   it('signs the net margin with a real minus sign', () => {

@@ -46,9 +46,8 @@ tags:
 - assertVisible:
     id: 'advanced-stats-team-name'
     text: 'Dark'
-- assertVisible:
-    id: 'advanced-stats-opponent-name'
-    text: 'Light'
+# The opponent name is nested in the "vs" line, and iOS doesn't expose a nested text's testID.
+- assertVisible: 'vs Light'
 
 - scrollUntilVisible:
     element:

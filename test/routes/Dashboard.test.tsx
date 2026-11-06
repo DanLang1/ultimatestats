@@ -156,16 +156,11 @@ it('resumes advanced line setup and starts a scrimmage after warning about the a
   });
 });
 
-it('opens saved games and the combine screen in the Stats tab', async () => {
+it('opens saved games in the Stats tab', async () => {
   const user = userEvent.setup();
   await renderScreen(<DashboardScreen />, { queryClient: arrangeDashboard() });
   await user.press(screen.getByRole('button', { name: 'Saved games' }));
   expect(router.navigate).toHaveBeenLastCalledWith('/stats');
-  await user.press(screen.getByRole('button', { name: 'Combine games' }));
-  expect(router.navigate).toHaveBeenLastCalledWith({
-    pathname: '/aggregate-stats',
-    params: { from: 'dashboard' },
-  });
 });
 
 it('opens the last saved game from the dashboard', async () => {

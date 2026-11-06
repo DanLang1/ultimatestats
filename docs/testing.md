@@ -122,7 +122,7 @@ Basic and team seed modes:
 - `mode=basicSavedCallahanGame` lands on a saved 1-0 basic game against Rivals whose only point is
   an opponent block, Kelly's block, and Kelly's Callahan (`setup-basic-saved-callahan-game.yaml`).
 - `mode=basicSavedGames` adds an earlier 1-0 win over Hammers (Joe from Jon) to that saved game and
-  lands on Aggregate Stats (`setup-basic-saved-games.yaml`).
+  lands on Saved Games (`setup-basic-saved-games.yaml`).
 
 Every seed except `mode=onboarding` marks onboarding as seen, so flows that relaunch the app
 (`launchApp` mid-flow) re-enter through `/` to the active game or Dashboard even if an earlier

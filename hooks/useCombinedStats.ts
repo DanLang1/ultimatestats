@@ -77,7 +77,7 @@ function combineBasicGames(
 
   const rosterMap = new Map<string, Player>();
   games.forEach((game) => game.team1.roster.forEach((player) => rosterMap.set(player.id, player)));
-  // Saved Games and the Combine page only combine one team's games.
+  // Saved Games only combines one team's games.
   const firstGame = games[0];
 
   return {

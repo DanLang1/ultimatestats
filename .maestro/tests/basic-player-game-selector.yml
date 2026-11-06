@@ -3,21 +3,29 @@ name: Basic Player Game Selector
 tags:
   - basic
 ---
-# Aggregate Stats -> Combined Stats (both games) -> player stats -> game selector: picking a game returns to the player's stats
+# Saved Games -> Combined Stats (both games) -> player stats -> game selector: picking a game returns to the player's stats
 # with that game in the impact chart, and the player screen's back still returns to the box score.
 - runFlow: ../flows/setup-basic-saved-games.yaml
-# Aggregate Stats opens on the Advanced tab.
+- extendedWaitUntil:
+    visible:
+      id: 'saved-games-screen'
+    timeout: 5000
+# The seed team has the newest game, so Saved Games opens on it with just the two seeded games.
+# Waits for the seeded list and the seed's navigation to settle; a tap during it is dropped.
+- extendedWaitUntil:
+    visible: '2 GAMES'
+    timeout: 5000
+- waitForAnimationToEnd
 - tapOn:
-    id: 'aggregate-mode-basic'
+    id: 'header-action-select'
 - extendedWaitUntil:
-    visible: '.*Zoboomafoo, 2 games.*'
+    visible:
+      id: 'saved-games-select-all'
     timeout: 5000
-- tapOn: '.*Zoboomafoo, 2 games.*'
-- extendedWaitUntil:
-    visible: 'Select all'
-    timeout: 5000
-- tapOn: 'Select all'
-- tapOn: 'View stats'
+- tapOn:
+    id: 'saved-games-select-all'
+- tapOn:
+    id: 'saved-games-select-bar-view-stats'
 - extendedWaitUntil:
     visible: 'COMBINED STATS'
     timeout: 5000
@@ -52,6 +60,8 @@ tags:
 - assertVisible: 'Hold'
 - assertNotVisible: 'Opp Hold'
 
+# The game sheet's close animation can swallow an immediate tap.
+- waitForAnimationToEnd
 - tapOn:
     id: 'screen-header-back'
 - extendedWaitUntil:

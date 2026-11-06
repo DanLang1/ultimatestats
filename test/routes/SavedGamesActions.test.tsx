@@ -655,6 +655,48 @@ it('adds the selected games to a tournament and leaves selection mode', async ()
   ).toEqual(['advanced:game', 'advanced:scrimmage']);
 });
 
+it('confirms deleting a tournament inside the picker sheet', async () => {
+  await arrangeMixedKinds();
+  const emptyTournamentId = await useTournamentStore
+    .getState()
+    .addTournament('Empty Invite', '2026-02-01', '2026-02-02');
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Advanced game'));
+  await user.press(screen.getByLabelText('Add to tournament'));
+
+  // The alert modal can't present over the sheet, so the sheet confirms the delete itself.
+  await user.press(screen.getByLabelText('Delete Empty Invite'));
+  expect(screen.getByText('Delete Empty Invite?')).toBeVisible();
+  // The header also reads Cancel while selecting; the sheet's renders after it.
+  const cancelLabels = screen.getAllByText('Cancel');
+  await user.press(cancelLabels[cancelLabels.length - 1]);
+  expect(screen.getByText('Select Tournament')).toBeVisible();
+
+  await user.press(screen.getByLabelText('Delete Empty Invite'));
+  await user.press(screen.getByText('Delete tournament'));
+  expect(useTournamentStore.getState().tournaments.some(({ id }) => id === emptyTournamentId)).toBe(
+    false,
+  );
+  expect(screen.getByText('Select Tournament')).toBeVisible();
+});
+
+it('hands the selected games to a tournament created from the picker', async () => {
+  await arrangeGames('basic');
+  const user = userEvent.setup();
+  await renderScreen(<StatsScreen />);
+  await user.press(screen.getByTestId('header-action-select'));
+  await user.press(screen.getByText('Select all'));
+  await user.press(screen.getByLabelText('Add to tournament'));
+  await user.press(screen.getByText('Create New Tournament'));
+
+  expect(router.push).toHaveBeenCalledWith({
+    pathname: '/create-tournament',
+    params: { gameKind: 'basic', gameIds: expect.stringMatching(/^(first,second|second,first)$/) },
+  });
+});
+
 it('deletes a selection of both kinds', async () => {
   await arrangeMixedKinds();
   const basicGameId = useGameStore.getState().savedGames[0].id;

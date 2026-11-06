@@ -241,16 +241,8 @@ export default function DashboardScreen() {
           <DashboardRow
             testID="dashboard-saved-games-button"
             label="Saved games"
-            showDivider
-            onPress={() => router.navigate('/stats')}
-          />
-          <DashboardRow
-            testID="dashboard-combine-games-button"
-            label="Combine games"
             showDivider={false}
-            onPress={() =>
-              router.navigate({ pathname: '/aggregate-stats', params: { from: 'dashboard' } })
-            }
+            onPress={() => router.navigate('/stats')}
           />
         </DashboardSection>
 

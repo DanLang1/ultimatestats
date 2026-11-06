@@ -187,38 +187,6 @@ export function formatPointDifferential(games: GameListItem[]): string {
   return '0';
 }
 
-/** Games that share a tournament, or the games linked to none when `tournament` is null. */
-export interface TournamentGameSection {
-  tournament: Tournament | null;
-  /** Newest first; never empty. */
-  games: LinkedGameListItem[];
-}
-
-/**
- * One section per tournament that has a listed game, ordered by its newest game, then a final
- * section for games linked to no tournament.
- */
-export function groupGamesByTournament(games: LinkedGameListItem[]): TournamentGameSection[] {
-  // Map insertion order follows each tournament's newest game.
-  const tournamentSections = new Map<string, TournamentGameSection>();
-  const unlinkedGames: LinkedGameListItem[] = [];
-
-  for (const game of [...games].sort((a, b) => b.timestamp - a.timestamp)) {
-    const { tournament } = game;
-    if (tournament === null) {
-      unlinkedGames.push(game);
-      continue;
-    }
-    const section = tournamentSections.get(tournament.id);
-    if (section) section.games.push(game);
-    else tournamentSections.set(tournament.id, { tournament, games: [game] });
-  }
-
-  const sections = [...tournamentSections.values()];
-  if (unlinkedGames.length > 0) sections.push({ tournament: null, games: unlinkedGames });
-  return sections;
-}
-
 /** Both teams and their scores, from the tracked team's side. */
 export interface MatchupScore {
   myTeamName: string;
@@ -248,54 +216,4 @@ export function formatGameRowAccessibilityLabel(
 ): string {
   const label = `${game.myTeamName} versus ${game.opponentName}, ${formatScoreAccessibilityLabel(game)}`;
   return detailLabel != null ? `${label}, ${detailLabel}` : label;
-}
-
-/** One tracked team in the aggregate team list. */
-export interface AggregateTeam {
-  id: string;
-  name: string;
-  /** Newest first; never empty. */
-  games: GameListItem[];
-}
-
-/** Groups games by team with each team's games newest first, then sorts teams by most games. */
-function groupGamesByTeam<T>(
-  games: T[],
-  getTeamId: (game: T) => string,
-  toListItem: (game: T) => GameListItem,
-): AggregateTeam[] {
-  const teams = new Map<string, AggregateTeam>();
-  for (const game of games) {
-    const item = toListItem(game);
-    const teamId = getTeamId(game);
-    const team = teams.get(teamId);
-    if (team) team.games.push(item);
-    else teams.set(teamId, { id: teamId, name: item.myTeamName, games: [item] });
-  }
-  for (const team of teams.values()) team.games.sort((a, b) => b.timestamp - a.timestamp);
-  return [...teams.values()].sort((a, b) => b.games.length - a.games.length);
-}
-
-/** Groups advanced games by focus source team, most games first. */
-export function groupAdvancedGamesByTeam(
-  games: AdvancedGameSummary[],
-  savedTeams: SavedTeam[],
-): AggregateTeam[] {
-  return groupGamesByTeam(
-    games,
-    (game) => game.focusSourceTeamId,
-    (game) => advancedGameSummaryToTeamListItem(game, savedTeams),
-  );
-}
-
-/** Groups basic games by tracked team ID (names resolve live), most games first. */
-export function groupBasicGamesByTeam(
-  games: SavedGame[],
-  savedTeams: SavedTeam[],
-): AggregateTeam[] {
-  return groupGamesByTeam(
-    games,
-    (game) => game.team1.id,
-    (game) => basicGameToListItem(game, savedTeams),
-  );
 }

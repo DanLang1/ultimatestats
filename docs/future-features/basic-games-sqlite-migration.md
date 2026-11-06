@@ -136,12 +136,10 @@ Screens and utilities that currently read `savedGames` directly would need revie
 Likely touch points:
 
 - `app/(main)/(hub)/(analytics)/stats.tsx`
-- `app/(main)/(hub)/(analytics)/aggregate-stats.tsx`
 - `app/(main)/(hub)/(analytics)/saved-games/[gameId].tsx`
 - `components/basic/timeline/GameTimelineScreen.tsx`
 - `app/(main)/import.tsx`
 - `components/view-stats/SavedGamesList.tsx`
-- `components/view-stats/AggregateGamesList.tsx`
 - sharing/export flows that serialize selected saved games
 
 List screens should use summaries. Detail, aggregate, timeline, sharing, and event

@@ -97,7 +97,7 @@ async function seedMaestroState(params: MaestroSetupParams): Promise<Href> {
 
   if (params.mode === 'basicSavedGames') {
     await seedMaestroBasicSavedGames();
-    return '/aggregate-stats';
+    return '/stats';
   }
 
   if (params.mode === 'basicCancelPendingGoal') {

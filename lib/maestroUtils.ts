@@ -365,6 +365,9 @@ export async function seedMaestroBasicSavedCallahanGame() {
 
 export async function seedMaestroBasicSavedGames() {
   await seedMaestroBasicSavedGame();
+  // An earlier advanced flow can leave the seed team's advanced game saved; Saved Games lists the
+  // whole team, so it would join a Select all and block combining.
+  await clearAdvancedGames([MAESTRO_SEED_GAME_ID]);
   await useGameStore.getState().importGame(buildSeedBasicSecondSavedGame(buildSeedTeam()));
 }
 
