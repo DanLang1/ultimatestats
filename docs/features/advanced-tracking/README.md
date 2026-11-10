@@ -79,7 +79,7 @@ adjusted.
 Whenever the tracked team has the disc, the footer shows a compact voice button plus T/A, Drop,
 and Goal as always-on alternatives to the swipe gestures; swipes keep working. T/A records the
 throwaway directly. Drop and Goal arm a `PassModifier` so the next player tap records the drop or
-goal, using the same prompt, cancel control, and chip highlighting as More-menu modifiers. While the
+goal (a Goal tap on a holder who just caught a pass first asks who threw it), using the same prompt, cancel control, and chip highlighting as More-menu modifiers. While the
 opponent has the disc, the row shows Opp Goal and Opp Turn instead. While any modifier (More menu,
 Goal, or Drop) owns the next tap, the whole row, offense or defense and including voice, is hidden
 from view and from assistive tech until that modifier is used or canceled from the prompt; its

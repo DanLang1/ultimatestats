@@ -4,7 +4,7 @@ import {
   canAmendOpeningPull,
   canCapture,
   canChangeLine,
-  canDropCaughtPass,
+  canAmendCaughtPass,
   canPauseGameClock,
   canUndo,
 } from './trackerCommands';
@@ -36,8 +36,6 @@ export interface TrackerCommands {
   changeLine: boolean;
   /** A received pull can still be marked dropped by the receiving team. */
   amendOpeningPull: boolean;
-  /** A drop by the holder records the pass they just caught as dropped. */
-  dropCaughtPass: boolean;
   pauseGameClock: boolean;
   startSecondHalfEarly: boolean;
   undo: boolean;
@@ -63,6 +61,11 @@ export interface TrackerSessionView {
   /** Single-team tracking only: the untracked opponent holds the disc. */
   oppHasDisc: boolean;
   discHolderRef: PlayerRef | null;
+  /**
+   * Who threw the pass the holder was logged as catching, while that pass can still be recorded
+   * as the holder's drop or goal; null otherwise.
+   */
+  caughtPassThrowerRef: PlayerRef | null;
   activeStoppage: StoppageAction | null;
   activeGameClockPause: GameClockPause | null;
   /** The point is in progress with no stoppage or game-clock pause, so in-point controls show. */
@@ -127,6 +130,7 @@ export function getTrackerSessionView(
     displaySideId,
     oppHasDisc,
     discHolderRef,
+    caughtPassThrowerRef: getCaughtPassThrowerRef(game, possession),
     activeStoppage,
     activeGameClockPause,
     isPlayLive,
@@ -139,7 +143,6 @@ export function getTrackerSessionView(
     commands: {
       changeLine: !isModifierArmed && canChangeLine(game).ok,
       amendOpeningPull: canDropOpeningPull,
-      dropCaughtPass: canDropCaughtPass(game).ok,
       pauseGameClock: canPauseGameClock(game).ok,
       startSecondHalfEarly: canStartSecondHalfEarly(game, lastUndoEntry),
       undo: canUndo(game, lastUndoEntry).ok,
@@ -148,6 +151,18 @@ export function getTrackerSessionView(
       openRareMenu: !isModifierArmed && !pointIsOver && (oppHasDisc || discHolderRef != null),
     },
   };
+}
+
+function getCaughtPassThrowerRef(
+  game: AdvancedTrackedGame,
+  possession: PointPossession | null,
+): PlayerRef | null {
+  if (!canAmendCaughtPass(game).ok) return null;
+  const caughtPass = possession?.actions.at(-1);
+  if (caughtPass?.kind !== 'throw') {
+    throw new Error("An amendable caught pass must be the possession's last action.");
+  }
+  return caughtPass.thrower;
 }
 
 function getTrackerFooterMode({

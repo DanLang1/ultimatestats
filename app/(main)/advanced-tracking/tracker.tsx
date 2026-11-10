@@ -10,6 +10,7 @@ import { DevDebugModal } from '@/components/advancedTracking/DevDebugModal';
 import { LandscapeUnsupported } from '@/components/advancedTracking/LandscapeUnsupported';
 import { TrackerActionFooter } from '@/components/advancedTracking/TrackerActionFooter';
 import { TrackerCapBar } from '@/components/advancedTracking/TrackerCapBar';
+import { TrackerGoalThrowerMenu } from '@/components/advancedTracking/TrackerGoalThrowerMenu';
 import { TrackerHelpSheet } from '@/components/advancedTracking/TrackerHelpSheet';
 import { TrackerHomeMenu } from '@/components/advancedTracking/TrackerHomeMenu';
 import { TrackerLastActionCard } from '@/components/advancedTracking/TrackerLastActionCard';
@@ -34,6 +35,7 @@ import { useVoiceStatCommands } from '@/hooks/advancedTracking/useVoiceStatComma
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import { getActiveBetweenPointTimeout } from '@/lib/advancedTracking/livePlayState';
+import { getParticipantNameFromRef } from '@/lib/advancedTracking/participantUtils';
 import { getPointTimer } from '@/lib/advancedTracking/pointClock';
 import { isAdvancedGameOver } from '@/lib/advancedTracking/trackingUtils';
 import { PassModifier } from '@/lib/advancedTracking/types';
@@ -65,6 +67,7 @@ export default function AdvancedTrackerScreen() {
   const [showPointNote, setShowPointNote] = useState(false);
   const [showLineChangeMenu, setShowLineChangeMenu] = useState(false);
   const [showRareMenu, setShowRareMenu] = useState(false);
+  const [showGoalThrowerMenu, setShowGoalThrowerMenu] = useState(false);
   const [passModifier, setPassModifier] = useState<PassModifier>(null);
   const [trackingSurfaceHeight, setTrackingSurfaceHeight] = useState<number | null>(null);
 
@@ -79,10 +82,12 @@ export default function AdvancedTrackerScreen() {
     oppHasDisc: session?.oppHasDisc ?? false,
     discHolderRef: session?.discHolderRef ?? null,
     canDropOpeningPull: session?.commands.amendOpeningPull ?? false,
+    caughtPassThrowerRef: session?.caughtPassThrowerRef ?? null,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
     amendOpeningPullAsDropped,
+    onAskGoalThrower: () => setShowGoalThrowerMenu(true),
   });
 
   const voiceControls = useVoiceStatCommands({
@@ -112,6 +117,7 @@ export default function AdvancedTrackerScreen() {
     point,
     pointIsOver,
     discHolderRef,
+    caughtPassThrowerRef,
     oppHasDisc,
     activeStoppage,
     activeGameClockPause,
@@ -161,6 +167,16 @@ export default function AdvancedTrackerScreen() {
     setPassModifier(null);
     router.push('/advanced-tracking/tracker-injury-sub');
   };
+  const handleHolderGoal = (onCaughtPass: boolean) => {
+    if (discHolderRef == null) throw new Error('A goal by the holder needs a holder.');
+    recordCaptureIntent({
+      kind: 'goal',
+      scorer: discHolderRef,
+      ...(onCaughtPass ? { onCaughtPass: true } : {}),
+    });
+    setPassModifier(null);
+    setShowGoalThrowerMenu(false);
+  };
   const handleGamePause = () => {
     startGameClockPause('manual');
   };
@@ -188,6 +204,14 @@ export default function AdvancedTrackerScreen() {
     });
   };
 
+  const goalThrowerQuestion =
+    showGoalThrowerMenu && discHolderRef != null && caughtPassThrowerRef != null
+      ? {
+          scorerName: getParticipantNameFromRef(discHolderRef, participants),
+          passThrowerName: getParticipantNameFromRef(caughtPassThrowerRef, participants),
+        }
+      : null;
+
   const offenseActions: OffenseActionsProps = {
     hasHolder: discHolderRef != null,
     canDropOpeningPull: commands.amendOpeningPull,
@@ -212,7 +236,7 @@ export default function AdvancedTrackerScreen() {
         discHolderRef={discHolderRef}
         oppHasDisc={oppHasDisc}
         canDropOpeningPull={commands.amendOpeningPull}
-        canDropCaughtPass={commands.dropCaughtPass}
+        canDropCaughtPass={caughtPassThrowerRef != null}
         passModifier={passModifier}
         handlers={handlers}
         onLineChangePress={() => setShowLineChangeMenu(true)}
@@ -290,6 +314,16 @@ export default function AdvancedTrackerScreen() {
           visible={showRareMenu}
           onClose={() => setShowRareMenu(false)}
           setPassModifier={setPassModifier}
+        />
+      )}
+
+      {goalThrowerQuestion && (
+        <TrackerGoalThrowerMenu
+          scorerName={goalThrowerQuestion.scorerName}
+          passThrowerName={goalThrowerQuestion.passThrowerName}
+          onClose={() => setShowGoalThrowerMenu(false)}
+          onPassWasGoal={() => handleHolderGoal(true)}
+          onSelfGoal={() => handleHolderGoal(false)}
         />
       )}
 

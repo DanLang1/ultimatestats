@@ -30,6 +30,7 @@ import {
   type PointLine,
   type PointPossession,
   type PullResult,
+  type ThrowResult,
   type ThrowType,
 } from './types';
 import type { WriteContext } from './writeContext';
@@ -176,8 +177,8 @@ export interface CaptureWriteResult {
 }
 
 function assertValidCapturePlan(game: AdvancedTrackedGame, plan: PlannedCapture): void {
-  if (plan.caughtPassDrop && (plan.pickup != null || plan.throw != null)) {
-    throw new Error('A caught-pass drop changes the last throw and cannot also write an action.');
+  if (plan.caughtPassResult != null && (plan.pickup != null || plan.throw != null)) {
+    throw new Error('A caught-pass result changes the last throw and cannot also write an action.');
   }
   if (plan.pickup != null) {
     assertValidSideIds(game, [plan.pickup.sideId]);
@@ -197,21 +198,54 @@ function assertValidCapturePlan(game: AdvancedTrackedGame, plan: PlannedCapture)
 }
 
 /**
- * Turns the possession's last action, a caught pass, into a drop by its receiver. The throw keeps
- * its ID, so the undo entry from recording it now removes the dropped throw.
+ * Records any cap a point-ending throw crossed and rederives halftime. Returns whether the game is
+ * now in the halftime break.
  */
-function applyCaughtPassDrop(possession: PointPossession): CaptureWriteResult {
+function syncAfterThrow(
+  game: AdvancedTrackedGame,
+  result: ThrowResult,
+  ctx: WriteContext,
+  capTiming: CapTimingSettings,
+): boolean {
+  if (isPointEndingThrow(result) && game.points[0]?.startedAt != null) {
+    syncCapTransitions(game, {
+      gameElapsedMs: getGameClockElapsedMs(game, ctx.at),
+      capTiming,
+    });
+  }
+  return syncDerivedHalftimeTransition(game);
+}
+
+/**
+ * Turns the possession's last action, a caught pass, into its receiver's drop or goal. The throw
+ * keeps its ID, so the undo entry from recording it now removes the amended throw. It is restamped
+ * at the capture time: the outcome must not predate writes made since the catch, such as a Red
+ * Zone entry.
+ */
+function applyCaughtPassResult(
+  game: AdvancedTrackedGame,
+  possession: PointPossession,
+  result: 'drop' | 'goal',
+  ctx: WriteContext,
+  capTiming: CapTimingSettings,
+): CaptureWriteResult {
   const caughtPass = possession.actions.at(-1);
   if (caughtPass?.kind !== 'throw' || caughtPass.result !== 'complete') {
     throw new Error('The current possession does not end with a caught pass.');
   }
-  caughtPass.result = 'drop';
-  return { undoEntries: [], visibleActionId: caughtPass.id, isHalftimeBreakActive: false };
+  caughtPass.result = result;
+  caughtPass.recordedAt = ctx.at;
+  return {
+    undoEntries: [],
+    visibleActionId: caughtPass.id,
+    isHalftimeBreakActive: syncAfterThrow(game, result, ctx, capTiming),
+  };
 }
 
 /**
  * Applies a planned capture (from `planCaptureIntent`) to the current point: a pickup, starting a
- * new possession when the current one is over, then a throw, or a drop of the pass just caught.
+ * new possession when the current one is over, then a throw, or a new result for the pass just
+ * caught.
  * After a throw it records any crossed cap and rederives halftime. Throws before mutating when the
  * plan references unknown sides or participants or lacks a required defender.
  */
@@ -225,7 +259,9 @@ export function applyCapture(
   const point = getCurrentPoint(game);
   let possession = getCurrentPossession(game);
   if (point == null || possession == null) throw new Error('No current possession to capture.');
-  if (plan.caughtPassDrop) return applyCaughtPassDrop(possession);
+  if (plan.caughtPassResult != null) {
+    return applyCaughtPassResult(game, possession, plan.caughtPassResult, ctx, capTiming);
+  }
 
   const undoEntries: ActionUndoEntry[] = [];
   let visibleActionId: string | undefined;
@@ -275,13 +311,7 @@ export function applyCapture(
     possessionId: possession.id,
     actionId: throwId,
   });
-  if (isPointEndingThrow(throwInput.result) && game.points[0]?.startedAt != null) {
-    syncCapTransitions(game, {
-      gameElapsedMs: getGameClockElapsedMs(game, ctx.at),
-      capTiming,
-    });
-  }
-  const isHalftimeBreakActive = syncDerivedHalftimeTransition(game);
+  const isHalftimeBreakActive = syncAfterThrow(game, throwInput.result, ctx, capTiming);
   return { undoEntries, visibleActionId: throwId, isHalftimeBreakActive };
 }
 

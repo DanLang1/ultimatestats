@@ -1,0 +1,28 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Goal On Caught Pass
+tags:
+  - advanced
+---
+- runFlow:
+    file: ../flows/setup-game.yaml
+    env:
+      TRACKER_STATE: focusPossession
+
+# Jon was logged catching the pass. Goal then Jon asks who threw it.
+- tapOn:
+    id: 'tracker-chip-Jon'
+- tapOn:
+    id: 'offense-goal'
+- tapOn:
+    id: 'tracker-chip-Jon'
+- extendedWaitUntil:
+    visible:
+      id: 'goal-thrower-pass'
+    timeout: 5000
+- tapOn:
+    id: 'goal-thrower-pass'
+- assertVisible:
+    id: 'between-point-start-next'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-goal-on-caught-pass

@@ -10,10 +10,12 @@ function makeInput(passModifier: PassModifier, hasHolder = true) {
     oppHasDisc: false,
     discHolderRef: hasHolder ? holder : null,
     canDropOpeningPull: false,
+    caughtPassThrowerRef: null as PlayerRef | null,
     passModifier,
     setPassModifier: jest.fn(),
     recordCaptureIntent: jest.fn((): CaptureIntentResult => ({ ok: true, actionId: 'action' })),
     amendOpeningPullAsDropped: jest.fn(),
+    onAskGoalThrower: jest.fn(),
   };
 }
 
@@ -57,6 +59,14 @@ describe('useTrackerHandlers', () => {
     useTrackerHandlers(input).onPlayerTap(holder);
     expect(input.recordCaptureIntent).toHaveBeenCalledWith({ kind: 'drop', receiver: holder });
     expect(input.setPassModifier).toHaveBeenCalledWith(null);
+  });
+
+  it('asks who threw a button-mode goal by a holder who just caught a pass', () => {
+    const input = { ...makeInput('goal'), caughtPassThrowerRef: defender };
+    useTrackerHandlers(input).onPlayerTap(holder);
+    expect(input.onAskGoalThrower).toHaveBeenCalled();
+    expect(input.recordCaptureIntent).not.toHaveBeenCalled();
+    expect(input.setPassModifier).not.toHaveBeenCalled();
   });
 
   it('maps a button-mode drop during the opening pull to a dropped pull', () => {

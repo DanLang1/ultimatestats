@@ -136,10 +136,10 @@ export function canAmendOpeningPull(game: AdvancedTrackedGame): CommandAvailabil
 }
 
 /**
- * Whether a drop by the holder can be recorded, turning the pass they were logged as catching into
- * their drop: the catch is the possession's last action, so nothing has happened since.
+ * Whether the pass the holder was logged as catching can still be recorded as their drop or their
+ * goal: the catch is the possession's last action, so nothing has happened since.
  */
-export function canDropCaughtPass(
+export function canAmendCaughtPass(
   game: AdvancedTrackedGame,
 ): { ok: true } | { ok: false; reason: LivePointBlock | 'no-caught-pass' } {
   const captureBlock = canCapture(game);

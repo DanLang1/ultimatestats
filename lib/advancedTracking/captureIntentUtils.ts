@@ -2,7 +2,7 @@ import { assertNever } from '@/lib/utils';
 
 import { getLivePlayState } from './livePlayState';
 import { isSamePlayerRef } from './participantUtils';
-import { canCapture, canDropCaughtPass, type TrackerCommandBlock } from './trackerCommands';
+import { canCapture, canAmendCaughtPass, type TrackerCommandBlock } from './trackerCommands';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import { getOtherSideId, isPossessionOver } from './trackingUtils';
 import type { AdvancedTrackedGame, PlayerRef, PointPossession, ThrowResult } from './types';
@@ -11,7 +11,11 @@ import type { AdvancedTrackedGame, PlayerRef, PointPossession, ThrowResult } fro
 export type CaptureIntent =
   | { kind: 'pickup'; player: PlayerRef }
   | { kind: 'pass'; receiver: PlayerRef }
-  | { kind: 'goal'; scorer: PlayerRef }
+  /**
+   * `onCaughtPass` means the pass the holder was logged as catching was the goal, so its thrower
+   * gets the assist. Without it a goal by the holder is a self-goal off their own throw.
+   */
+  | { kind: 'goal'; scorer: PlayerRef; onCaughtPass?: true }
   | { kind: 'drop'; receiver: PlayerRef }
   | { kind: 'fifty-fifty'; receiver: PlayerRef }
   | { kind: 'throwaway' }
@@ -47,10 +51,10 @@ export interface PlannedCapture {
     splitAttribution?: boolean;
   };
   /**
-   * The holder dropped the pass they were logged as catching: that completion becomes their drop
-   * instead of a new throw being written.
+   * The pass the holder was logged as catching ended the possession: that completion takes this
+   * result instead of a new throw being written.
    */
-  caughtPassDrop?: true;
+  caughtPassResult?: 'drop' | 'goal';
 }
 
 export type CapturePlanResult =
@@ -117,11 +121,22 @@ export function planCaptureIntent(
 
   if (intent.kind === 'drop' && isSamePlayerRef(intent.receiver, thrower)) {
     // A holder can't drop their own throw, so this is the pass they never caught.
-    const caughtPassDrop = canDropCaughtPass(game);
-    return caughtPassDrop.ok ? { ok: true, plan: { caughtPassDrop: true } } : caughtPassDrop;
+    return planCaughtPassResult(game, 'drop');
+  }
+  if (intent.kind === 'goal' && intent.onCaughtPass) {
+    if (!isSamePlayerRef(intent.scorer, thrower)) return { ok: false, reason: 'no-caught-pass' };
+    return planCaughtPassResult(game, 'goal');
   }
 
   return buildThrowPlan(intent, thrower, pickup, isAnonymousOpponentPossession);
+}
+
+function planCaughtPassResult(
+  game: AdvancedTrackedGame,
+  caughtPassResult: 'drop' | 'goal',
+): CapturePlanResult {
+  const availability = canAmendCaughtPass(game);
+  return availability.ok ? { ok: true, plan: { caughtPassResult } } : availability;
 }
 
 function planAnonymousOpponentIntent(

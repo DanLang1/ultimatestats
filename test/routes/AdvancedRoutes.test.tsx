@@ -503,6 +503,35 @@ describe('advanced tracking routes', () => {
       });
     });
 
+    it.each([
+      ['the pass they caught', 'goal-thrower-pass', 0],
+      ['their own throw', 'goal-thrower-self', 1],
+    ])(
+      'asks who threw a goal by the holder and records %s',
+      async (_name, answerTestId, throwerIndex) => {
+        const user = userEvent.setup();
+        arrangeHolderPossession();
+        useAdvancedTrackingStore.getState().recordCaptureIntent({
+          kind: 'pass',
+          receiver: { refType: 'participant', participantId: testTeam.roster[1].id },
+        });
+        await renderScreen(<TrackerScreen />);
+
+        await user.press(screen.getByTestId('offense-goal'));
+        await user.press(screen.getByTestId(`tracker-chip-${testTeam.roster[1].name}`));
+        expect(screen.getByText('WHO THREW IT?')).toBeVisible();
+        await user.press(screen.getByTestId(answerTestId));
+
+        expect(getLastAction()).toMatchObject({
+          kind: 'throw',
+          result: 'goal',
+          thrower: { refType: 'participant', participantId: testTeam.roster[throwerIndex].id },
+          toPlayer: { refType: 'participant', participantId: testTeam.roster[1].id },
+        });
+        expect(screen.queryByText('WHO THREW IT?')).not.toBeOnTheScreen();
+      },
+    );
+
     it('records a drop by tapping Drop and then the receiver', async () => {
       const user = userEvent.setup();
       arrangeHolderPossession();

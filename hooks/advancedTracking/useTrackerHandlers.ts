@@ -1,5 +1,6 @@
 import { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
+import { isSamePlayerRef } from '@/lib/advancedTracking/participantUtils';
 import { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 import { assertNever } from '@/lib/utils';
 
@@ -7,10 +8,13 @@ interface UseTrackerHandlersInput {
   oppHasDisc: boolean;
   discHolderRef: PlayerRef | null;
   canDropOpeningPull: boolean;
+  caughtPassThrowerRef: PlayerRef | null;
   passModifier: PassModifier;
   setPassModifier: (modifier: PassModifier) => void;
   recordCaptureIntent: (intent: CaptureIntent) => CaptureIntentResult;
   amendOpeningPullAsDropped: (receiver: PlayerRef) => void;
+  /** Asks who threw a goal by the holder: the pass they caught, or their own throw. */
+  onAskGoalThrower: () => void;
 }
 
 /** Maps tracker gestures to semantic captures; the store resolves the live possession and holder. */
@@ -19,10 +23,12 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     oppHasDisc,
     discHolderRef,
     canDropOpeningPull,
+    caughtPassThrowerRef,
     passModifier,
     setPassModifier,
     recordCaptureIntent,
     amendOpeningPullAsDropped,
+    onAskGoalThrower,
   } = input;
 
   const onPlayerTap = (ref: PlayerRef) => {
@@ -30,6 +36,11 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
     switch (passModifier) {
       case 'goal':
         if (discHolderRef == null) return;
+        if (caughtPassThrowerRef != null && isSamePlayerRef(discHolderRef, ref)) {
+          // Goal stays armed until the answer records it.
+          onAskGoalThrower();
+          return;
+        }
         recordCaptureIntent({ kind: 'goal', scorer: ref });
         break;
       case 'drop':

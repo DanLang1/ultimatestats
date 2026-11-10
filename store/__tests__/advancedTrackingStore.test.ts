@@ -1407,6 +1407,73 @@ describe('advancedTrackingStore', () => {
     });
   });
 
+  it('records a goal on the pass the holder just caught, and undo returns the disc', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pass', receiver: meves });
+
+    useAdvancedTrackingStore
+      .getState()
+      .recordCaptureIntent({ kind: 'goal', scorer: meves, onCaughtPass: true });
+
+    const game = getCurrentGame()!;
+    expect(getCurrentPoint(game)?.possessions[0].actions).toHaveLength(3);
+    expect(getGameScore(game)).toEqual({ [homeSideId]: 1, [awaySideId]: 0 });
+    const credits = buildAnalyticsGame(game)
+      .attributions.filter(
+        (attribution) => attribution.type === 'goal' || attribution.type === 'assist',
+      )
+      .map((attribution) => [attribution.type, attribution.participantId]);
+    expect(credits).toEqual(
+      expect.arrayContaining([
+        ['assist', august.participantId],
+        ['goal', meves.participantId],
+      ]),
+    );
+    expect(credits).toHaveLength(2);
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions.at(-1)).toMatchObject({
+      kind: 'disc_pickup',
+      player: august,
+    });
+    expect(getGameScore(getCurrentGame()!)).toEqual({ [homeSideId]: 0, [awaySideId]: 0 });
+  });
+
+  it.each([
+    ['drop', { kind: 'drop', receiver: meves }],
+    ['goal', { kind: 'goal', scorer: meves, onCaughtPass: true }],
+  ] as const)(
+    'keeps analytics valid when Red Zone was entered between the catch and its %s',
+    (_name, intent) => {
+      createGame();
+      useAdvancedTrackingStore.getState().recordPull({
+        lines: homeLines,
+        puller: untracked,
+        receiver: august,
+        result: 'inbound',
+      });
+      useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000);
+      useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pass', receiver: meves });
+      nowSpy.mockReturnValue(2_000);
+      useAdvancedTrackingStore.getState().setCurrentPossessionRedZone(true);
+      nowSpy.mockReturnValue(3_000);
+
+      expect(useAdvancedTrackingStore.getState().recordCaptureIntent(intent).ok).toBe(true);
+      nowSpy.mockRestore();
+
+      expect(() => buildAnalyticsGame(getCurrentGame()!)).not.toThrow();
+    },
+  );
+
   it('rejects a drop by a holder who picked the disc up', () => {
     createGame();
     useAdvancedTrackingStore.getState().recordPull({
