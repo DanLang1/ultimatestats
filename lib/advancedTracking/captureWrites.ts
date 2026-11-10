@@ -176,6 +176,9 @@ export interface CaptureWriteResult {
 }
 
 function assertValidCapturePlan(game: AdvancedTrackedGame, plan: PlannedCapture): void {
+  if (plan.caughtPassDrop && (plan.pickup != null || plan.throw != null)) {
+    throw new Error('A caught-pass drop changes the last throw and cannot also write an action.');
+  }
   if (plan.pickup != null) {
     assertValidSideIds(game, [plan.pickup.sideId]);
     assertValidParticipantRefs(game, [plan.pickup.player]);
@@ -194,10 +197,23 @@ function assertValidCapturePlan(game: AdvancedTrackedGame, plan: PlannedCapture)
 }
 
 /**
- * Appends a planned capture (from `planCaptureIntent`) to the current point: a pickup, starting a
- * new possession when the current one is over, then a throw. After a throw it records any crossed
- * cap and rederives halftime. Throws before mutating when the plan references unknown sides or
- * participants or lacks a required defender.
+ * Turns the possession's last action, a caught pass, into a drop by its receiver. The throw keeps
+ * its ID, so the undo entry from recording it now removes the dropped throw.
+ */
+function applyCaughtPassDrop(possession: PointPossession): CaptureWriteResult {
+  const caughtPass = possession.actions.at(-1);
+  if (caughtPass?.kind !== 'throw' || caughtPass.result !== 'complete') {
+    throw new Error('The current possession does not end with a caught pass.');
+  }
+  caughtPass.result = 'drop';
+  return { undoEntries: [], visibleActionId: caughtPass.id, isHalftimeBreakActive: false };
+}
+
+/**
+ * Applies a planned capture (from `planCaptureIntent`) to the current point: a pickup, starting a
+ * new possession when the current one is over, then a throw, or a drop of the pass just caught.
+ * After a throw it records any crossed cap and rederives halftime. Throws before mutating when the
+ * plan references unknown sides or participants or lacks a required defender.
  */
 export function applyCapture(
   game: AdvancedTrackedGame,
@@ -209,6 +225,7 @@ export function applyCapture(
   const point = getCurrentPoint(game);
   let possession = getCurrentPossession(game);
   if (point == null || possession == null) throw new Error('No current possession to capture.');
+  if (plan.caughtPassDrop) return applyCaughtPassDrop(possession);
 
   const undoEntries: ActionUndoEntry[] = [];
   let visibleActionId: string | undefined;

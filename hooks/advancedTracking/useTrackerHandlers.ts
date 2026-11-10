@@ -1,6 +1,5 @@
 import { TrackerPlayerGridHandlers } from '@/components/advancedTracking/TrackerPlayerGrid';
 import { CaptureIntent, CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
-import { isSamePlayerRef } from '@/lib/advancedTracking/participantUtils';
 import { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 import { assertNever } from '@/lib/utils';
 
@@ -37,8 +36,9 @@ export function useTrackerHandlers(input: UseTrackerHandlersInput): TrackerPlaye
         if (canDropOpeningPull) {
           amendOpeningPullAsDropped(ref);
         } else {
-          if (discHolderRef == null || isSamePlayerRef(discHolderRef, ref)) return;
-          recordCaptureIntent({ kind: 'drop', receiver: ref });
+          if (discHolderRef == null) return;
+          // A holder who caught no pass can't drop it; Drop stays armed for the real receiver.
+          if (!recordCaptureIntent({ kind: 'drop', receiver: ref }).ok) return;
         }
         break;
       case 'block':

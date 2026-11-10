@@ -1,7 +1,8 @@
 import { assertNever } from '@/lib/utils';
 
 import { getLivePlayState } from './livePlayState';
-import { canCapture, type TrackerCommandBlock } from './trackerCommands';
+import { isSamePlayerRef } from './participantUtils';
+import { canCapture, canDropCaughtPass, type TrackerCommandBlock } from './trackerCommands';
 import { areBothSidesFullyTracked } from './trackingModeUtils';
 import { getOtherSideId, isPossessionOver } from './trackingUtils';
 import type { AdvancedTrackedGame, PlayerRef, PointPossession, ThrowResult } from './types';
@@ -24,7 +25,12 @@ export type CaptureIntent =
 /** The tracker command blocks a capture can be rejected for. */
 export type CaptureIntentRejection = Extract<
   TrackerCommandBlock,
-  'point-not-started' | 'point-over' | 'play-paused' | 'possession-over' | 'holder-required'
+  | 'point-not-started'
+  | 'point-over'
+  | 'play-paused'
+  | 'possession-over'
+  | 'holder-required'
+  | 'no-caught-pass'
 >;
 
 export type CaptureIntentResult =
@@ -40,6 +46,11 @@ export interface PlannedCapture {
     defender?: PlayerRef;
     splitAttribution?: boolean;
   };
+  /**
+   * The holder dropped the pass they were logged as catching: that completion becomes their drop
+   * instead of a new throw being written.
+   */
+  caughtPassDrop?: true;
 }
 
 export type CapturePlanResult =
@@ -102,6 +113,12 @@ export function planCaptureIntent(
       intent.kind === 'throwaway')
   ) {
     return { ok: false, reason: 'holder-required' };
+  }
+
+  if (intent.kind === 'drop' && isSamePlayerRef(intent.receiver, thrower)) {
+    // A holder can't drop their own throw, so this is the pass they never caught.
+    const caughtPassDrop = canDropCaughtPass(game);
+    return caughtPassDrop.ok ? { ok: true, plan: { caughtPassDrop: true } } : caughtPassDrop;
   }
 
   return buildThrowPlan(intent, thrower, pickup, isAnonymousOpponentPossession);

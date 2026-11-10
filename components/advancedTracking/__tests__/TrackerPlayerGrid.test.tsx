@@ -42,6 +42,7 @@ async function renderGrid({
       discHolderRef={discHolderRef}
       oppHasDisc={oppHasDisc}
       canDropOpeningPull={canDropOpeningPull}
+      canDropCaughtPass={false}
       passModifier={passModifier}
       handlers={handlers}
       onLineChangePress={onLineChangePress}

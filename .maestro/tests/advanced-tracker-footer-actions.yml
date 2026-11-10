@@ -50,6 +50,20 @@ tags:
 - tapOn:
     id: 'tracker-chip-Joe'
 
+# Drop on the holder: Jon was logged catching Joe's pass, so the pass becomes Jon's drop.
+- tapOn:
+    id: 'tracker-chip-Jon'
+- tapOn:
+    id: 'offense-drop'
+- tapOn:
+    id: 'tracker-chip-Jon'
+- assertVisible:
+    id: 'defense-opp-turn'
+- tapOn:
+    id: 'defense-opp-turn'
+- tapOn:
+    id: 'tracker-chip-Joe'
+
 # A More-menu modifier owns the next tap, so the footer row is hidden until it is canceled.
 - runFlow:
     file: ../flows/open-rare-menu.yaml

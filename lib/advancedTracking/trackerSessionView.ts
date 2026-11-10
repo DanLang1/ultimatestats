@@ -4,6 +4,7 @@ import {
   canAmendOpeningPull,
   canCapture,
   canChangeLine,
+  canDropCaughtPass,
   canPauseGameClock,
   canUndo,
 } from './trackerCommands';
@@ -35,6 +36,8 @@ export interface TrackerCommands {
   changeLine: boolean;
   /** A received pull can still be marked dropped by the receiving team. */
   amendOpeningPull: boolean;
+  /** A drop by the holder records the pass they just caught as dropped. */
+  dropCaughtPass: boolean;
   pauseGameClock: boolean;
   startSecondHalfEarly: boolean;
   undo: boolean;
@@ -136,6 +139,7 @@ export function getTrackerSessionView(
     commands: {
       changeLine: !isModifierArmed && canChangeLine(game).ok,
       amendOpeningPull: canDropOpeningPull,
+      dropCaughtPass: canDropCaughtPass(game).ok,
       pauseGameClock: canPauseGameClock(game).ok,
       startSecondHalfEarly: canStartSecondHalfEarly(game, lastUndoEntry),
       undo: canUndo(game, lastUndoEntry).ok,

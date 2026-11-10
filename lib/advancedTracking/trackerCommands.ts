@@ -22,6 +22,7 @@ export type TrackerCommandBlock =
   | 'play-past-pull'
   | 'pull-already-dropped'
   | 'opponent-has-disc'
+  | 'no-caught-pass'
   | 'game-not-started'
   | 'halftime-break'
   | 'timeout-active'
@@ -41,6 +42,7 @@ const TRACKER_COMMAND_BLOCK_MESSAGES = {
   'play-past-pull': 'play has moved past the opening pull',
   'pull-already-dropped': 'the pull was already marked dropped',
   'opponent-has-disc': 'the untracked opponent has the disc',
+  'no-caught-pass': 'the last action is not a caught pass',
   'game-not-started': 'the game has not started',
   'halftime-break': 'it is the halftime break',
   'timeout-active': 'a timeout is already running',
@@ -129,6 +131,22 @@ export function canAmendOpeningPull(game: AdvancedTrackedGame): CommandAvailabil
   if (isDroppedPull(openingAction.result)) return { ok: false, reason: 'pull-already-dropped' };
   if (!areBothSidesFullyTracked(game) && activeSideId !== game.focusSideId) {
     return { ok: false, reason: 'opponent-has-disc' };
+  }
+  return { ok: true };
+}
+
+/**
+ * Whether a drop by the holder can be recorded, turning the pass they were logged as catching into
+ * their drop: the catch is the possession's last action, so nothing has happened since.
+ */
+export function canDropCaughtPass(
+  game: AdvancedTrackedGame,
+): { ok: true } | { ok: false; reason: LivePointBlock | 'no-caught-pass' } {
+  const captureBlock = canCapture(game);
+  if (!captureBlock.ok) return captureBlock;
+  const lastAction = getLivePlayState(game).possession?.actions.at(-1);
+  if (lastAction?.kind !== 'throw' || lastAction.result !== 'complete') {
+    return { ok: false, reason: 'no-caught-pass' };
   }
   return { ok: true };
 }

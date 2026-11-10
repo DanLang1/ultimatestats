@@ -27,6 +27,7 @@ interface TrackerChipBaseProps {
     isTargetable: boolean;
     oppHasDisc: boolean;
     canDropOpeningPull: boolean;
+    canDropCaughtPass: boolean;
     passModifier: PassModifier;
   };
   actions: {
@@ -48,7 +49,14 @@ export const TrackerChipBase = ({
 }: TrackerChipBaseProps) => {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
-  const { isHolder, isTargetable, oppHasDisc, canDropOpeningPull, passModifier } = state;
+  const {
+    isHolder,
+    isTargetable,
+    oppHasDisc,
+    canDropOpeningPull,
+    canDropCaughtPass,
+    passModifier,
+  } = state;
   const { tap, throwaway, goal, drop, pullDrop, oppSwipeDown } = actions;
   // Height-limited chips on short phones give their padding to the label; long names may wrap.
   const isCompact = isTrackerChipContentCompact(chipWidth);
@@ -90,8 +98,9 @@ export const TrackerChipBase = ({
     modifierColor =
       PASS_MODIFIER_TONES[passModifier] === 'danger' ? palette.danger : palette.success;
   }
-  // A holder can't drop their own throw, so they sit out the drop prompt.
-  const isHolderExcluded = isHolder && passModifier === 'drop';
+  // A holder can't drop their own throw, so they sit out the drop prompt unless they can be
+  // marked as dropping the pass they were logged as catching.
+  const isHolderExcluded = isHolder && passModifier === 'drop' && !canDropCaughtPass;
 
   const { bg, border, textColor, borderWidth, opacity } = (() => {
     if (oppHasDisc) {

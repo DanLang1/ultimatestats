@@ -1,4 +1,5 @@
 import { useTrackerHandlers } from '@/hooks/advancedTracking/useTrackerHandlers';
+import type { CaptureIntentResult } from '@/lib/advancedTracking/captureIntentUtils';
 import type { PassModifier, PlayerRef } from '@/lib/advancedTracking/types';
 
 const holder: PlayerRef = { refType: 'participant', participantId: 'light-holder' };
@@ -11,7 +12,7 @@ function makeInput(passModifier: PassModifier, hasHolder = true) {
     canDropOpeningPull: false,
     passModifier,
     setPassModifier: jest.fn(),
-    recordCaptureIntent: jest.fn(),
+    recordCaptureIntent: jest.fn((): CaptureIntentResult => ({ ok: true, actionId: 'action' })),
     amendOpeningPullAsDropped: jest.fn(),
   };
 }
@@ -44,11 +45,18 @@ describe('useTrackerHandlers', () => {
     expect(dropInput.setPassModifier).toHaveBeenCalledWith(null);
   });
 
-  it('keeps a button-mode drop armed when the holder is tapped', () => {
+  it('keeps a button-mode drop armed when the capture is rejected', () => {
+    const input = makeInput('drop');
+    input.recordCaptureIntent.mockReturnValue({ ok: false, reason: 'no-caught-pass' });
+    useTrackerHandlers(input).onPlayerTap(holder);
+    expect(input.setPassModifier).not.toHaveBeenCalled();
+  });
+
+  it('sends a button-mode drop on the holder as the same drop capture', () => {
     const input = makeInput('drop');
     useTrackerHandlers(input).onPlayerTap(holder);
-    expect(input.recordCaptureIntent).not.toHaveBeenCalled();
-    expect(input.setPassModifier).not.toHaveBeenCalled();
+    expect(input.recordCaptureIntent).toHaveBeenCalledWith({ kind: 'drop', receiver: holder });
+    expect(input.setPassModifier).toHaveBeenCalledWith(null);
   });
 
   it('maps a button-mode drop during the opening pull to a dropped pull', () => {

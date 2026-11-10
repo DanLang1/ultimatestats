@@ -1376,6 +1376,53 @@ describe('advancedTrackingStore', () => {
     expect(getActiveLineIds(point!, homeSideId)).toEqual([august.participantId]);
   });
 
+  it('records a drop by the holder on the pass they just caught, and undo returns the disc', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'pass', receiver: meves });
+
+    useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'drop', receiver: meves });
+
+    const droppedPossession = getCurrentPoint(getCurrentGame())?.possessions[0];
+    expect(droppedPossession?.actions.at(-1)).toMatchObject({
+      kind: 'throw',
+      result: 'drop',
+      thrower: august,
+      toPlayer: meves,
+    });
+    expect(() => buildAnalyticsGame(getCurrentGame()!)).not.toThrow();
+
+    expect(useAdvancedTrackingStore.getState().undoLastOperation()).toBe(true);
+
+    const restoredPossession = getCurrentPoint(getCurrentGame())?.possessions[0];
+    expect(restoredPossession?.actions.at(-1)).toMatchObject({
+      kind: 'disc_pickup',
+      player: august,
+    });
+  });
+
+  it('rejects a drop by a holder who picked the disc up', () => {
+    createGame();
+    useAdvancedTrackingStore.getState().recordPull({
+      lines: homeLines,
+      puller: untracked,
+      receiver: august,
+      result: 'inbound',
+    });
+    useAdvancedTrackingStore.getState().recordPickup({ sideId: homeSideId, player: august });
+
+    expect(
+      useAdvancedTrackingStore.getState().recordCaptureIntent({ kind: 'drop', receiver: august }),
+    ).toEqual({ ok: false, reason: 'no-caught-pass' });
+    expect(getCurrentPoint(getCurrentGame())?.possessions[0].actions).toHaveLength(2);
+  });
+
   it('refuses to mark a pull as dropped a second time', () => {
     createGame();
     useAdvancedTrackingStore.getState().recordPull({

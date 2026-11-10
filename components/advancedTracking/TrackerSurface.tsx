@@ -54,6 +54,7 @@ interface TrackerSurfaceProps {
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
   canDropOpeningPull: boolean;
+  canDropCaughtPass: boolean;
   passModifier: PassModifier;
   handlers: TrackerPlayerGridHandlers;
   onPrepareNextLine: () => void;
@@ -71,6 +72,7 @@ export const TrackerSurface = ({
   discHolderRef,
   oppHasDisc,
   canDropOpeningPull,
+  canDropCaughtPass,
   passModifier,
   handlers,
   onPrepareNextLine,
@@ -112,6 +114,7 @@ export const TrackerSurface = ({
           discHolderRef={discHolderRef}
           oppHasDisc={oppHasDisc}
           canDropOpeningPull={canDropOpeningPull}
+          canDropCaughtPass={canDropCaughtPass}
           passModifier={passModifier}
           handlers={handlers}
           onLineChangePress={onLineChangePress}

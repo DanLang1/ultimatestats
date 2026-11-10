@@ -40,6 +40,7 @@ const CAPTURE_REJECTION_MESSAGES: Record<CaptureIntentRejection, string> = {
   'play-paused': 'Play is paused',
   'holder-required': 'Tap who has the disc first',
   'possession-over': 'Tap who has the disc first',
+  'no-caught-pass': 'No caught pass to drop',
 };
 
 export function getCaptureRejectionMessage(reason: CaptureIntentRejection): string {

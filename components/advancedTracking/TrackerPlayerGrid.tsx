@@ -21,6 +21,7 @@ interface TrackerPlayerGridProps {
   discHolderRef: PlayerRef | null;
   oppHasDisc: boolean;
   canDropOpeningPull: boolean;
+  canDropCaughtPass: boolean;
   passModifier: PassModifier;
   handlers: TrackerPlayerGridHandlers;
   onLineChangePress: () => void;
@@ -74,6 +75,7 @@ export const TrackerPlayerGrid = ({
   discHolderRef,
   oppHasDisc,
   canDropOpeningPull,
+  canDropCaughtPass,
   passModifier,
   handlers,
   onLineChangePress,
@@ -142,6 +144,7 @@ export const TrackerPlayerGrid = ({
             discHolderRef={discHolderRef}
             oppHasDisc={oppHasDisc}
             canDropOpeningPull={canDropOpeningPull}
+            canDropCaughtPass={canDropCaughtPass}
             passModifier={passModifier}
             onTap={handlers.onPlayerTap}
             onDrop={handlers.onDrop}

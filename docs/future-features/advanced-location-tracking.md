@@ -420,8 +420,7 @@ close when implementation starts:
 - Mode routing: `/advanced-tracking/tracker` is hard-coded at about a dozen call sites. Switching on
   `locationMode` inside `tracker.tsx` avoids opening an `xy` game in the old tracker.
 - Rules that live only in the existing UI: `recordPull` does not clear the halftime break (the pull
-  route does), and only `useTrackerHandlers` rejects a drop to the current holder. Move both into
-  the store or planner so the new UI cannot skip them.
+  route does). Move it into the store so the new UI cannot skip it.
 - Sharing: see the "Share Schema Version Stamping" entry in `docs/tech-debt.md` before bumping the
   schema version.
 - Attacking direction (needed for end-zone goal taps and later normalization) should be one lib query;

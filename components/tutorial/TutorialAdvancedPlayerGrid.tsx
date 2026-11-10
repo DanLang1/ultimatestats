@@ -97,6 +97,7 @@ export default function TutorialAdvancedPlayerGrid({
               discHolderRef={discHolderRef}
               oppHasDisc={oppHasDisc}
               canDropOpeningPull={false}
+              canDropCaughtPass={false}
               passModifier={passModifier}
               onTap={handlers.onPlayerTap}
               onDrop={handlers.onDrop}

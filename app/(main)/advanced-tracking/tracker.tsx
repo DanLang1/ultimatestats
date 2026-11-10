@@ -212,6 +212,7 @@ export default function AdvancedTrackerScreen() {
         discHolderRef={discHolderRef}
         oppHasDisc={oppHasDisc}
         canDropOpeningPull={commands.amendOpeningPull}
+        canDropCaughtPass={commands.dropCaughtPass}
         passModifier={passModifier}
         handlers={handlers}
         onLineChangePress={() => setShowLineChangeMenu(true)}
