@@ -1,5 +1,3 @@
-import { normalizeVoicePhrase } from '@/lib/advancedTracking/voicePhraseUtils';
-
 const NUMBER_WORDS_UNDER_TWENTY = [
   'zero',
   'one',
@@ -34,7 +32,7 @@ const TENS_WORDS: Record<number, string> = {
   90: 'ninety',
 };
 
-const SINGLE_DIGIT_VOICE_ALIASES: Record<number, string[]> = {
+const SINGLE_DIGIT_VOICE_HOMOPHONES: Record<number, string[]> = {
   0: ['oh'],
   1: ['won'],
   2: ['to', 'too'],
@@ -70,25 +68,29 @@ export function buildVoiceNumberPhrases(playerNumber: string | undefined): strin
   if (!normalizedNumber) return [];
 
   const phrases = new Set<string>([normalizedNumber]);
-  const numericValue = Number(normalizedNumber);
-  const numericPhrase = numberToWords(numericValue);
-
+  const numericPhrase = numberToWords(Number(normalizedNumber));
   if (numericPhrase != null) {
     phrases.add(numericPhrase);
   }
-  getVoiceAliasesForNumber(numericValue).forEach((alias) => {
-    phrases.add(alias);
-  });
 
-  return [...phrases].flatMap((phrase) => {
-    const normalizedPhrase = normalizeVoicePhrase(phrase);
-    if (!normalizedPhrase) return [];
-    return [normalizedPhrase, `number ${normalizedPhrase}`];
-  });
+  return withNumberPrefixVariants([...phrases]);
 }
 
-function getVoiceAliasesForNumber(value: number): string[] {
-  return SINGLE_DIGIT_VOICE_ALIASES[value] ?? [];
+/**
+ * Words the recognizer commonly returns for a spoken digit, such as `for` for four. They are
+ * ordinary words and the start of many names, so they are weaker evidence than the number itself.
+ */
+export function buildVoiceNumberHomophonePhrases(playerNumber: string | undefined): string[] {
+  if (playerNumber == null) return [];
+
+  const normalizedNumber = normalizePlayerNumber(playerNumber);
+  if (!normalizedNumber) return [];
+
+  return withNumberPrefixVariants(SINGLE_DIGIT_VOICE_HOMOPHONES[Number(normalizedNumber)] ?? []);
+}
+
+function withNumberPrefixVariants(phrases: string[]): string[] {
+  return phrases.flatMap((phrase) => [phrase, `number ${phrase}`]);
 }
 
 function numberToWords(value: number): string | null {

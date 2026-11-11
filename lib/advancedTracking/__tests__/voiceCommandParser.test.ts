@@ -34,14 +34,6 @@ describe('parseVoiceStatCommand', () => {
   });
 
   it('rejects commands that include throwers or action words', () => {
-    expect(parseVoiceStatCommand('pass Mark', activeParticipants)).toMatchObject({
-      ok: false,
-      reasonCode: 'unsupported_command',
-    });
-    expect(parseVoiceStatCommand('past Mark', activeParticipants)).toMatchObject({
-      ok: false,
-      reasonCode: 'unsupported_command',
-    });
     expect(parseVoiceStatCommand('Joe to Ted', activeParticipants)).toMatchObject({
       ok: false,
       reasonCode: 'unsupported_command',
@@ -62,6 +54,114 @@ describe('parseVoiceStatCommand', () => {
       ok: false,
       reasonCode: 'unsupported_command',
     });
+  });
+
+  it('finds the one named player among filler words', () => {
+    expect(parseVoiceStatCommand('uh Mark', activeParticipants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'mark' },
+      matchKind: 'name',
+      matchCertainty: 'exact',
+    });
+    expect(parseVoiceStatCommand('pass to Joe Ramirez', activeParticipants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'joe' },
+    });
+    expect(parseVoiceStatCommand('uh Sara', activeParticipants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'sarah' },
+      matchCertainty: 'sounds_like',
+    });
+  });
+
+  it('matches names that sound the same but are spelled too differently for a spelling guess', () => {
+    const participantsWithSoundAlikes: VoiceParticipantContext[] = [
+      { id: 'jeff', name: 'Jeff' },
+      { id: 'leigha', name: 'Leigha' },
+      { id: 'mark', name: 'Mark' },
+    ];
+
+    expect(parseVoiceStatCommand('Geoff', participantsWithSoundAlikes)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'jeff' },
+      matchCertainty: 'sounds_like',
+    });
+  });
+
+  it('prefers a same-sounding name over a spelling guess at a jersey number', () => {
+    const participants: VoiceParticipantContext[] = [
+      { id: 'benn', name: 'Benn', number: '5' },
+      { id: 'ten', name: 'Rory', number: '10' },
+    ];
+
+    expect(parseVoiceStatCommand('ben', participants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'benn' },
+      matchKind: 'name',
+    });
+  });
+
+  it('rejects a spelling guess that is equally close to a name and a jersey number', () => {
+    const participants: VoiceParticipantContext[] = [
+      { id: 'tim', name: 'Tim', number: '5' },
+      { id: 'ten', name: 'Rory', number: '10' },
+    ];
+
+    expect(parseVoiceStatCommand('tin', participants)).toMatchObject({
+      ok: false,
+      reasonCode: 'ambiguous_player',
+    });
+  });
+
+  it('does not pick a jersey number out of a longer number phrase', () => {
+    const participants: VoiceParticipantContext[] = [{ id: 'mika', name: 'Mika', number: '3' }];
+
+    expect(parseVoiceStatCommand('twenty three', participants)).toMatchObject({ ok: false });
+  });
+
+  it('marks number homophones as weaker than the number itself', () => {
+    const participants: VoiceParticipantContext[] = [
+      { id: 'noor', name: 'Noor', number: '4' },
+      { id: 'won', name: 'Won', number: '9' },
+      { id: 'piper', name: 'Piper', number: '1' },
+    ];
+
+    expect(parseVoiceStatCommand('four', participants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'noor' },
+      matchCertainty: 'exact',
+    });
+    expect(parseVoiceStatCommand('for', participants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'noor' },
+      matchCertainty: 'sounds_like',
+    });
+    expect(parseVoiceStatCommand('won', participants)).toMatchObject({
+      ok: true,
+      command: { kind: 'pass', toParticipantId: 'won' },
+      matchKind: 'name',
+    });
+  });
+
+  it('rejects common short words that are two letters away from a short name', () => {
+    expect(parseVoiceStatCommand('and', activeParticipants)).toMatchObject({ ok: false });
+    expect(parseVoiceStatCommand('yes', activeParticipants)).toMatchObject({ ok: false });
+    expect(parseVoiceStatCommand('the', activeParticipants)).toMatchObject({ ok: false });
+  });
+
+  it('does not guess a different jersey number when the spoken one is not on the line', () => {
+    const participants: VoiceParticipantContext[] = [
+      { id: 'noor', name: 'Noor', number: '4' },
+      { id: 'river', name: 'River', number: '2' },
+      { id: 'tate', name: 'Tate', number: '12' },
+    ];
+
+    expect(parseVoiceStatCommand('number 7', participants)).toMatchObject({
+      ok: false,
+      reasonCode: 'unsupported_command',
+    });
+    expect(parseVoiceStatCommand('number 17', participants)).toMatchObject({ ok: false });
+    expect(parseVoiceStatCommand('number ten', participants)).toMatchObject({ ok: false });
   });
 
   it('rejects players outside the active line', () => {
@@ -292,5 +392,12 @@ describe('buildVoiceContextualStrings', () => {
     expect(buildVoiceContextualStrings(participantsWithNumbers)).toEqual(
       expect.arrayContaining(['12', 'twelve', 'number twelve']),
     );
+  });
+
+  it('leaves number homophones out of the recognizer hints', () => {
+    const hints = buildVoiceContextualStrings([{ id: 'noor', name: 'Noor', number: '4' }]);
+
+    expect(hints).toContain('four');
+    expect(hints).not.toContain('for');
   });
 });

@@ -161,6 +161,36 @@ describe('voice command recognition', () => {
     expect(result.current.feedback.kind).toBe('recorded');
   });
 
+  it('waits for the final result before recording a number homophone', async () => {
+    const input = arrangeInput();
+    const { result } = await renderHook(() => useVoiceStatCommands(input));
+    await begin(result);
+    await hear('tree', false);
+    expect(input.recordCaptureIntent).not.toHaveBeenCalled();
+    await hear('tree');
+    expect(input.recordCaptureIntent).toHaveBeenCalledWith({
+      kind: 'pass',
+      receiver: participantRef('casey'),
+    });
+  });
+
+  it('prefers an exact name alternative over a number homophone', async () => {
+    const input = arrangeInput();
+    const { result } = await renderHook(() => useVoiceStatCommands(input));
+    await begin(result);
+    await emit('result', {
+      isFinal: true,
+      results: [
+        { transcript: 'tree', confidence: 0.9 },
+        { transcript: 'Blair', confidence: 0.5 },
+      ],
+    });
+    expect(input.recordCaptureIntent).toHaveBeenCalledWith({
+      kind: 'pass',
+      receiver: participantRef('blair'),
+    });
+  });
+
   it('waits for a final same-holder number and rejects it without a self-pass', async () => {
     const input = arrangeInput();
     const { result } = await renderHook(() => useVoiceStatCommands(input));

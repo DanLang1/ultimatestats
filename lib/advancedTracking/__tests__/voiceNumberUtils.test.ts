@@ -1,4 +1,5 @@
 import {
+  buildVoiceNumberHomophonePhrases,
   buildVoiceNumberPhrases,
   getPlayerNumberIdentity,
   normalizePlayerNumber,
@@ -31,14 +32,14 @@ describe('voiceNumberUtils', () => {
     );
   });
 
-  it('includes common speech-recognition aliases for single-digit numbers', () => {
-    expect(buildVoiceNumberPhrases('1')).toEqual(
-      expect.arrayContaining(['1', 'one', 'won', 'number won']),
-    );
-    expect(buildVoiceNumberPhrases('2')).toEqual(expect.arrayContaining(['two', 'to', 'too']));
-    expect(buildVoiceNumberPhrases('3')).toEqual(expect.arrayContaining(['three', 'tree']));
-    expect(buildVoiceNumberPhrases('4')).toEqual(expect.arrayContaining(['four', 'for', 'fore']));
-    expect(buildVoiceNumberPhrases('8')).toEqual(expect.arrayContaining(['eight', 'ate']));
+  it('keeps speech-recognition homophones for single-digit numbers out of the number phrases', () => {
+    expect(buildVoiceNumberHomophonePhrases('1')).toEqual(['won', 'number won']);
+    expect(buildVoiceNumberHomophonePhrases('2')).toEqual(expect.arrayContaining(['to', 'too']));
+    expect(buildVoiceNumberHomophonePhrases('3')).toEqual(expect.arrayContaining(['tree']));
+    expect(buildVoiceNumberHomophonePhrases('4')).toEqual(expect.arrayContaining(['for', 'fore']));
+    expect(buildVoiceNumberHomophonePhrases('8')).toEqual(expect.arrayContaining(['ate']));
+    expect(buildVoiceNumberHomophonePhrases('12')).toEqual([]);
+    expect(buildVoiceNumberPhrases('4')).toEqual(['4', 'number 4', 'four', 'number four']);
   });
 
   it('collapses leading-zero numbers to canonical numeric phrases', () => {

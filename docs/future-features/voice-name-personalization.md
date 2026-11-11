@@ -22,8 +22,8 @@ See [current voice-input behavior](../features/advanced-tracking/voice-input.md)
 - `expo-speech-recognition` wraps the platform recognizer.
 - Active player names, name parts, and jersey-number phrases are supplied as `contextualStrings`.
 - Up to five transcript alternatives are requested and considered by the matching pipeline.
-- Matching is scoped to the active lineup. Approximate name matching uses spelling edit distance,
-  not an explicit pronunciation model.
+- Matching is scoped to the active lineup. Approximate name matching uses a consonant sound key
+  and spelling edit distance, not an explicit pronunciation model.
 - Names wait for final recognition; qualifying number results can record from interim results.
 - Successful commands use the existing pass-capture path; the holder supplies the thrower.
 
@@ -161,7 +161,7 @@ Sources: [Query-by-example keyword spotting research](https://research.google/pu
 - Require sufficient evidence and separation from the next candidate. Similar short names are a
   particular concern even with a small lineup.
 - Prioritize explicit aliases over increasingly permissive spelling guesses. The current parser
-  already allows two edits for short names and rejects equal-distance ties; loosening it further
+  already guesses from spelling distance and rejects equal-distance ties; loosening it further
   could silently record incorrect passes.
 - Use active-line context, while preserving existing holder and capture-validity checks.
 - Route accepted selections through the existing semantic pass-capture path.

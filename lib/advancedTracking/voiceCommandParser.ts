@@ -1,4 +1,8 @@
-import { buildVoiceNumberPhrases } from '@/lib/advancedTracking/voiceNumberUtils';
+import {
+  buildVoiceNumberHomophonePhrases,
+  buildVoiceNumberPhrases,
+} from '@/lib/advancedTracking/voiceNumberUtils';
+import { soundsAlike } from '@/lib/advancedTracking/voicePhoneticUtils';
 import { normalizeVoicePhrase } from '@/lib/advancedTracking/voicePhraseUtils';
 
 export interface VoiceParticipantContext {
@@ -14,6 +18,13 @@ export type VoiceStatCommand = {
 
 export type VoiceCommandMatchKind = 'name' | 'number';
 
+/**
+ * How strongly the transcript identifies the player: `exact` is the player's own name or number,
+ * `sounds_like` is a same-sounding spelling or a number homophone, `approximate` is a spelling
+ * guess.
+ */
+export type VoiceCommandMatchCertainty = 'exact' | 'sounds_like' | 'approximate';
+
 export type VoiceCommandParseFailureReason =
   | 'empty'
   | 'ambiguous_player'
@@ -25,6 +36,7 @@ export type VoiceCommandParseResult =
       ok: true;
       command: VoiceStatCommand;
       matchKind: VoiceCommandMatchKind;
+      matchCertainty: VoiceCommandMatchCertainty;
       matchedPhrase: string;
     }
   | {
@@ -37,6 +49,7 @@ interface PlayerVoicePhrase {
   participantId: string;
   phrase: string;
   matchKind: VoiceCommandMatchKind;
+  isNumberHomophone: boolean;
 }
 
 export function buildVoiceContextualStrings(
@@ -102,6 +115,7 @@ function buildReceiverOnlyResult(
       toParticipantId: receiver.participantId,
     },
     matchKind: receiver.matchKind,
+    matchCertainty: receiver.matchCertainty,
     matchedPhrase: receiver.matchedPhrase,
   };
 }
@@ -111,42 +125,86 @@ type PlayerMatchResult =
       status: 'match';
       participantId: string;
       matchKind: VoiceCommandMatchKind;
+      matchCertainty: VoiceCommandMatchCertainty;
       matchedPhrase: string;
     }
   | { status: 'ambiguous' }
   | { status: 'none' };
 
 function matchPlayer(tokens: string[], phrases: PlayerVoicePhrase[]): PlayerMatchResult {
-  const phrase = tokens.join(' ').trim();
-  if (!phrase) return { status: 'none' };
-
-  const matches = phrases.filter((candidate) => candidate.phrase === phrase);
-  const uniqueParticipantIds = [...new Set(matches.map((match) => match.participantId))];
-
-  if (uniqueParticipantIds.length === 1) {
-    const [match] = matches;
-    return {
-      status: 'match',
-      participantId: uniqueParticipantIds[0],
-      matchKind: match.matchKind,
-      matchedPhrase: match.phrase,
-    };
-  }
-
-  if (uniqueParticipantIds.length > 1) {
-    return { status: 'ambiguous' };
-  }
+  const exactMatch = matchPlayerByExactPhrase(tokens.join(' '), phrases);
+  if (exactMatch.status !== 'none') return exactMatch;
 
   if (tokens.some((token) => UNSUPPORTED_COMMAND_WORDS.has(token))) {
     return { status: 'none' };
   }
 
-  const numberMatch = matchPlayerByBestEffortNumber(phrase, phrases);
-  if (numberMatch.status !== 'none') {
-    return numberMatch;
-  }
+  const spokenNameMatch = matchPlayerBySpokenName(tokens, phrases);
+  if (spokenNameMatch.status === 'match') return spokenNameMatch;
 
-  return matchPlayerByBestEffort(phrase, phrases);
+  return matchPlayerByClosestSpelling(tokens.join(' '), phrases);
+}
+
+function matchPlayerByExactPhrase(phrase: string, phrases: PlayerVoicePhrase[]): PlayerMatchResult {
+  const matches = phrases.filter((candidate) => candidate.phrase === phrase);
+  const ownPhraseMatches = matches.filter((candidate) => !candidate.isNumberHomophone);
+  // A player actually named `Won` or `Oh` outranks another player's number homophone.
+  const strongestMatches = ownPhraseMatches.length > 0 ? ownPhraseMatches : matches;
+  const uniqueParticipantIds = new Set(strongestMatches.map((match) => match.participantId));
+
+  if (uniqueParticipantIds.size === 0) return { status: 'none' };
+  if (uniqueParticipantIds.size > 1) return { status: 'ambiguous' };
+
+  const [match] = strongestMatches;
+  return {
+    status: 'match',
+    participantId: match.participantId,
+    matchKind: match.matchKind,
+    matchCertainty: match.isNumberHomophone ? 'sounds_like' : 'exact',
+    matchedPhrase: match.phrase,
+  };
+}
+
+/**
+ * Finds the one player named anywhere in the transcript, so filler such as `uh Lang` still
+ * resolves. Unmatched words are ignored; naming two players is not a receiver-only command.
+ * Numbers are excluded: a lone `three` inside `twenty three` must not select player 3.
+ */
+function matchPlayerBySpokenName(
+  tokens: string[],
+  phrases: PlayerVoicePhrase[],
+): PlayerMatchResult {
+  const namePhrases = phrases.filter((candidate) => candidate.matchKind === 'name');
+  const spokenNameMatches = getContiguousPhrases(tokens).flatMap((spokenPhrase) =>
+    namePhrases
+      .filter(
+        (candidate) =>
+          candidate.phrase === spokenPhrase || soundsAlike(spokenPhrase, candidate.phrase),
+      )
+      .map((candidate) => ({ candidate, isOwnSpelling: candidate.phrase === spokenPhrase })),
+  );
+  const uniqueParticipantIds = new Set(
+    spokenNameMatches.map((match) => match.candidate.participantId),
+  );
+  if (uniqueParticipantIds.size !== 1) return { status: 'none' };
+
+  const ownSpellingMatch = spokenNameMatches.find((match) => match.isOwnSpelling);
+  const { candidate } = ownSpellingMatch ?? spokenNameMatches[0];
+  return {
+    status: 'match',
+    participantId: candidate.participantId,
+    matchKind: 'name',
+    matchCertainty: ownSpellingMatch == null ? 'sounds_like' : 'exact',
+    matchedPhrase: candidate.phrase,
+  };
+}
+
+function getContiguousPhrases(tokens: string[]): string[] {
+  return tokens.flatMap((_, startIndex) =>
+    tokens
+      .slice(startIndex)
+      .map((__, length) => tokens.slice(startIndex, startIndex + length + 1).join(' ')),
+  );
 }
 
 function buildPlayerVoicePhrases(
@@ -156,127 +214,87 @@ function buildPlayerVoicePhrases(
     const normalizedName = normalizeVoicePhrase(participant.name);
     if (!normalizedName) return [];
 
-    const firstName = getFirstName(participant.name);
-    const namePhrases = new Set([normalizedName]);
-    if (firstName != null && firstName !== normalizedName) {
-      namePhrases.add(firstName);
-    }
-    normalizeTranscript(participant.name).forEach((namePart) => {
-      namePhrases.add(namePart);
-    });
+    const namePhrases = new Set([normalizedName, ...normalizedName.split(' ')]);
     const playerNamePhrases = [...namePhrases].map((phrase) => ({
       participantId: participant.id,
       phrase,
       matchKind: 'name' as const,
+      isNumberHomophone: false,
     }));
-    const numberPhrases = buildVoiceNumberPhrases(participant.number).map((numberPhrase) => ({
+    const numberPhrases = buildVoiceNumberPhrases(participant.number).map((phrase) => ({
       participantId: participant.id,
-      phrase: numberPhrase,
+      phrase,
       matchKind: 'number' as const,
+      isNumberHomophone: false,
     }));
+    const numberHomophonePhrases = buildVoiceNumberHomophonePhrases(participant.number).map(
+      (phrase) => ({
+        participantId: participant.id,
+        phrase,
+        matchKind: 'number' as const,
+        isNumberHomophone: true,
+      }),
+    );
 
-    return [...playerNamePhrases, ...numberPhrases];
+    return [...playerNamePhrases, ...numberPhrases, ...numberHomophonePhrases];
   });
 }
 
-function matchPlayerByBestEffort(phrase: string, phrases: PlayerVoicePhrase[]): PlayerMatchResult {
-  const candidates = getBestEffortNameScores(phrase, phrases)
-    .filter((candidate) => candidate.distance <= getMaxNameEditDistance(phrase, candidate.phrase))
-    .sort((a, b) => a.distance - b.distance);
-
-  const [topCandidate, secondCandidate] = candidates;
-  if (topCandidate == null) return { status: 'none' };
-
-  if (
-    secondCandidate != null &&
-    topCandidate.participantId !== secondCandidate.participantId &&
-    topCandidate.distance === secondCandidate.distance
-  ) {
-    return { status: 'ambiguous' };
-  }
-
-  return {
-    status: 'match',
-    participantId: topCandidate.participantId,
-    matchKind: 'name',
-    matchedPhrase: topCandidate.phrase,
-  };
-}
-
-function matchPlayerByBestEffortNumber(
+/**
+ * Guesses from spelling distance across names and numbers together. Two players at the same
+ * distance are ambiguous, whichever kind of phrase each matched.
+ */
+function matchPlayerByClosestSpelling(
   phrase: string,
   phrases: PlayerVoicePhrase[],
 ): PlayerMatchResult {
-  const candidates = getBestEffortNumberScores(phrase, phrases)
-    .filter((candidate) => candidate.distance <= getMaxNumberEditDistance(phrase, candidate.phrase))
-    .sort((a, b) => a.distance - b.distance);
-
-  const [topCandidate, secondCandidate] = candidates;
+  const [topCandidate, secondCandidate] = getClosestPhraseByParticipant(phrase, phrases).sort(
+    (a, b) => a.distance - b.distance,
+  );
   if (topCandidate == null) return { status: 'none' };
 
-  if (
-    secondCandidate != null &&
-    topCandidate.participantId !== secondCandidate.participantId &&
-    topCandidate.distance === secondCandidate.distance
-  ) {
+  if (secondCandidate != null && topCandidate.distance === secondCandidate.distance) {
     return { status: 'ambiguous' };
   }
 
   return {
     status: 'match',
     participantId: topCandidate.participantId,
-    matchKind: 'number',
+    matchKind: topCandidate.matchKind,
+    matchCertainty: 'approximate',
     matchedPhrase: topCandidate.phrase,
   };
 }
 
-interface PlayerNameScore {
+interface PlayerPhraseDistance {
   participantId: string;
   phrase: string;
+  matchKind: VoiceCommandMatchKind;
   distance: number;
 }
 
-function getBestEffortNameScores(phrase: string, phrases: PlayerVoicePhrase[]): PlayerNameScore[] {
-  const bestMatchByParticipant = new Map<string, PlayerNameScore>();
-
-  phrases
-    .filter((candidate) => candidate.matchKind === 'name')
-    .forEach((candidate) => {
-      const currentBestMatch = bestMatchByParticipant.get(candidate.participantId);
-      const distance = getDamerauLevenshteinDistance(phrase, candidate.phrase);
-      if (currentBestMatch != null && currentBestMatch.distance <= distance) return;
-
-      bestMatchByParticipant.set(candidate.participantId, {
-        participantId: candidate.participantId,
-        phrase: candidate.phrase,
-        distance,
-      });
-    });
-
-  return [...bestMatchByParticipant.values()];
-}
-
-function getBestEffortNumberScores(
+function getClosestPhraseByParticipant(
   phrase: string,
   phrases: PlayerVoicePhrase[],
-): PlayerNameScore[] {
-  const bestMatchByParticipant = new Map<string, PlayerNameScore>();
+): PlayerPhraseDistance[] {
+  const closestByParticipant = new Map<string, PlayerPhraseDistance>();
 
-  phrases
-    .filter((candidate) => candidate.matchKind === 'number')
-    .forEach((candidate) => {
-      const currentBestMatch = bestMatchByParticipant.get(candidate.participantId);
-      const distance = getDamerauLevenshteinDistance(phrase, candidate.phrase);
-      if (currentBestMatch != null && currentBestMatch.distance <= distance) return;
+  phrases.forEach((candidate) => {
+    const distance = getDamerauLevenshteinDistance(phrase, candidate.phrase);
+    if (distance > getMaxEditDistance(candidate.matchKind, phrase, candidate.phrase)) return;
 
-      bestMatchByParticipant.set(candidate.participantId, {
-        participantId: candidate.participantId,
-        phrase: candidate.phrase,
-        distance,
-      });
+    const currentClosest = closestByParticipant.get(candidate.participantId);
+    if (currentClosest != null && currentClosest.distance <= distance) return;
+
+    closestByParticipant.set(candidate.participantId, {
+      participantId: candidate.participantId,
+      phrase: candidate.phrase,
+      matchKind: candidate.matchKind,
+      distance,
     });
+  });
 
-  return [...bestMatchByParticipant.values()];
+  return [...closestByParticipant.values()];
 }
 
 function normalizeTranscript(transcript: string): string[] {
@@ -284,27 +302,44 @@ function normalizeTranscript(transcript: string): string[] {
   return normalized ? normalized.split(' ') : [];
 }
 
-function getFirstName(name: string): string | null {
-  const [firstName] = normalizeTranscript(name);
-  return firstName ?? null;
-}
+const UNSUPPORTED_COMMAND_WORDS = new Set(['assist', 'block', 'by', 'drop', 'goal']);
 
-const UNSUPPORTED_COMMAND_WORDS = new Set(['assist', 'block', 'by', 'drop', 'goal', 'to']);
+function getMaxEditDistance(
+  matchKind: VoiceCommandMatchKind,
+  phrase: string,
+  candidatePhrase: string,
+): number {
+  return matchKind === 'number'
+    ? getMaxNumberEditDistance(phrase, candidatePhrase)
+    : getMaxNameEditDistance(phrase, candidatePhrase);
+}
 
 function getMaxNameEditDistance(phrase: string, candidatePhrase: string): number {
   const shortestLength = Math.min(phrase.length, candidatePhrase.length);
-  if (shortestLength <= 4) return 2;
+  if (shortestLength <= 4) return 1;
   if (shortestLength <= 8) return 2;
 
   return 3;
 }
 
+const NUMBER_PHRASE_PREFIX = 'number ';
+
+/** The `number ` prefix identifies no player, so it must not earn a short number extra edits. */
 function getMaxNumberEditDistance(phrase: string, candidatePhrase: string): number {
-  const shortestLength = Math.min(phrase.length, candidatePhrase.length);
+  const shortestLength = Math.min(
+    getSpokenNumberLength(phrase),
+    getSpokenNumberLength(candidatePhrase),
+  );
   if (shortestLength <= 2) return 0;
   if (shortestLength <= 5) return 1;
 
   return 2;
+}
+
+function getSpokenNumberLength(phrase: string): number {
+  return phrase.startsWith(NUMBER_PHRASE_PREFIX)
+    ? phrase.length - NUMBER_PHRASE_PREFIX.length
+    : phrase.length;
 }
 
 function getDamerauLevenshteinDistance(left: string, right: string): number {

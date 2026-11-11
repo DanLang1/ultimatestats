@@ -30,8 +30,8 @@ Show lightweight feedback in the voice action area:
 - Listening state.
 - Interim/final transcript, for example `Heard: Ann`.
 - Recognition confidence is retained for candidate ranking and development logs, but is not shown
-  to users. Valid number matches may record from an interim result to keep pass entry fast; name
-  matches wait for the final result.
+  to users. Exact number matches may record from an interim result to keep pass entry fast; names,
+  number homophones such as `for`, and spelling guesses wait for the final result.
 - Successful parse/action, for example `Recorded pass`.
 - Rejection reason, for example `Tap who has the disc first` or `Player name is ambiguous`.
 - On iOS, first-time offline recognition may require enabling and using keyboard Dictation once so
@@ -66,14 +66,15 @@ teams with stable numbers and weaker for pickup/practice contexts.
 Recommended order:
 
 1. Exact match against active player names, name parts, and jersey-number phrases.
-2. Best-effort matching scoped to the active seven, using spelling edit distance
-   (Damerau-Levenshtein). The allowed distance scales with phrase length (0 for very short
-   phrases, up to 2 for longer ones).
-3. Reject when no candidate is within the allowed distance, or when the two closest distinct players
+2. The one active player named anywhere in the transcript, by exact or same-sounding spelling, so
+   filler words around a name are ignored. Numbers are never picked out of a longer phrase.
+3. Best-effort matching scoped to the active seven, using spelling edit distance
+   (Damerau-Levenshtein). The allowed distance scales with phrase length.
+4. Reject when no candidate is within the allowed distance, or when the two closest distinct players
    tie at the same distance, and show what was heard.
 
-Matching is text-only: there is no recognition-confidence threshold and no pronunciation or
-spoken-letter model. A near-tie that is not exactly equal is accepted for the closest candidate.
+Matching is text-only: there is no recognition-confidence threshold, and same-sounding spellings
+are compared by a consonant sound key rather than a pronunciation or spoken-letter model. A near-tie that is not exactly equal is accepted for the closest candidate.
 
 If nothing matches or the result is ambiguous, reject and show what was heard.
 

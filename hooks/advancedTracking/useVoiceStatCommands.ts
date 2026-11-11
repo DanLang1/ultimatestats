@@ -14,6 +14,7 @@ import { planVoicePassIntent } from '@/lib/advancedTracking/voiceCaptureIntentUt
 import {
   buildVoiceContextualStrings,
   parseVoiceStatCommand,
+  VoiceCommandMatchCertainty,
   VoiceParticipantContext,
   VoiceStatCommand,
 } from '@/lib/advancedTracking/voiceCommandParser';
@@ -280,10 +281,13 @@ export function useVoiceStatCommands(input: UseVoiceStatCommandsInput): VoiceSta
       transcript: parseResult.transcript,
     });
 
+    // Number homophones and spelling guesses wait for the final result: an interim `for` is often
+    // the start of a name such as `Forrest`.
     const canRecordInterimNumber =
       !event.isFinal &&
       parseResult.result.ok === true &&
       parseResult.result.matchKind === 'number' &&
+      parseResult.result.matchCertainty === 'exact' &&
       !isCurrentDiscHolder(parseResult.result.command.toParticipantId, input.discHolderRef);
     if (!event.isFinal && !canRecordInterimNumber) {
       setMessage(transcript);
@@ -490,6 +494,13 @@ function parseBestVoiceStatCommand(
   return candidates.find((candidate) => candidate.result.ok) ?? candidates[0] ?? null;
 }
 
+/** Certainty outranks match kind, so an exact name beats another alternative's number homophone. */
+const MATCH_CERTAINTY_WEIGHTS: Record<VoiceCommandMatchCertainty, number> = {
+  exact: 1000,
+  sounds_like: 500,
+  approximate: 0,
+};
+
 function getVoiceParseCandidateScore(candidate: {
   transcript: string;
   confidence: number;
@@ -505,7 +516,15 @@ function getVoiceParseCandidateScore(candidate: {
   const matchKindWeight = candidate.result.matchKind === 'number' ? 100 : 50;
   const confidenceWeight = getAvailableConfidence(candidate.confidence) ?? 0;
 
-  return matchKindWeight + matchedPhraseLength * 10 + normalizedTranscriptLength + confidenceWeight;
+  const matchCertaintyWeight = MATCH_CERTAINTY_WEIGHTS[candidate.result.matchCertainty];
+
+  return (
+    matchCertaintyWeight +
+    matchKindWeight +
+    matchedPhraseLength * 10 +
+    normalizedTranscriptLength +
+    confidenceWeight
+  );
 }
 
 function getAvailableConfidence(confidence: number | undefined): number | null {
