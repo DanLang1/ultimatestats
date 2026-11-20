@@ -860,8 +860,12 @@ describe('advanced tracking routes', () => {
   it('creates the game with the line size chosen in the Players setting', async () => {
     const user = userEvent.setup();
     useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
-    useSettingsStore.setState({ numPlayers: 2 });
     await renderScreen(<AdvancedPreGameConfirm />);
+
+    await user.press(screen.getByText('7v7'));
+    await user.press(screen.getByTestId('line-size-option-2'));
+    expect(screen.getByTestId('line-size-summary')).toHaveTextContent('2v2');
+    await user.press(screen.getByTestId('line-size-save'));
 
     expect(screen.getByText('2v2')).toBeVisible();
     expect(screen.queryByText(/Advanced tracking requires at least/)).not.toBeOnTheScreen();

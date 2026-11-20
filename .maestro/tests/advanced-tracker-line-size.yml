@@ -12,14 +12,15 @@ tags:
 - assertVisible:
     text: 'ADVANCED TRACKER'
 
-# Pick 5v5 through the Players card and number picker.
+# Pick 5v5 through the Players card.
 - tapOn: '.*Players, 7v7.*'
 - tapOn:
-    id: 'number-picker-clear'
+    id: 'line-size-option-5'
+- assertVisible:
+    id: 'line-size-summary'
+    text: '5v5'
 - tapOn:
-    id: 'number-picker-key-5'
-- tapOn:
-    id: 'number-picker-save'
+    id: 'line-size-save'
 - assertVisible: '.*Players, 5v5.*'
 
 - tapOn:

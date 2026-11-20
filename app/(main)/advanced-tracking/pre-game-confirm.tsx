@@ -6,6 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import { EditableSettingCard } from '@/components/pre-game-confirm/EditableSettingCard';
 import { FlipSelection } from '@/components/pre-game-confirm/FlipSelection';
+import { PlayersSettingCard } from '@/components/pre-game-confirm/PlayersSettingCard';
 import { TimeoutSettingCard } from '@/components/pre-game-confirm/TimeoutSettingCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -287,23 +288,7 @@ export default function AdvancedPreGameConfirm() {
             </ThemedText>
           </EditableSettingCard>
 
-          <EditableSettingCard
-            icon="account-multiple-outline"
-            label="Players"
-            onPress={() =>
-              openNumberPicker({
-                value: numPlayers,
-                min: 1,
-                max: 7,
-                label: 'Players',
-                quickOptions: [3, 5, 7],
-                onChange: setNumPlayers,
-              })
-            }>
-            <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
-              {numPlayers}v{numPlayers}
-            </ThemedText>
-          </EditableSettingCard>
+          <PlayersSettingCard lineSize={numPlayers} onChange={setNumPlayers} />
 
           <EditableSettingCard
             icon="clock-outline"

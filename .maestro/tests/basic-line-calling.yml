@@ -16,11 +16,12 @@ tags:
     timeout: 5000
 - tapOn: '.*Players, 7v7.*'
 - tapOn:
-    id: 'number-picker-clear'
+    id: 'line-size-option-5'
+- assertVisible:
+    id: 'line-size-summary'
+    text: '5v5'
 - tapOn:
-    id: 'number-picker-key-5'
-- tapOn:
-    id: 'number-picker-save'
+    id: 'line-size-save'
 - assertVisible: '.*Players, 5v5.*'
 - tapOn: '.*Line Calling, OFF.*'
 - assertVisible: '.*Line Calling, ON.*'
