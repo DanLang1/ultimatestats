@@ -105,8 +105,8 @@ re-deriving point, possession, or holder in a component.
   is loaded or replaced. AsyncStorage retains countdown progress only while that derived break is
   active; it does not persist a second halftime-activity flag.
 - Partial line drafts remain recoverable while preparing a point. PullTracking accepts only a
-  current, ready draft: every full-roster side has exactly seven unique participants, anonymous
-  sides are empty, and no participant is unknown or selected on both sides.
+  current, ready draft: every full-roster side has exactly as many unique participants as the
+  game's line size, anonymous sides are empty, and no participant is unknown or selected on both sides.
 - During halftime, line preparation can update that pending selection without ending the break or
   creating the second-half point; the normal start flow still advances through pull tracking.
 - `useSavedAdvancedGamesStore` owns saved-game summaries and an in-memory record cache.

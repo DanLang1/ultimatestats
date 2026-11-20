@@ -1,5 +1,6 @@
 import { getDefaultHalftimeTimerState } from '@/lib/advancedTracking/halftimeTimerUtils';
 import type { AdvancedGameType, Participant, PlayerRef } from '@/lib/advancedTracking/types';
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import {
   getMaestroSeedPlayerId,
   MAESTRO_CREATED_TEAM_PREFIX,
@@ -126,7 +127,7 @@ function resetMaestroSetupState(team: SavedTeam) {
     genderRatioEnabled: false,
     firstPointRatio: null,
     lineCallingEnabled: false,
-    numPlayers: 7,
+    numPlayers: DEFAULT_LINE_SIZE,
     rosterViewMode: 'chips',
     orientationMode: 'portrait',
     hardCapMins: 90,
@@ -628,6 +629,7 @@ export async function seedAdvancedTrackerTestGame(
     ],
     participants,
     format: {
+      lineSize: DEFAULT_LINE_SIZE,
       gameTo,
       halftimeEnabled: true,
       ...getSeedCapFormat(capMode),

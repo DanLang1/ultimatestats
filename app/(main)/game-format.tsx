@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getCapThresholdMinutes } from '@/lib/advancedTracking/capUtils';
+import { getLineSize } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import {
   createFormatSections,
@@ -248,6 +249,7 @@ function buildAdvancedFormatRows({
   firstPointRatio,
 }: AdvancedFormatRowsInput): FormatRow[] {
   const format = game.settings.format;
+  const lineSize = getLineSize(game);
   const focusSide = game.sides.find((side) => side.id === game.focusSideId);
   const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
   const initialReceivingSide = game.sides.find((side) => side.id === game.initialReceivingSideId);
@@ -260,6 +262,7 @@ function buildAdvancedFormatRows({
     { label: 'My Team', value: focusSide?.label ?? team1Name },
     { label: 'Opponent', value: opponentSide?.label ?? team2Name },
     { label: 'Game To', value: formatValue(format?.gameTo) },
+    { label: 'Players', value: `${lineSize}v${lineSize}` },
     {
       label: 'Hard Cap',
       value:

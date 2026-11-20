@@ -13,6 +13,7 @@ import {
   getScrimmageLineSelectionGroups,
   hasInjurySubChanges,
   haveSameParticipantIds,
+  getLineSize,
 } from '@/lib/advancedTracking/trackingUtils';
 import {
   persistCurrentLiveGame,
@@ -147,6 +148,7 @@ export default function TrackerInjurySubScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <TrackerLineScreen
+        lineSize={getLineSize(game)}
         key={sideId}
         participants={defaultParticipants}
         allParticipants={isScrimmage ? eligibleParticipants : undefined}

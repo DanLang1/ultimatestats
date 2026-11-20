@@ -43,8 +43,11 @@ export const MAX_TOURNAMENT_NAME_LENGTH = 30;
 /** Maximum character length for a private advanced-game note. */
 export const MAX_ADVANCED_GAME_NOTE_LENGTH = 1000;
 
-/** Standard number of active players per side in Ultimate. */
-export const ULTIMATE_LINE_SIZE = 7;
+/** Standard number of active players per side in Ultimate: the default line size for new games. */
+export const DEFAULT_LINE_SIZE = 7;
+
+/** Most players a saved line preset can hold. */
+export const MAX_LINE_PRESET_SIZE = 14;
 
 /** Maximum number of scoring connections shown per direction in chemistry maps. */
 export const CHEMISTRY_MAP_VISIBLE_CONNECTIONS = 4;

@@ -23,7 +23,7 @@ import {
   Participant,
 } from '@/lib/advancedTracking/types';
 import { getContrastingTextColor } from '@/lib/colorUtils';
-import { MAX_TEAM_NAME_LENGTH, ULTIMATE_LINE_SIZE } from '@/lib/constants';
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { formatRatioFull } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -80,6 +80,8 @@ export default function AdvancedPreGameConfirm() {
     setAdvancedHardCapEnabled,
     advancedSoftCapEnabled,
     setAdvancedSoftCapEnabled,
+    numPlayers,
+    setNumPlayers,
   } = useSettingsStore();
 
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
@@ -110,7 +112,7 @@ export default function AdvancedPreGameConfirm() {
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
-  const minimumActivePlayerCount = isScrimmage ? ULTIMATE_LINE_SIZE * 2 : ULTIMATE_LINE_SIZE;
+  const minimumActivePlayerCount = isScrimmage ? numPlayers * 2 : numPlayers;
   const activePlayerCount = currentTeam.roster.filter((player) => player.isActive).length;
   const hasEnoughPlayers = activePlayerCount >= minimumActivePlayerCount;
   const canContinue =
@@ -161,6 +163,7 @@ export default function AdvancedPreGameConfirm() {
       participants,
       format: {
         gameTo,
+        lineSize: numPlayers,
         halftimeEnabled: autoHalftimeEnabled,
         softCapEnabled: advancedSoftCapEnabled,
         hardCapEnabled: advancedHardCapEnabled,
@@ -281,6 +284,24 @@ export default function AdvancedPreGameConfirm() {
             }>
             <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
               {gameTo}
+            </ThemedText>
+          </EditableSettingCard>
+
+          <EditableSettingCard
+            icon="account-multiple-outline"
+            label="Players"
+            onPress={() =>
+              openNumberPicker({
+                value: numPlayers,
+                min: 1,
+                max: 7,
+                label: 'Players',
+                quickOptions: [3, 5, 7],
+                onChange: setNumPlayers,
+              })
+            }>
+            <ThemedText style={[styles.settingValue, { color: palette.textInverse }]}>
+              {numPlayers}v{numPlayers}
             </ThemedText>
           </EditableSettingCard>
 

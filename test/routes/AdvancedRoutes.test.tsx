@@ -13,6 +13,7 @@ import TrackerLineSelectScreen from '@/app/(main)/advanced-tracking/tracker-line
 import { getActiveLineIds } from '@/lib/advancedTracking/lineup';
 import * as advancedStorage from '@/lib/advancedTracking/storage';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -196,7 +197,7 @@ function arrangeCompletedPointForNextLineSelection() {
       { id: 'away', label: 'Away', trackingMode: 'anonymous' },
     ],
     participants,
-    format: { gameTo: 15 },
+    format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15 },
   });
   useAdvancedTrackingStore.getState().recordPull({
     lines: [{ sideId: 'home', participantIds: lineIds }],
@@ -686,7 +687,7 @@ describe('advanced tracking routes', () => {
           { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
         ],
         participants: testTeam.roster.map((player) => ({ id: player.id, name: player.name })),
-        format: { gameTo: 15 },
+        format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15 },
         metadata: { title: 'Windchill vs Rivals' },
       });
       useAdvancedTrackingStore.getState().recordPull({
@@ -854,6 +855,21 @@ describe('advanced tracking routes', () => {
     expect(useAdvancedTrackingStore.getState().currentGame?.sides[0].label).toBe('Windchill');
     expect(useAdvancedTrackingStore.getState().currentGame?.flip).toBeUndefined();
     expect(router.push).toHaveBeenCalledWith('/advanced-tracking/tracker-line-select');
+  });
+
+  it('creates the game with the line size chosen in the Players setting', async () => {
+    const user = userEvent.setup();
+    useGameStore.setState({ currentTeam: testTeam, team2Name: 'Rivals' });
+    useSettingsStore.setState({ numPlayers: 2 });
+    await renderScreen(<AdvancedPreGameConfirm />);
+
+    expect(screen.getByText('2v2')).toBeVisible();
+    expect(screen.queryByText(/Advanced tracking requires at least/)).not.toBeOnTheScreen();
+
+    await user.press(screen.getByTestId('advanced-tracker-receiving-focus'));
+    await user.press(screen.getByText('Set Line'));
+
+    expect(useAdvancedTrackingStore.getState().currentGame?.settings.format?.lineSize).toBe(2);
   });
 
   it('uses the focused opponent draft when creating a game', async () => {
@@ -1053,7 +1069,7 @@ describe('advanced tracking routes', () => {
         { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
       ],
       participants,
-      format: { gameTo: 15 },
+      format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15 },
     });
     useAdvancedTrackingStore.getState().savePendingNextPointLineSelection(
       'windchill',
@@ -1110,7 +1126,7 @@ describe('advanced tracking routes', () => {
         { id: 'dark', label: 'Dark', trackingMode: 'full-roster' },
       ],
       participants,
-      format: { gameTo: 15 },
+      format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15 },
     });
     useAdvancedTrackingStore.getState().savePendingNextPointLineSelection('light', lightIds);
     useAdvancedTrackingStore.getState().savePendingNextPointLineSelection('dark', darkIds);

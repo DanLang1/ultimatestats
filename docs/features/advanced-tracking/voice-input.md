@@ -15,7 +15,7 @@ what action, if any, was recorded.
   rejecting the command. Tapping again cancels the active listening window.
 - Recommended commands use jersey numbers, such as `number twelve`. Receiver-only names such as
   `Anne` remain supported. The thrower is always derived from the current disc holder.
-- Active-line context only: names are matched against the seven players on the field.
+- Active-line context only: names are matched against the players on the field.
 - Every successful voice pass records through the same store path as a tap pass, so the receiver
   becomes the highlighted disc holder through existing UI state.
 - Unsupported commands are rejected. Unclear name matches are guessed when the active-line context
@@ -68,7 +68,7 @@ Recommended order:
 1. Exact match against active player names, name parts, and jersey-number phrases.
 2. The one active player named anywhere in the transcript, by exact or same-sounding spelling, so
    filler words around a name are ignored. Numbers are never picked out of a longer phrase.
-3. Best-effort matching scoped to the active seven, using spelling edit distance
+3. Best-effort matching scoped to the active line, using spelling edit distance
    (Damerau-Levenshtein). The allowed distance scales with phrase length.
 4. Reject when no candidate is within the allowed distance, or when the two closest distinct players
    tie at the same distance, and show what was heard.

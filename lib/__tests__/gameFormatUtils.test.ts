@@ -147,9 +147,15 @@ describe('createFormatSections', () => {
       disabled: true,
     };
     const teams = [opponent, row('Initial Receiver'), row('My Team')];
-    const rules = ['Game To', 'Hard Cap', 'Soft Cap', 'Halftime', 'Timeouts', 'Gender Ratio'].map(
-      row,
-    );
+    const rules = [
+      'Game To',
+      'Players',
+      'Hard Cap',
+      'Soft Cap',
+      'Halftime',
+      'Timeouts',
+      'Gender Ratio',
+    ].map(row);
     const features = ['Stat Tracking', 'Point Timer', 'Line Calling'].map(row);
 
     expect(

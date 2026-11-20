@@ -20,9 +20,14 @@ import {
   isAdvancedGameOver,
 } from '@/lib/advancedTracking/trackingUtils';
 import { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
-import { DEFAULT_HALFTIME_BREAK_SECONDS, MAX_ADVANCED_GAME_NOTE_LENGTH } from '@/lib/constants';
+import {
+  DEFAULT_HALFTIME_BREAK_SECONDS,
+  DEFAULT_LINE_SIZE,
+  MAX_ADVANCED_GAME_NOTE_LENGTH,
+} from '@/lib/constants';
 import { useSettingsStore } from '@/store/settingsStore';
 
+import { resolvePendingNextPointLines } from '../advancedTracking/pendingLineSelection';
 import { useSavedAdvancedGamesStore } from '../advancedTracking/savedGamesStore';
 import type {
   AdvancedTrackingState,
@@ -117,18 +122,18 @@ function createGame(gameTo = 15, initialReceivingSideId = homeSideId): string {
       { id: august.participantId, name: 'August' },
       { id: meves.participantId, name: 'Meves' },
     ],
-    format: { gameTo },
+    format: { lineSize: DEFAULT_LINE_SIZE, gameTo },
     metadata: { title: 'Showcase Game' },
   });
 }
 
-function createDualTrackedScrimmage() {
+function createDualTrackedScrimmage(lineSize = DEFAULT_LINE_SIZE) {
   const participants = Array.from({ length: 18 }, (_, index) => ({
     id: `scrim-player-${index + 1}`,
     name: `Scrim Player ${index + 1}`,
   }));
-  const lightIds = participants.slice(0, 7).map((participant) => participant.id);
-  const darkIds = participants.slice(7, 14).map((participant) => participant.id);
+  const lightIds = participants.slice(0, lineSize).map((participant) => participant.id);
+  const darkIds = participants.slice(lineSize, lineSize * 2).map((participant) => participant.id);
 
   useAdvancedTrackingStore.getState().createGame({
     id: 'dual-tracked-scrimmage',
@@ -140,7 +145,7 @@ function createDualTrackedScrimmage() {
       { id: awaySideId, label: 'Dark', trackingMode: 'full-roster' },
     ],
     participants,
-    format: { gameTo: 15 },
+    format: { lineSize, gameTo: 15 },
   });
   useAdvancedTrackingStore.getState().recordPull({
     lines: [
@@ -217,6 +222,7 @@ describe('advancedTrackingStore', () => {
         { id: meves.participantId, name: 'Meves' },
       ],
       format: {
+        lineSize: DEFAULT_LINE_SIZE,
         gameTo: 15,
         softCapEnabled: false,
         hardCapEnabled: true,
@@ -831,6 +837,27 @@ describe('advancedTrackingStore', () => {
     expect(useAdvancedTrackingStore.getState().undoStack).toEqual([]);
   });
 
+  it('runs a 5v5 scrimmage on its configured line size', () => {
+    const { lightIds, darkIds } = createDualTrackedScrimmage(5);
+    const game = getCurrentGame();
+    expect(game?.settings.format?.lineSize).toBe(5);
+    expect(game?.points[0].lines.map((line) => line.participantIds.length)).toEqual([5, 5]);
+
+    useAdvancedTrackingStore.getState().recordThrow({
+      thrower: { refType: 'participant', participantId: lightIds[0] },
+      result: 'goal',
+      toPlayer: { refType: 'participant', participantId: lightIds[1] },
+    });
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection(homeSideId, lightIds);
+    useAdvancedTrackingStore.getState().savePendingNextPointLineSelection(awaySideId, darkIds);
+
+    const { pendingNextPointLineSelection } = useAdvancedTrackingStore.getState();
+    expect(resolvePendingNextPointLines(getCurrentGame(), pendingNextPointLineSelection)).toEqual([
+      { sideId: homeSideId, participantIds: lightIds },
+      { sideId: awaySideId, participantIds: darkIds },
+    ]);
+  });
+
   it('keeps pending next-point selections separate for each tracked side', () => {
     const { lightIds, darkIds } = createDualTrackedScrimmage();
     useAdvancedTrackingStore.getState().recordThrow({
@@ -899,7 +926,7 @@ describe('advancedTrackingStore', () => {
         { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
       ],
       participants: [],
-      format: { gameTo: 11 },
+      format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 11 },
     });
     const { currentGame } = useAdvancedTrackingStore.getState();
     expect(currentGame!.settings.format?.halftimeAt).toBe(6);
@@ -1906,7 +1933,7 @@ describe('advancedTrackingStore', () => {
         { id: awaySideId, label: 'Away', trackingMode: 'anonymous' },
       ],
       participants: [],
-      format: { gameTo: 15 },
+      format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15 },
     });
 
     expect(getCurrentGame()?.metadata).toBeUndefined();
@@ -2049,7 +2076,7 @@ describe('advancedTrackingStore', () => {
         { id: august.participantId, name: 'August' },
         { id: meves.participantId, name: 'Meves' },
       ],
-      format: { gameTo: 15, halftimeEnabled: false },
+      format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15, halftimeEnabled: false },
     });
 
     useAdvancedTrackingStore.getState().recordPull({
@@ -2272,7 +2299,7 @@ describe('advancedTrackingStore', () => {
           { id: august.participantId, name: 'August' },
           { id: meves.participantId, name: 'Meves' },
         ],
-        format: { gameTo, halftimeEnabled: false },
+        format: { lineSize: DEFAULT_LINE_SIZE, gameTo, halftimeEnabled: false },
       });
     }
 
@@ -3308,6 +3335,7 @@ describe('advancedTrackingStore', () => {
           { id: meves.participantId, name: 'Meves' },
         ],
         format: {
+          lineSize: DEFAULT_LINE_SIZE,
           gameTo: 15,
           softCapEnabled: true,
           hardCapEnabled: true,
@@ -3484,6 +3512,7 @@ describe('advancedTrackingStore', () => {
           { id: meves.participantId, name: 'Meves' },
         ],
         format: {
+          lineSize: DEFAULT_LINE_SIZE,
           gameTo: 15,
           halftimeEnabled: false,
           softCapEnabled: true,

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import type { Participant } from '@/lib/advancedTracking/types';
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { resetAllStores } from '@/test/fixtures/resetStores';
@@ -21,6 +22,7 @@ function ReactiveInitialSelectionHarness({ participants }: { participants: Parti
 
   return (
     <TrackerLineScreen
+      lineSize={DEFAULT_LINE_SIZE}
       participants={participants}
       initialSelectedIds={selectedIds}
       title="Reactive Selection"
@@ -46,6 +48,7 @@ describe('TrackerLineScreen', () => {
 
     await renderScreen(
       <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
         participants={available}
         allParticipants={available}
         rosterParticipants={[joe, ...available]}
@@ -112,6 +115,7 @@ describe('TrackerLineScreen', () => {
 
     await renderScreen(
       <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
         participants={participants}
         initialSelectedIds={participants.slice(0, 7).map((participant) => participant.id)}
         title="Correct Current Lineup"
@@ -159,7 +163,12 @@ describe('TrackerLineScreen', () => {
     });
     const onConfirm = jest.fn();
     await renderScreen(
-      <TrackerLineScreen participants={participants} title="Set line" onConfirm={onConfirm} />,
+      <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
+        participants={participants}
+        title="Set line"
+        onConfirm={onConfirm}
+      />,
     );
     const quickPreset = screen.getByTestId('line-select-quick-preset-large');
     await user.press(quickPreset);
@@ -191,6 +200,35 @@ describe('TrackerLineScreen', () => {
     expect(useLinePresetsStore.getState().presets[0].playerIds).toEqual(playerIds);
   });
 
+  it('requires and caps at the configured line size', async () => {
+    const user = userEvent.setup();
+    const onConfirm = jest.fn();
+    const participants = Array.from({ length: 7 }, (_, index) =>
+      makeParticipant(`p-${index}`, `Player ${index}`),
+    );
+    await renderScreen(
+      <TrackerLineScreen
+        lineSize={5}
+        participants={participants}
+        title="Set line"
+        onConfirm={onConfirm}
+      />,
+    );
+
+    for (const index of [0, 1, 2, 3]) {
+      await user.press(screen.getByText(`Player ${index}`));
+    }
+    expect(screen.getByText('4/5')).toBeVisible();
+    expect(screen.getByTestId('line-select-confirm')).toBeDisabled();
+
+    await user.press(screen.getByText('Player 4'));
+    await user.press(screen.getByText('Player 5'));
+    expect(screen.getByText('5/5')).toBeVisible();
+
+    await user.press(screen.getByTestId('line-select-confirm'));
+    expect(onConfirm).toHaveBeenCalledWith(participants.slice(0, 5).map((p) => p.id));
+  });
+
   it('keeps an oversized preset but requires exactly seven and caps manual taps', async () => {
     const user = userEvent.setup();
     const participants = Array.from({ length: 10 }, (_, index) =>
@@ -207,7 +245,12 @@ describe('TrackerLineScreen', () => {
       ],
     });
     await renderScreen(
-      <TrackerLineScreen participants={participants} title="Set line" onConfirm={() => {}} />,
+      <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
+        participants={participants}
+        title="Set line"
+        onConfirm={() => {}}
+      />,
     );
 
     await user.press(screen.getByTestId('line-select-quick-preset-large'));
@@ -246,6 +289,7 @@ describe('TrackerLineScreen', () => {
     });
     await renderScreen(
       <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
         participants={participants}
         rosterParticipants={[...participants, makeParticipant('missing', 'Absent player')]}
         initialSelectedIds={participants.slice(0, 7).map((p) => p.id)}
@@ -277,6 +321,7 @@ describe('TrackerLineScreen', () => {
 
     await renderScreen(
       <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
         participants={[handler, cutter, hybrid]}
         title="Set line"
         onConfirm={() => {}}
@@ -316,6 +361,7 @@ describe('TrackerLineScreen', () => {
 
     await renderScreen(
       <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
         participants={[mmpHandler, fmpHandler, mmpCutter]}
         title="Set line"
         onConfirm={() => {}}
@@ -344,6 +390,7 @@ describe('TrackerLineScreen', () => {
 
     await renderScreen(
       <TrackerLineScreen
+        lineSize={DEFAULT_LINE_SIZE}
         participants={[mmpHandler, mmpCutter]}
         title="Set line"
         onConfirm={() => {}}

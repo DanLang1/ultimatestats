@@ -12,7 +12,6 @@ import { ResponsiveHeaderActions } from '@/components/ui/ResponsiveHeaderActions
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Participant } from '@/lib/advancedTracking/types';
-import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
 import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
@@ -40,23 +39,26 @@ function buildRestrictedLineSelection(
   participantIds: string[],
   lockedIds: string[],
   restrictedIds: ReadonlySet<string>,
+  lineSize: number,
   fallbackIds: string[] = [],
 ): string[] {
   const nextIds = new Set(lockedIds);
 
   for (const candidates of [participantIds, fallbackIds]) {
     for (const participantId of candidates) {
-      if (nextIds.size >= ULTIMATE_LINE_SIZE) break;
+      if (nextIds.size >= lineSize) break;
       if (!restrictedIds.has(participantId)) {
         nextIds.add(participantId);
       }
     }
   }
 
-  return [...nextIds].slice(0, ULTIMATE_LINE_SIZE);
+  return [...nextIds].slice(0, lineSize);
 }
 
 interface TrackerLineScreenProps {
+  /** Players required on this line; the game's line size. */
+  lineSize: number;
   participants: Participant[];
   /** Expanded eligible participant set exposed by the "Other players" section. */
   allParticipants?: Participant[];
@@ -80,6 +82,7 @@ interface TrackerLineScreenProps {
 }
 
 export const TrackerLineScreen = ({
+  lineSize,
   participants,
   allParticipants,
   rosterParticipants,
@@ -117,6 +120,7 @@ export const TrackerLineScreen = ({
           participantIds,
           lockedParticipantIds,
           restrictedParticipantIdSet,
+          lineSize,
           fallbackIds,
         );
 
@@ -153,7 +157,7 @@ export const TrackerLineScreen = ({
   const lockedParticipantIdSet = new Set(lockedParticipantIds);
   const hasSubChanges =
     !requireChanges || selectedIds.some((id) => !initialSelectionIds.includes(id));
-  const canConfirm = selectedIds.length === ULTIMATE_LINE_SIZE && hasSubChanges;
+  const canConfirm = selectedIds.length === lineSize && hasSubChanges;
 
   const handleConfirm = async () => {
     if (!canConfirm || isConfirming) return;
@@ -201,7 +205,7 @@ export const TrackerLineScreen = ({
       participantRestrictions?.onPress(id);
       return;
     }
-    if (!isSelected && selectedIds.length >= ULTIMATE_LINE_SIZE) return;
+    if (!isSelected && selectedIds.length >= lineSize) return;
     if (selectedPreset != null) {
       if (!selectedPreset.playerIds.includes(id)) {
         setShowAllPlayers(true);
@@ -250,7 +254,7 @@ export const TrackerLineScreen = ({
   const sourceLabel =
     selectedPreset?.name ??
     (selectedRecentPointNumber != null ? `Pt ${selectedRecentPointNumber}` : 'Choose line');
-  const selectionDifference = selectedIds.length - ULTIMATE_LINE_SIZE;
+  const selectionDifference = selectedIds.length - lineSize;
   const needsLineChanges = requireChanges && !hasSubChanges;
   let selectionHint = 'Ready for this point';
   if (selectionDifference > 0) selectionHint = `Deselect ${selectionDifference} to continue`;
@@ -447,7 +451,7 @@ export const TrackerLineScreen = ({
                   color: selectionDifference > 0 ? palette.warning : palette.textInverse,
                 },
               ]}>
-              {selectedIds.length}/{ULTIMATE_LINE_SIZE}
+              {selectedIds.length}/{lineSize}
             </ThemedText>
             <ThemedText style={[styles.hint, { color: palette.textMuted }]}>
               {selectionHint}

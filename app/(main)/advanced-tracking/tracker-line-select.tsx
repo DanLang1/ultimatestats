@@ -12,6 +12,7 @@ import {
   getLineReceivingSideId,
   getScrimmageLineSelectionGroups,
   getSideScore,
+  getLineSize,
 } from '@/lib/advancedTracking/trackingUtils';
 import { GenderRatio, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { getCurrentPendingNextPointLineSelection } from '@/store/advancedTracking/pendingLineSelection';
@@ -105,6 +106,7 @@ export default function TrackerLineSelectScreen() {
 
   return (
     <TrackerLineScreen
+      lineSize={getLineSize(game)}
       key={selectedSideId}
       participants={defaultParticipants}
       allParticipants={isScrimmage ? eligibleParticipants : undefined}

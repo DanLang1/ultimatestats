@@ -1,10 +1,10 @@
 import {
   assertValidLines,
   getCurrentPoint,
+  getLineSize,
   hasPointEnded,
 } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, PointLine } from '@/lib/advancedTracking/types';
-import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 
 import type { PendingNextPointLineSelection } from './trackingStore.types';
 
@@ -33,7 +33,7 @@ export function getCurrentPendingNextPointLineSelection(
 
 /**
  * Resolves a ready pending line into the canonical side order expected by
- * recordPull. A ready line has seven players for each full-roster side and no
+ * recordPull. A ready line has the game's line size of players for each full-roster side and no
  * players for an anonymous side.
  */
 export function resolvePendingNextPointLines(
@@ -43,6 +43,7 @@ export function resolvePendingNextPointLines(
   const currentSelection = getCurrentPendingNextPointLineSelection(game, selection);
   if (game == null || currentSelection == null) return null;
 
+  const lineSize = getLineSize(game);
   const validSideIds = new Set(game.sides.map((side) => side.id));
   for (const sideId of Object.keys(currentSelection.participantIdsBySide)) {
     if (!validSideIds.has(sideId)) return null;
@@ -51,7 +52,7 @@ export function resolvePendingNextPointLines(
   const lines = game.sides.map((side) => {
     const sideParticipantIds = currentSelection.participantIdsBySide[side.id] ?? [];
     if (side.trackingMode === 'anonymous' && sideParticipantIds.length !== 0) return null;
-    if (side.trackingMode === 'full-roster' && sideParticipantIds.length !== ULTIMATE_LINE_SIZE) {
+    if (side.trackingMode === 'full-roster' && sideParticipantIds.length !== lineSize) {
       return null;
     }
     return { sideId: side.id, participantIds: [...sideParticipantIds] };

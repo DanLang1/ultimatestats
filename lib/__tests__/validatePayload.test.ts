@@ -670,6 +670,14 @@ describe('validatePayload', () => {
 });
 
 describe('shared advanced record boundary validation', () => {
+  it.each([0, 8, 4.5, '5'])('rejects line size %p', (lineSize) => {
+    const data = {
+      ...makeAdvancedGameData(),
+      settings: { locationMode: 'none', format: { formatType: 'standard', lineSize } },
+    };
+    expect(() => validatePayload(makeAdvancedGamePayload({ data }))).toThrow('invalid line size');
+  });
+
   it.each([
     ['id', '', 'missing data id'],
     ['schemaVersion', undefined, 'missing schemaVersion'],

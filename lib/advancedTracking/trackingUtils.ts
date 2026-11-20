@@ -1,4 +1,4 @@
-import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { PointLineRecord } from '@/lib/storage/types';
 import { assertNever, hasItems } from '@/lib/utils';
@@ -64,6 +64,17 @@ export function getCurrentPossession(game: AdvancedTrackedGame | null): PointPos
   }
 
   return point.possessions[point.possessions.length - 1];
+}
+
+export function isValidLineSize(lineSize: unknown): lineSize is number {
+  return (
+    typeof lineSize === 'number' && Number.isInteger(lineSize) && lineSize >= 1 && lineSize <= 7
+  );
+}
+
+/** Players each full-roster side puts on the field for every point of this game. */
+export function getLineSize(game: AdvancedTrackedGame): number {
+  return game.settings.format?.lineSize ?? DEFAULT_LINE_SIZE;
 }
 
 export function getOtherSideId(game: AdvancedTrackedGame, sideId: string): string {
@@ -569,8 +580,9 @@ export function assertValidLines(game: AdvancedTrackedGame, lines: PointLine[]) 
     throw new Error('Fully tracked sides require exactly one line for each side.');
   }
 
-  if (lines.some((line) => line.participantIds.length !== ULTIMATE_LINE_SIZE)) {
-    throw new Error('Fully tracked sides require seven participants on each side.');
+  const lineSize = getLineSize(game);
+  if (lines.some((line) => line.participantIds.length !== lineSize)) {
+    throw new Error(`Fully tracked sides require ${lineSize} participants on each side.`);
   }
 
   const selectedParticipantIds = lines.flatMap((line) => line.participantIds);
@@ -745,12 +757,13 @@ function assertFullyTrackedEffectiveLines(
 ) {
   if (!areBothSidesFullyTracked(game)) return;
 
+  const lineSize = getLineSize(game);
   const allParticipantIds: string[] = [];
   for (const side of game.sides) {
     const line = effectiveLines.get(side.id);
     // Product constraint: dual-side tracking does not currently support playing short-handed.
-    if (line == null || line.size !== ULTIMATE_LINE_SIZE) {
-      throw new Error('Fully tracked sides require seven active participants on each side.');
+    if (line == null || line.size !== lineSize) {
+      throw new Error(`Fully tracked sides require ${lineSize} active participants on each side.`);
     }
     allParticipantIds.push(...line);
   }

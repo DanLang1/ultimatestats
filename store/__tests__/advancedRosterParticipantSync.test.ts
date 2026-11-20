@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getActiveAdvancedGame } from '@/lib/advancedTracking/trackingUtils';
 import { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 
@@ -78,7 +79,7 @@ function createGame(participants: Participant[], gameTo = 15) {
       { id: awaySideId, label: 'Opponent', trackingMode: 'anonymous' },
     ],
     participants,
-    format: { gameTo },
+    format: { lineSize: DEFAULT_LINE_SIZE, gameTo },
   });
 }
 

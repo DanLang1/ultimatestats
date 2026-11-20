@@ -41,7 +41,7 @@ interface PlayerGroup {
   players: Player[];
 }
 
-// Deliberately covers the scrimmage minimum: ULTIMATE_LINE_SIZE * 2 players split evenly by type.
+// Deliberately covers the scrimmage minimum: DEFAULT_LINE_SIZE * 2 players split evenly by type.
 const SAMPLE_TEAM_PLAYERS: Pick<Player, 'name' | 'number' | 'matchingType' | 'role'>[] = [
   { name: 'Kelly', number: '7', matchingType: 'fmp', role: 'handler' },
   { name: 'Rachel', number: '12', matchingType: 'fmp', role: 'cutter' },

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { GenderRatio } from '@/lib/genderRatioUtils';
 import { reportHydrationError } from '@/lib/sentry';
 
@@ -61,7 +62,7 @@ export const useSettingsStore = create<SettingsState>()(
       genderRatioEnabled: false,
       firstPointRatio: null,
       lineCallingEnabled: false,
-      numPlayers: 7,
+      numPlayers: DEFAULT_LINE_SIZE,
       rosterViewMode: 'chips',
       orientationMode: 'system',
       hardCapMins: 90,

@@ -15,6 +15,7 @@ import {
   getEffectiveGameTo,
   getGameScore,
   getLineReceivingSideId,
+  getLineSize,
   getLiveInProgressGame,
   getOtherSideId,
   getPointActionParticipantIds,
@@ -1144,7 +1145,43 @@ describe('assertValidLines', () => {
       { sideId: AWAY, participantIds: darkIds },
     ];
 
-    expect(() => assertValidLines(scrimmageGame, lines)).toThrow('seven participants on each side');
+    expect(() => assertValidLines(scrimmageGame, lines)).toThrow('7 participants on each side');
+  });
+
+  it('reads the line size from the game format, defaulting legacy games to seven', () => {
+    expect(getLineSize({ ...baseGame, settings: { locationMode: 'none' } })).toBe(7);
+    expect(
+      getLineSize({
+        ...baseGame,
+        settings: { locationMode: 'none', format: { formatType: 'standard' } },
+      }),
+    ).toBe(7);
+    expect(
+      getLineSize({
+        ...baseGame,
+        settings: { locationMode: 'none', format: { formatType: 'standard', lineSize: 5 } },
+      }),
+    ).toBe(5);
+  });
+
+  it("validates scrimmage lines against the game's configured line size", () => {
+    const fiveOnFiveGame: AdvancedTrackedGame = {
+      ...scrimmageGame,
+      settings: { ...scrimmageGame.settings, format: { formatType: 'standard', lineSize: 5 } },
+    };
+    const fivePlayerLines = [
+      { sideId: HOME, participantIds: lightIds.slice(0, 5) },
+      { sideId: AWAY, participantIds: darkIds.slice(0, 5) },
+    ];
+    const sevenPlayerLines = [
+      { sideId: HOME, participantIds: lightIds },
+      { sideId: AWAY, participantIds: darkIds },
+    ];
+
+    expect(() => assertValidLines(fiveOnFiveGame, fivePlayerLines)).not.toThrow();
+    expect(() => assertValidLines(fiveOnFiveGame, sevenPlayerLines)).toThrow(
+      '5 participants on each side',
+    );
   });
 
   it('rejects a participant selected for both scrimmage sides', () => {

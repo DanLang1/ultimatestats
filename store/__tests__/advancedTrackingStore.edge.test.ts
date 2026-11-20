@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
+
 import {
   getActiveAdvancedGame,
   getCurrentPoint,
@@ -89,7 +91,7 @@ function createGame(gameTo = 15): string {
       { id: august.participantId, name: 'August' },
       { id: meves.participantId, name: 'Meves' },
     ],
-    format: { gameTo },
+    format: { lineSize: DEFAULT_LINE_SIZE, gameTo },
   });
 }
 

@@ -1,5 +1,6 @@
 import { withoutAdvancedPrivateNotes } from '@/lib/advancedTracking/gameNoteUtils';
 import { migrateAdvancedTrackedGame } from '@/lib/advancedTracking/migrations';
+import { isValidLineSize } from '@/lib/advancedTracking/trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   FLIP_CHOICES,
@@ -296,6 +297,10 @@ function validateAdvancedGame(data: unknown): asserts data is AdvancedTrackedGam
   }
   if (!isRecord(data.settings) || !isString(data.settings.locationMode)) {
     throw new InvalidSharePayloadError('Invalid advanced game: missing settings');
+  }
+  const { format } = data.settings;
+  if (isRecord(format) && format.lineSize !== undefined && !isValidLineSize(format.lineSize)) {
+    throw new InvalidSharePayloadError('Invalid advanced game: invalid line size');
   }
   const { possessionCount, actionCount } = validateAdvancedGameStructure(data);
 

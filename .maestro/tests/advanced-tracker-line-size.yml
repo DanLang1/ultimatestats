@@ -1,0 +1,94 @@
+appId: com.langdk.ultimatestats.dev
+name: Advanced Tracker Line Size
+tags:
+  - advanced
+  - ui-setup
+---
+- runFlow: ../flows/setup-team-dashboard.yaml
+- tapOn:
+    id: 'dashboard-new-game-button'
+- tapOn:
+    id: 'new-game-sheet-advanced'
+- assertVisible:
+    text: 'ADVANCED TRACKER'
+
+# Pick 5v5 through the Players card and number picker.
+- tapOn: '.*Players, 7v7.*'
+- tapOn:
+    id: 'number-picker-clear'
+- tapOn:
+    id: 'number-picker-key-5'
+- tapOn:
+    id: 'number-picker-save'
+- assertVisible: '.*Players, 5v5.*'
+
+- tapOn:
+    text: 'Zoboomafoo'
+- runFlow:
+    when:
+      visible: 'FMP Majority'
+    commands:
+      - tapOn:
+          text: 'FMP Majority'
+- tapOn:
+    id: 'advanced-tracker-set-line-button'
+- assertVisible:
+    id: 'line-select-title'
+
+# Confirm stays disabled until five are picked, and a sixth tap is ignored.
+- tapOn:
+    id: 'player-chip-Joe'
+- tapOn:
+    id: 'player-chip-Jon'
+- tapOn:
+    id: 'player-chip-Mike'
+- tapOn:
+    id: 'player-chip-Molly'
+- assertVisible: '4/5'
+- assertVisible:
+    id: 'line-select-confirm'
+    enabled: false
+- tapOn:
+    id: 'player-chip-Kelly'
+- assertVisible: '5/5'
+- tapOn:
+    id: 'player-chip-Rachel'
+- assertVisible: '5/5'
+- tapOn:
+    id: 'line-select-confirm'
+
+- assertVisible:
+    text: 'THEY ARE PULLING'
+- tapOn:
+    id: 'pull-skip-timing'
+- extendedWaitUntil:
+    visible:
+      text: 'TAP WHO HAS THE DISC'
+    timeout: 5000
+
+# Only the five selected players are on the field.
+- assertVisible:
+    id: 'tracker-chip-Kelly'
+- assertNotVisible:
+    id: 'tracker-chip-Rachel'
+
+# Play the point out and confirm the next line keeps the game's line size.
+- tapOn:
+    id: 'tracker-chip-Joe'
+- runFlow:
+    file: ../flows/open-rare-menu.yaml
+- runFlow:
+    file: ../flows/select-opponent-block.yaml
+- runFlow:
+    file: ../flows/record-opponent-goal.yaml
+- tapOn:
+    id: 'between-point-start-next'
+- extendedWaitUntil:
+    visible:
+      id: 'line-select-title'
+    timeout: 5000
+- assertVisible: '0/5'
+- assertVisible: 'Choose 5 more'
+
+- takeScreenshot:
+    path: .maestro/screenshots/advanced-tracker-line-size

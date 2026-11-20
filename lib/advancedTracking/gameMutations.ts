@@ -1,6 +1,6 @@
 import { withAdvancedGameNote } from './gameNoteUtils';
 import { getSafeDiscHolderRef } from './livePlayState';
-import { assertTwoSides, getLastPlayAction } from './trackingUtils';
+import { assertTwoSides, getLastPlayAction, isValidLineSize } from './trackingUtils';
 import {
   ADVANCED_TRACKING_SCHEMA_VERSION,
   type AdvancedGameType,
@@ -22,6 +22,7 @@ export interface CreateAdvancedGameInput {
   participants: Participant[];
   format: {
     gameTo: number;
+    lineSize: number;
     halftimeEnabled?: boolean;
     softCapEnabled?: boolean;
     hardCapEnabled?: boolean;
@@ -49,6 +50,10 @@ export function createAdvancedGame(
   if (!sideIds.has(input.initialReceivingSideId)) {
     throw new Error('initialReceivingSideId must match one of the advanced tracking sides.');
   }
+  const { lineSize } = input.format;
+  if (!isValidLineSize(lineSize)) {
+    throw new Error(`Line size must be a whole number from 1 to 7.`);
+  }
 
   return {
     id,
@@ -72,6 +77,7 @@ export function createAdvancedGame(
         hardCapEnabled: input.format.hardCapEnabled,
         timeoutsPerHalf: input.format.timeoutsPerHalf,
         floaterEnabled: input.format.floaterEnabled,
+        lineSize,
       },
     },
     sides: input.sides,

@@ -1,3 +1,4 @@
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import type { Player, SavedGame, SavedTeam } from '@/lib/storage/types';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -91,7 +92,7 @@ export function arrangeAdvancedGame() {
       { id: 'rivals', label: 'Rivals', trackingMode: 'anonymous' },
     ],
     participants: testPlayers.map((player) => ({ id: player.id, name: player.name })),
-    format: { gameTo: 15 },
+    format: { lineSize: DEFAULT_LINE_SIZE, gameTo: 15 },
     metadata: { title: 'Windchill vs Rivals' },
   });
 }

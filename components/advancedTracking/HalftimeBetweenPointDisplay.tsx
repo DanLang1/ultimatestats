@@ -8,9 +8,9 @@ import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hoo
 import { computeAdvancedGameStats } from '@/lib/advancedTracking/advancedGameStats';
 import { buildAnalyticsGame } from '@/lib/advancedTracking/buildAnalyticsGame';
 import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUtils';
+import { getLineSize } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
 import { isStandaloneUndo } from '@/lib/advancedTracking/undoOperations';
-import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
 import {
   getCurrentPendingNextPointLineSelection,
   resolvePendingNextPointLines,
@@ -44,6 +44,7 @@ export const HalftimeBetweenPointDisplay = ({
   const { pendingNextPointLineSelection, undoLastOperation, undoStack } =
     useAdvancedTrackingStore();
   const showStandaloneUndo = isStandaloneUndo(undoStack.at(-1));
+  const lineSize = getLineSize(game);
 
   const analyticsGame = buildAnalyticsGame(game);
   const { teamStats, playerStats } = computeAdvancedGameStats(analyticsGame, game.focusSideId);
@@ -165,7 +166,7 @@ export const HalftimeBetweenPointDisplay = ({
                         styles.lineCountBadge,
                         { color: isLineReady ? palette.success : palette.accent },
                       ]}>
-                      ({focusLineCount}/{ULTIMATE_LINE_SIZE})
+                      ({focusLineCount}/{lineSize})
                     </ThemedText>
                   )}
                 </View>
@@ -212,7 +213,7 @@ export const HalftimeBetweenPointDisplay = ({
                     color={palette.textMuted}
                   />
                   <ThemedText style={[styles.emptyLineText, { color: palette.textMuted }]}>
-                    Select {ULTIMATE_LINE_SIZE} players for 2nd half
+                    Select {lineSize} players for 2nd half
                   </ThemedText>
                 </Pressable>
               )}

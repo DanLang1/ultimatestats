@@ -108,7 +108,7 @@ export interface GameState {
 
   currentPoint: number;
 
-  currentLine: string[]; // 7 playerIds on field now
+  currentLine: string[]; // numPlayers playerIds on field now
   pointLines: PointLineRecord[];
 
   setCurrentTeam: (team: SavedTeam) => void;

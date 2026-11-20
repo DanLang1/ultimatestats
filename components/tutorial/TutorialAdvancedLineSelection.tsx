@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { usePulseAnimation } from '@/hooks/usePulseAnimation';
-import { ULTIMATE_LINE_SIZE } from '@/lib/constants';
+import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { formatRatio } from '@/lib/genderRatioUtils';
 import { Fonts } from '@/theme/theme';
 
@@ -51,7 +51,7 @@ export default function TutorialAdvancedLineSelection({
   const confirmPulse = usePulseAnimation(step === 'confirm', 800, ReduceMotion.Never);
 
   const selectedPresetIds = new Set(TUTORIAL_ADVANCED_LINE_PRESET.playerIds);
-  const canConfirm = selectedIds.length === ULTIMATE_LINE_SIZE;
+  const canConfirm = selectedIds.length === DEFAULT_LINE_SIZE;
   const focusedIds = selectedPreset ? selectedPresetIds : undefined;
   const content = STEP_CONTENT[step];
 
@@ -67,7 +67,7 @@ export default function TutorialAdvancedLineSelection({
       if (currentIds.includes(playerId)) {
         return currentIds.filter((id) => id !== playerId);
       }
-      if (currentIds.length >= ULTIMATE_LINE_SIZE) {
+      if (currentIds.length >= DEFAULT_LINE_SIZE) {
         return currentIds;
       }
       return [...currentIds, playerId];
@@ -83,7 +83,7 @@ export default function TutorialAdvancedLineSelection({
     setFeedback(null);
   };
 
-  const selectionDifference = selectedIds.length - ULTIMATE_LINE_SIZE;
+  const selectionDifference = selectedIds.length - DEFAULT_LINE_SIZE;
   const selectionHint = selectedPreset ? 'Ready to continue' : 'Choose a preset to begin';
   const headerTitle = `O-Point · 0-0 · ${formatRatio('more-women', 2)}`;
 
@@ -187,7 +187,7 @@ export default function TutorialAdvancedLineSelection({
                 styles.count,
                 { color: selectionDifference > 0 ? palette.warning : palette.textInverse },
               ]}>
-              {selectedIds.length}/{ULTIMATE_LINE_SIZE}
+              {selectedIds.length}/{DEFAULT_LINE_SIZE}
             </ThemedText>
             <ThemedText style={[styles.hint, { color: palette.textMuted }]}>
               {selectionHint}

@@ -16,6 +16,7 @@ import { getFullyTrackedSideIds } from '@/lib/advancedTracking/trackingModeUtils
 import {
   getScrimmageLineSelectionGroups,
   haveSameParticipantIds,
+  getLineSize,
 } from '@/lib/advancedTracking/trackingUtils';
 import type { AdvancedTrackedGame, Participant, TrackedPoint } from '@/lib/advancedTracking/types';
 import { getSequenceNumber } from '@/lib/genderRatioUtils';
@@ -215,6 +216,7 @@ export function AdvancedActiveLineCorrectionScreen({
   return (
     <>
       <TrackerLineScreen
+        lineSize={getLineSize(game)}
         key={sideId}
         participants={defaultParticipants}
         allParticipants={game.gameType === 'scrimmage' ? eligibleParticipants : undefined}

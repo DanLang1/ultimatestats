@@ -152,6 +152,8 @@ export interface GameFormatSettings {
   timeoutsPerHalf?: number;
   /** Whether a once-per-game floater timeout is available after regulars are used. */
   floaterEnabled?: boolean;
+  /** Players per side on each line. Missing means `DEFAULT_LINE_SIZE` for legacy games. */
+  lineSize?: number;
 }
 
 // --- Sides & Participants ---
