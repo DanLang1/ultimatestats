@@ -138,8 +138,6 @@ function assertParticipantId(
   if (!participantIds.has(participantId)) throw new Error(message);
 }
 
-// ── Attribution emission ──────────────────────────────────────────────────────
-
 function addAttribution(
   attributions: AnalyticsAttribution[],
   type: AttributionType,
@@ -246,8 +244,6 @@ function emitAttributions(
     }
   }
 }
-
-// ── Build context ─────────────────────────────────────────────────────────────
 
 /** Constants derived from the game that are shared across all per-point and per-possession builders. */
 type GameBuildContext = {
@@ -532,7 +528,6 @@ function compilePossessionWithActions(
       possessionIndex: possIndex,
       actionIndex,
       // Use the action's own sideId for pull (the pulling side, not the receiving possession's side).
-      // For throw, disc_pickup, and stoppage, action.sideId matches poss.sideId by convention.
       sideId: action.kind === 'pull' ? action.sideId : poss.sideId,
       actorId,
       receiverId,

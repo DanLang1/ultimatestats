@@ -459,7 +459,6 @@ export function aggregateTimingStats(allStats: TimingStats[]): TimingStats {
   const totalOPoints = statsWithData.reduce((acc, s) => acc + s.timedOPointCount, 0);
   const totalDPoints = statsWithData.reduce((acc, s) => acc + s.timedDPointCount, 0);
 
-  // Weighted average: sum(avg * count) / totalCount
   const weightedAvgAll = statsWithData.reduce(
     (acc, s) => acc + s.avgPointDurationMs * s.timedPointCount,
     0,

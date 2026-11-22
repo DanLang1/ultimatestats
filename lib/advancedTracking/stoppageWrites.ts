@@ -61,7 +61,6 @@ export function applyStoppage(
   return actionId;
 }
 
-/** Resumes play from the active stoppage on the current possession. */
 export function applyStoppageResume(game: AdvancedTrackedGame, at: number): void {
   const stoppage = getActiveStoppage(getCurrentPossession(game));
   if (stoppage == null) throw new Error('No active stoppage to resume.');

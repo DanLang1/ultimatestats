@@ -129,7 +129,6 @@ export function computePlayerStats(
 
       const stats = getOrCreate(goalPlayerId);
       stats.goals++;
-      // Check for Callahan: assistPlayerId is 'OTHER_TEAM'
       if (assistPlayerId === 'OTHER_TEAM') {
         stats.callahans++;
       }
@@ -618,9 +617,7 @@ export function getImpactStats(
   // In-progress point events use the score at the start of the current point.
   flushPendingPointEvents(currentPointScore);
 
-  // If no events, just return the start
   if (points.length === 1 && events.length > 0) {
-    // Maybe add a point at the end so the graph spans the game?
     points.push({
       eventIndex,
       cumulativePlusMinus: 0,
@@ -628,7 +625,6 @@ export function getImpactStats(
       score: getScore(),
     });
   } else if (points.length > 1) {
-    // Add an endpoint to show the final state sustained purely for visual length?
     points.push({
       eventIndex,
       cumulativePlusMinus: currentPlusMinus,
@@ -760,17 +756,14 @@ export function getPlayerRoleLabel(roleStats: RoleStats, isMVP = false): PlayerR
     return 'Shooter';
   }
 
-  // D-Liner: Has blocks
   if (blocks >= 0.6) {
     return 'Lockdown';
   }
 
-  // Goal Getter: High goals, low assists
   if (goals >= 0.7 && assists < 0.2 && drops < 0.2) {
     return 'Front Cone';
   }
 
-  // Handler: High assists, low goals
   if (assists >= 0.6 && throwaways < 0.2) {
     return 'Reliable';
   }

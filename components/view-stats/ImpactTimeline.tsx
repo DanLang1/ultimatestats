@@ -17,7 +17,6 @@ const LABEL_GAP = 4;
 
 type ScaleMode = 'event' | 'game';
 
-/** Maps an event description to a single letter abbreviation. */
 function eventAbbrev(description: string | undefined): string | null {
   if (!description) return null;
   const d = description.toLowerCase();

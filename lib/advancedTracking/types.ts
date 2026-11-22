@@ -156,8 +156,6 @@ export interface GameFormatSettings {
   lineSize?: number;
 }
 
-// --- Sides & Participants ---
-
 export const SIDE_TRACKING_MODES = ['full-roster', 'anonymous'] as const;
 
 export type SideTrackingMode = (typeof SIDE_TRACKING_MODES)[number];
@@ -194,8 +192,6 @@ export interface Participant {
    */
   role?: 'handler' | 'cutter' | 'hybrid' | null;
 }
-
-// --- Points ---
 
 export type Endzone = 'near' | 'far';
 
@@ -263,8 +259,6 @@ export interface TrackedPoint {
   revivalPauses?: PointRevivalPause[];
 }
 
-// --- Possessions ---
-
 export interface RedZoneData {
   /** Absolute timestamp (ms epoch) when Red Zone was selected during live play. */
   enteredAt: number;
@@ -280,8 +274,6 @@ export interface PointPossession {
   redZone?: RedZoneData;
   actions: PossessionAction[];
 }
-
-// --- Transitions ---
 
 /** A timeout called between points. */
 export interface BetweenPointTransition {
@@ -318,8 +310,6 @@ export type GameTransition =
       afterPointId: string;
     };
 
-// --- Player References ---
-
 /**
  * Distinguishes three meaningfully different cases for who performed an action:
  * - `'participant'`: a known tracked player
@@ -331,13 +321,9 @@ export type PlayerRef =
   | { refType: 'unknown' }
   | { refType: 'untracked' };
 
-// --- Field Location ---
-
 export type FieldLocation =
   | { locationType: 'zone'; zoneId: string }
   | { locationType: 'xy'; x: number; y: number };
-
-// --- Actions ---
 
 export type PossessionAction = PullAction | DiscPickupAction | ThrowAction | StoppageAction;
 
@@ -524,11 +510,6 @@ export interface ThrowAction {
   kind: 'throw';
   sideId: string;
   thrower: PlayerRef;
-  /**
-   * Who caught or was in position to catch the throw. Present on `complete` and `goal`
-   * (the receiver), and optionally on `drop`. Absent on `throwaway`, `block`,
-   * `pressure`, and `callahan` — coaches record what happened, not intent.
-   */
   toPlayer?: PlayerRef;
   /**
    * `'stall'` — count reached 10, disc turns over at the spot with no throw.

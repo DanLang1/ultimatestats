@@ -84,7 +84,6 @@ export default function EditEventModal() {
   const activeEvents = savedGame?.events ?? events;
   const activePointLines = savedGame?.pointLines ?? pointLines;
 
-  // Sort roster alphabetically by name (matches StatEntrySheet pattern)
   const sortedRoster = [...roster].sort((a, b) => a.name.localeCompare(b.name));
 
   const eventIndex = parseInt(params.eventIndex ?? '-1', 10);

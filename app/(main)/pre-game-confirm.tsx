@@ -110,7 +110,6 @@ export default function PreGameConfirm() {
   const selectedRatioOrbitColor =
     selectedRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
 
-  // Button text depends on whether line calling chains next
   const showSetLine = statTrackingEnabled && lineCallingEnabled;
   const buttonLabel = showSetLine ? 'Set Line' : 'Start Game';
   const buttonIcon = showSetLine ? 'clipboard-check-outline' : 'play';

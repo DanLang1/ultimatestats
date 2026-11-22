@@ -11,9 +11,7 @@ export const TUTORIAL_STAT_INITIAL_SCORE_TEAM1 = 3;
 export const TUTORIAL_STAT_INITIAL_SCORE_TEAM2 = 2;
 export const TUTORIAL_STAT_CURRENT_POINT = 6;
 export const TUTORIAL_STAT_EXPECTED_RATIO: GenderRatio = 'more-women'; // FMP point
-export const TUTORIAL_STAT_GAME_TIMER = 90 * 60; // 90 minutes
-
-// 14 players: 7 FMP, 7 MMP — evenly spread across handler/cutter/hybrid
+export const TUTORIAL_STAT_GAME_TIMER = 90 * 60;
 
 export const TUTORIAL_STAT_ROSTER: Player[] = [
   { id: 'f1', name: 'Helton', isActive: true, matchingType: 'fmp', role: 'cutter' },

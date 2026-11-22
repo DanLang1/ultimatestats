@@ -29,7 +29,6 @@ export interface GoalInfo {
   isCallahan: boolean;
   /** Name of the player who caught the goal. Null if untracked (opp goal or callahan with no toPlayer). */
   scorerName: string | null;
-  /** Name of the player who threw the goal assist. Null for opp goals, calahans, or pull-catch goals. */
   assisterName: string | null;
 }
 

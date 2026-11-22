@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 
 interface PlayerStatsStore {
-  playerId: string | null; // Changed from player name to player ID
+  playerId: string | null;
   events: GameEvent[];
   team: 'team1' | 'team2';
   roster?: Player[] | null;
@@ -15,7 +15,7 @@ interface PlayerStatsStore {
   gameTo?: number;
   autoHalftimeEnabled?: boolean;
   openPlayerStats: (
-    playerId: string, // Changed from player name to player ID
+    playerId: string,
     events: GameEvent[],
     team: 'team1' | 'team2',
     roster?: Player[],

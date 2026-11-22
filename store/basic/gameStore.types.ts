@@ -20,7 +20,7 @@ export type GoalEvent = {
   goalPlayerId: string | null;
   assistPlayerId: string | null;
   gameId?: string; // Populated on save - links to SavedGame.id
-  elapsedMs?: number; // Elapsed game time in ms when goal was scored
+  elapsedMs?: number;
   pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
   triggeredHalftime?: boolean; // True if this goal was the one that actually sent the game to halftime
   triggeredSoftcap?: boolean; // True if this goal was the one that activated the soft cap
@@ -33,7 +33,7 @@ export type TurnoverEvent = {
   playerId: string | null;
   player2Id?: string | null; // Second player ID for 50/50 turnovers
   gameId?: string; // Populated on save - links to SavedGame.id
-  elapsedMs?: number; // Elapsed game time in ms when event was recorded
+  elapsedMs?: number;
   pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
 };
 
@@ -43,7 +43,7 @@ export type TimeoutEvent = {
   index: number; // Which timeout slot (0, 1 for regular timeouts)
   isFloater: boolean;
   gameId?: string; // Populated on save - links to SavedGame.id
-  elapsedMs?: number; // Elapsed game time in ms when timeout was called
+  elapsedMs?: number;
   pointTimerWasPaused?: boolean; // Timer state BEFORE timeout (for undo restoration)
   pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
 };

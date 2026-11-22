@@ -12,12 +12,6 @@ export interface GameActiveState {
 
 /**
  * Check if a game is considered "in progress" based on current state.
- * A game is active if any of the following are true:
- * - The game clock is running
- * - Either team has scored
- * - FMP/MMP ratio has been selected for first point
- * - A line has been set for the current point
- * - Lines have been recorded for previous points
  */
 export function isGameActive(state: GameActiveState): boolean {
   const { isGameClockRunning, team1Score, team2Score, firstPointRatio, currentLine, pointLines } =
@@ -53,12 +47,10 @@ export function checkGameOver(state: GameOverState): boolean {
   const isHardcap = gameClockSecondsLeft === 0;
   const notTied = team1Score !== team2Score;
 
-  // Hardcap: game ends immediately if one team is ahead
   if (isHardcap && notTied) {
     return true;
   }
 
-  // Normal/Softcap: game ends when a team reaches gameTo and is ahead
   const team1ReachedTarget = team1Score >= gameTo;
   const team2ReachedTarget = team2Score >= gameTo;
   const reachedGameTo = (team1ReachedTarget || team2ReachedTarget) && notTied;

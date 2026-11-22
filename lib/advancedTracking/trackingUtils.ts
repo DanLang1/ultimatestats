@@ -503,8 +503,6 @@ export function syncCapTransitions(
   return didChange;
 }
 
-// --- Assertions ---
-
 export function assertTwoSides(sides: GameSide[]) {
   if (sides.length !== 2) {
     throw new Error('Advanced tracking MVP currently requires exactly two sides.');

@@ -73,7 +73,6 @@ export interface AnalyticsPoint {
    * True when only one side possessed the disc for the entire point (no turnovers).
    * Only ever true for 'hold' or 'opp_hold' — breaks and broken points always involve
    * two possessions by definition, so isCleanHold is always false for those states.
-   * Null when the point ended early due to game termination.
    */
   isCleanHold: boolean | null;
 }

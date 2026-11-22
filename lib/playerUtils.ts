@@ -27,12 +27,6 @@ export function getActiveRoster(roster: Player[]): Player[] {
 
 /**
  * Performance: O(n) scan.
- * Fallbacks:
- * 1. Returns null if no ID provided.
- * 2. Returns ID if no roster provided.
- * 3. Returns "Deleted Player (xxxx)" if not found in roster.
- * 4. Returns "Other Team" if ID is "OTHER_TEAM" (Callahan).
- * 5. Returns "Unknown" if ID is "UNKNOWN_PLAYER".
  */
 export function getPlayerName(
   roster: Player[] | null | undefined,

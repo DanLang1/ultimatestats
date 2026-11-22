@@ -5,13 +5,6 @@ import { useSettingsStore } from '@/store/settingsStore';
  * Checks if the LineEditor screen should be shown.
  * Call this after a point completes (from PointSummaryModal, StatEntryOverlay, etc.)
  * to determine if we should navigate to LineEditor.
- *
- * Returns true if:
- * - Line calling is enabled
- * - Stat tracking is enabled
- * - Game is not locked
- * - Not at halftime
- * - Line not already set for the current point
  */
 export function shouldShowLinePrompt(): boolean {
   const { lineCallingEnabled } = useSettingsStore.getState();

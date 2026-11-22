@@ -27,7 +27,6 @@ interface SettingsState {
 
   orientationMode: OrientationMode;
 
-  // Hard Cap / Cap Timing (minutes)
   hardCapMins: number;
   softCapMins: number;
   advancedSoftCapAtMins: number;

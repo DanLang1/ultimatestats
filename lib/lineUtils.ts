@@ -43,7 +43,6 @@ function getGroupKey(player: Player): GenderRoleGroup {
 }
 
 /**
- * Groups players by gender matching type and role.
  * Returns groups in a consistent order with labels.
  * Only returns groups that have players.
  */
@@ -241,7 +240,7 @@ export function sortByPlayerNumber(players: Player[]): Player[] {
 }
 
 /**
- * Formats playing time for display, e.g., "(3 pts)"
+ * Formats playing time for display, e.g., "3pts"
  */
 export function formatPlayingTime(playerId: string, playingTime: Map<string, number>): string {
   const points = playingTime.get(playerId) ?? 0;

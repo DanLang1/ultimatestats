@@ -90,7 +90,6 @@ export default function useTutorialStatGameState(onComplete?: () => void) {
 
   const [possession, setPossession] = useState<'team1' | 'team2'>('team2');
 
-  // The tutorial uses a fixed line for player attribution.
   const [currentLine] = useState<string[]>(INITIAL_LINE);
   const [pointTimerRunning, setPointTimerRunning] = useState(false);
   const [hasPointStarted, setHasPointStarted] = useState(false);

@@ -131,7 +131,6 @@ export function formatRecord(games: GameListItem[]): string {
   return scrimmages > 0 ? `${record} · ${scrimmageLabel}` : record;
 }
 
-/** "1 scrim" or "3 scrims". */
 function formatScrimmageCount(count: number): string {
   return `${count} ${count === 1 ? 'scrim' : 'scrims'}`;
 }

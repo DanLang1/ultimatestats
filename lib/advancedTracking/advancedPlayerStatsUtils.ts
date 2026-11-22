@@ -225,8 +225,6 @@ function buildPointById(points: AnalyticsPoint[]): Map<string, AnalyticsPoint> {
 }
 
 /**
- * Optionally filter to a single side.
- *
  * Attribution-first: iterates `game.attributions` once, bucketing by participant and type,
  * then derives remaining stats (points played, O/D, timing) from `game.points`.
  */

@@ -57,7 +57,6 @@ export default function PlayerStatsScreen() {
     playerId && events.length ? computePlayerStats(events, team, roster || undefined) : [];
   const roleStats =
     playerId && events.length ? getRoleStats(playerId, events, team, roster || undefined) : null;
-  // Find by player ID instead of name
   const summary = allPlayerStats.find((p) => p.id === playerId);
   const highestPlusMinus = allPlayerStats.length
     ? Math.max(...allPlayerStats.map((p) => p.plusMinus))

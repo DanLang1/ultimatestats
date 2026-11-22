@@ -274,7 +274,6 @@ export function computeAdvancedTeamStats(game: AnalyticsGame, sideId: string): A
         break;
       case 'terminated':
       case 'in_progress':
-        // Terminated/in-progress points don't contribute to hold/break counts
         break;
     }
   }

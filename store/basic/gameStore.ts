@@ -1062,7 +1062,6 @@ export const useGameStore = create<GameState>()(
               if (updates.subtype !== undefined) event.subtype = updates.subtype;
               if (updates.team !== undefined) event.team = updates.team;
             } else if (event.type === 'goal') {
-              // Check if this is a Callahan (goal with OTHER_TEAM assist)
               const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
 
               if (updates.goalPlayerId !== undefined) event.goalPlayerId = updates.goalPlayerId;
@@ -1098,7 +1097,6 @@ export const useGameStore = create<GameState>()(
               return;
             }
 
-            // Safe to delete turnovers
             state.events.splice(eventIndex, 1);
             result = true;
           });
@@ -1165,7 +1163,6 @@ export const useGameStore = create<GameState>()(
             }
           }
 
-          // Update the main event
           updatedEvents[eventIndex] = updatedEvent;
           const updatedGame: SavedGame = { ...game, events: updatedEvents };
 

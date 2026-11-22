@@ -144,7 +144,6 @@ export default function TutorialStatScoreboardRoute() {
         />
       )}
 
-      {/* Turnover Entry Overlay (who made the block?) */}
       {phase === 'turnover-entry' && (
         <TutorialTurnoverEntry
           teamName={TUTORIAL_STAT_TEAM1_NAME}

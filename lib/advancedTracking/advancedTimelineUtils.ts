@@ -269,8 +269,6 @@ function buildThrowLabel(
   }
 }
 
-// ── Action display builders ──────────────────────────────────────────────────
-
 function actionBase(action: AnalyticsAction) {
   return {
     id: action.id,
@@ -463,8 +461,6 @@ export function buildAdvancedTimeline(game: AdvancedTrackedGame): AdvancedTimeli
   return ctx.analytics.points.map((point) => buildTimelinePoint(point, ctx));
 }
 
-// ── Timeline context ─────────────────────────────────────────────────────────
-
 interface TimelineBuildContext {
   analytics: AnalyticsGame;
   rawPointById: Map<string, TrackedPoint>;
@@ -502,8 +498,6 @@ function buildTimelineContext(game: AdvancedTrackedGame): TimelineBuildContext {
     gameTransitionsByPointId,
   };
 }
-
-// ── Point building ───────────────────────────────────────────────────────────
 
 function getRequiredRawPoint(ctx: TimelineBuildContext, point: AnalyticsPoint): TrackedPoint {
   const rawPoint = ctx.rawPointById.get(point.id);

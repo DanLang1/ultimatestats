@@ -73,7 +73,6 @@ export function StatEntryInner({
   }
 
   // Show on first step if event before the current goal was a block by our team
-  // Note: goal event is now pushed immediately in incrementScore, so we check the second-to-last event
   const lastEvent = events[events.length - 1];
   const prevEvent = events[events.length - 2];
 
