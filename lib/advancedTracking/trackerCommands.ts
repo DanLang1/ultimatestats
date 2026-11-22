@@ -190,7 +190,7 @@ export function canPauseGameClock(game: AdvancedTrackedGame): CommandAvailabilit
 }
 
 /** How an allowed timeout is recorded: a mid-point stoppage or a between-point transition. */
-export interface TimeoutPlan {
+interface TimeoutPlan {
   kind: 'in-point' | 'between-point';
   /** The side's regular timeouts for this half are used up, so this spends its floater. */
   isFloater: boolean;

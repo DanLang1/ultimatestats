@@ -158,31 +158,16 @@ npm run maestro:smoke
 # Core device flows; excludes the extended tag
 npm run maestro
 
-# Advanced tracker flows, including scrimmage
-npm run maestro:advanced
-
-# Scrimmage setup, dual-side turnovers, and side-perspective stats
-npm run maestro:scrimmage
-
-# Basic scoreboard games: setup, scoring, line calling, timers, timeline, saved stats
-npm run maestro:basic
-
-# Roster, line preset, and team management
-npm run maestro:team
-
 # Core and extended device flows
 npm run maestro:all
 
-# CI-friendly JUnit report and local artifacts
-npm run maestro:ci
+# One tag (advanced, scrimmage, basic, or team), on one simulator
+MAESTRO_SHARDS=1 npm run maestro:parallel -- --include-tags basic
 ```
 
 Reports (HTML, JSON, JUnit) and failure screenshots land in a timestamped folder under
-`.maestro/test-output/reports/`; `maestro:ci` writes to `.maestro/test-output/ci/` instead.
-`npm run maestro:parallel` spreads flows across several booted simulators
-(`.agents/skills/maestro-parallel/SKILL.md`). `npm run maestro:classic` runs the core suite with
-Homebrew Maestro (`brew install mobile-dev-inc/tap/maestro`) as a fallback, with its CLI analytics
-disabled. `npm run check` runs `lint:maestro`, which syntax-checks the flows offline.
+`.maestro/test-output/reports/`. `npm run maestro:parallel` spreads flows across several booted
+simulators (`.agents/skills/maestro-parallel/SKILL.md`). `npm run check` runs `lint:maestro`, which syntax-checks the flows offline.
 
 maestro-runner differs from Maestro in ways flows must account for:
 

@@ -42,5 +42,5 @@ smallest applicable npm Maestro suite documented in `docs/testing.md`.
 ## Verification
 
 - Confirm the final screenshot and failure artifacts rather than relying only on exit status.
-- Use `npm run maestro:ci` when a structured JUnit report and workspace-local artifacts are needed.
+- Each run writes HTML, JSON, and JUnit reports under `.maestro/test-output/reports/`.
 - Keep application changes and flow assertions synchronized.

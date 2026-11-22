@@ -2,7 +2,7 @@ import { CAP_WARNING_THRESHOLD_MS } from '@/lib/constants';
 
 import type { AdvancedTrackedGame } from './types';
 
-export type CapLabel = 'SOFT CAP' | 'SOFT CAP ACTIVE' | 'HARD CAP';
+type CapLabel = 'SOFT CAP' | 'SOFT CAP ACTIVE' | 'HARD CAP';
 
 export interface CapState {
   /** Which cap we're currently counting down to. */

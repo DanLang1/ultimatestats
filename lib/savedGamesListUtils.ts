@@ -3,8 +3,8 @@ import { formatDayTitle } from '@/lib/dateUtils';
 import { formatRecord, GameListItem, isScrimmage, LinkedGameListItem } from '@/lib/gameListUtils';
 import { GameKind, Tournament } from '@/lib/storage/types';
 
-export type SavedGamesSortField = 'date' | 'score';
-export type SavedGamesSortDirection = 'asc' | 'desc';
+type SavedGamesSortField = 'date' | 'score';
+type SavedGamesSortDirection = 'asc' | 'desc';
 export type SavedGamesSortKey = 'newest' | 'oldest' | 'points-desc' | 'points-asc';
 
 export interface SavedGamesSortOption {

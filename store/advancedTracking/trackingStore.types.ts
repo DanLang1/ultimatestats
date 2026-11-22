@@ -16,15 +16,12 @@ import type {
   GameMetadata,
   InjurySubChange,
   PlayerRef,
-  PullResult,
 } from '@/lib/advancedTracking/types';
 
 export type {
   CreateAdvancedGameInput,
   InjurySubChange,
-  PullResult,
   RecordInjurySubsInput,
-  RecordPullInput,
   UpdateInjurySubsInput,
   UpdateThrowTypeInput,
 };
@@ -45,7 +42,7 @@ export interface PendingNextPointLineSelection {
 }
 
 /** The store derives whether the timeout spends the floater. */
-export interface RecordBetweenPointTimeoutInput {
+interface RecordBetweenPointTimeoutInput {
   sideId: string;
 }
 

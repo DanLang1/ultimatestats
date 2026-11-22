@@ -3,7 +3,7 @@ import type { AnalyticsGame, PointState } from './analyticsTypes';
 import { getPointStateForSide } from './buildAnalyticsGame';
 
 /** A scored point from the perspective side's view. */
-export type ScoreFlowOutcome = Exclude<PointState, 'terminated' | 'in_progress'>;
+type ScoreFlowOutcome = Exclude<PointState, 'terminated' | 'in_progress'>;
 
 export interface ScoreFlowStep {
   outcome: ScoreFlowOutcome;
@@ -11,7 +11,7 @@ export interface ScoreFlowStep {
   margin: number;
 }
 
-export interface ScoreFlowHalftime {
+interface ScoreFlowHalftime {
   myScore: number;
   opponentScore: number;
 }

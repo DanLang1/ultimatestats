@@ -64,7 +64,7 @@ export interface AdvancedTimelinePossession {
   actions: AdvancedTimelineAction[];
 }
 
-export interface AdvancedTimelineActionBase {
+interface AdvancedTimelineActionBase {
   id: string;
   kind: AnalyticsAction['kind'];
   sideId: string;
@@ -74,14 +74,14 @@ export interface AdvancedTimelineActionBase {
   tone: ActionTone;
 }
 
-export interface PullDisplayAction extends AdvancedTimelineActionBase {
+interface PullDisplayAction extends AdvancedTimelineActionBase {
   kind: 'pull';
   pullResult: PullResult;
   hangTimeMs?: number;
   pullerName: string;
 }
 
-export interface PickupDisplayAction extends AdvancedTimelineActionBase {
+interface PickupDisplayAction extends AdvancedTimelineActionBase {
   kind: 'disc_pickup';
   playerName: string;
 }

@@ -12,7 +12,7 @@ function getSourcePlayerId(participant: Participant): string {
   return participant.sourcePlayerId ?? participant.id;
 }
 
-export function buildParticipantFromRosterPlayer(player: Player): Participant {
+function buildParticipantFromRosterPlayer(player: Player): Participant {
   return {
     id: player.id,
     name: player.name,

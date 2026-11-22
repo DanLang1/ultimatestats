@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { PermissionStatus } from 'expo-modules-core';
+import { PermissionStatus } from 'expo';
 import {
   ExpoSpeechRecognitionModule,
   type ExpoSpeechRecognitionErrorCode,

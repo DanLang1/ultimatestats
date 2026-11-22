@@ -11,7 +11,7 @@ type TutorialAction =
   | { type: 'timeout'; team: 'team1' | 'team2'; index: number }
   | { type: 'undo' };
 
-export interface TutorialStepDef {
+interface TutorialStepDef {
   title: string;
   message?: string;
   expectedAction: 'score-any' | 'timeout' | 'undo' | 'play' | 'none';

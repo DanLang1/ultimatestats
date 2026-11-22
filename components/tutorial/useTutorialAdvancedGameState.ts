@@ -6,7 +6,7 @@ import type { PlayerRef } from '@/lib/advancedTracking/types';
 
 import type { TutorialAdvancedVariant } from './tutorialNavigation';
 
-export type TutorialAdvancedStep =
+type TutorialAdvancedStep =
   | 'pass-to-mark'
   | 'throwaway-by-mark'
   | 'block-by-rachel'
@@ -15,7 +15,7 @@ export type TutorialAdvancedStep =
   | 'goal-to-kelly';
 
 /** How an action was entered; each step accepts only the input it teaches. */
-export type TutorialInputMethod = 'swipe' | 'button';
+type TutorialInputMethod = 'swipe' | 'button';
 
 export type TutorialAdvancedAction =
   | { kind: 'tap'; playerId: string }
@@ -36,7 +36,7 @@ export interface TutorialAdvancedResult {
 
 export type TutorialFooterButton = 'throwaway' | 'goal';
 
-export type TutorialAdvancedCue =
+type TutorialAdvancedCue =
   | { target: 'chip'; playerId: string; direction: 'up' | 'down' | 'right' }
   | { target: 'footer'; button: TutorialFooterButton }
   | { target: 'more' };
@@ -90,7 +90,7 @@ const BLOCK_BY_RACHEL: TutorialStepDefinition = {
   result: { kind: 'block', label: 'Rachel · Block' },
 };
 
-export const TUTORIAL_ADVANCED_STEPS: Record<TutorialAdvancedVariant, TutorialStepDefinition[]> = {
+const TUTORIAL_ADVANCED_STEPS: Record<TutorialAdvancedVariant, TutorialStepDefinition[]> = {
   // Starts on defense so each turnover hands the disc to the other side: block (to us), throwaway
   // (to them), pressure (to us), then the goal.
   buttons: [

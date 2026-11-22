@@ -29,7 +29,7 @@ const SOUND_REWRITES: [RegExp, string][] = [
  * name (`geoff`/`jeff`, `long`/`lang`) produce the same key. Vowels are dropped because they are
  * what the recognizer most often changes.
  */
-export function getVoiceSoundKey(normalizedPhrase: string): string {
+function getVoiceSoundKey(normalizedPhrase: string): string {
   return normalizedPhrase.split(' ').map(getWordSoundKey).join(' ');
 }
 

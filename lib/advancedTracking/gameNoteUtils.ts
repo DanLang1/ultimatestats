@@ -1,16 +1,14 @@
 import type { AdvancedTrackedGame, GameMetadata, TrackedPoint } from '@/lib/advancedTracking/types';
 import { MAX_ADVANCED_GAME_NOTE_LENGTH } from '@/lib/constants';
 
-export function normalizeAdvancedGameNote(note: string): string | undefined {
+function normalizeAdvancedGameNote(note: string): string | undefined {
   const trimmedNote = note.trim();
   if (trimmedNote.length === 0) return undefined;
   return trimmedNote.slice(0, MAX_ADVANCED_GAME_NOTE_LENGTH);
 }
 
-export const normalizeAdvancedPointNote = normalizeAdvancedGameNote;
-
 export function withAdvancedPointNote(point: TrackedPoint, note: string): TrackedPoint {
-  const normalizedNote = normalizeAdvancedPointNote(note);
+  const normalizedNote = normalizeAdvancedGameNote(note);
   const { note: _existingNote, ...pointWithoutNote } = point;
   return normalizedNote === undefined
     ? pointWithoutNote

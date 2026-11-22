@@ -8,13 +8,13 @@ export type ImportedPlayerDraft = {
   role: PlayerRole | null;
 };
 
-export type ImportApiPlayer = {
+type ImportApiPlayer = {
   name: string;
   position?: string;
   pronouns?: string;
 };
 
-export type ImportApiTeam = {
+type ImportApiTeam = {
   teamname?: string;
   division?: string;
 };

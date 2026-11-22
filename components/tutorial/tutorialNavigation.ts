@@ -17,9 +17,7 @@ export function parseTutorialAdvancedVariant(variant: string | undefined): Tutor
   return 'gestures';
 }
 
-export function getTutorialExitRoute(
-  origin: TutorialOrigin,
-): '/dashboard' | '/advanced-tracking/tracker' {
+function getTutorialExitRoute(origin: TutorialOrigin): '/dashboard' | '/advanced-tracking/tracker' {
   if (origin === 'tracker') return '/advanced-tracking/tracker';
   return '/dashboard';
 }

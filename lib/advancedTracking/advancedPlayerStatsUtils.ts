@@ -107,7 +107,7 @@ type AdvancedPlayerStatField<Field extends keyof AdvancedPlayerStats> = Field;
  * Player counters summed straight from attributions. Derived stats (plus/minus, turnovers, touches)
  * are computed afterwards and must not appear here.
  */
-export type AttributionCountField = AdvancedPlayerStatField<
+type AttributionCountField = AdvancedPlayerStatField<
   | 'goals'
   | 'assists'
   | 'hockeyAssists'

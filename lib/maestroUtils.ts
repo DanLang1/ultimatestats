@@ -63,7 +63,7 @@ export async function waitForMaestroStoresToHydrate() {
   ]);
 }
 
-export function buildSeedTeam(playerNames: string[] = MAESTRO_SEED_PLAYERS): SavedTeam {
+function buildSeedTeam(playerNames: string[] = MAESTRO_SEED_PLAYERS): SavedTeam {
   return {
     id: MAESTRO_SEED_TEAM_ID,
     name: MAESTRO_SEED_TEAM_NAME,

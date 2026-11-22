@@ -19,7 +19,7 @@ export function resetStartupMigrationRunnerForTests() {
   startupMigrationPromise = null;
 }
 
-export function createStartupMigrations(): StartupMigration[] {
+function createStartupMigrations(): StartupMigration[] {
   return [
     {
       id: 'basic-tournament-links',

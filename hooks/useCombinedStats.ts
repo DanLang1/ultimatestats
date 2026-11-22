@@ -31,7 +31,7 @@ export interface BasicCombinedStats {
   roster: Player[];
 }
 
-export interface AdvancedCombinedStats {
+interface AdvancedCombinedStats {
   kind: 'advanced';
   teamName: string;
   aggregatedGame: AnalyticsGame;

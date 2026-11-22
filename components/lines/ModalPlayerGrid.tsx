@@ -41,7 +41,7 @@ function sortPlayers(
     .map(({ player }) => player);
 }
 
-export type SortDirection = LinePlayerSortOrder;
+type SortDirection = LinePlayerSortOrder;
 
 export interface ModalPlayerGridProps {
   roster: Player[];

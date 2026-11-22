@@ -14,9 +14,9 @@ Read `docs/README.md` for the project map and New Screen Checklist. Follow its l
   use a function only when the logic is parameterized or reused across sites.
 - Trust the data we own. Avoid noisy or unnecessary fallbacks or excessive null checks on data we know can never be null
 - Sometimes throwing an error or returning early is better than silently passing 'invalid' or odd fallbacks through the code
-- Prefer exported, named types for reusable domain concepts, especially across storage, analytics,
-  state, and UI boundaries. Avoid indexed-access types such as `Model['field']` as a substitute for
-  a named domain type; indexed access remains appropriate for one-off structural derivations that
+- Prefer named types for reusable domain concepts, especially across storage, analytics, state, and
+  UI boundaries. Avoid indexed-access types such as `Model['field']` as a substitute for a named
+  domain type; indexed access remains appropriate for one-off structural derivations that
   should stay tightly coupled to their source type.
 - Use semantic palette tokens instead of `themeMode` styling branches. Add theme-specific values to `theme/theme.ts`.
 - Put app-wide limits in `lib/constants.ts`.

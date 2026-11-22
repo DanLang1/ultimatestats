@@ -11,7 +11,7 @@ import { Fonts, type Palette } from '@/theme/theme';
 const INFO_BUTTON_SIZE = 44;
 const INFO_ICON_SIZE = 15;
 
-export interface SectionCardInfo {
+interface SectionCardInfo {
   accessibilityLabel: string;
   title: string;
   message: string;

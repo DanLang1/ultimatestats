@@ -24,7 +24,7 @@ const PLAYING_TIME_USAGE_KEYS = new Set<RelativePlayingTimeMetricKey>([
   'playingTimePercent',
 ]);
 
-export function isPlayingTimeMetric(metric: RelativeRowMetric): metric is RelativePlayingTimeRow {
+function isPlayingTimeMetric(metric: RelativeRowMetric): metric is RelativePlayingTimeRow {
   return metric.category === 'playingTime';
 }
 

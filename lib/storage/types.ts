@@ -1,7 +1,7 @@
 // Types for persistent storage - designed for easy migration to SQLite later
 
-import { GameEvent, TurnoverType } from '@/store/basic/gameStore.types';
-export type { GameEvent, TurnoverType };
+import { GameEvent } from '@/store/basic/gameStore.types';
+export type { GameEvent };
 
 export const CURRENT_SCHEMA_VERSION = 6;
 

@@ -816,7 +816,7 @@ let lastPersistedLiveGame: AdvancedTrackedGame | null = null;
 let lastPersistedUndoStack: AdvancedTrackingUndoEntry[] | null = null;
 let lastLiveGamePersistPromise: Promise<void> | null = null;
 
-export function persistLiveSnapshot(snapshot: AdvancedGameHistorySnapshot): Promise<void> {
+function persistLiveSnapshot(snapshot: AdvancedGameHistorySnapshot): Promise<void> {
   if (snapshot.game === lastPersistedLiveGame && snapshot.undoStack === lastPersistedUndoStack) {
     return lastLiveGamePersistPromise ?? Promise.resolve();
   }

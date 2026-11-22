@@ -72,7 +72,7 @@ export function useTheme(): ThemeContextValue {
   return context;
 }
 
-export async function loadPersistedTheme(): Promise<ThemeMode> {
+async function loadPersistedTheme(): Promise<ThemeMode> {
   try {
     const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
     return stored === 'light' ? 'light' : 'dark';

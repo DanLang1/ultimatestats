@@ -5,7 +5,7 @@ import {
   type PullResult,
 } from '@/lib/advancedTracking/types';
 
-export const ADVANCED_UNDO_PAYLOAD_VERSION = 1;
+const ADVANCED_UNDO_PAYLOAD_VERSION = 1;
 
 /** Undo of a recorded possession action, removing it from its possession. */
 export interface ActionUndoEntry {

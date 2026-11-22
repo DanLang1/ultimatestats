@@ -29,7 +29,7 @@ const EMPTY_RECENT_LINES: RecentLine[] = [];
 const EMPTY_POINT_LINES: PointLineRecord[] = [];
 const EMPTY_PARTICIPANT_IDS: string[] = [];
 
-export interface LineParticipantRestrictions {
+interface LineParticipantRestrictions {
   lockedIds: string[];
   restrictedIds?: string[];
   onPress: (participantId: string) => void;

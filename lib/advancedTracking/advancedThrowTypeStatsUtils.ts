@@ -58,7 +58,7 @@ const EMPTY: AdvancedThrowTypeStats = {
   resetPressures: 0,
 };
 
-export function createEmptyAdvancedThrowTypeStats(): AdvancedThrowTypeStats {
+function createEmptyAdvancedThrowTypeStats(): AdvancedThrowTypeStats {
   return { ...EMPTY };
 }
 

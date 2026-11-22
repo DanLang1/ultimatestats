@@ -2,14 +2,14 @@ import type { AnalyticsGame } from './analyticsTypes';
 import { getFinalScores, getFocusGameOutcome } from './buildAnalyticsGame';
 import type { FlipChoice } from './types';
 
-export interface AdvancedInitialPullWinBucket {
+interface AdvancedInitialPullWinBucket {
   games: number;
   wins: number;
   losses: number;
   winPercentage: number | null;
 }
 
-export interface AdvancedFlipChoiceBucket extends AdvancedInitialPullWinBucket {
+interface AdvancedFlipChoiceBucket extends AdvancedInitialPullWinBucket {
   ties: number;
 }
 

@@ -13,7 +13,7 @@
     "lint:maestro": "maestro-runner lint .maestro/tests/",
     "typecheck": "tsc --noEmit",
     "check": "npm run format:check && npm run lint && npm run lint:maestro && npm run typecheck",
-    "check:all": "npm run check && npm test",
+    "check:all": "npm run check && npm run knip && npm test",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "format:changed": "git diff --name-only -z --diff-filter=d HEAD | xargs -0 -r oxfmt --no-error-on-unmatched-pattern",
@@ -24,15 +24,10 @@
     "pre-release": "bash scripts/pre-release.sh",
     "pre-release:fast": "bash scripts/pre-release.sh --skip-maestro",
     "maestro": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --exclude-tags extended .maestro/tests/",
-    "maestro:scrimmage": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --include-tags scrimmage .maestro/tests/",
     "maestro:smoke": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --include-tags smoke .maestro/tests/",
-    "maestro:advanced": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --include-tags advanced .maestro/tests/",
-    "maestro:basic": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --include-tags basic .maestro/tests/",
-    "maestro:team": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --include-tags team .maestro/tests/",
-    "maestro:ci": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/ci --flatten test --exclude-tags extended .maestro/tests/",
     "maestro:all": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test .maestro/tests/",
     "maestro:parallel": "bash scripts/maestro-parallel.sh",
-    "maestro:classic": "MAESTRO_CLI_NO_ANALYTICS=1 maestro test --exclude-tags extended .maestro/tests/"
+    "knip": "knip"
   },
   "dependencies": {
     "@expo/ui": "~57.0.26",
@@ -86,6 +81,7 @@
     "eslint-plugin-testing-library": "^7.16.2",
     "jest": "~29.7.0",
     "jest-expo": "~57.0.6",
+    "knip": "^6.47.0",
     "maestro-runner": "^1.1.29",
     "oxfmt": "^0.74.0",
     "oxlint": "^1.90.0",

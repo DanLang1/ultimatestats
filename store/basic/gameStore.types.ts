@@ -1,7 +1,7 @@
 import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 
-export type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
+type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 export type UpdateRosterPlayerResult =
   | 'updated'
@@ -37,7 +37,7 @@ export type TurnoverEvent = {
   pointNumber?: number; // Point this event belongs to (absent in games saved before this field existed)
 };
 
-export type TimeoutEvent = {
+type TimeoutEvent = {
   type: 'timeout';
   team: 'team1' | 'team2'; // Team that called the timeout
   index: number; // Which timeout slot (0, 1 for regular timeouts)

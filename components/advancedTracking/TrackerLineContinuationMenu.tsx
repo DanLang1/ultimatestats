@@ -7,7 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { Fonts } from '@/theme/theme';
 
-export type TrackerLineContinuationKind = 'injury-sub' | 'line-correction';
+type TrackerLineContinuationKind = 'injury-sub' | 'line-correction';
 
 interface TrackerLineContinuationMenuProps {
   visible: boolean;

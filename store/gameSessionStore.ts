@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { reportHydrationError } from '@/lib/sentry';
 
-export type ActiveGameType = 'advanced' | 'basic';
+type ActiveGameType = 'advanced' | 'basic';
 
 interface GameSessionState {
   activeGameType: ActiveGameType | null;

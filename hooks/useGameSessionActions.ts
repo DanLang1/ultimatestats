@@ -18,11 +18,11 @@ export function finishActiveGameSession() {
   useGameSessionStore.getState().clearActiveGame();
 }
 
-export function restoreBasicGameSession() {
+function restoreBasicGameSession() {
   useGameSessionStore.getState().setActiveGameType('basic');
 }
 
-export function restoreAdvancedGameSession() {
+function restoreAdvancedGameSession() {
   useGameSessionStore.getState().setActiveGameType('advanced');
 }
 

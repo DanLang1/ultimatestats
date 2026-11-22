@@ -17,7 +17,7 @@ export function dropLegacyCapFields(game: SavedGame): Omit<SavedGame, 'schemaVer
   return result;
 }
 
-export function migrateSavedGameToV5DropUnusedCapFields(game: SavedGame): SavedGame {
+function migrateSavedGameToV5DropUnusedCapFields(game: SavedGame): SavedGame {
   return {
     ...dropLegacyCapFields(game),
     schemaVersion: 5,

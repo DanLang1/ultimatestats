@@ -2,7 +2,7 @@ import type { AdvancedPlayerStats } from './advancedPlayerStatsUtils';
 
 export type AdvancedPlayerStatKey = Exclude<keyof AdvancedPlayerStats, 'participantId'>;
 
-export interface PlayerStatLabel {
+interface PlayerStatLabel {
   /** Full label for legends, CSV headers, and cards. */
   label: string;
   /** Compact form for table headers; defaults to `label`. */

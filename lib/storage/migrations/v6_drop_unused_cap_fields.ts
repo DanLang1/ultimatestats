@@ -7,7 +7,7 @@ export const SAVED_GAME_MIGRATION_V6_DROP_UNUSED_CAP_FIELDS: SavedGameMigration 
   migrate: migrateSavedGameToV6DropUnusedCapFields,
 };
 
-export function migrateSavedGameToV6DropUnusedCapFields(game: SavedGame): SavedGame {
+function migrateSavedGameToV6DropUnusedCapFields(game: SavedGame): SavedGame {
   return {
     ...dropLegacyCapFields(game),
     schemaVersion: 6,

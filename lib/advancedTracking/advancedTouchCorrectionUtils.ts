@@ -22,15 +22,15 @@ import {
 } from './types';
 
 /** A stable location for a correction in the persisted point/possession/action model. */
-export interface AdvancedTouchLocator {
+interface AdvancedTouchLocator {
   pointId: string;
   possessionId: string;
   touchId: string;
 }
 
-export type AdvancedStandaloneCorrectionKind = 'pull-receiver' | 'callahan-scorer';
+type AdvancedStandaloneCorrectionKind = 'pull-receiver' | 'callahan-scorer';
 
-export interface AdvancedStandaloneCorrectionLocator {
+interface AdvancedStandaloneCorrectionLocator {
   pointId: string;
   possessionId: string;
   actionId: string;
@@ -45,7 +45,7 @@ export type CorrectAdvancedTouchInput = AdvancedTouchCorrectionLocator & {
   participantId: string;
 };
 
-export type AdvancedTouchKind = 'pickup' | 'pass-receiver' | 'terminal-receiver';
+type AdvancedTouchKind = 'pickup' | 'pass-receiver' | 'terminal-receiver';
 
 /** One occurrence in a chain. Two occurrences with the same participant are still distinct. */
 export interface AdvancedTouchOccurrence {
@@ -82,7 +82,7 @@ export interface AdvancedStandaloneCorrectionContext {
   eligibleParticipants: Participant[];
 }
 
-export interface AdvancedTouchCorrectionContext {
+interface AdvancedTouchCorrectionContext {
   kind: 'touch';
   segment: AdvancedTouchCorrectionSegment;
   touch: AdvancedTouchOccurrence;
@@ -542,7 +542,7 @@ function findSegmentTouch(
 }
 
 /** Resolves a selected occurrence or standalone attribution into its correction context. */
-export function getAdvancedTouchCorrectionContext(
+function getAdvancedTouchCorrectionContext(
   game: AdvancedTrackedGame,
   locator: AdvancedTouchCorrectionLocator,
 ): AdvancedCorrectionContext {

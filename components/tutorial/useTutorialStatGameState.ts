@@ -6,7 +6,7 @@ import {
   TUTORIAL_STAT_TEAM1_NAME,
 } from './tutorialStatData';
 
-export type TutorialStatPhase = 'scoreboard' | 'turnover-entry' | 'stat-entry';
+type TutorialStatPhase = 'scoreboard' | 'turnover-entry' | 'stat-entry';
 
 type ExpectedAction =
   | 'start-point'
@@ -16,15 +16,9 @@ type ExpectedAction =
   | 'select-scorer'
   | 'select-assist';
 
-export type TooltipTarget =
-  | 'action-bar'
-  | 'team1'
-  | 'team2'
-  | 'turnover-entry'
-  | 'stat-entry'
-  | 'center';
+type TooltipTarget = 'action-bar' | 'team1' | 'team2' | 'turnover-entry' | 'stat-entry' | 'center';
 
-export interface TutorialStatStepDef {
+interface TutorialStatStepDef {
   title: string;
   message?: string;
   expectedAction: ExpectedAction;

@@ -4,7 +4,7 @@ export function toISODate(date: Date): string {
 }
 
 /** Formats an ISO date string (YYYY-MM-DD) as MM/DD/YYYY for display. */
-export function formatISODateForDisplay(isoDate: string): string {
+function formatISODateForDisplay(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${month}/${day}/${year}`;
 }

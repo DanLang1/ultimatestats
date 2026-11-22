@@ -2,7 +2,7 @@ import type { GameListItem, LinkedGameListItem } from '@/lib/gameListUtils';
 import { GameKind, Tournament, TournamentGameLink } from '@/lib/storage/types';
 
 /** Basic and advanced games live in separate stores; an ID only identifies a game with its kind. */
-export interface GameRef {
+interface GameRef {
   kind: GameKind;
   id: string;
 }

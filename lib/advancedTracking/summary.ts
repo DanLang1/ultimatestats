@@ -30,7 +30,7 @@ export interface AdvancedGameSummary {
   pointsTracked: number;
 }
 
-export function getAdvancedGamePlayedAt(game: AdvancedTrackedGame): number | null {
+function getAdvancedGamePlayedAt(game: AdvancedTrackedGame): number | null {
   if (!game.metadata?.date) return null;
   return new Date(game.metadata.date).getTime() || null;
 }

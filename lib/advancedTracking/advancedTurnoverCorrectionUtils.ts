@@ -66,7 +66,7 @@ export type CorrectAdvancedTurnoverInput = AdvancedTurnoverCorrectionLocator & {
   throwType?: ThrowType;
 };
 
-export interface AdvancedTurnoverParticipantField {
+interface AdvancedTurnoverParticipantField {
   sideId: string;
   isFullRoster: boolean;
   currentRef: PlayerRef | undefined;

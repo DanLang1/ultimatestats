@@ -1,6 +1,6 @@
 import type { AdvancedTrackedGame } from './types';
 
-export function getAdvancedFocusSide(game: AdvancedTrackedGame) {
+function getAdvancedFocusSide(game: AdvancedTrackedGame) {
   return game.sides.find((side) => side.id === game.focusSideId) ?? null;
 }
 

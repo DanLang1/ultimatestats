@@ -105,7 +105,7 @@ export function advancedGameSummaryToTeamListItem(
   };
 }
 
-export type GameResult = 'win' | 'loss' | 'tie';
+type GameResult = 'win' | 'loss' | 'tie';
 
 /** A scrimmage pits two sides of the same team, so it has no win or loss for the tracked side. */
 export function isScrimmage(game: GameListItem): boolean {
@@ -113,7 +113,7 @@ export function isScrimmage(game: GameListItem): boolean {
 }
 
 /** Result from the tracked side's perspective. */
-export function getGameResult(game: GameListItem): GameResult {
+function getGameResult(game: GameListItem): GameResult {
   if (game.myScore > game.opponentScore) return 'win';
   if (game.myScore < game.opponentScore) return 'loss';
   return 'tie';

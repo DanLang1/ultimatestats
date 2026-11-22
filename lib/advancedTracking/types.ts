@@ -133,7 +133,7 @@ export interface GameMetadata {
   notes?: string;
 }
 
-export interface AdvancedTrackingSettings {
+interface AdvancedTrackingSettings {
   locationMode: 'none' | 'zone' | 'xy';
   format?: GameFormatSettings;
 }
@@ -158,7 +158,7 @@ export interface GameFormatSettings {
 
 export const SIDE_TRACKING_MODES = ['full-roster', 'anonymous'] as const;
 
-export type SideTrackingMode = (typeof SIDE_TRACKING_MODES)[number];
+type SideTrackingMode = (typeof SIDE_TRACKING_MODES)[number];
 
 export interface GameSide {
   id: string;
@@ -193,7 +193,7 @@ export interface Participant {
   role?: 'handler' | 'cutter' | 'hybrid' | null;
 }
 
-export type Endzone = 'near' | 'far';
+type Endzone = 'near' | 'far';
 
 export interface PointLine {
   sideId: string;
@@ -226,7 +226,7 @@ export interface InjurySubChange {
   outIds: string[];
 }
 
-export interface PointRevivalPause {
+interface PointRevivalPause {
   /** Absolute timestamp when the scoring action originally ended the point. */
   pausedAt: number;
   /** Absolute timestamp when undo resumed tracking for the point. */
@@ -259,7 +259,7 @@ export interface TrackedPoint {
   revivalPauses?: PointRevivalPause[];
 }
 
-export interface RedZoneData {
+interface RedZoneData {
   /** Absolute timestamp (ms epoch) when Red Zone was selected during live play. */
   enteredAt: number;
   /** True when selecting Red Zone created the anonymous possession and pickup scaffold. */
@@ -366,7 +366,7 @@ export interface PullAction {
   recordedAt?: number;
 }
 
-export interface DiscPickupAction {
+interface DiscPickupAction {
   id: string;
   kind: 'disc_pickup';
   sideId: string;
@@ -403,7 +403,7 @@ export type ThrowType = (typeof THROW_TYPES)[number];
 export type ThrowOutcome = 'continues' | 'scores' | 'turnover' | 'defense_scores';
 
 /** The action field that names the player credited with the result, besides the thrower. */
-export type ThrowCreditedRole = 'receiver' | 'defender';
+type ThrowCreditedRole = 'receiver' | 'defender';
 
 export interface ThrowResultSpec {
   outcome: ThrowOutcome;

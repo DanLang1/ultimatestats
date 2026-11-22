@@ -8,7 +8,7 @@ export const SAVED_GAME_MIGRATION_V3_STAMP_HALFTIME: SavedGameMigration = {
   migrate: migrateSavedGameToV3StampHalftime,
 };
 
-export function migrateSavedGameToV3StampHalftime(game: SavedGame): SavedGame {
+function migrateSavedGameToV3StampHalftime(game: SavedGame): SavedGame {
   const autoHalftimeEnabled = game.autoHalftimeEnabled ?? true;
   const events = normalizeHalftimeMarkers(game.events, game.gameTo, autoHalftimeEnabled);
 

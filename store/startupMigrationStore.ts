@@ -5,7 +5,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { reportHydrationError } from '@/lib/sentry';
 
-export type StartupMigrationRecord = {
+type StartupMigrationRecord = {
   completedAt: number;
   version: number;
 };

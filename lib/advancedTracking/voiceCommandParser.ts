@@ -16,7 +16,7 @@ export type VoiceStatCommand = {
   toParticipantId: string;
 };
 
-export type VoiceCommandMatchKind = 'name' | 'number';
+type VoiceCommandMatchKind = 'name' | 'number';
 
 /**
  * How strongly the transcript identifies the player: `exact` is the player's own name or number,
@@ -25,7 +25,7 @@ export type VoiceCommandMatchKind = 'name' | 'number';
  */
 export type VoiceCommandMatchCertainty = 'exact' | 'sounds_like' | 'approximate';
 
-export type VoiceCommandParseFailureReason =
+type VoiceCommandParseFailureReason =
   | 'empty'
   | 'ambiguous_player'
   | 'no_player_match'
