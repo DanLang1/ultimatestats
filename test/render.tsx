@@ -34,7 +34,7 @@ function TestProviders({
     <QueryClientProvider client={queryClient}>
       <SafeAreaFrameContext.Provider value={{ x: 0, y: 0, width: 390, height: 844 }}>
         <SafeAreaInsetsContext.Provider value={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-          <ThemeProvider initialTheme="dark">
+          <ThemeProvider>
             <AlertProvider>{children}</AlertProvider>
           </ThemeProvider>
         </SafeAreaInsetsContext.Provider>

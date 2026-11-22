@@ -6,7 +6,6 @@ import type {
   GameMetadata,
   PossessionLosingThrowResult,
   PullResult,
-  SideTrackingMode,
   ThrowDetails,
   ThrowResult,
 } from './types';
@@ -175,8 +174,6 @@ export interface AnalyticsGame {
   flip?: GameFlip;
   /** Display label for each side, keyed by sideId. */
   sideLabels: Record<string, string>;
-  /** Player identity tracking capability for each side, keyed by sideId. */
-  sideTrackingModes?: Record<string, SideTrackingMode>;
   /** Display name for each participant, keyed by participantId. */
   participantNames: Map<string, string>;
   metadata?: GameMetadata;

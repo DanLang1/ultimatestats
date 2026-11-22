@@ -200,12 +200,3 @@ export function getSafeDiscHolderRef(
   }
   return getDiscHolderRef(possession, focusSideId);
 }
-
-/** Returns the ID of the player currently holding the disc, if it's a known participant. */
-export function getDiscHolderId(
-  possession: PointPossession | null,
-  focusSideId: string,
-): string | null {
-  const ref = getDiscHolderRef(possession, focusSideId);
-  return ref?.refType === 'participant' ? ref.participantId : null;
-}

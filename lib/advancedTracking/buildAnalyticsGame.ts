@@ -16,7 +16,6 @@ import {
 } from './analyticsTypes';
 import { getParticipantIdsUsedBySide } from './lineup';
 import { getActivePlayElapsedMsAt } from './pointClock';
-import { getSideTrackingModes } from './trackingModeUtils';
 import {
   getLastPlayAction,
   getPlayOutcome,
@@ -668,7 +667,6 @@ function buildAnalyticsGameInternal(game: AdvancedTrackedGame): AnalyticsGame {
     initialReceivingSideId: game.initialReceivingSideId,
     ...(game.flip != null ? { flip: game.flip } : {}),
     sideLabels: Object.fromEntries(game.sides.map((s) => [s.id, s.label])),
-    sideTrackingModes: getSideTrackingModes(game.sides),
     participantNames: new Map(game.participants.map((p) => [p.id, p.name])),
     metadata: game.metadata,
     createdAt: game.createdAt,

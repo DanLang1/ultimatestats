@@ -1,9 +1,6 @@
-import { buildAnalyticsGame } from '../buildAnalyticsGame';
 import {
-  areBothAnalyticsSidesFullyTracked,
   areBothSidesFullyTracked,
   getFullyTrackedSideIds,
-  isSideFullyTracked,
   supportsTimelineLineCorrection,
 } from '../trackingModeUtils';
 import type { AdvancedTrackedGame } from '../types';
@@ -30,8 +27,6 @@ describe('trackingModeUtils', () => {
   it('derives both-side tracking from side capabilities rather than game type', () => {
     expect(areBothSidesFullyTracked(game)).toBe(true);
     expect(getFullyTrackedSideIds(game)).toEqual(['home', 'away']);
-    expect(isSideFullyTracked(game, 'home')).toBe(true);
-    expect(areBothAnalyticsSidesFullyTracked(buildAnalyticsGame(game))).toBe(true);
   });
 
   it('returns false when one side is anonymous', () => {
@@ -42,8 +37,6 @@ describe('trackingModeUtils', () => {
 
     expect(areBothSidesFullyTracked(singleSideGame)).toBe(false);
     expect(getFullyTrackedSideIds(singleSideGame)).toEqual(['home']);
-    expect(isSideFullyTracked(singleSideGame, 'away')).toBe(false);
-    expect(areBothAnalyticsSidesFullyTracked(buildAnalyticsGame(singleSideGame))).toBe(false);
   });
 
   it('supports timeline line correction whenever at least one side is fully tracked', () => {

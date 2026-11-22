@@ -9,10 +9,9 @@ interface ScoreBadgeProps {
   score2: number;
   size?: 'small' | 'medium' | 'large';
   style?: ViewStyle;
-  testID?: string;
 }
 
-export function ScoreBadge({ score1, score2, size = 'medium', style, testID }: ScoreBadgeProps) {
+export function ScoreBadge({ score1, score2, size = 'medium', style }: ScoreBadgeProps) {
   const { palette } = useTheme();
 
   const isWin = score1 > score2;
@@ -44,7 +43,6 @@ export function ScoreBadge({ score1, score2, size = 'medium', style, testID }: S
 
   return (
     <View
-      testID={testID}
       style={[
         styles.badge,
         sizeStyles,

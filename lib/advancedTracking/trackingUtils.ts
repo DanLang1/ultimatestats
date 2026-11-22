@@ -234,10 +234,6 @@ export function getPointScoringSideId(
   return null;
 }
 
-export function cloneGame(game: AdvancedTrackedGame): AdvancedTrackedGame {
-  return structuredClone(game);
-}
-
 export function getGameScore(game: AdvancedTrackedGame): Record<string, number> {
   const score: Record<string, number> = {};
   for (const side of game.sides) {

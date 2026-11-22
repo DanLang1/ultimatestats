@@ -18,7 +18,6 @@ const THEME_STORAGE_KEY = 'ultimatestats-theme-mode';
 
 interface ThemeProviderProps {
   children: ReactNode;
-  initialTheme?: ThemeMode;
 }
 
 // The theme most recently loaded or chosen this session. A provider mounted later (the root error
@@ -30,10 +29,8 @@ export function resetSessionThemeModeForTests() {
   sessionThemeMode = null;
 }
 
-export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
-  const [themeMode, setThemeModeState] = useState<ThemeMode>(
-    initialTheme ?? sessionThemeMode ?? 'dark',
-  );
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(sessionThemeMode ?? 'dark');
 
   useEffect(() => {
     let isActive = true;

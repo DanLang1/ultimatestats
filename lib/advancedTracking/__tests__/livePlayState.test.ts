@@ -1,6 +1,5 @@
 import {
   getActiveSideId,
-  getDiscHolderId,
   getDiscHolderRef,
   getSafeDiscHolderRef,
   getTrackerDisplaySideId,
@@ -132,42 +131,6 @@ describe('getTrackerDisplaySideId', () => {
   });
 });
 
-describe('getDiscHolderId', () => {
-  it('returns null if not focus side possession', () => {
-    const pos = makePossession(AWAY);
-    expect(getDiscHolderId(pos, HOME)).toBeNull();
-  });
-
-  it('returns null if possession is over', () => {
-    const pos = makePossession(HOME, [
-      { id: 'a1', kind: 'throw', sideId: HOME, thrower: august, result: 'goal' },
-    ]);
-    expect(getDiscHolderId(pos, HOME)).toBeNull();
-  });
-
-  it('identifies disc holder from pickup', () => {
-    const pos = makePossession(HOME, [
-      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
-    ]);
-    expect(getDiscHolderId(pos, HOME)).toBe(august.participantId);
-  });
-
-  it('identifies disc holder after a completion', () => {
-    const pos = makePossession(HOME, [
-      { id: 'a1', kind: 'disc_pickup', sideId: HOME, player: august },
-      {
-        id: 'a2',
-        kind: 'throw',
-        sideId: HOME,
-        thrower: august,
-        toPlayer: meves,
-        result: 'complete',
-      },
-    ]);
-    expect(getDiscHolderId(pos, HOME)).toBe(meves.participantId);
-  });
-});
-
 describe('getDiscHolderRef', () => {
   const unknown = { refType: 'unknown' as const };
 
@@ -203,7 +166,6 @@ describe('getDiscHolderRef', () => {
       },
     ]);
     expect(getDiscHolderRef(pos, HOME)).toEqual(unknown);
-    expect(getDiscHolderId(pos, HOME)).toBeNull();
   });
 });
 
