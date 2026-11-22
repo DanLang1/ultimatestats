@@ -57,7 +57,7 @@ export default function ScoreFlowSection({ game, perspectiveSideId }: ScoreFlowS
         isNeutral={isScrimmage}
         accessibilityLabel="Score margin by point"
       />
-      {hasLegend && <ChartLegend items={legend} swatch="dot" />}
+      {hasLegend && <ChartLegend items={legend} />}
       {hasStats && <ChartStatRow stats={stats} />}
     </View>
   );

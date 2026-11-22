@@ -13,24 +13,19 @@ export interface ChartLegendItem {
 
 interface ChartLegendProps {
   items: ChartLegendItem[];
-  /** Matches the chart's marks: a dot for point markers, a square for bars. */
-  swatch: 'dot' | 'square';
 }
 
-/** One line of colored swatches naming what a chart's colors mean. */
-export default function ChartLegend({ items, swatch }: ChartLegendProps) {
+/** One line of colored dots naming what a chart's colors mean. */
+export default function ChartLegend({ items }: ChartLegendProps) {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const swatchRadius = swatch === 'dot' ? SWATCH_SIZE / 2 : 2;
 
   return (
     <View style={styles.row}>
       {items.map((item) => (
         <View key={item.label} style={styles.item}>
-          <View
-            style={[styles.swatch, { backgroundColor: item.color, borderRadius: swatchRadius }]}
-          />
+          <View style={[styles.swatch, { backgroundColor: item.color }]} />
           <ThemedText style={[styles.label, { color: palette.textMuted }]}>{item.label}</ThemedText>
         </View>
       ))}
@@ -52,6 +47,7 @@ function createStyles(sizeClass: SizeClass) {
     swatch: {
       width: SWATCH_SIZE,
       height: SWATCH_SIZE,
+      borderRadius: SWATCH_SIZE / 2,
     },
     label: {
       fontSize: scaleBySizeClass(12, sizeClass),
