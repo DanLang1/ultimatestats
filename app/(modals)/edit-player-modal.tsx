@@ -7,6 +7,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
+import { useSavedBasicGames } from '@/hooks/basic/useSavedBasicGames';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   getPlayerNumberIdentity,
@@ -28,8 +29,9 @@ export default function EditPlayerModal() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { currentTeam, setCurrentTeam, saveCurrentTeam, events, savedGames, updateRosterPlayer } =
+  const { currentTeam, setCurrentTeam, saveCurrentTeam, events, updateRosterPlayer } =
     useGameStore();
+  const savedGames = useSavedBasicGames();
   const { mmpColor, fmpColor } = useSettingsStore();
 
   const { removePlayerFromPresets } = useLinePresetsStore();

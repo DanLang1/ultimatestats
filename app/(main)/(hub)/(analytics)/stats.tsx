@@ -14,6 +14,7 @@ import SavedGamesSelectBar from '@/components/view-stats/SavedGamesSelectBar';
 import { SavedGamesTeamSheet } from '@/components/view-stats/SavedGamesTeamSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useSavedBasicGames } from '@/hooks/basic/useSavedBasicGames';
 import { useHasLiveStats } from '@/hooks/useActiveGameSession';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
@@ -47,7 +48,8 @@ export default function StatsScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const hasLiveStats = useHasLiveStats();
-  const { savedGames, savedTeams, deleteSavedGames } = useGameStore();
+  const { savedTeams, deleteSavedGames } = useGameStore();
+  const savedGames = useSavedBasicGames();
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);

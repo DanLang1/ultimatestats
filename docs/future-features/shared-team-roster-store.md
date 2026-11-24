@@ -57,7 +57,7 @@ Keep these in `store/basic`:
 ## Migration Sketch
 
 1. Create `store/teamStore.ts` with persisted Zustand state.
-2. Move shared team and roster actions from `store/basic/gameStore.ts`.
+2. Move shared team and roster actions from `store/basic/slices/teamSlice.ts`.
 3. Update basic screens and flows to read/write team data through `teamStore`.
 4. Update advanced tracking screens/hooks to use `teamStore` instead of
    `store/basic/gameStore`.

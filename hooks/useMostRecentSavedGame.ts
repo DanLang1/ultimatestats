@@ -1,4 +1,5 @@
 import { useCompletedAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useSavedBasicGames } from '@/hooks/basic/useSavedBasicGames';
 import {
   advancedGameSummaryToListItem,
   basicGameToListItem,
@@ -8,7 +9,7 @@ import { useGameStore } from '@/store/basic/gameStore';
 
 /** The newest saved game of either kind, or null before any game is saved. */
 export function useMostRecentSavedGame(): GameListItem | null {
-  const savedGames = useGameStore((state) => state.savedGames);
+  const savedGames = useSavedBasicGames();
   const savedTeams = useGameStore((state) => state.savedTeams);
   const { data: advancedSummaries } = useCompletedAdvancedGameSummaries();
 

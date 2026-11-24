@@ -8,6 +8,7 @@ import EventTimeline from '@/components/basic/timeline/EventTimeline';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/context/ThemeContext';
+import { useSavedBasicGame } from '@/hooks/basic/useSavedBasicGames';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { canEditBasicPointLine } from '@/lib/basic/pointLineEditUtils';
 import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
@@ -34,7 +35,6 @@ export default function GameTimelineScreen({ routeScope }: GameTimelineScreenPro
     currentTeam,
     team2Name,
     events,
-    savedGames,
     savedTeams,
     startingPossession,
     gameTo,
@@ -46,26 +46,26 @@ export default function GameTimelineScreen({ routeScope }: GameTimelineScreenPro
     pointTimerEnabled,
     pointLines: currentPointLines,
   } = useGameStore();
+  const savedGame = useSavedBasicGame(savedGameId);
   const team1Name = currentTeam.name;
 
   const gameData = isSavedGame
     ? (() => {
-        const game = savedGames.find((savedGame) => savedGame.id === savedGameId);
-        if (!game) return null;
+        if (!savedGame) return null;
 
         return {
-          team1Name: resolveTeamName(game.team1.id, game.team1.name, savedTeams),
-          team2Name: game.team2Name,
-          events: game.events,
-          team1Score: game.team1Score,
-          team2Score: game.team2Score,
-          startingPossession: game.startingPossession,
-          gameTo: game.gameTo,
-          autoHalftimeEnabled: game.autoHalftimeEnabled ?? true,
-          roster: game.team1.roster,
-          pointStartTimestamps: game.pointStartTimestamps,
-          timingEnabled: game.events.some((event) => event.elapsedMs !== undefined),
-          pointLines: game.pointLines ?? [],
+          team1Name: resolveTeamName(savedGame.team1.id, savedGame.team1.name, savedTeams),
+          team2Name: savedGame.team2Name,
+          events: savedGame.events,
+          team1Score: savedGame.team1Score,
+          team2Score: savedGame.team2Score,
+          startingPossession: savedGame.startingPossession,
+          gameTo: savedGame.gameTo,
+          autoHalftimeEnabled: savedGame.autoHalftimeEnabled ?? true,
+          roster: savedGame.team1.roster,
+          pointStartTimestamps: savedGame.pointStartTimestamps,
+          timingEnabled: savedGame.events.some((event) => event.elapsedMs !== undefined),
+          pointLines: savedGame.pointLines ?? [],
         };
       })()
     : {

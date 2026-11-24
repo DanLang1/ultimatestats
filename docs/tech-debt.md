@@ -170,7 +170,7 @@ rewrite it to describe only the remaining problem as it exists now.
 - References:
   `app/(main)/pre-game-confirm.tsx` + `app/(main)/advanced-tracking/pre-game-confirm.tsx` — identical card layouts
   `components/view-stats/ImpactTimeline.tsx` + `components/advancedTracking/AdvancedImpactTimeline.tsx` — duplicated impact chart layout, score label fitting, axis labels, step-path, and scale-mode logic; keep basic/advanced event formatting separate
-  `store/basic/gameStore.types.ts` + `store/basic/gameStore.ts` — `addTurnoverEvent` parameter type defined inline in both
+  `store/basic/gameStore.types.ts` + `store/basic/slices/liveGameSlice.ts` — `addTurnoverEvent` parameter type defined inline in both
 
 ## P4 - Basic Mode Known Design Debt
 
@@ -185,6 +185,7 @@ rewrite it to describe only the remaining problem as it exists now.
 - Halftime, game-over, and soft-cap rules are implemented separately from advanced; share import
   does not validate basic events individually.
 - References:
-  `store/basic/gameStore.ts`
+  `store/basic/slices/liveGameSlice.ts`
+  `store/basic/slices/savedGamesSlice.ts`
   `lib/basic/statsUtils.ts`
   `lib/sharing/validate.ts`

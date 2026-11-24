@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { PlayerChip } from '@/components/ui/PlayerChip';
 import { useTheme } from '@/context/ThemeContext';
+import { useSavedBasicGame } from '@/hooks/basic/useSavedBasicGames';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { getPlayerName } from '@/lib/playerUtils';
@@ -71,7 +72,6 @@ export default function EditEventModal() {
     currentTeam,
     events,
     pointLines,
-    savedGames,
     updateEvent,
     deleteEvent,
     updateSavedGameEvent,
@@ -79,7 +79,7 @@ export default function EditEventModal() {
   } = useGameStore();
 
   const isSavedGame = params.gameId && params.gameId !== 'current';
-  const savedGame = isSavedGame ? savedGames.find((g) => g.id === params.gameId) : null;
+  const savedGame = useSavedBasicGame(isSavedGame ? params.gameId : null);
   const roster = savedGame?.team1.roster ?? currentTeam.roster;
   const activeEvents = savedGame?.events ?? events;
   const activePointLines = savedGame?.pointLines ?? pointLines;

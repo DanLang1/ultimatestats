@@ -1,0 +1,291 @@
+{
+  "ultimatestats-game-storage": {
+    "state": {
+      "currentTeam": {
+        "id": "checkpoint-default-team",
+        "name": "Team 1",
+        "roster": []
+      },
+      "team2Name": "Team 2",
+      "team1BgColor": "#F8FAFC",
+      "team2BgColor": "#0F172A",
+      "team1Score": 0,
+      "team2Score": 0,
+      "team1Timeouts": [true, true],
+      "team2Timeouts": [true, true],
+      "team1Floater": true,
+      "team2Floater": true,
+      "floaterEnabled": true,
+      "autoHalftimeEnabled": true,
+      "gameHalf": 1,
+      "gameTo": 15,
+      "baseGameTo": 15,
+      "isSoftCap": false,
+      "softCapPending": false,
+      "timerEndTime": null,
+      "timerTimeLeft": 5400,
+      "currentGameStatus": "fresh",
+      "isPostGameFlowPending": false,
+      "currentGameId": null,
+      "isHalftimeBreak": false,
+      "halftimeEndTime": null,
+      "halftimeTimeLeft": 420,
+      "statTrackingEnabled": false,
+      "events": [],
+      "currentPoint": 1,
+      "possession": null,
+      "startingPossession": null,
+      "savedGames": [
+        {
+          "id": "fixture-v2-halftime-by-math",
+          "createdAt": 1700000000000,
+          "team1": {
+            "id": "team-1",
+            "name": "Mixed Team",
+            "roster": [
+              {
+                "id": "p1",
+                "name": "Alex",
+                "isActive": true,
+                "matchingType": null,
+                "role": null
+              },
+              {
+                "id": "p2",
+                "name": "Blair",
+                "isActive": true,
+                "matchingType": null,
+                "role": null
+              }
+            ]
+          },
+          "team2Name": "Womp",
+          "team1Score": 8,
+          "team2Score": 3,
+          "events": [
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p1",
+              "assistPlayerId": "p2"
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p1",
+              "assistPlayerId": null
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p2",
+              "assistPlayerId": "p1"
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p1",
+              "assistPlayerId": "p2"
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p1",
+              "assistPlayerId": null
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p2",
+              "assistPlayerId": "p1"
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p1",
+              "assistPlayerId": "p2",
+              "triggeredHalftime": true
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p2",
+              "assistPlayerId": null
+            }
+          ],
+          "gameTo": 13,
+          "startingPossession": "team1",
+          "autoHalftimeEnabled": true,
+          "schemaVersion": 6
+        },
+        {
+          "id": "fixture-v2-softcap-final-target",
+          "createdAt": 1700003600000,
+          "team1": {
+            "id": "team-1",
+            "name": "Mixed Team",
+            "roster": [
+              {
+                "id": "joel",
+                "name": "Joel",
+                "isActive": true,
+                "matchingType": null,
+                "role": null
+              },
+              {
+                "id": "lily",
+                "name": "Lily",
+                "isActive": true,
+                "matchingType": null,
+                "role": null
+              }
+            ]
+          },
+          "team2Name": "Womp",
+          "team1Score": 1,
+          "team2Score": 4,
+          "events": [
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "joel",
+              "assistPlayerId": "lily"
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            },
+            {
+              "type": "turnover",
+              "team": "team1",
+              "subtype": "drop",
+              "playerId": "lily",
+              "player2Id": null
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null,
+              "triggeredSoftcap": true,
+              "triggeredHalftime": true
+            },
+            {
+              "type": "turnover",
+              "team": "team2",
+              "subtype": "block",
+              "playerId": null,
+              "player2Id": null
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            },
+            {
+              "type": "turnover",
+              "team": "team2",
+              "subtype": "block",
+              "playerId": null,
+              "player2Id": null
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            }
+          ],
+          "gameTo": 4,
+          "startingPossession": "team1",
+          "autoHalftimeEnabled": true,
+          "schemaVersion": 6
+        },
+        {
+          "id": "fixture-v3-already-stamped-halftime",
+          "createdAt": 1700007200000,
+          "team1": {
+            "id": "team-1",
+            "name": "Mixed Team",
+            "roster": [
+              {
+                "id": "p1",
+                "name": "Alex",
+                "isActive": true,
+                "matchingType": null,
+                "role": null
+              },
+              {
+                "id": "p2",
+                "name": "Blair",
+                "isActive": true,
+                "matchingType": null,
+                "role": null
+              }
+            ]
+          },
+          "team2Name": "Womp",
+          "team1Score": 2,
+          "team2Score": 1,
+          "events": [
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p1",
+              "assistPlayerId": "p2"
+            },
+            {
+              "type": "goal",
+              "team": "team1",
+              "goalPlayerId": "p2",
+              "assistPlayerId": "p1",
+              "triggeredHalftime": true
+            },
+            {
+              "type": "goal",
+              "team": "team2",
+              "goalPlayerId": null,
+              "assistPlayerId": null
+            }
+          ],
+          "autoHalftimeEnabled": true,
+          "gameTo": 3,
+          "startingPossession": "team1",
+          "schemaVersion": 6
+        }
+      ],
+      "savedTeams": [],
+      "pointTimerEnabled": false,
+      "currentPointStartTime": null,
+      "pointStartTimestamps": {},
+      "pointTimerPausedElapsed": null,
+      "pendingTimeoutModal": false,
+      "timeoutEndTime": null,
+      "timeoutTimeLeft": 70,
+      "currentLine": [],
+      "pointLines": []
+    },
+    "version": 0
+  }
+}

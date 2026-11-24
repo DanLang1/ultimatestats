@@ -16,6 +16,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
 import StatsContent from '@/components/view-stats/StatsContent';
 import { useTheme } from '@/context/ThemeContext';
+import { useSavedBasicGame } from '@/hooks/basic/useSavedBasicGames';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { formatDate, generateSavedGameCSV } from '@/lib/basic/statsUtils';
 import { MIN_PLAYED_AT_YEAR } from '@/lib/constants';
@@ -40,7 +41,8 @@ export default function SavedGameStatsScreen() {
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { savedGames, savedTeams, updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
+  const { savedTeams, updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
+  const selectedGame = useSavedBasicGame(gameId);
   const removeGameFromTournament = useTournamentStore((state) => state.removeGameFromTournament);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
     null,
@@ -48,8 +50,6 @@ export default function SavedGameStatsScreen() {
   // Upper bound for the date picker; the change handler still rejects future dates.
   const [latestPlayedAtDate] = useState(() => new Date());
   const [isAndroidDatePickerOpen, setIsAndroidDatePickerOpen] = useState(false);
-
-  const selectedGame = gameId ? (savedGames.find((game) => game.id === gameId) ?? null) : null;
 
   const hasMissingParam = !gameId;
   const gameTeamName = selectedGame
@@ -100,7 +100,6 @@ export default function SavedGameStatsScreen() {
 
   const handleDateChange = async (_event: DateTimePickerChangeEvent, selectedValue: Date) => {
     if (!selectedGame) return;
-    // oxlint-disable-next-line react/purity -- false positive: runs in an event handler, not render (oxc-project/oxc#27309, fixed after oxlint 1.90). Remove on the next oxlint upgrade.
     const now = new Date();
     if (selectedValue.getTime() > now.getTime()) return;
     await updateSavedGamePlayedAt(selectedGame.id, selectedValue.getTime());

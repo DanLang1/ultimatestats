@@ -1,6 +1,7 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 
 import EditPointLineSheet from '@/components/basic/timeline/EditPointLineSheet';
+import { useSavedBasicGame } from '@/hooks/basic/useSavedBasicGames';
 import { resolveEditableBasicPointLine } from '@/lib/basic/pointLineEditUtils';
 import { Player, PointLineRecord, SavedGame } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -25,16 +26,16 @@ export default function EditPointLineModal() {
     currentGameId,
     currentPoint,
     pointLines,
-    savedGames,
     replacePointLine,
     replaceSavedGamePointLine,
   } = useGameStore();
 
   const savedGameId = params.gameId && params.gameId !== 'current' ? params.gameId : null;
+  const savedGame = useSavedBasicGame(savedGameId);
   const source =
     savedGameId === null
       ? { roster: currentTeam.roster, pointLines }
-      : getSavedGameSource(savedGames.find((game) => game.id === savedGameId));
+      : getSavedGameSource(savedGame);
 
   if (!source) {
     return <Redirect href="/stats" />;

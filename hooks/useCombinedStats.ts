@@ -3,6 +3,7 @@ import {
   useAdvancedGames,
   useCompletedAdvancedGameSummaries,
 } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useSavedBasicGames } from '@/hooks/basic/useSavedBasicGames';
 import {
   AdvancedFlipStats,
   AdvancedInitialPullWinStats,
@@ -93,7 +94,8 @@ function combineBasicGames(
 /** Combined results for one team's games of one kind, plus their CSV export. */
 export function useCombinedStats(kind: GameKind, gameIds: string[]) {
   const { showAlert } = useAlert();
-  const { savedGames, savedTeams } = useGameStore();
+  const { savedTeams } = useGameStore();
+  const savedGames = useSavedBasicGames();
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const gameIdSet = new Set(gameIds);
 

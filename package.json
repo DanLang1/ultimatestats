@@ -27,6 +27,7 @@
     "maestro:smoke": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test --include-tags smoke .maestro/tests/",
     "maestro:all": "maestro-runner --platform ios --condition-timeout 2000 --config .maestro/config.yaml --output .maestro/test-output/reports test .maestro/tests/",
     "maestro:parallel": "bash scripts/maestro-parallel.sh",
+    "capture:storage-checkpoint": "node scripts/capture-storage-checkpoint.ts",
     "knip": "knip"
   },
   "dependencies": {

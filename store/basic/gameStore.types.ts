@@ -1,3 +1,5 @@
+import type { StateCreator } from 'zustand';
+
 import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
 import { MatchingType, PlayerRole } from '@/lib/storage/types';
 
@@ -55,8 +57,58 @@ export type EventToastSignal =
   | { id: number; kind: 'undo'; event: GameEvent }
   | { id: number; kind: 'opponentGoal' };
 
-export interface GameState {
+export interface TeamSlice {
   currentTeam: SavedTeam; // My team (id, name, roster) - defaults to Team 1
+  savedTeams: SavedTeam[];
+
+  setCurrentTeam: (team: SavedTeam) => void;
+  addPlayer: (name: string) => string | null;
+  updateRosterPlayer: (
+    playerId: string,
+    updates: {
+      isActive?: boolean;
+      matchingType?: MatchingType | null;
+      number?: string;
+      role?: PlayerRole | null;
+    },
+  ) => UpdateRosterPlayerResult;
+  clearRoster: () => void;
+  saveCurrentTeam: (teamOverride?: SavedTeam) => Promise<void>;
+  deleteTeam: (id: string) => Promise<void>;
+  loadTeam: (teamId: string) => Promise<void>;
+  importTeam: (team: SavedTeam) => Promise<void>;
+}
+
+export interface SavedGamesSlice {
+  savedGames: SavedGame[];
+
+  updateSavedGameEvent: (
+    gameId: string,
+    eventIndex: number,
+    updates: {
+      playerId?: string | null;
+      player2Id?: string | null;
+      subtype?: TurnoverType;
+      goalPlayerId?: string | null;
+      assistPlayerId?: string | null;
+      elapsedMs?: number | null;
+    },
+  ) => Promise<void>;
+  deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
+  updateSavedGamePlayedAt: (gameId: string, playedAt: number) => Promise<void>;
+  replaceSavedGamePointLine: (
+    gameId: string,
+    pointNumber: number,
+    playerIds: string[],
+  ) => Promise<boolean>;
+
+  saveCurrentGame: () => Promise<void>;
+  deleteSavedGame: (id: string) => Promise<void>;
+  deleteSavedGames: (ids: string[]) => Promise<void>;
+  importGame: (game: SavedGame) => Promise<void>;
+}
+
+export interface LiveGameSlice {
   team2Name: string; // Opposing team name (no roster/ID needed)
 
   team1BgColor: string;
@@ -111,7 +163,6 @@ export interface GameState {
   currentLine: string[]; // numPlayers playerIds on field now
   pointLines: PointLineRecord[];
 
-  setCurrentTeam: (team: SavedTeam) => void;
   setTeam2Name: (name: string) => void;
   setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
@@ -147,19 +198,8 @@ export interface GameState {
   clearTimeoutModal: () => void;
 
   setStatTrackingEnabled: (enabled: boolean) => void;
-  addPlayer: (name: string) => string | null;
-  updateRosterPlayer: (
-    playerId: string,
-    updates: {
-      isActive?: boolean;
-      matchingType?: MatchingType | null;
-      number?: string;
-      role?: PlayerRole | null;
-    },
-  ) => UpdateRosterPlayerResult;
   addGoalEvent: (event: { goalPlayerId: string | null; assistPlayerId: string | null }) => void;
   cancelPendingGoal: () => void;
-  clearRoster: () => void;
   setPointTimerEnabled: (enabled: boolean) => void;
   startPoint: () => void;
   togglePointTimerPause: () => void;
@@ -188,21 +228,6 @@ export interface GameState {
   ) => void;
   deleteEvent: (eventIndex: number) => boolean; // Returns false if deletion blocked (goal/assist)
 
-  updateSavedGameEvent: (
-    gameId: string,
-    eventIndex: number,
-    updates: {
-      playerId?: string | null;
-      player2Id?: string | null;
-      subtype?: TurnoverType;
-      goalPlayerId?: string | null;
-      assistPlayerId?: string | null;
-      elapsedMs?: number | null;
-    },
-  ) => Promise<void>;
-  deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
-  updateSavedGamePlayedAt: (gameId: string, playedAt: number) => Promise<void>;
-
   setCurrentLine: (playerIds: string[]) => void;
   recordLineForPoint: (
     pointNumber: number,
@@ -210,20 +235,13 @@ export interface GameState {
     subType?: 'injury' | 'replacement',
   ) => void;
   replacePointLine: (pointNumber: number, playerIds: string[]) => boolean;
-  replaceSavedGamePointLine: (
-    gameId: string,
-    pointNumber: number,
-    playerIds: string[],
-  ) => Promise<boolean>;
-
-  savedGames: SavedGame[];
-  savedTeams: SavedTeam[];
-  saveCurrentGame: () => Promise<void>;
-  deleteSavedGame: (id: string) => Promise<void>;
-  deleteSavedGames: (ids: string[]) => Promise<void>;
-  saveCurrentTeam: (teamOverride?: SavedTeam) => Promise<void>;
-  deleteTeam: (id: string) => Promise<void>;
-  loadTeam: (teamId: string) => Promise<void>;
-  importGame: (game: SavedGame) => Promise<void>;
-  importTeam: (team: SavedTeam) => Promise<void>;
 }
+
+export interface GameState extends TeamSlice, SavedGamesSlice, LiveGameSlice {}
+
+export type GameSliceCreator<Slice> = StateCreator<
+  GameState,
+  [['zustand/immer', never], ['zustand/persist', unknown]],
+  [],
+  Slice
+>;

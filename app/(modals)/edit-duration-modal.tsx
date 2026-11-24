@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
+import { useSavedBasicGame } from '@/hooks/basic/useSavedBasicGames';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   computePointByPointEvents,
@@ -34,7 +35,6 @@ export default function EditDurationModal() {
     startingPossession,
     gameTo: currentGameTo,
     autoHalftimeEnabled: currentAutoHalftimeEnabled,
-    savedGames,
     updateEvent,
     updateSavedGameEvent,
   } = useGameStore();
@@ -44,7 +44,7 @@ export default function EditDurationModal() {
   const currentMs = params.currentDurationMs ? parseInt(params.currentDurationMs, 10) : 0;
   const editorType = params.editorType === 'event' ? 'event' : 'point';
   const isSavedGame = gameId !== 'current';
-  const savedGame = isSavedGame ? savedGames.find((g) => g.id === gameId) : null;
+  const savedGame = useSavedBasicGame(isSavedGame ? gameId : null);
 
   const activeEvents = savedGame?.events ?? events;
   const activeStartingPossession = savedGame?.startingPossession ?? startingPossession;

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useSavedBasicGames } from '@/hooks/basic/useSavedBasicGames';
 import type { AdvancedGameSummary } from '@/lib/advancedTracking/summary';
 import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import {
@@ -97,7 +98,8 @@ function isExpectedShareImportError(error: Error): boolean {
 }
 
 export function useShareImport(shareId: string | undefined) {
-  const { savedGames, savedTeams } = useGameStore();
+  const { savedTeams } = useGameStore();
+  const savedGames = useSavedBasicGames();
   const { data: advancedGameSummaries } = useAdvancedGameSummaries();
   // Only set after a user action (import confirmed/cancelled) to override the derived state
   const [doneState, setDoneState] = useState<ShareImportState | null>(null);

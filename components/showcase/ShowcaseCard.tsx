@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { useAdvancedGameSummaries } from '@/hooks/advancedTracking/useAdvancedGameQueries';
+import { useSavedBasicGames } from '@/hooks/basic/useSavedBasicGames';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import {
   fetchShowcasePayload,
@@ -28,7 +29,7 @@ export default function ShowcaseCard({ game }: ShowcaseCardProps) {
   const { importGame } = useGameStore();
   const { importAdvancedGame } = useAdvancedTrackingStore();
 
-  const { savedGames } = useGameStore();
+  const savedGames = useSavedBasicGames();
   const { data: advancedSummaries } = useAdvancedGameSummaries();
   const basicGameImported =
     game.game_type === 'game' && savedGames.some((savedGame) => savedGame.id === game.game_id);
