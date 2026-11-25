@@ -30,6 +30,7 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export const FOCUS_SIDE_ID = 'focus-side';
@@ -49,9 +50,9 @@ export default function AdvancedPreGameConfirm() {
   const styles = createStyles(sizeClass);
   const { finishActiveGameSession } = useGameSessionActions();
 
+  const currentTeam = useCurrentTeam();
+  const teams = useTeamStore((state) => state.teams);
   const {
-    currentTeam,
-    savedTeams,
     team2Name,
     gameTo,
     setGameTo,
@@ -108,8 +109,7 @@ export default function AdvancedPreGameConfirm() {
     isEditingOpponentName,
     startEditingOpponentName,
   } = useOpponentNameDraft();
-  const canSwitchTeam =
-    savedTeams.length > 1 && savedTeams.some((team) => team.id !== currentTeam.id);
+  const canSwitchTeam = teams.length > 1;
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 

@@ -3,6 +3,7 @@ import { hasItems } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 
 import { TurnoverEntryInner } from './TurnoverEntryInner';
 
@@ -12,13 +13,13 @@ interface TurnoverEntryOverlayProps {
 }
 
 export function TurnoverEntryOverlay({ preselectedType, onDismiss }: TurnoverEntryOverlayProps) {
+  const currentTeam = useCurrentTeam();
+  const addPlayer = useTeamStore((state) => state.addPlayer);
   const {
     pendingTurnoverEntry,
     possession,
     statTrackingEnabled,
-    currentTeam,
     team2Name,
-    addPlayer,
     addTurnoverEvent,
     clearPendingTurnoverEntry,
     currentLine,

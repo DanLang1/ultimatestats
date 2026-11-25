@@ -5,6 +5,7 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useTeamStore } from '@/store/teamStore';
 import {
   ADVANCED_TEST_SIDES,
   createAdvancedGameScenario,
@@ -37,12 +38,24 @@ export const testTeam: SavedTeam = {
   roster: testPlayers,
 };
 
+/** Replaces the team list with this one team and makes it current. */
+export function arrangeCurrentTeam(team: SavedTeam) {
+  useTeamStore.setState({ teams: [team], currentTeamId: team.id });
+}
+
+/** Adds teams to the team list; the current team stays the same. */
+export function arrangeOtherTeams(teams: SavedTeam[]) {
+  useTeamStore.setState((state) => {
+    state.teams.push(...teams);
+  });
+}
+
 export function arrangeBasicGame(options?: {
   statTrackingEnabled?: boolean;
   status?: 'fresh' | 'inProgress' | 'finished';
 }) {
+  arrangeCurrentTeam(testTeam);
   useGameStore.setState({
-    currentTeam: testTeam,
     team2Name: 'Rivals',
     statTrackingEnabled: options?.statTrackingEnabled ?? false,
     currentGameStatus: options?.status ?? 'inProgress',

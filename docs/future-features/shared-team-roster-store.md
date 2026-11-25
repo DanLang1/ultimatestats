@@ -1,25 +1,6 @@
 # Shared Team And Roster Store
 
-> **Status**: Follow-up from basic/advanced structure split
-
-## Problem
-
-The app now has intentional basic and advanced namespaces for domain logic, stores,
-hooks, and components. One ownership ambiguity remains: advanced tracking still
-reads roster/team data from the basic game store.
-
-Current known imports:
-
-- `app/(main)/advanced-tracking/pre-game-confirm.tsx`
-- `components/advancedTracking/TrackerLineScreen.tsx`
-- `hooks/advancedTracking/useLiveRosterParticipants.ts`
-- `store/advancedTracking/trackingStore.ts` (roster-to-participant sync subscription and
-  the `registerActiveAdvancedGameGetter` deactivation-guard seam in the basic store)
-
-Those files use `useGameStore` for shared concepts like the active team roster,
-not for basic scoring or basic game state. That means the dependency is practical
-today, but the ownership is wrong: advanced should not need to import from
-`store/basic`.
+> **Status**: Migration sketch steps 1-5 are done; step 6 remains.
 
 ## Goal
 
@@ -32,20 +13,13 @@ The desired direction:
 store/
   basic/              # Basic live game state only
   advancedTracking/   # Advanced live tracking and saved advanced games
-  teamStore.ts        # Shared current team, saved teams, roster CRUD
+  teamStore.ts        # Shared team list, current team, roster CRUD
 ```
 
-After this, advanced tracking should have zero imports from `store/basic`.
+Advanced tracking no longer reads team data from `store/basic`; its pre-game screen still reads
+shared game config (opponent name, game-to, timeouts) from there.
 
-## Likely Shared State
-
-Move these concepts out of the basic game store:
-
-- `currentTeam`
-- `savedTeams`
-- roster mutations such as `addPlayer`, `updateRosterPlayer`, and delete/toggle
-  helpers
-- team preset/import/save/delete actions
+## Basic Store State
 
 Keep these in `store/basic`:
 
@@ -74,9 +48,7 @@ Keep these in `store/basic`:
   future SQLite direction as saved games?
 - Mid-game roster changes now flow one way into a live advanced game:
   additions/reactivations append participants, while deactivation and deletion are blocked after
-  recorded actions. When this store is extracted, that sync subscription and the
-  `registerActiveAdvancedGameGetter` guard seam move with it and can become a
-  direct store-to-store call.
+  recorded actions.
 
 ## Related Docs
 

@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useGameStore } from '@/store/basic/gameStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
+  // The team store reads storage while this module loads, before beforeEach configures the mock.
+  getItem: jest.fn().mockResolvedValue(null),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 }));
@@ -19,10 +19,7 @@ describe('line rollback after goal reversal', () => {
     mockedAsyncStorage.removeItem.mockResolvedValue(undefined);
 
     useGameStore.getState().resetGame();
-    useLinePresetsStore.setState({
-      presets: [],
-      lineConfirmedForNextPoint: false,
-    });
+    useGameStore.getState().setLineConfirmedForNextPoint(false);
   });
 
   it('restores the previous current line when undoing a goal after setting the next line', () => {
@@ -36,7 +33,7 @@ describe('line rollback after goal reversal', () => {
 
     useGameStore.getState().setCurrentLine(pointTwoLine);
     useGameStore.getState().recordLineForPoint(2, false);
-    useLinePresetsStore.getState().setLineConfirmedForNextPoint(true);
+    useGameStore.getState().setLineConfirmedForNextPoint(true);
 
     const didUndo = useGameStore.getState().undoLastAction();
     const { currentLine, pointLines, currentPoint } = useGameStore.getState();
@@ -51,7 +48,7 @@ describe('line rollback after goal reversal', () => {
         playerIds: pointOneLine,
       }),
     );
-    expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
+    expect(useGameStore.getState().lineConfirmedForNextPoint).toBe(false);
   });
 
   it('restores the previous current line when canceling pending stat entry after setting the next line', () => {
@@ -66,7 +63,7 @@ describe('line rollback after goal reversal', () => {
 
     useGameStore.getState().setCurrentLine(pointTwoLine);
     useGameStore.getState().recordLineForPoint(2, false);
-    useLinePresetsStore.getState().setLineConfirmedForNextPoint(true);
+    useGameStore.getState().setLineConfirmedForNextPoint(true);
 
     useGameStore.getState().cancelPendingGoal();
 
@@ -82,7 +79,7 @@ describe('line rollback after goal reversal', () => {
         playerIds: pointOneLine,
       }),
     );
-    expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
+    expect(useGameStore.getState().lineConfirmedForNextPoint).toBe(false);
   });
 
   it('clears currentLine when undoing to a point with no recorded line', () => {
@@ -92,7 +89,7 @@ describe('line rollback after goal reversal', () => {
 
     useGameStore.getState().setCurrentLine(pointTwoLine);
     useGameStore.getState().recordLineForPoint(2, false);
-    useLinePresetsStore.getState().setLineConfirmedForNextPoint(true);
+    useGameStore.getState().setLineConfirmedForNextPoint(true);
 
     const didUndo = useGameStore.getState().undoLastAction();
     const { currentLine, pointLines, currentPoint } = useGameStore.getState();
@@ -101,7 +98,7 @@ describe('line rollback after goal reversal', () => {
     expect(currentPoint).toBe(1);
     expect(currentLine).toEqual([]);
     expect(pointLines).toEqual([]);
-    expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
+    expect(useGameStore.getState().lineConfirmedForNextPoint).toBe(false);
   });
 
   it('restores the latest recorded line for the reverted point when multiple line records exist', () => {
@@ -119,7 +116,7 @@ describe('line rollback after goal reversal', () => {
 
     useGameStore.getState().setCurrentLine(pointTwoLine);
     useGameStore.getState().recordLineForPoint(2, false);
-    useLinePresetsStore.getState().setLineConfirmedForNextPoint(true);
+    useGameStore.getState().setLineConfirmedForNextPoint(true);
 
     const didUndo = useGameStore.getState().undoLastAction();
     const { currentLine, pointLines, currentPoint } = useGameStore.getState();
@@ -136,6 +133,6 @@ describe('line rollback after goal reversal', () => {
         substitutionType: 'injury',
       }),
     );
-    expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
+    expect(useGameStore.getState().lineConfirmedForNextPoint).toBe(false);
   });
 });

@@ -13,6 +13,7 @@ import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { getPlayerName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
+import { useCurrentTeam } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 type EditableTurnoverType = TurnoverType | 'opponentTurn' | 'opponentBlock';
@@ -68,8 +69,8 @@ export default function EditEventModal() {
     gameId: string; // 'current' or saved game ID
   }>();
 
+  const currentTeam = useCurrentTeam();
   const {
-    currentTeam,
     events,
     pointLines,
     updateEvent,

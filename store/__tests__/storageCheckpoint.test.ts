@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage/types';
 import {
   coldStartApp,
@@ -7,7 +9,11 @@ import {
   type StorageCheckpoint,
 } from '@/test/storageCheckpoint';
 
+import { PersistedTeamState } from '../teamStore.types';
+
 const BASIC_GAME_STORAGE_KEY = 'ultimatestats-game-storage';
+const LINE_PRESETS_STORAGE_KEY = 'ultimatestats-line-presets';
+const TEAM_STORAGE_KEY = 'ultimatestats-team-storage';
 
 type PersistedBasicGameEntry = {
   state: {
@@ -22,35 +28,127 @@ function getBasicGameEntry(storage: StorageCheckpoint) {
   return storage[BASIC_GAME_STORAGE_KEY] as PersistedBasicGameEntry;
 }
 
+type PersistedTeamEntry = {
+  state: PersistedTeamState;
+  version: number;
+};
+
+function getTeamEntry(storage: StorageCheckpoint) {
+  return storage[TEAM_STORAGE_KEY] as PersistedTeamEntry;
+}
+
+type PersistedEntryWithLineConfirmedFlag = {
+  state: { lineConfirmedForNextPoint?: boolean };
+};
+
+/**
+ * The complete storage difference from 2.6.0: the basic-game entry gains
+ * `lineConfirmedForNextPoint` (default false), the line-presets entry drops it, and a team entry
+ * appears. The basic-game entry keeps its `currentTeam` and `savedTeams`.
+ */
+function withStorageChangesSince260(
+  checkpoint: StorageCheckpoint,
+  expectedTeamEntry: PersistedTeamEntry,
+): StorageCheckpoint {
+  const expectedStorage = structuredClone(checkpoint);
+  const basicGameEntry = expectedStorage[
+    BASIC_GAME_STORAGE_KEY
+  ] as PersistedEntryWithLineConfirmedFlag;
+  const linePresetsEntry = expectedStorage[
+    LINE_PRESETS_STORAGE_KEY
+  ] as PersistedEntryWithLineConfirmedFlag;
+
+  basicGameEntry.state.lineConfirmedForNextPoint = false;
+  delete linePresetsEntry.state.lineConfirmedForNextPoint;
+  expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
+
+  return expectedStorage;
+}
+
 function getSavedGameIds(savedGames: SavedGame[]) {
   return savedGames.map((game) => game.id);
 }
 
 describe('storage checkpoints', () => {
   // mid-game holds a game in progress (events, lines, running clocks, an open timeout), so a live
-  // field that failed to hydrate cannot hide behind its default.
-  it('cold-starts 2.6.0/mid-game.json and writes it back unchanged', async () => {
-    const checkpoint = readCheckpointFile('2.6.0/mid-game.json');
-    const persistedBasicGame = getBasicGameEntry(checkpoint).state;
-    await seedStorage(checkpoint);
+  // field that failed to hydrate cannot hide behind its default. multiple-teams holds four saved
+  // teams, a current team that differs from its saved copy, and a preset whose team was deleted.
+  //
+  // The team entry is seeded from the basic-game entry. In mid-game the current team equals its
+  // saved copy, so the teams are the saved teams. In multiple-teams the current copy replaces the
+  // stale saved one, which the expected file spells out.
+  it.each([
+    {
+      checkpointPath: '2.6.0/mid-game.json',
+      getExpectedTeamEntry: (checkpoint: StorageCheckpoint): PersistedTeamEntry => {
+        const { currentTeam, savedTeams } = getBasicGameEntry(checkpoint).state;
+        return { state: { teams: savedTeams, currentTeamId: currentTeam.id }, version: 0 };
+      },
+    },
+    {
+      checkpointPath: '2.6.0/multiple-teams.json',
+      getExpectedTeamEntry: () =>
+        getTeamEntry(
+          readCheckpointFile('expected/multiple-teams.team-storage.after-cold-start.json'),
+        ),
+    },
+  ])(
+    'cold-starts $checkpointPath, seeds the team entry, and writes the rest back with only the line-confirmed flag moved',
+    async ({ checkpointPath, getExpectedTeamEntry }) => {
+      const checkpoint = readCheckpointFile(checkpointPath);
+      const persistedBasicGame = getBasicGameEntry(checkpoint).state;
+      const expectedTeamEntry = getExpectedTeamEntry(checkpoint);
+      await seedStorage(checkpoint);
 
-    const app = await coldStartApp();
+      const app = await coldStartApp();
 
-    expect(app.reportedErrors).toEqual([]);
-    const hydratedBasicGame = app.useGameStore.getState();
-    expect(getSavedGameIds(hydratedBasicGame.savedGames)).toEqual(
-      getSavedGameIds(persistedBasicGame.savedGames),
-    );
-    expect(hydratedBasicGame.savedTeams).toEqual(persistedBasicGame.savedTeams);
-    expect(hydratedBasicGame.currentTeam).toEqual(persistedBasicGame.currentTeam);
-    expect(hydratedBasicGame).toMatchObject(persistedBasicGame);
+      expect(app.reportedErrors).toEqual([]);
+      // Seeded by the team store's own storage read, before any store has written.
+      expect(getTeamEntry(await readStorage())).toEqual(expectedTeamEntry);
+      expect(app.useTeamStore.getState()).toMatchObject(expectedTeamEntry.state);
+      const hydratedBasicGame = app.useGameStore.getState();
+      expect(getSavedGameIds(hydratedBasicGame.savedGames)).toEqual(
+        getSavedGameIds(persistedBasicGame.savedGames),
+      );
+      expect(hydratedBasicGame.savedTeams).toEqual(persistedBasicGame.savedTeams);
+      expect(hydratedBasicGame.currentTeam).toEqual(persistedBasicGame.currentTeam);
+      expect(hydratedBasicGame).toMatchObject(persistedBasicGame);
 
-    await app.writeAllPersistedStores();
+      await app.writeAllPersistedStores();
 
-    expect(await readStorage()).toEqual(checkpoint);
+      expect(await readStorage()).toEqual(
+        withStorageChangesSince260(checkpoint, expectedTeamEntry),
+      );
+    },
+  );
+
+  // On a device the basic-game and team entries stay absent until the first state change; the
+  // harness forces that write so the persisted defaults can be read.
+  it('cold-starts a fresh install with the default team in the team entry only and stays stable', async () => {
+    await seedStorage({});
+
+    const firstStart = await coldStartApp();
+    await firstStart.writeAllPersistedStores();
+    const storageAfterFirstStart = await readStorage();
+
+    expect(firstStart.reportedErrors).toEqual([]);
+    const persistedBasicGame = getBasicGameEntry(storageAfterFirstStart).state;
+    expect(persistedBasicGame).not.toHaveProperty('currentTeam');
+    expect(persistedBasicGame).not.toHaveProperty('savedTeams');
+    expect(persistedBasicGame.savedGames).toEqual([]);
+    const persistedTeams = getTeamEntry(storageAfterFirstStart).state;
+    expect(persistedTeams.teams).toEqual([
+      { id: persistedTeams.currentTeamId, name: 'Team 1', roster: [] },
+    ]);
+
+    const secondStart = await coldStartApp();
+    await secondStart.writeAllPersistedStores();
+
+    expect(secondStart.reportedErrors).toEqual([]);
+    expect(await readStorage()).toEqual(storageAfterFirstStart);
   });
 
-  it.each(['2.6.0/mid-game.json', '2.6.0/legacy-saved-games.json'])(
+  it.each(['2.6.0/mid-game.json', '2.6.0/multiple-teams.json', '2.6.0/legacy-saved-games.json'])(
     'leaves storage identical after a second cold start of %s',
     async (checkpointPath) => {
       await seedStorage(readCheckpointFile(checkpointPath));
@@ -66,6 +164,21 @@ describe('storage checkpoints', () => {
       expect(await readStorage()).toEqual(storageAfterFirstStart);
     },
   );
+
+  it('seeds one team from an unsaved default team', async () => {
+    await seedStorage(readCheckpointFile('2.6.0/legacy-saved-games.json'));
+
+    const app = await coldStartApp();
+
+    expect(app.reportedErrors).toEqual([]);
+    expect(getTeamEntry(await readStorage())).toEqual({
+      state: {
+        teams: [{ id: 'checkpoint-default-team', name: 'Team 1', roster: [] }],
+        currentTeamId: 'checkpoint-default-team',
+      },
+      version: 0,
+    });
+  });
 
   it('migrates legacy saved games at hydration and persists the result', async () => {
     const checkpoint = readCheckpointFile('2.6.0/legacy-saved-games.json');
@@ -86,5 +199,22 @@ describe('storage checkpoints', () => {
     expect({ [BASIC_GAME_STORAGE_KEY]: persistedBasicGame }).toEqual(
       readCheckpointFile('expected/legacy-saved-games.after-cold-start.json'),
     );
+  });
+
+  it('hydrates the seeded teams even when writing the seeded team entry fails', async () => {
+    await seedStorage(readCheckpointFile('2.6.0/multiple-teams.json'));
+    const seedWriteError = new Error('disk full');
+    jest.mocked(AsyncStorage.setItem).mockRejectedValueOnce(seedWriteError);
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const app = await coldStartApp();
+
+    expect(app.reportedErrors.map(([error]) => error)).toEqual([seedWriteError]);
+    expect(app.useTeamStore.getState().teams.map((team) => team.name)).toEqual([
+      'Hammers',
+      'Rookies',
+      'Imports',
+      'Cleared',
+    ]);
   });
 });

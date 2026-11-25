@@ -13,7 +13,7 @@ import {
 } from '@/lib/sharing';
 import { SavedGame, SavedTeam } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 
 type GamePayload = Extract<SharedPayload, { type: 'game' }>;
 type AdvancedGamePayload = Extract<SharedPayload, { type: 'advanced-game' }>;
@@ -98,7 +98,7 @@ function isExpectedShareImportError(error: Error): boolean {
 }
 
 export function useShareImport(shareId: string | undefined) {
-  const { savedTeams } = useGameStore();
+  const teams = useTeamStore((state) => state.teams);
   const savedGames = useSavedBasicGames();
   const { data: advancedGameSummaries } = useAdvancedGameSummaries();
   // Only set after a user action (import confirmed/cancelled) to override the derived state
@@ -122,7 +122,7 @@ export function useShareImport(shareId: string | undefined) {
   } else if (query.isError) {
     importState = { status: 'error', message: getShareImportErrorMessage(query.error) };
   } else if (query.data) {
-    importState = deriveImportState(query.data, savedGames, advancedGameSummaries, savedTeams);
+    importState = deriveImportState(query.data, savedGames, advancedGameSummaries, teams);
   }
 
   return { isPending: query.isPending, importState, setImportState: setDoneState };

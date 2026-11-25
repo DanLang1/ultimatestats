@@ -1,0 +1,141 @@
+{
+  "ultimatestats-team-storage": {
+    "state": {
+      "teams": [
+        {
+          "id": "mwu4basg7xjd8o091tm",
+          "name": "Hammers",
+          "roster": [
+            {
+              "id": "mwu4basmdsge1eyvn35",
+              "name": "Ana",
+              "isActive": true,
+              "matchingType": null,
+              "role": null,
+              "number": "7"
+            },
+            {
+              "id": "mwu4basnk7io5gusub",
+              "name": "Ben",
+              "isActive": true,
+              "matchingType": null,
+              "role": null,
+              "number": "0"
+            },
+            {
+              "id": "mwu4basnw0b44bvz2k",
+              "name": "Cleo",
+              "isActive": true,
+              "matchingType": "fmp",
+              "role": null
+            },
+            {
+              "id": "mwu4basnuq6l8n5e04c",
+              "name": "Dev",
+              "isActive": true,
+              "matchingType": "mmp",
+              "role": null
+            },
+            {
+              "id": "mwu4basnbgqcdmnps9",
+              "name": "Eli",
+              "isActive": true,
+              "matchingType": null,
+              "role": "handler"
+            },
+            {
+              "id": "mwu4basnl04ru8gts4",
+              "name": "Fay",
+              "isActive": true,
+              "matchingType": null,
+              "role": "cutter"
+            },
+            {
+              "id": "mwu4basnn201rg4cz4l",
+              "name": "Gus",
+              "isActive": false,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4basnn848o6tdzo",
+              "name": "Hanna",
+              "isActive": true,
+              "matchingType": "fmp",
+              "role": null,
+              "number": "12"
+            }
+          ]
+        },
+        {
+          "id": "mwu4baspjt5ejx73kel",
+          "name": "Rookies",
+          "roster": [
+            {
+              "id": "mwu4baspmmyt6dy206p",
+              "name": "Jo",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspfprmocxdx7g",
+              "name": "Kai",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspif6jvjztvgp",
+              "name": "Lena",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4basp08w60fkq8zy",
+              "name": "Milo",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            }
+          ]
+        },
+        {
+          "id": "mwu4baspnd91gugrfts",
+          "name": "Imports",
+          "roster": [
+            {
+              "id": "mwu4baspfmegvbthqd4",
+              "name": "Nia",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspf0erlpn8dic",
+              "name": "Omar",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspkzpvdib1okk",
+              "name": "Pia",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            }
+          ]
+        },
+        {
+          "id": "mwu4basp0qh130mj617",
+          "name": "Cleared",
+          "roster": []
+        }
+      ],
+      "currentTeamId": "mwu4basp0qh130mj617"
+    },
+    "version": 0
+  }
+}

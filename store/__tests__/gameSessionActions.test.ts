@@ -6,7 +6,8 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
+  // The team store reads storage while this module loads, before beforeEach configures the mock.
+  getItem: jest.fn().mockResolvedValue(null),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 }));
@@ -104,5 +105,13 @@ describe('game session actions', () => {
     expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
     expect(useGameStore.getState().team1Score).toBe(0);
     expect(useGameStore.getState().currentGameStatus).toBe('fresh');
+  });
+
+  it('does not carry a line confirmed in the previous game into a new game', () => {
+    useGameStore.getState().setLineConfirmedForNextPoint(true);
+
+    useGameStore.getState().resetGame();
+
+    expect(useGameStore.getState().lineConfirmedForNextPoint).toBe(false);
   });
 });

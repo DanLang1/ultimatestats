@@ -101,6 +101,8 @@ export async function coldStartApp() {
   const { useStartupMigrationStore } = jest.requireActual<
     typeof import('@/store/startupMigrationStore')
   >('@/store/startupMigrationStore');
+  const { useTeamStore } =
+    jest.requireActual<typeof import('@/store/teamStore')>('@/store/teamStore');
   const { useTournamentStore } =
     jest.requireActual<typeof import('@/store/tournamentStore')>('@/store/tournamentStore');
   const { useTutorialStore } =
@@ -117,6 +119,7 @@ export async function coldStartApp() {
     useLinePresetsStore,
     useSettingsStore,
     useStartupMigrationStore,
+    useTeamStore,
     useTournamentStore,
     useTutorialStore,
   ];
@@ -126,6 +129,7 @@ export async function coldStartApp() {
 
   return {
     useGameStore,
+    useTeamStore,
     /** Errors sent to Sentry during this start; hydration failures are otherwise silent. */
     reportedErrors: jest.mocked(Sentry.captureException).mock.calls,
     /** Makes every persisted store write its current state, as any later state change would. */

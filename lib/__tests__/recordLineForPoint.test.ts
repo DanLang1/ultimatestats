@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { computePlayingTime } from '@/lib/lineUtils';
-import { Player, SavedGame } from '@/lib/storage';
+import { Player, SavedGame, SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
+  // The team store reads storage while this module loads, before beforeEach configures the mock.
+  getItem: jest.fn().mockResolvedValue(null),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 }));
@@ -20,6 +22,10 @@ function makePlayer(id: string): Player {
     matchingType: null,
     role: null,
   };
+}
+
+function setCurrentTeam(team: SavedTeam) {
+  useTeamStore.setState({ teams: [team], currentTeamId: team.id });
 }
 
 describe('recordLineForPoint replacement handling', () => {
@@ -95,8 +101,8 @@ describe('recordLineForPoint replacement handling', () => {
       startingPossession: 'team1',
       pointLines: originalPointLines,
     };
+    setCurrentTeam({ id: 'team', name: 'Team', roster });
     useGameStore.setState({
-      currentTeam: { id: 'team', name: 'Team', roster },
       currentGameId: savedGame.id,
       currentPoint: 3,
       pointLines: originalPointLines,
@@ -121,8 +127,8 @@ describe('recordLineForPoint replacement handling', () => {
   it('rejects edits to the live in-progress point', () => {
     const roster = ['a', 'b', 'c'].map(makePlayer);
     const pointLines = [{ pointNumber: 2, playerIds: ['a', 'b'], timestamp: 1 }];
+    setCurrentTeam({ id: 'team', name: 'Team', roster });
     useGameStore.setState({
-      currentTeam: { id: 'team', name: 'Team', roster },
       currentPoint: 2,
       pointLines,
     });
@@ -157,8 +163,8 @@ describe('recordLineForPoint replacement handling', () => {
         { pointNumber: 1, playerIds: ['a', 'c'], timestamp: 2, isSubstitution: true },
       ],
     };
+    setCurrentTeam(game.team1);
     useGameStore.setState({
-      currentTeam: game.team1,
       currentGameId: game.id,
       currentGameStatus: 'inProgress',
       currentPoint: 2,
@@ -214,8 +220,8 @@ describe('recordLineForPoint replacement handling', () => {
       startingPossession: 'team1',
       pointLines,
     };
+    setCurrentTeam({ id: 'team', name: 'Team', roster: liveRoster });
     useGameStore.setState({
-      currentTeam: { id: 'team', name: 'Team', roster: liveRoster },
       currentGameId: game.id,
       currentPoint: 2,
       pointLines,
@@ -244,8 +250,8 @@ describe('recordLineForPoint replacement handling', () => {
       startingPossession: 'team1',
       pointLines,
     };
+    setCurrentTeam({ id: 'team', name: 'Team', roster: liveRoster });
     useGameStore.setState({
-      currentTeam: { id: 'team', name: 'Team', roster: liveRoster },
       currentGameId: game.id,
       currentPoint: 2,
       pointLines,

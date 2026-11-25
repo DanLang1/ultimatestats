@@ -21,14 +21,15 @@ import { getCapStatusMessage } from '@/lib/basic/capStatusUtils';
 import { formatRatioFull, getExpectedRatio, getSequenceNumber } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export default function GameInfoScreen() {
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
+  const currentTeam = useCurrentTeam();
   const {
     gameTo,
-    currentTeam,
     team2Name,
     team1Timeouts,
     team2Timeouts,

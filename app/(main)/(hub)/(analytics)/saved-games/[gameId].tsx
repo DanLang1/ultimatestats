@@ -30,6 +30,7 @@ import {
 } from '@/lib/sharing/shareActionUtils';
 import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
 
@@ -41,7 +42,8 @@ export default function SavedGameStatsScreen() {
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { savedTeams, updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
+  const { updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
+  const teams = useTeamStore((state) => state.teams);
   const selectedGame = useSavedBasicGame(gameId);
   const removeGameFromTournament = useTournamentStore((state) => state.removeGameFromTournament);
   const [pendingShareAction, setPendingShareAction] = useState<(() => Promise<string>) | null>(
@@ -53,7 +55,7 @@ export default function SavedGameStatsScreen() {
 
   const hasMissingParam = !gameId;
   const gameTeamName = selectedGame
-    ? resolveTeamName(selectedGame.team1.id, selectedGame.team1.name, savedTeams)
+    ? resolveTeamName(selectedGame.team1.id, selectedGame.team1.name, teams)
     : null;
   const actionIconColor = selectedGame ? palette.accent : palette.textMuted;
 

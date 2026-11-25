@@ -27,8 +27,8 @@ import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
 import { getContrastingTextColor } from '@/lib/colorUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam } from '@/store/teamStore';
 
 export default function LiveScoreboard() {
   const layout = useLayout();
@@ -44,8 +44,8 @@ export default function LiveScoreboard() {
     ? 0
     : scaleBySizeClass(isCompactVertical ? 14 : 20, layout.sizeClass);
 
+  const currentTeam = useCurrentTeam();
   const {
-    currentTeam,
     team2Name,
     team1BgColor,
     team2BgColor,
@@ -130,7 +130,7 @@ export default function LiveScoreboard() {
     const { didIncrement, isHalftime } = incrementScore(isTeam1);
 
     if (didIncrement) {
-      useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
+      useGameStore.getState().setLineConfirmedForNextPoint(false);
     }
 
     if (!didIncrement) return;

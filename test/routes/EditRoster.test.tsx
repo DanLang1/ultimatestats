@@ -8,7 +8,13 @@ import type { SharedPayload } from '@/lib/sharing/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { arrangeBasicGame, testTeam } from '@/test/fixtures/domain';
+import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
+import {
+  arrangeBasicGame,
+  arrangeCurrentTeam,
+  arrangeOtherTeams,
+  testTeam,
+} from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
@@ -29,10 +35,8 @@ describe('<EditRosterScreen />', () => {
   it('waits for native actions dismissal before opening the team switcher', async () => {
     await setWindow('portrait');
     const user = userEvent.setup();
-    useGameStore.setState({
-      currentTeam: testTeam,
-      savedTeams: [testTeam, { id: 'other-team', name: 'Other Team', roster: [] }],
-    });
+    arrangeCurrentTeam(testTeam);
+    arrangeOtherTeams([{ id: 'other-team', name: 'Other Team', roster: [] }]);
     await renderScreen(<EditRosterScreen />);
     await user.press(screen.getByTestId('roster-actions-button'));
     const actionsModal = screen.getByTestId('team-actions-modal');
@@ -48,7 +52,7 @@ describe('<EditRosterScreen />', () => {
 
   it('offers USAU import from the empty roster state', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: { ...testTeam, roster: [] } });
+    arrangeCurrentTeam({ ...testTeam, roster: [] });
 
     await renderScreen(<EditRosterScreen />);
 
@@ -60,7 +64,7 @@ describe('<EditRosterScreen />', () => {
 
   it('loads a sample team from the empty roster state', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: { ...testTeam, roster: [] } });
+    arrangeCurrentTeam({ ...testTeam, roster: [] });
     useLinePresetsStore.setState({
       presets: [
         {
@@ -81,7 +85,7 @@ describe('<EditRosterScreen />', () => {
     await renderScreen(<EditRosterScreen />);
     await user.press(screen.getByTestId('empty-roster-load-test-team'));
 
-    expect(useGameStore.getState().currentTeam.name).toBe('Windchill');
+    expect(getCurrentTeam().name).toBe('Windchill');
     expect(useLinePresetsStore.getState().presets).toEqual([
       {
         id: 'other-team-preset',
@@ -90,36 +94,31 @@ describe('<EditRosterScreen />', () => {
         teamId: 'other-team',
       },
     ]);
-    expect(useGameStore.getState().currentTeam.roster).toHaveLength(14);
-    expect(
-      useGameStore.getState().currentTeam.roster.filter((player) => player.matchingType === 'fmp'),
-    ).toHaveLength(7);
-    expect(
-      useGameStore.getState().currentTeam.roster.filter((player) => player.matchingType === 'mmp'),
-    ).toHaveLength(7);
+    expect(getCurrentTeam().roster).toHaveLength(14);
+    expect(getCurrentTeam().roster.filter((player) => player.matchingType === 'fmp')).toHaveLength(
+      7,
+    );
+    expect(getCurrentTeam().roster.filter((player) => player.matchingType === 'mmp')).toHaveLength(
+      7,
+    );
   });
   it('saves and clears matching and role choices from quick-edit cards', async () => {
     await setWindow('portrait');
     useSettingsStore.setState({ rosterViewMode: 'cards' });
-    useGameStore.setState({ currentTeam: { ...testTeam, roster: [testTeam.roster[0]] } });
+    arrangeCurrentTeam({ ...testTeam, roster: [testTeam.roster[0]] });
     const user = userEvent.setup();
     await renderScreen(<EditRosterScreen />);
 
-    const savedPlayer = () =>
-      useGameStore.getState().savedTeams.find((team) => team.id === testTeam.id)?.roster[0];
-
-    // The first press selects a value (persisting it); pressing the same value again clears it.
+    // The first press selects a value; pressing the same value again clears it.
     await user.press(screen.getAllByText('MMP').at(-1)!);
-    expect(useGameStore.getState().currentTeam.roster[0].matchingType).toBe('mmp');
-    expect(savedPlayer()?.matchingType).toBe('mmp');
+    expect(getCurrentTeam().roster[0].matchingType).toBe('mmp');
     await user.press(screen.getAllByText('MMP').at(-1)!);
-    expect(useGameStore.getState().currentTeam.roster[0].matchingType).toBeNull();
+    expect(getCurrentTeam().roster[0].matchingType).toBeNull();
 
     await user.press(screen.getAllByText('Hybrid').at(-1)!);
-    expect(useGameStore.getState().currentTeam.roster[0].role).toBe('hybrid');
-    expect(savedPlayer()?.role).toBe('hybrid');
+    expect(getCurrentTeam().roster[0].role).toBe('hybrid');
     await user.press(screen.getAllByText('Hybrid').at(-1)!);
-    expect(useGameStore.getState().currentTeam.roster[0].role).toBeNull();
+    expect(getCurrentTeam().roster[0].role).toBeNull();
 
     await user.press(screen.getByText('Alex'));
     expect(router.push).toHaveBeenCalledWith({
@@ -131,22 +130,19 @@ describe('<EditRosterScreen />', () => {
   it('saves a jersey number on blur and rejects a duplicate without changing either player', async () => {
     await setWindow('landscape');
     useSettingsStore.setState({ rosterViewMode: 'cards' });
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
     const user = userEvent.setup();
     await renderScreen(<EditRosterScreen />);
     await user.clear(screen.getAllByPlaceholderText('#')[0]);
     await user.type(screen.getAllByPlaceholderText('#')[0], '9');
     await waitFor(() => {
-      expect(useGameStore.getState().currentTeam.roster[0].number).toBe('9');
+      expect(getCurrentTeam().roster[0].number).toBe('9');
     });
     await user.clear(screen.getAllByPlaceholderText('#')[0]);
     await user.type(screen.getAllByPlaceholderText('#')[0], '12');
     expect(screen.getByText('Duplicate Number')).toBeVisible();
     expect(screen.getByText('Another player already has #12.')).toBeVisible();
-    expect(useGameStore.getState().currentTeam.roster.map((player) => player.number)).toEqual([
-      undefined,
-      '12',
-    ]);
+    expect(getCurrentTeam().roster.map((player) => player.number)).toEqual([undefined, '12']);
     expect(screen.getAllByPlaceholderText('#')[0]).toHaveDisplayValue('');
   });
 });
@@ -154,25 +150,23 @@ describe('<EditRosterScreen />', () => {
 describe('roster management', () => {
   beforeEach(async () => {
     await setWindow('tablet');
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam] });
+    arrangeCurrentTeam(testTeam);
     useSettingsStore.setState({ rosterViewMode: 'chips' });
   });
 
   it('applies bulk matching and roles only to selected players, and clears the selection on exit', async () => {
-    useGameStore.setState({
-      currentTeam: {
-        ...testTeam,
-        roster: [
-          ...testTeam.roster,
-          {
-            id: 'bench',
-            name: 'Bench',
-            isActive: false,
-            matchingType: null,
-            role: null,
-          },
-        ],
-      },
+    arrangeCurrentTeam({
+      ...testTeam,
+      roster: [
+        ...testTeam.roster,
+        {
+          id: 'bench',
+          name: 'Bench',
+          isActive: false,
+          matchingType: null,
+          role: null,
+        },
+      ],
     });
     const user = userEvent.setup();
     await renderScreen(<EditRosterScreen />);
@@ -184,20 +178,17 @@ describe('roster management', () => {
     expect(screen.getByText('2 selected')).toBeVisible();
     await user.press(screen.getAllByText('MMP').at(-1)!);
     expect(
-      useGameStore
-        .getState()
-        .currentTeam.roster.slice(0, 2)
+      getCurrentTeam()
+        .roster.slice(0, 2)
         .map((player) => player.matchingType),
     ).toEqual(['mmp', 'mmp']);
     await user.press(screen.getByText('Hybrid'));
     expect(
-      useGameStore
-        .getState()
-        .savedTeams.find((team) => team.id === testTeam.id)
-        ?.roster.slice(0, 2)
+      getCurrentTeam()
+        .roster.slice(0, 2)
         .map((player) => player.role),
     ).toEqual(['hybrid', 'hybrid']);
-    expect(useGameStore.getState().currentTeam.roster[2]).toMatchObject({
+    expect(getCurrentTeam().roster[2]).toMatchObject({
       matchingType: null,
       role: null,
     });
@@ -240,14 +231,11 @@ describe('roster management', () => {
     await user.type(input, 'alex');
     expect(screen.getByText('alex is already on your team')).toBeVisible();
     await user.press(screen.getByTestId('roster-add-player-button'));
-    expect(useGameStore.getState().currentTeam.roster).toHaveLength(3);
-    expect(useGameStore.getState().savedTeams[0].roster).toHaveLength(3);
+    expect(getCurrentTeam().roster).toHaveLength(3);
   });
 
   it('renames the current team while rejecting another team name and allowing cancellation', async () => {
-    useGameStore.setState({
-      savedTeams: [testTeam, { id: 'other', name: 'Visitors', roster: [] }],
-    });
+    arrangeOtherTeams([{ id: 'other', name: 'Visitors', roster: [] }]);
     const user = userEvent.setup();
     await renderScreen(<EditRosterScreen />);
     await user.press(screen.getByText('Rename'));
@@ -255,14 +243,12 @@ describe('roster management', () => {
     await user.type(screen.getByPlaceholderText('Team name'), 'visitors');
     expect(screen.getByText('A team with this name already exists')).toBeVisible();
     await user.press(screen.getByText('Save'));
-    expect(useGameStore.getState().currentTeam.name).toBe('Windchill');
+    expect(getCurrentTeam().name).toBe('Windchill');
     await user.clear(screen.getByPlaceholderText('Team name'));
     await user.type(screen.getByPlaceholderText('Team name'), '  Lake Effect  ');
     await user.press(screen.getByText('Save'));
     expect(screen.getByText('LAKE EFFECT')).toBeVisible();
-    expect(useGameStore.getState().savedTeams.find((team) => team.id === testTeam.id)?.name).toBe(
-      'Lake Effect',
-    );
+    expect(getCurrentTeam().name).toBe('Lake Effect');
     await user.press(screen.getByText('Rename'));
     await user.clear(screen.getByPlaceholderText('Team name'));
     await user.press(screen.getByText('Save'));
@@ -276,20 +262,20 @@ describe('roster management', () => {
   it.each([false, true])(
     'creates a team while retaining the old team (empty roster: %s)',
     async (empty) => {
-      if (empty) useGameStore.setState({ currentTeam: { ...testTeam, roster: [] } });
+      if (empty) arrangeCurrentTeam({ ...testTeam, roster: [] });
       const user = userEvent.setup();
       await renderScreen(<EditRosterScreen />);
       await user.press(screen.getByText('New Team'));
       await user.type(screen.getByPlaceholderText('Team name'), 'windchill');
       expect(screen.getByText('A team with this name already exists')).toBeVisible();
       await user.press(screen.getByText('Create'));
-      expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
+      expect(getCurrentTeam().id).toBe(testTeam.id);
       await user.clear(screen.getByPlaceholderText('Team name'));
       await user.type(screen.getByPlaceholderText('Team name'), '  New Squad  ');
       await user.press(screen.getByText('Create'));
       expect(screen.getByText('NEW SQUAD')).toBeVisible();
-      expect(useGameStore.getState().currentTeam).toMatchObject({ name: 'New Squad', roster: [] });
-      expect(useGameStore.getState().savedTeams.map((team) => team.name)).toEqual([
+      expect(getCurrentTeam()).toMatchObject({ name: 'New Squad', roster: [] });
+      expect(useTeamStore.getState().teams.map((team) => team.name)).toEqual([
         'Windchill',
         'New Squad',
       ]);
@@ -305,11 +291,18 @@ describe('roster management', () => {
     await user.press(screen.getByText('Clear'));
     await user.press(screen.getByText('Clear All'));
     expect(screen.getByText('No players yet')).toBeVisible();
-    expect(useGameStore.getState().currentTeam.roster).toHaveLength(0);
+    expect(getCurrentTeam().roster).toHaveLength(0);
+  });
+
+  it('offers no Clear action while a game is active', async () => {
+    arrangeBasicGame();
+    await renderScreen(<EditRosterScreen />);
+    expect(screen.getByText('Alex')).toBeVisible();
+    expect(screen.queryByText('Clear')).not.toBeOnTheScreen();
   });
 
   it('toggles the roster view and requests team-switch and back navigation', async () => {
-    useGameStore.setState({ savedTeams: [testTeam, { id: 'other', name: 'Other', roster: [] }] });
+    arrangeOtherTeams([{ id: 'other', name: 'Other', roster: [] }]);
     const user = userEvent.setup();
     await renderScreen(<EditRosterScreen />);
     await user.press(screen.getByText('Cards'));
@@ -333,7 +326,7 @@ describe('roster management', () => {
     // eslint-disable-next-line testing-library/no-await-sync-events
     await fireEvent(screen.getByTestId('quick-edit-active-player-alex'), 'valueChange', false);
     expect(await screen.findByText('Player Already Participated')).toBeVisible();
-    expect(useGameStore.getState().currentTeam.roster[0].isActive).toBe(true);
+    expect(getCurrentTeam().roster[0].isActive).toBe(true);
   });
 
   it('shares the current team only after confirmation', async () => {

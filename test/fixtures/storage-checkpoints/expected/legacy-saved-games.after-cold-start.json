@@ -284,7 +284,8 @@
       "timeoutEndTime": null,
       "timeoutTimeLeft": 70,
       "currentLine": [],
-      "pointLines": []
+      "pointLines": [],
+      "lineConfirmedForNextPoint": false
     },
     "version": 0
   }

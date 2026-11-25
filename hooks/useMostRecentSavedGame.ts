@@ -5,16 +5,16 @@ import {
   basicGameToListItem,
   GameListItem,
 } from '@/lib/gameListUtils';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 
 /** The newest saved game of either kind, or null before any game is saved. */
 export function useMostRecentSavedGame(): GameListItem | null {
   const savedGames = useSavedBasicGames();
-  const savedTeams = useGameStore((state) => state.savedTeams);
+  const teams = useTeamStore((state) => state.teams);
   const { data: advancedSummaries } = useCompletedAdvancedGameSummaries();
 
   const games = [
-    ...savedGames.map((game) => basicGameToListItem(game, savedTeams)),
+    ...savedGames.map((game) => basicGameToListItem(game, teams)),
     ...advancedSummaries.map(advancedGameSummaryToListItem),
   ];
   return games.reduce<GameListItem | null>(

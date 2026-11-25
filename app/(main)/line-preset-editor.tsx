@@ -9,12 +9,14 @@ import { MAX_LINE_PRESET_SIZE } from '@/lib/constants';
 import { LinePreset } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useCurrentTeam } from '@/store/teamStore';
 
 export default function LinePresetEditor() {
   const { presetId } = useLocalSearchParams<{ presetId?: string }>();
   const { showAlert } = useAlert();
 
-  const { currentTeam, pointLines, currentPoint } = useGameStore();
+  const currentTeam = useCurrentTeam();
+  const { pointLines, currentPoint } = useGameStore();
   const gameActive = useIsGameActive();
   const { presets, addPreset, updatePreset, deletePreset, reorderPresets } = useLinePresetsStore();
 

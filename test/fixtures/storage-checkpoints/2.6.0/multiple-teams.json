@@ -1,0 +1,316 @@
+{
+  "ultimatestats-tutorial-storage": {
+    "state": {
+      "hasSeenOnboarding": true,
+      "hasSeenStatsTutorial": false,
+      "hasSeenAdvancedTutorial": false,
+      "hasSeenAdvancedVoiceHint": false,
+      "shouldShowStatsTutorialOnNextGameStart": false
+    },
+    "version": 0
+  },
+  "ultimatestats_tournaments": {
+    "state": {
+      "tournaments": [],
+      "gameLinks": []
+    },
+    "version": 0
+  },
+  "ultimatestats_startup_migrations": {
+    "state": {
+      "migrations": {
+        "basic-tournament-links": {
+          "completedAt": 1795489875814,
+          "version": 1
+        }
+      }
+    },
+    "version": 0
+  },
+  "ultimatestats-game-storage": {
+    "state": {
+      "currentTeam": {
+        "id": "mwu4basp0qh130mj617",
+        "name": "Cleared",
+        "roster": []
+      },
+      "team2Name": "Team 2",
+      "team1BgColor": "#F8FAFC",
+      "team2BgColor": "#0F172A",
+      "team1Score": 0,
+      "team2Score": 0,
+      "team1Timeouts": [true, true],
+      "team2Timeouts": [true, true],
+      "team1Floater": true,
+      "team2Floater": true,
+      "floaterEnabled": true,
+      "autoHalftimeEnabled": true,
+      "gameHalf": 1,
+      "gameTo": 15,
+      "baseGameTo": 15,
+      "isSoftCap": false,
+      "softCapPending": false,
+      "timerEndTime": null,
+      "timerTimeLeft": 5400,
+      "currentGameStatus": "fresh",
+      "isPostGameFlowPending": false,
+      "currentGameId": null,
+      "isHalftimeBreak": false,
+      "halftimeEndTime": null,
+      "halftimeTimeLeft": 420,
+      "statTrackingEnabled": false,
+      "events": [],
+      "currentPoint": 1,
+      "possession": null,
+      "startingPossession": null,
+      "savedGames": [],
+      "savedTeams": [
+        {
+          "id": "mwu4basg7xjd8o091tm",
+          "name": "Hammers",
+          "roster": [
+            {
+              "id": "mwu4basmdsge1eyvn35",
+              "name": "Ana",
+              "isActive": true,
+              "matchingType": null,
+              "role": null,
+              "number": "7"
+            },
+            {
+              "id": "mwu4basnk7io5gusub",
+              "name": "Ben",
+              "isActive": true,
+              "matchingType": null,
+              "role": null,
+              "number": "0"
+            },
+            {
+              "id": "mwu4basnw0b44bvz2k",
+              "name": "Cleo",
+              "isActive": true,
+              "matchingType": "fmp",
+              "role": null
+            },
+            {
+              "id": "mwu4basnuq6l8n5e04c",
+              "name": "Dev",
+              "isActive": true,
+              "matchingType": "mmp",
+              "role": null
+            },
+            {
+              "id": "mwu4basnbgqcdmnps9",
+              "name": "Eli",
+              "isActive": true,
+              "matchingType": null,
+              "role": "handler"
+            },
+            {
+              "id": "mwu4basnl04ru8gts4",
+              "name": "Fay",
+              "isActive": true,
+              "matchingType": null,
+              "role": "cutter"
+            },
+            {
+              "id": "mwu4basnn201rg4cz4l",
+              "name": "Gus",
+              "isActive": false,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4basnn848o6tdzo",
+              "name": "Hanna",
+              "isActive": true,
+              "matchingType": "fmp",
+              "role": null,
+              "number": "12"
+            }
+          ]
+        },
+        {
+          "id": "mwu4baspjt5ejx73kel",
+          "name": "Rookies",
+          "roster": [
+            {
+              "id": "mwu4baspmmyt6dy206p",
+              "name": "Jo",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspfprmocxdx7g",
+              "name": "Kai",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspif6jvjztvgp",
+              "name": "Lena",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4basp08w60fkq8zy",
+              "name": "Milo",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            }
+          ]
+        },
+        {
+          "id": "mwu4baspnd91gugrfts",
+          "name": "Imports",
+          "roster": [
+            {
+              "id": "mwu4baspfmegvbthqd4",
+              "name": "Nia",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspf0erlpn8dic",
+              "name": "Omar",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4baspkzpvdib1okk",
+              "name": "Pia",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            }
+          ]
+        },
+        {
+          "id": "mwu4basp0qh130mj617",
+          "name": "Cleared",
+          "roster": [
+            {
+              "id": "mwu4baspqm3ht0rge8",
+              "name": "Quin",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            },
+            {
+              "id": "mwu4basp8qs7mbvep37",
+              "name": "Rae",
+              "isActive": true,
+              "matchingType": null,
+              "role": null
+            }
+          ]
+        }
+      ],
+      "pointTimerEnabled": false,
+      "currentPointStartTime": null,
+      "pointStartTimestamps": {},
+      "pointTimerPausedElapsed": null,
+      "pendingTimeoutModal": false,
+      "timeoutEndTime": null,
+      "timeoutTimeLeft": 70,
+      "currentLine": [],
+      "pointLines": []
+    },
+    "version": 0
+  },
+  "ultimatestats-line-presets": {
+    "state": {
+      "presets": [
+        {
+          "id": "mwu4basoliv6lwj7e58",
+          "name": "O Line",
+          "playerIds": [
+            "mwu4basmdsge1eyvn35",
+            "mwu4basnk7io5gusub",
+            "mwu4basnw0b44bvz2k",
+            "mwu4basnuq6l8n5e04c",
+            "mwu4basnbgqcdmnps9",
+            "mwu4basnl04ru8gts4"
+          ],
+          "teamId": "mwu4basg7xjd8o091tm"
+        },
+        {
+          "id": "mwu4baso98yvfmdqkj6",
+          "name": "D Line",
+          "playerIds": [
+            "mwu4basnw0b44bvz2k",
+            "mwu4basnuq6l8n5e04c",
+            "mwu4basnbgqcdmnps9",
+            "mwu4basnl04ru8gts4",
+            "mwu4basnn848o6tdzo"
+          ],
+          "teamId": "mwu4basg7xjd8o091tm"
+        },
+        {
+          "id": "mwu4basp7ofyycdrbwg",
+          "name": "Starters",
+          "playerIds": [
+            "mwu4baspmmyt6dy206p",
+            "mwu4baspfprmocxdx7g",
+            "mwu4baspif6jvjztvgp",
+            "mwu4basp08w60fkq8zy"
+          ],
+          "teamId": "mwu4baspjt5ejx73kel"
+        },
+        {
+          "id": "mwu4basp7bwlario0ht",
+          "name": "Orphan",
+          "playerIds": ["mwu4baspi15pmiv8b8q", "mwu4basphokmdev3ktm"],
+          "teamId": "mwu4baspmh2up38rwe"
+        },
+        {
+          "id": "mwu4baspnzuo7t329pr",
+          "name": "All",
+          "playerIds": ["mwu4baspfmegvbthqd4", "mwu4baspf0erlpn8dic", "mwu4baspkzpvdib1okk"],
+          "teamId": "mwu4baspnd91gugrfts"
+        }
+      ],
+      "lineConfirmedForNextPoint": false
+    },
+    "version": 0
+  },
+  "ultimatestats_advanced_tracking": {
+    "state": {
+      "currentGameId": null,
+      "pendingNextPointLineSelection": null
+    },
+    "version": 1
+  },
+  "ultimatestats-game-session": {
+    "state": {
+      "activeGameType": null
+    },
+    "version": 0
+  },
+  "ultimatestats-settings": {
+    "state": {
+      "mmpColor": "#60A5FA",
+      "fmpColor": "#F472B6",
+      "genderRatioEnabled": false,
+      "firstPointRatio": null,
+      "lineCallingEnabled": false,
+      "numPlayers": 7,
+      "rosterViewMode": "chips",
+      "orientationMode": "system",
+      "hardCapMins": 90,
+      "softCapMins": 20,
+      "advancedSoftCapAtMins": 70,
+      "advancedHardCapEnabled": true,
+      "advancedSoftCapEnabled": true,
+      "statEntryOrder": "goal_first",
+      "linePlayerSortOrder": "alpha"
+    },
+    "version": 0
+  }
+}

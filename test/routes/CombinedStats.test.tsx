@@ -8,7 +8,12 @@ import CombinedStatsScreen from '@/app/(main)/(hub)/(analytics)/combined-stats';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
-import { createFinalAdvancedGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import {
+  arrangeOtherTeams,
+  createFinalAdvancedGame,
+  createSavedBasicGame,
+  testTeam,
+} from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetAdvancedTrackingStorage } from '@/test/mocks/advancedTrackingStorage';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -50,8 +55,8 @@ afterEach(() => {
 async function arrangeGames(kind: 'basic' | 'advanced') {
   if (kind === 'basic') {
     const game = createSavedBasicGame();
+    arrangeOtherTeams([testTeam]);
     useGameStore.setState({
-      savedTeams: [testTeam],
       savedGames: [
         { ...game, id: 'first', team2Name: 'Falcons', createdAt: 1000 },
         { ...game, id: 'second', team2Name: 'Eagles', createdAt: 2000 },

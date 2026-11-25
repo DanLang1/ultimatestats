@@ -15,6 +15,7 @@ import type { SavedGame } from '@/lib/storage';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useTeamStore } from '@/store/teamStore';
 
 type GamePayload = Extract<SharedPayload, { type: 'game' }>;
 type AdvancedGamePayload = Extract<SharedPayload, { type: 'advanced-game' }>;
@@ -25,7 +26,10 @@ export default function ImportScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { savedTeams, importGame, importTeam, loadTeam } = useGameStore();
+  const importGame = useGameStore((state) => state.importGame);
+  const teams = useTeamStore((state) => state.teams);
+  const importTeam = useTeamStore((state) => state.importTeam);
+  const switchTeam = useTeamStore((state) => state.switchTeam);
   const { importAdvancedGame } = useAdvancedTrackingStore();
   const { isPending, importState, setImportState } = useShareImport(shareId);
   const gameActive = useIsGameActive();
@@ -116,7 +120,7 @@ export default function ImportScreen() {
       await useLinePresetsStore.getState().importPresetsForTeam(payload.data.id, payload.presets);
     }
     if (!gameActive) {
-      await loadTeam(payload.data.id);
+      await switchTeam(payload.data.id);
     }
     setImportState({ status: 'done', type: 'team' });
   };
@@ -131,7 +135,7 @@ export default function ImportScreen() {
             isPending={isPending}
             isImporting={importMutation.isPending}
             importState={importState}
-            savedTeams={savedTeams}
+            savedTeams={teams}
             onDismiss={handleDone}
             onImportGame={(payload) => importMutation.mutate(() => handleImportGame(payload))}
             onImportGames={(games) => importMutation.mutate(() => handleImportGames(games))}

@@ -9,20 +9,13 @@ import { migrateSavedGames } from '@/lib/storage/migrations';
 import { GameState } from './gameStore.types';
 import { createLiveGameSlice } from './slices/liveGameSlice';
 import { createSavedGamesSlice } from './slices/savedGamesSlice';
-import { createTeamSlice } from './slices/teamSlice';
 
-export {
-  hasPlayerRecordedActionsInActiveAdvancedGame,
-  registerActiveAdvancedGameGetter,
-} from './slices/teamSlice';
-
-// Basic games and the shared team/roster. Advanced game state and advanced saved records never live
-// here; advanced code only reads team and roster data from this store.
+// Basic games only. Teams and rosters live in `store/teamStore.ts`; advanced game state and advanced
+// saved records never live here.
 export const useGameStore = create<GameState>()(
   immer(
     persist(
       (...sliceArgs) => ({
-        ...createTeamSlice(...sliceArgs),
         ...createLiveGameSlice(...sliceArgs),
         ...createSavedGamesSlice(...sliceArgs),
       }),
@@ -40,7 +33,10 @@ export const useGameStore = create<GameState>()(
         },
         // Only persist game-related state, not UI state like pending entries
         partialize: (state: GameState) => ({
+          // Legacy 2.6.x team keys, written back exactly as hydrated.
+          // TODO: remove before this ships. See LegacyPersistedTeamKeys.
           currentTeam: state.currentTeam,
+          savedTeams: state.savedTeams,
           team2Name: state.team2Name,
           team1BgColor: state.team1BgColor,
           team2BgColor: state.team2BgColor,
@@ -72,7 +68,6 @@ export const useGameStore = create<GameState>()(
           possession: state.possession,
           startingPossession: state.startingPossession,
           savedGames: state.savedGames,
-          savedTeams: state.savedTeams,
           pointTimerEnabled: state.pointTimerEnabled,
           currentPointStartTime: state.currentPointStartTime,
           pointStartTimestamps: state.pointStartTimestamps,
@@ -82,6 +77,7 @@ export const useGameStore = create<GameState>()(
           timeoutTimeLeft: state.timeoutTimeLeft,
           currentLine: state.currentLine,
           pointLines: state.pointLines,
+          lineConfirmedForNextPoint: state.lineConfirmedForNextPoint,
         }),
       },
     ),

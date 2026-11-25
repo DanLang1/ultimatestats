@@ -33,6 +33,7 @@ import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { reportError } from '@/lib/sentry';
 import { LAST_SEEN_VERSION_KEY } from '@/lib/versionUtils';
 import { useGameStore } from '@/store/basic/gameStore';
+import { selectCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
@@ -59,8 +60,8 @@ export default function DashboardScreen() {
   const { hasNewVersion } = useVersionCheck();
   const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
-  const team1Name = useGameStore((state) => state.currentTeam.name);
-  const rosterCount = useGameStore((state) => state.currentTeam.roster.length);
+  const team1Name = useTeamStore((state) => selectCurrentTeam(state).name);
+  const rosterCount = useTeamStore((state) => selectCurrentTeam(state).roster.length);
   const mostRecentGame = useMostRecentSavedGame();
   const hasActiveBasicGame = activeSession.kind === 'basic';
   const hasLiveGame = activeSession.kind !== 'none';

@@ -4,6 +4,7 @@ import { migrateSavedGame } from '@/lib/storage/migrations';
 import { generateId } from '@/lib/utils';
 
 import { useSettingsStore } from '../../settingsStore';
+import { getCurrentTeam } from '../../teamStore';
 import { GameSliceCreator, GameState, SavedGamesSlice, TurnoverType } from '../gameStore.types';
 import { canReplacePointLine, resetGameState } from './gameStoreHelpers';
 
@@ -30,7 +31,7 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
       if (isCurrentGame) {
         if (pointNumber >= state.currentPoint) return;
         if (
-          !canReplacePointLine(state.pointLines, pointNumber, playerIds, state.currentTeam.roster)
+          !canReplacePointLine(state.pointLines, pointNumber, playerIds, getCurrentTeam().roster)
         ) {
           return;
         }
@@ -164,7 +165,7 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
       id: gameId,
       schemaVersion: CURRENT_SCHEMA_VERSION,
       createdAt: Date.now(),
-      team1: state.currentTeam,
+      team1: getCurrentTeam(),
       team2Name: state.team2Name,
       team1Score: state.team1Score,
       team2Score: state.team2Score,

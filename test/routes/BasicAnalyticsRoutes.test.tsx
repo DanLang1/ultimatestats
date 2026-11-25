@@ -24,7 +24,13 @@ import {
   participantRef,
   UNTRACKED_PLAYER,
 } from '@/test/fixtures/advancedGameBuilder';
-import { arrangeBasicGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import {
+  arrangeBasicGame,
+  arrangeCurrentTeam,
+  arrangeOtherTeams,
+  createSavedBasicGame,
+  testTeam,
+} from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
@@ -316,7 +322,8 @@ describe('basic analytics routes', () => {
 
   it('renders a dynamic saved-game route from a real saved record', async () => {
     const game = createSavedBasicGame();
-    useGameStore.setState({ savedGames: [game], savedTeams: [testTeam] });
+    arrangeOtherTeams([testTeam]);
+    useGameStore.setState({ savedGames: [game] });
     setMockSearchParams({ gameId: game.id });
 
     const user = userEvent.setup();
@@ -336,14 +343,14 @@ it('sorts live player stats and opens analytics for a player with only line part
   resetAllStores();
   resetMockRouter();
   arrangeBasicGame({ statTrackingEnabled: true });
+  arrangeCurrentTeam({
+    ...testTeam,
+    roster: [
+      ...testTeam.roster,
+      { id: 'player-casey', name: 'Casey', isActive: true, matchingType: null, role: null },
+    ],
+  });
   useGameStore.setState({
-    currentTeam: {
-      ...testTeam,
-      roster: [
-        ...testTeam.roster,
-        { id: 'player-casey', name: 'Casey', isActive: true, matchingType: null, role: null },
-      ],
-    },
     events: [
       {
         type: 'turnover',

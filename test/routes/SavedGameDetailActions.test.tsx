@@ -19,7 +19,7 @@ import {
   ADVANCED_TEST_PARTICIPANTS,
   UNTRACKED_PLAYER,
 } from '@/test/fixtures/advancedGameBuilder';
-import { createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import { arrangeOtherTeams, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
@@ -68,8 +68,8 @@ afterEach(() => {
 async function arrangeDetail(kind: 'basic' | 'advanced', from?: StatsScreenOrigin) {
   const id = `${kind}-detail`;
   if (kind === 'basic') {
+    arrangeOtherTeams([testTeam]);
     useGameStore.setState({
-      savedTeams: [testTeam],
       savedGames: [{ ...createSavedBasicGame(), id, team2Name: 'Detail Rival' }],
     });
   } else {

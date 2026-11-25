@@ -44,7 +44,7 @@ will be created or replaced, and performs the appropriate basic or advanced pers
 - Team imports detect an existing team ID and let the user choose whether to update the roster or
   keep the local copy.
 - Imported records receive `importedAt`.
-- Basic games and teams are written through `useGameStore`.
+- Basic games are written through `useGameStore`; teams through `useTeamStore`.
 - Advanced games are written through `useSavedAdvancedGamesStore`, which persists them to SQLite.
 - Team line presets are imported through `useLinePresetsStore`.
 - Persistence must finish before success is displayed, navigation, or another action invalidates the

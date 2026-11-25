@@ -39,6 +39,7 @@ import { attachTournaments, buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 
 const GAME_NAVIGATION_GUARD_MS = 750;
@@ -48,7 +49,8 @@ export default function StatsScreen() {
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
   const hasLiveStats = useHasLiveStats();
-  const { savedTeams, deleteSavedGames } = useGameStore();
+  const deleteSavedGames = useGameStore((state) => state.deleteSavedGames);
+  const teams = useTeamStore((state) => state.teams);
   const savedGames = useSavedBasicGames();
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
@@ -74,9 +76,9 @@ export default function StatsScreen() {
 
   const allGames = attachTournaments(
     [
-      ...savedGames.map((g) => basicGameToListItem(g, savedTeams)),
+      ...savedGames.map((g) => basicGameToListItem(g, teams)),
       ...completedAdvancedSavedGameSummaries.map((summary) =>
-        advancedGameSummaryToTeamListItem(summary, savedTeams),
+        advancedGameSummaryToTeamListItem(summary, teams),
       ),
     ],
     buildTournamentIndex(tournaments, gameLinks),

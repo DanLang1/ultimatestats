@@ -73,10 +73,9 @@ rewrite it to describe only the remaining problem as it exists now.
 
 ## P3 - Store Architecture Refactor
 
-- `gameStore` is a god store spanning six concerns: live game state, timers, roster, game catalog, UI signals, and game config.
-- Start with the proven ownership seams: shared team/roster state first, then evaluate basic
-  saved-game persistence alongside the SQLite proposal. Reassess the remaining store before
-  extracting config or timers.
+- `gameStore` is a god store spanning five concerns: live game state, timers, game catalog, UI signals, and game config.
+- Start with the proven ownership seams: evaluate basic saved-game persistence alongside the
+  SQLite proposal. Reassess the remaining store before extracting config or timers.
 - Store boundaries can be redrawn without changing the `SavedGame` record shape, but moving
   persisted ownership still requires a deliberate storage migration and hydration plan.
 - References:

@@ -29,7 +29,7 @@ import { buildImportedTeam } from '@/lib/import-team/transform';
 import { NAME_FORMAT_OPTIONS, NameFormatOption } from '@/lib/import-team/types';
 import { reportError } from '@/lib/sentry';
 import { pluralize } from '@/lib/utils';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export default function ImportTeamScreen() {
@@ -38,7 +38,9 @@ export default function ImportTeamScreen() {
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
   const { showAlert } = useAlert();
-  const { savedTeams, importTeam, loadTeam } = useGameStore();
+  const teams = useTeamStore((state) => state.teams);
+  const importTeam = useTeamStore((state) => state.importTeam);
+  const switchTeam = useTeamStore((state) => state.switchTeam);
   const gameActive = useIsGameActive();
 
   const [nameFormat, setNameFormat] = useState<NameFormatOption>('first');
@@ -112,7 +114,7 @@ export default function ImportTeamScreen() {
         return;
       }
 
-      const importedTeam = buildImportedTeam(parsedPayload, savedTeams, 'Imported Team');
+      const importedTeam = buildImportedTeam(parsedPayload, teams, 'Imported Team');
 
       if (importedTeam.roster.length === 0) {
         showAlert({
@@ -140,7 +142,7 @@ export default function ImportTeamScreen() {
           ],
         });
       } else {
-        await loadTeam(importedTeam.id);
+        await switchTeam(importedTeam.id);
         router.replace({
           pathname: '/edit-roster',
           params: { teamName: importedTeam.name },

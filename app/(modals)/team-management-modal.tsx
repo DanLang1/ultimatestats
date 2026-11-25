@@ -11,7 +11,7 @@ import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { reportError } from '@/lib/sentry';
 import { SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 const CLOSE_ICON_SIZE = 24;
@@ -28,10 +28,12 @@ export default function TeamManagementModal() {
   const [teamToDelete, setTeamToDelete] = useState<SavedTeam | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const { currentTeam, savedTeams, loadTeam, deleteTeam, saveCurrentTeam } = useGameStore();
+  const currentTeam = useCurrentTeam();
+  const teams = useTeamStore((state) => state.teams);
+  const switchTeam = useTeamStore((state) => state.switchTeam);
+  const deleteTeam = useTeamStore((state) => state.deleteTeam);
 
-  const hasRoster = currentTeam.roster.length > 0;
-  const otherTeams = savedTeams.filter((t) => t.id !== currentTeam.id);
+  const otherTeams = teams.filter((t) => t.id !== currentTeam.id);
 
   const handleDismiss = () => {
     if (isSwitching) return;
@@ -43,12 +45,11 @@ export default function TeamManagementModal() {
     setIsSwitching(true);
     setSwitchError(null);
     try {
-      if (hasRoster) await saveCurrentTeam();
       if (isPregame) {
         useGameStore.getState().setCurrentLine([]);
-        useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
+        useGameStore.getState().setLineConfirmedForNextPoint(false);
       }
-      await loadTeam(teamId);
+      await switchTeam(teamId);
       handleDismiss();
     } catch (error) {
       reportError('team-switch', error);

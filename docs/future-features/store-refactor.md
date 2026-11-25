@@ -9,7 +9,6 @@
 - live scoring, possession, events, point lines, and entry signals
 - game, halftime, timeout, and point timers
 - basic format/configuration state
-- active team/roster and saved teams
 - saved basic games
 
 The large persist projection makes ownership changes and hydration behavior expensive to reason
@@ -26,9 +25,7 @@ Before introducing a new store, use the boundaries that already exist:
 - tournaments and game links → `store/tournamentStore.ts`
 - app preferences → `store/settingsStore.ts`
 - line presets → `store/linePresetsStore.ts`
-
-The likely first extraction is shared team/roster ownership because advanced tracking currently
-depends on that subset of the basic store. See [shared-team-roster-store.md](shared-team-roster-store.md).
+- teams and rosters → `store/teamStore.ts`
 
 Moving saved basic games should be considered together with
 [basic-games-sqlite-migration.md](basic-games-sqlite-migration.md), not as a second competing
@@ -48,10 +45,9 @@ storage design.
 
 ## Suggested Order
 
-1. Shared team and roster ownership.
-2. Basic saved-game persistence, only if SQLite migration is justified.
-3. Reassess what remains before proposing config or timer stores.
-4. Remove `usePlayerStatsStore` only when route/data access can replace it without copying another
+1. Basic saved-game persistence, only if SQLite migration is justified.
+2. Reassess what remains before proposing config or timer stores.
+3. Remove `usePlayerStatsStore` only when route/data access can replace it without copying another
    navigation context.
 
 ## Verification Required

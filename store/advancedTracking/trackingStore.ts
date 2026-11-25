@@ -81,8 +81,8 @@ import {
 import { reportError, reportHydrationError } from '@/lib/sentry';
 import { generateId, isRecord } from '@/lib/utils';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
-import { registerActiveAdvancedGameGetter, useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { selectCurrentTeam, useTeamStore } from '@/store/teamStore';
 
 import { getCurrentPendingNextPointLineSelection } from './pendingLineSelection';
 import {
@@ -847,13 +847,11 @@ useAdvancedTrackingStore.subscribe((state) => {
   void persistLiveSnapshot({ game, undoStack: state.undoStack });
 });
 
-registerActiveAdvancedGameGetter(() => getLiveInProgressGame(useAdvancedTrackingStore.getState()));
-
-useGameStore.subscribe((gameState) => {
+useTeamStore.subscribe((teamState) => {
   const game = getLiveInProgressGame(useAdvancedTrackingStore.getState());
   if (game == null) return;
 
-  const plan = deriveRosterParticipantSyncPlan(game, gameState.currentTeam);
+  const plan = deriveRosterParticipantSyncPlan(game, selectCurrentTeam(teamState));
   if (plan == null) return;
 
   useAdvancedTrackingStore.setState((state) => {

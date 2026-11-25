@@ -5,6 +5,7 @@ import BasicScoreboard from '@/app/(main)/(hub)/(game)/scoreboard';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { getCurrentTeam } from '@/store/teamStore';
 import { arrangeBasicGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockPathname } from '@/test/mocks/expoRouter';
@@ -51,10 +52,10 @@ it('adds and attributes a new scorer, then recognizes an existing assister in la
   await user.type(screen.getByPlaceholderText('Add player...'), 'bLaIr');
   await user.press(screen.getByText('Add'));
   const state = useGameStore.getState();
-  const robin = state.currentTeam.roster.find((player) => player.name === 'Robin');
+  const robin = getCurrentTeam().roster.find((player) => player.name === 'Robin');
   expect(robin).toMatchObject({ isActive: true });
   expect(
-    state.currentTeam.roster.filter((player) => player.name.toLowerCase() === 'blair'),
+    getCurrentTeam().roster.filter((player) => player.name.toLowerCase() === 'blair'),
   ).toHaveLength(1);
   expect(state.events.at(-1)).toMatchObject({
     type: 'goal',
@@ -139,7 +140,7 @@ it('attributes a 50/50 to an added thrower and an existing receiver in landscape
     type: 'turnover',
     subtype: 'fiftyfifty',
     team: 'team1',
-    playerId: state.currentTeam.roster.find((player) => player.name === 'Robin')!.id,
+    playerId: getCurrentTeam().roster.find((player) => player.name === 'Robin')!.id,
     player2Id: 'player-blair',
   });
   expect(state.possession).toBe('team2');
@@ -173,7 +174,6 @@ it('records a newly added player for a single-player turnover', async () => {
   expect(useGameStore.getState().events.at(-1)).toMatchObject({
     type: 'turnover',
     subtype: 'throwaway',
-    playerId: useGameStore.getState().currentTeam.roster.find((player) => player.name === 'Robin')!
-      .id,
+    playerId: getCurrentTeam().roster.find((player) => player.name === 'Robin')!.id,
   });
 });

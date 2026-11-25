@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { TrackerLineScreen } from '@/components/advancedTracking/TrackerLineScreen';
 import type { Participant } from '@/lib/advancedTracking/types';
 import { DEFAULT_LINE_SIZE } from '@/lib/constants';
-import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { getCurrentTeam } from '@/store/teamStore';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { renderScreen } from '@/test/render';
 
@@ -108,7 +108,7 @@ describe('TrackerLineScreen', () => {
           id: 'restricted-preset',
           name: 'Restricted Preset',
           playerIds: [participants[7].id, participants[8].id],
-          teamId: useGameStore.getState().currentTeam.id,
+          teamId: getCurrentTeam().id,
         },
       ],
     });
@@ -157,7 +157,7 @@ describe('TrackerLineScreen', () => {
           id: 'large',
           name: 'Large preset',
           playerIds,
-          teamId: useGameStore.getState().currentTeam.id,
+          teamId: getCurrentTeam().id,
         },
       ],
     });
@@ -240,7 +240,7 @@ describe('TrackerLineScreen', () => {
           id: 'large',
           name: 'Large preset',
           playerIds: participants.slice(0, 9).map((participant) => participant.id),
-          teamId: useGameStore.getState().currentTeam.id,
+          teamId: getCurrentTeam().id,
         },
       ],
     });
@@ -283,7 +283,7 @@ describe('TrackerLineScreen', () => {
           id: 'short',
           name: 'Short preset',
           playerIds: ['p-7', 'missing'],
-          teamId: useGameStore.getState().currentTeam.id,
+          teamId: getCurrentTeam().id,
         },
       ],
     });
@@ -314,7 +314,7 @@ describe('TrackerLineScreen', () => {
           id: 'mixed-role-preset',
           name: 'Mixed Role Preset',
           playerIds: [handler.id, cutter.id, hybrid.id],
-          teamId: useGameStore.getState().currentTeam.id,
+          teamId: getCurrentTeam().id,
         },
       ],
     });

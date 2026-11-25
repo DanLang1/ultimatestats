@@ -3,11 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getActiveAdvancedGame } from '@/lib/advancedTracking/trackingUtils';
 import { AdvancedTrackedGame, Participant } from '@/lib/advancedTracking/types';
 import { DEFAULT_LINE_SIZE } from '@/lib/constants';
+import { updateRosterPlayer } from '@/lib/rosterActions';
+import { SavedTeam } from '@/lib/storage/types';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
+  // The team store reads storage while this module loads, before beforeEach configures the mock.
+  getItem: jest.fn().mockResolvedValue(null),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 }));
@@ -65,9 +69,8 @@ function rosterPlayer(id: string, name: string, isActive = true) {
 }
 
 function setCurrentTeam(roster: ReturnType<typeof rosterPlayer>[]) {
-  useGameStore.setState({
-    currentTeam: { id: 'team-1', name: 'Timber', roster },
-  });
+  const team: SavedTeam = { id: 'team-1', name: 'Timber', roster };
+  useTeamStore.setState({ teams: [team], currentTeamId: team.id });
 }
 
 function createGame(participants: Participant[], gameTo = 15) {
@@ -99,11 +102,8 @@ function resetStores() {
     pendingNextPointLineSelection: null,
     isHalftimeBreakActive: false,
   });
-  useGameStore.setState({
-    currentTeam: { id: 'team-1', name: 'Timber', roster: [] },
-    events: [],
-    pointLines: [],
-  });
+  setCurrentTeam([]);
+  useGameStore.setState({ events: [], pointLines: [] });
 }
 
 describe('live roster -> participant sync', () => {
@@ -119,7 +119,7 @@ describe('live roster -> participant sync', () => {
     setCurrentTeam([rosterPlayer('anne', 'Anne')]);
     createGame([{ id: 'anne', name: 'Anne', sourcePlayerId: 'anne' }]);
 
-    const newPlayerId = useGameStore.getState().addPlayer('Newbie');
+    const newPlayerId = useTeamStore.getState().addPlayer('Newbie');
 
     expect(newPlayerId).not.toBeNull();
     expect(getLiveGame().participants).toEqual([
@@ -138,7 +138,7 @@ describe('live roster -> participant sync', () => {
     setCurrentTeam([rosterPlayer('anne', 'Anne'), rosterPlayer('late', 'Late', false)]);
     createGame([{ id: 'anne', name: 'Anne', sourcePlayerId: 'anne' }]);
 
-    const result = useGameStore.getState().updateRosterPlayer('late', { isActive: true });
+    const { result } = updateRosterPlayer('late', { isActive: true });
 
     expect(result).toBe('updated');
     expect(getLiveGame().participants.map((participant) => participant.id)).toEqual([
@@ -150,7 +150,7 @@ describe('live roster -> participant sync', () => {
   it('does not append participants when no game is live', () => {
     setCurrentTeam([rosterPlayer('anne', 'Anne')]);
 
-    const newPlayerId = useGameStore.getState().addPlayer('Newbie');
+    const newPlayerId = useTeamStore.getState().addPlayer('Newbie');
 
     expect(newPlayerId).not.toBeNull();
     expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();
@@ -163,7 +163,7 @@ describe('live roster -> participant sync', () => {
       if (state.currentGame != null) state.currentGame.status = 'final';
     });
 
-    useGameStore.getState().addPlayer('Newbie');
+    useTeamStore.getState().addPlayer('Newbie');
 
     expect(getLiveGame().participants.map((participant) => participant.id)).toEqual(['anne']);
   });
@@ -185,7 +185,7 @@ describe('live roster -> participant sync', () => {
       roster.map((player) => player.id),
     );
 
-    const result = useGameStore.getState().updateRosterPlayer('p3', { isActive: false });
+    const { result } = updateRosterPlayer('p3', { isActive: false });
 
     expect(result).toBe('updated');
     const selection = useAdvancedTrackingStore.getState().pendingNextPointLineSelection;
@@ -227,19 +227,17 @@ describe('live roster -> participant sync', () => {
 
     expect(pickup.ok).toBe(true);
 
-    const result = useGameStore.getState().updateRosterPlayer('anne', { isActive: false });
+    const { result } = updateRosterPlayer('anne', { isActive: false });
 
     expect(result).toBe('blocked-current-game-participation');
-    expect(
-      useGameStore.getState().currentTeam.roster.find((player) => player.id === 'anne')?.isActive,
-    ).toBe(true);
+    expect(getCurrentTeam().roster.find((player) => player.id === 'anne')?.isActive).toBe(true);
   });
 
   it('does not append participants for inactive roster players', () => {
     setCurrentTeam([rosterPlayer('anne', 'Anne'), rosterPlayer('bea', 'Bea', false)]);
     createGame([{ id: 'anne', name: 'Anne', sourcePlayerId: 'anne' }]);
 
-    useGameStore.getState().addPlayer('Newbie');
+    useTeamStore.getState().addPlayer('Newbie');
 
     expect(getLiveGame().participants.map((participant) => participant.id)).toEqual([
       'anne',

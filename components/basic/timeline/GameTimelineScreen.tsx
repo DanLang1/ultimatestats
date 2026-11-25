@@ -15,6 +15,7 @@ import { computePointByPointEvents } from '@/lib/basic/timelineUtils';
 import { resolveTeamName } from '@/lib/playerUtils';
 import { StatsRouteScope } from '@/lib/statsRouteScope';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 interface GameTimelineScreenProps {
@@ -31,11 +32,11 @@ export default function GameTimelineScreen({ routeScope }: GameTimelineScreenPro
   const savedGameId = isSavedGame ? params.gameId : undefined;
   const [showSplitSeparators, setShowSplitSeparators] = useState(true);
   const [showLineups, setShowLineups] = useState(true);
+  const currentTeam = useCurrentTeam();
+  const teams = useTeamStore((state) => state.teams);
   const {
-    currentTeam,
     team2Name,
     events,
-    savedTeams,
     startingPossession,
     gameTo,
     autoHalftimeEnabled,
@@ -54,7 +55,7 @@ export default function GameTimelineScreen({ routeScope }: GameTimelineScreenPro
         if (!savedGame) return null;
 
         return {
-          team1Name: resolveTeamName(savedGame.team1.id, savedGame.team1.name, savedTeams),
+          team1Name: resolveTeamName(savedGame.team1.id, savedGame.team1.name, teams),
           team2Name: savedGame.team2Name,
           events: savedGame.events,
           team1Score: savedGame.team1Score,

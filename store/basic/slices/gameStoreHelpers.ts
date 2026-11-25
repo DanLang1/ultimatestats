@@ -52,4 +52,5 @@ export function resetGameState(state: GameState, hardCapMinutes: number) {
   state.pointTimerPausedElapsed = null;
   state.currentLine = [];
   state.pointLines = [];
+  state.lineConfirmedForNextPoint = false;
 }

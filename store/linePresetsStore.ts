@@ -9,7 +9,6 @@ import { generateId } from '@/lib/utils';
 
 interface LinePresetsState {
   presets: LinePreset[];
-  lineConfirmedForNextPoint: boolean;
   addPreset: (name: string, playerIds: string[], teamId: string) => string;
   updatePreset: (id: string, updates: Partial<Omit<LinePreset, 'id'>>) => void;
   deletePreset: (id: string) => void;
@@ -17,7 +16,6 @@ interface LinePresetsState {
   reorderPresets: (teamId: string, fromIndex: number, toIndex: number) => void;
   clearPresetsForTeam: (teamId: string) => void;
   importPresetsForTeam: (teamId: string, presets: LinePreset[]) => Promise<void>;
-  setLineConfirmedForNextPoint: (confirmed: boolean) => void;
 }
 
 export const useLinePresetsStore = create<LinePresetsState>()(
@@ -25,7 +23,6 @@ export const useLinePresetsStore = create<LinePresetsState>()(
     persist(
       (set) => ({
         presets: [],
-        lineConfirmedForNextPoint: false,
 
         addPreset: (name: string, playerIds: string[], teamId: string) => {
           const id = generateId();
@@ -79,16 +76,11 @@ export const useLinePresetsStore = create<LinePresetsState>()(
             state.presets.push(...presets);
           });
         },
-
-        setLineConfirmedForNextPoint: (confirmed: boolean) => {
-          set((state) => {
-            state.lineConfirmedForNextPoint = confirmed;
-          });
-        },
       }),
       {
         name: 'ultimatestats-line-presets',
         storage: createJSONStorage(() => AsyncStorage),
+        partialize: (state) => ({ presets: state.presets }),
         onRehydrateStorage: () => (_state, error) => reportHydrationError('line-presets', error),
       },
     ),

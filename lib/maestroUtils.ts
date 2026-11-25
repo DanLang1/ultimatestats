@@ -20,6 +20,7 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useTeamStore } from '@/store/teamStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { palette } from '@/theme/theme';
 
@@ -59,6 +60,7 @@ export async function waitForMaestroStoresToHydrate() {
     waitForHydration(useGameSessionStore.persist),
     waitForHydration(useLinePresetsStore.persist),
     waitForHydration(useSettingsStore.persist),
+    waitForHydration(useTeamStore.persist),
     waitForHydration(useTutorialStore.persist),
   ]);
 }
@@ -83,16 +85,7 @@ function seedTestTeamWithPlayers(playerNames?: string[]) {
 }
 
 function setSeedTeam(team: SavedTeam) {
-  useGameStore.setState((state) => {
-    state.currentTeam = team;
-    const savedTeamIndex = state.savedTeams.findIndex((savedTeam) => savedTeam.id === team.id);
-    if (savedTeamIndex === -1) {
-      state.savedTeams.push(team);
-      return;
-    }
-
-    state.savedTeams[savedTeamIndex] = team;
-  });
+  void useTeamStore.getState().setCurrentTeam(team);
 }
 
 export function seedTestTeam() {
@@ -139,8 +132,8 @@ function resetMaestroSetupState(team: SavedTeam) {
     linePlayerSortOrder: 'alpha',
   });
 
+  setSeedTeam(team);
   useGameStore.setState((state) => {
-    state.currentTeam = team;
     state.team2Name = 'Team 2';
     state.autoHalftimeEnabled = true;
     state.floaterEnabled = true;
@@ -150,20 +143,12 @@ function resetMaestroSetupState(team: SavedTeam) {
     state.team2Timeouts = [true, true];
     state.statTrackingEnabled = true;
     state.pointTimerEnabled = false;
-
-    const savedTeamIndex = state.savedTeams.findIndex((savedTeam) => savedTeam.id === team.id);
-    if (savedTeamIndex === -1) {
-      state.savedTeams.push(team);
-      return;
-    }
-
-    state.savedTeams[savedTeamIndex] = team;
   });
 
   useLinePresetsStore.setState((state) => {
     state.presets = state.presets.filter((preset) => preset.teamId !== MAESTRO_SEED_TEAM_ID);
-    state.lineConfirmedForNextPoint = false;
   });
+  useGameStore.getState().setLineConfirmedForNextPoint(false);
 }
 
 export async function seedMaestroTeamPrerequisites(
@@ -173,7 +158,6 @@ export async function seedMaestroTeamPrerequisites(
     options.gameType === 'scrimmage' ? MAESTRO_SCRIMMAGE_PLAYERS : undefined,
   );
   resetMaestroSetupState(team);
-  setSeedTeam(team);
 
   if (options.clearActiveGame === true) {
     await clearAdvancedGames();
@@ -202,12 +186,16 @@ async function clearSeedTeamSavedBasicGames() {
 }
 
 // Flows that create teams name them with this prefix so a failed run cannot leak a team into
-// later runs; other saved teams on the simulator are left alone.
+// later runs; other saved teams on the simulator are left alone. A fresh install's untouched
+// default team goes too, so the seed team is the only team, as flows expect.
 function clearMaestroCreatedTeams() {
-  useGameStore.setState((state) => {
-    state.savedTeams = state.savedTeams.filter(
-      (team) => !team.name.startsWith(MAESTRO_CREATED_TEAM_PREFIX),
-    );
+  useTeamStore.setState((state) => {
+    state.teams = state.teams.filter((team) => {
+      const isCurrentTeam = team.id === state.currentTeamId;
+      const isMaestroCreatedTeam = team.name.startsWith(MAESTRO_CREATED_TEAM_PREFIX);
+      const isUntouchedDefaultTeam = team.name === 'Team 1' && team.roster.length === 0;
+      return isCurrentTeam || (!isMaestroCreatedTeam && !isUntouchedDefaultTeam);
+    });
   });
 }
 
@@ -409,12 +397,10 @@ export async function seedMaestroOnboardingPrerequisites() {
   await clearAdvancedGames();
   resetMaestroSetupState(team);
   useGameStore.getState().resetGame();
-  useGameStore.setState((state) => {
-    state.currentTeam = team;
-    state.savedTeams = [];
-  });
+  useTeamStore.setState({ teams: [team], currentTeamId: team.id });
   useGameSessionStore.getState().clearActiveGame();
-  useLinePresetsStore.setState({ presets: [], lineConfirmedForNextPoint: false });
+  useLinePresetsStore.setState({ presets: [] });
+  useGameStore.getState().setLineConfirmedForNextPoint(false);
   useTutorialStore.setState({
     hasSeenOnboarding: false,
     hasSeenStatsTutorial: false,

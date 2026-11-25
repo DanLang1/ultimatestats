@@ -6,6 +6,7 @@ import {
 } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { selectCurrentTeam, useTeamStore } from '@/store/teamStore';
 
 export interface LiveGameScore {
   myTeamName: string;
@@ -21,7 +22,7 @@ export interface LiveGameScore {
 export function useLiveGameScore(): LiveGameScore {
   const { kind } = useActiveGameSession();
   const liveAdvancedGame = useAdvancedTrackingStore(getLiveInProgressGame);
-  const basicTeam1Name = useGameStore((state) => state.currentTeam.name);
+  const basicTeam1Name = useTeamStore((state) => selectCurrentTeam(state).name);
   const basicTeam2Name = useGameStore((state) => state.team2Name);
   const basicTeam1Score = useGameStore((state) => state.team1Score);
   const basicTeam2Score = useGameStore((state) => state.team2Score);

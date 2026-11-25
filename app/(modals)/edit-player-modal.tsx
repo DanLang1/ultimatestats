@@ -15,13 +15,15 @@ import {
 } from '@/lib/advancedTracking/voiceNumberUtils';
 import { MAX_PLAYER_NUMBER_LENGTH } from '@/lib/constants';
 import { hasPlayerRecordedStats, hasPlayerRecordedStatsInSavedGames } from '@/lib/playerUtils';
-import { MatchingType, PlayerRole } from '@/lib/storage/types';
 import {
   hasPlayerRecordedActionsInActiveAdvancedGame,
-  useGameStore,
-} from '@/store/basic/gameStore';
+  updateRosterPlayer,
+} from '@/lib/rosterActions';
+import { MatchingType, PlayerRole } from '@/lib/storage/types';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export default function EditPlayerModal() {
@@ -29,8 +31,9 @@ export default function EditPlayerModal() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const { currentTeam, setCurrentTeam, saveCurrentTeam, events, updateRosterPlayer } =
-    useGameStore();
+  const currentTeam = useCurrentTeam();
+  const setCurrentTeam = useTeamStore((state) => state.setCurrentTeam);
+  const events = useGameStore((state) => state.events);
   const savedGames = useSavedBasicGames();
   const { mmpColor, fmpColor } = useSettingsStore();
 
@@ -78,7 +81,8 @@ export default function EditPlayerModal() {
     const trimmedName = name.trim();
     if (!trimmedName || nameExists || numberExists) return;
 
-    const updateResult = updateRosterPlayer(player.id, {
+    const { result: updateResult, persisted } = updateRosterPlayer(player.id, {
+      name: trimmedName,
       isActive,
       matchingType,
       number: normalizedNumber,
@@ -94,21 +98,7 @@ export default function EditPlayerModal() {
     if (updateResult !== 'updated') return;
     setSaveError(null);
 
-    const latestTeam = useGameStore.getState().currentTeam;
-    if (!latestTeam) return;
-
-    const updatedRoster = latestTeam.roster.map((p) =>
-      p.id === player.id
-        ? {
-            ...p,
-            name: trimmedName,
-            number: normalizedNumber || undefined,
-          }
-        : p,
-    );
-    const updatedTeam = { ...latestTeam, roster: updatedRoster };
-    setCurrentTeam(updatedTeam);
-    await saveCurrentTeam(updatedTeam);
+    await persisted;
     router.back();
   };
 
@@ -126,9 +116,8 @@ export default function EditPlayerModal() {
     }
 
     const newRoster = roster.filter((p) => p.id !== playerId);
-    setCurrentTeam({ ...currentTeam, roster: newRoster });
     removePlayerFromPresets(playerId);
-    await saveCurrentTeam();
+    await setCurrentTeam({ ...currentTeam, roster: newRoster });
     router.back();
   };
 

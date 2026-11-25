@@ -8,7 +8,7 @@ import type { GameEvent } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { arrangeBasicGame, testTeam } from '@/test/fixtures/domain';
+import { arrangeBasicGame, arrangeCurrentTeam, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
@@ -119,14 +119,12 @@ it('explains point-credit differences when editing an existing live line', async
 it('saves a preset edit while preserving its identity and excluding inactive players', async () => {
   const preset = { id: 'preset', name: 'O Line', teamId: testTeam.id, playerIds: ['player-alex'] };
   useLinePresetsStore.setState({ presets: [preset] });
-  useGameStore.setState({
-    currentTeam: {
-      ...testTeam,
-      roster: [
-        ...testTeam.roster,
-        { id: 'inactive', name: 'Inactive', isActive: false, matchingType: null, role: null },
-      ],
-    },
+  arrangeCurrentTeam({
+    ...testTeam,
+    roster: [
+      ...testTeam.roster,
+      { id: 'inactive', name: 'Inactive', isActive: false, matchingType: null, role: null },
+    ],
   });
   setMockSearchParams({ presetId: preset.id });
   const user = userEvent.setup();

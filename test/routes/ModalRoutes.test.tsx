@@ -12,12 +12,14 @@ import PointSummaryModal from '@/app/(modals)/point-summary-modal';
 import TeamManagementModal from '@/app/(modals)/team-management-modal';
 import TimeoutModal from '@/app/(modals)/timeout-modal';
 import { useGameStore } from '@/store/basic/gameStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
 import {
   arrangeAdvancedGame,
   arrangeBasicGame,
+  arrangeCurrentTeam,
+  arrangeOtherTeams,
   cacheCurrentAdvancedGame,
   createSavedBasicGame,
   recordOpeningPull,
@@ -35,7 +37,7 @@ describe('modal routes', () => {
   });
 
   it('redirects before rendering player controls when the requested player is missing', async () => {
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
     setMockSearchParams({ playerId: 'missing-player' });
 
     await renderScreen(<EditPlayerModal />);
@@ -91,8 +93,8 @@ describe('modal routes', () => {
       },
     ];
     arrangeBasicGame({ statTrackingEnabled: true });
+    arrangeCurrentTeam({ ...testTeam, roster });
     useGameStore.setState({
-      currentTeam: { ...testTeam, roster },
       currentPoint: 2,
       pointLines: [
         {
@@ -180,7 +182,7 @@ describe('modal routes', () => {
 
   it('deactivates a player from the edit-player modal', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
     setMockSearchParams({ playerId: 'player-alex' });
 
     await renderScreen(<EditPlayerModal />);
@@ -191,22 +193,19 @@ describe('modal routes', () => {
     void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', false);
     await user.press(screen.getByTestId('edit-player-save'));
 
-    expect(
-      useGameStore.getState().currentTeam.roster.find((player) => player.id === 'player-alex')
-        ?.isActive,
-    ).toBe(false);
+    expect(getCurrentTeam().roster.find((player) => player.id === 'player-alex')?.isActive).toBe(
+      false,
+    );
     expect(router.back).toHaveBeenCalled();
   });
 
   it('reactivates a player from the edit-player modal', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({
-      currentTeam: {
-        ...testTeam,
-        roster: testTeam.roster.map((player) =>
-          player.id === 'player-alex' ? { ...player, isActive: false } : player,
-        ),
-      },
+    arrangeCurrentTeam({
+      ...testTeam,
+      roster: testTeam.roster.map((player) =>
+        player.id === 'player-alex' ? { ...player, isActive: false } : player,
+      ),
     });
     setMockSearchParams({ playerId: 'player-alex' });
 
@@ -215,16 +214,15 @@ describe('modal routes', () => {
     void fireEvent(screen.getByTestId('edit-player-active-toggle'), 'valueChange', true);
     await user.press(screen.getByTestId('edit-player-save'));
 
-    expect(
-      useGameStore.getState().currentTeam.roster.find((player) => player.id === 'player-alex')
-        ?.isActive,
-    ).toBe(true);
+    expect(getCurrentTeam().roster.find((player) => player.id === 'player-alex')?.isActive).toBe(
+      true,
+    );
     expect(router.back).toHaveBeenCalled();
   });
 
   it('shows an inline error when advanced-game participation blocks deactivation', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
     arrangeAdvancedGame();
     setMockSearchParams({ playerId: 'player-alex' });
 
@@ -238,12 +236,12 @@ describe('modal routes', () => {
       /cannot be set inactive until the game is over/,
     );
     expect(screen.queryByTestId('edit-player-active-toggle')).not.toBeOnTheScreen();
-    expect(useGameStore.getState().currentTeam.roster[0].isActive).toBe(true);
+    expect(getCurrentTeam().roster[0].isActive).toBe(true);
     expect(router.back).not.toHaveBeenCalled();
   });
 
   it('hides deletion for a player who participated in the advanced game', async () => {
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
     arrangeAdvancedGame();
     recordOpeningPull();
     setMockSearchParams({ playerId: 'player-alex' });
@@ -256,7 +254,7 @@ describe('modal routes', () => {
 
   it('blocks deletion if advanced-game participation starts after the modal renders', async () => {
     const user = userEvent.setup();
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
     arrangeAdvancedGame();
     setMockSearchParams({ playerId: 'player-alex' });
 
@@ -270,7 +268,7 @@ describe('modal routes', () => {
       /cannot be deleted until the game is over/,
     );
     expect(screen.getByText('Edit Player')).toBeVisible();
-    expect(useGameStore.getState().currentTeam.roster).toHaveLength(testTeam.roster.length);
+    expect(getCurrentTeam().roster).toHaveLength(testTeam.roster.length);
   });
 
   it('renders the basic player game selector from real player-stat data', async () => {
@@ -350,7 +348,7 @@ describe('modal routes', () => {
   });
 
   it('renders team management from the real saved-team collection', async () => {
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam] });
+    arrangeCurrentTeam(testTeam);
 
     await renderScreen(<TeamManagementModal />);
 
@@ -361,12 +359,13 @@ describe('modal routes', () => {
   it('loads a selected team before dismissing the management modal', async () => {
     const user = userEvent.setup();
     const otherTeam = { id: 'team-zoboomafoo', name: 'Zoboomafoo', roster: [] };
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam, otherTeam] });
+    arrangeCurrentTeam(testTeam);
+    arrangeOtherTeams([otherTeam]);
 
     await renderScreen(<TeamManagementModal />);
     await user.press(screen.getByText('Zoboomafoo'));
 
-    expect(useGameStore.getState().currentTeam.id).toBe(otherTeam.id);
+    expect(getCurrentTeam().id).toBe(otherTeam.id);
     expect(router.back).toHaveBeenCalled();
   });
 
@@ -376,19 +375,19 @@ describe('modal routes', () => {
       const user = userEvent.setup();
       const otherTeam = { ...testTeam, id: 'other-team', name: 'Other Team' };
       setMockSearchParams({ pregame: mode });
+      arrangeCurrentTeam(testTeam);
+      arrangeOtherTeams([otherTeam]);
       useGameStore.setState({
-        currentTeam: testTeam,
-        savedTeams: [otherTeam],
         currentLine: ['old-player'],
+        lineConfirmedForNextPoint: true,
       });
-      useLinePresetsStore.setState({ lineConfirmedForNextPoint: true });
       await renderScreen(<TeamManagementModal />);
       expect(screen.queryByTestId('team-delete-other-team')).not.toBeOnTheScreen();
       await user.press(screen.getByTestId('team-select-other-team'));
-      expect(useGameStore.getState().currentTeam).toEqual(otherTeam);
-      expect(useGameStore.getState().savedTeams).toContainEqual(testTeam);
+      expect(getCurrentTeam()).toEqual(otherTeam);
+      expect(useTeamStore.getState().teams).toContainEqual(testTeam);
       expect(useGameStore.getState().currentLine).toEqual([]);
-      expect(useLinePresetsStore.getState().lineConfirmedForNextPoint).toBe(false);
+      expect(useGameStore.getState().lineConfirmedForNextPoint).toBe(false);
       expect(router.back).toHaveBeenCalled();
     },
   );
@@ -396,7 +395,8 @@ describe('modal routes', () => {
   it('cancels deletion inside the switcher without changing teams', async () => {
     const user = userEvent.setup();
     const otherTeam = { id: 'other-team', name: 'Other Team', roster: [] };
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam, otherTeam] });
+    arrangeCurrentTeam(testTeam);
+    arrangeOtherTeams([otherTeam]);
 
     await renderScreen(<TeamManagementModal />);
     await user.press(screen.getByTestId('team-delete-other-team'));
@@ -404,27 +404,28 @@ describe('modal routes', () => {
     await user.press(screen.getByTestId('team-delete-cancel'));
 
     expect(screen.getByText('Switch Team')).toBeVisible();
-    expect(useGameStore.getState().savedTeams).toContainEqual(otherTeam);
-    expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
+    expect(useTeamStore.getState().teams).toContainEqual(otherTeam);
+    expect(getCurrentTeam().id).toBe(testTeam.id);
     expect(router.back).not.toHaveBeenCalled();
   });
 
   it('opens team deletion confirmation without switching teams', async () => {
     const user = userEvent.setup();
     const otherTeam = { id: 'team-zoboomafoo', name: 'Zoboomafoo', roster: [] };
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam, otherTeam] });
+    arrangeCurrentTeam(testTeam);
+    arrangeOtherTeams([otherTeam]);
 
     await renderScreen(<TeamManagementModal />);
     await user.press(screen.getByTestId('team-delete-team-zoboomafoo'));
 
     expect(screen.getByText('Delete Team')).toBeVisible();
-    expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
+    expect(getCurrentTeam().id).toBe(testTeam.id);
     expect(router.back).not.toHaveBeenCalled();
 
     await user.press(screen.getByText('Delete', { exact: true }));
 
     await waitFor(() => {
-      expect(useGameStore.getState().savedTeams).not.toContainEqual(otherTeam);
+      expect(useTeamStore.getState().teams).not.toContainEqual(otherTeam);
     });
   });
 });
@@ -606,8 +607,8 @@ describe('continuing game breaks', () => {
     'continues halftime with line calling %s and confirmation %s',
     async (lineCallingEnabled, lineConfirmedForNextPoint, destination) => {
       useSettingsStore.setState({ lineCallingEnabled });
-      useLinePresetsStore.setState({ lineConfirmedForNextPoint });
       useGameStore.setState({
+        lineConfirmedForNextPoint,
         isHalftimeBreak: true,
         halftimeEndTime: null,
         startingPossession: 'team2',

@@ -13,13 +13,14 @@ import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUti
 import { getLiveInProgressGame } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useCurrentTeam } from '@/store/teamStore';
 
 /** Live stats for the current game: advanced analytics while one is in progress, else basic. */
 export default function LiveGameStats() {
   const { palette } = useTheme();
   const liveAdvancedGame = useAdvancedTrackingStore(getLiveInProgressGame);
+  const currentTeam = useCurrentTeam();
   const {
-    currentTeam,
     team2Name,
     team1Score,
     team2Score,

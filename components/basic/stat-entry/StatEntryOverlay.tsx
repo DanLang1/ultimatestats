@@ -6,6 +6,7 @@ import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
 import { hasItems } from '@/lib/utils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 
 import { StatEntryInner } from './StatEntryInner';
 
@@ -16,11 +17,11 @@ interface StatEntryOverlayProps {
 }
 
 export function StatEntryOverlay({ onFinish }: StatEntryOverlayProps) {
+  const currentTeam = useCurrentTeam();
+  const addPlayer = useTeamStore((state) => state.addPlayer);
   const {
     pendingStatEntry,
-    currentTeam,
     team2Name,
-    addPlayer,
     addGoalEvent,
     cancelPendingGoal,
     pointTimerEnabled,

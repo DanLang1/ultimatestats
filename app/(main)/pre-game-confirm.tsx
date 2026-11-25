@@ -23,6 +23,7 @@ import { formatRatioFull, GenderRatio } from '@/lib/genderRatioUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { Fonts } from '@/theme/theme';
 
@@ -32,11 +33,11 @@ export default function PreGameConfirm() {
   const styles = createStyles(sizeClass);
   const { finishActiveGameSession } = useGameSessionActions();
 
+  const currentTeam = useCurrentTeam();
+  const teams = useTeamStore((state) => state.teams);
   const {
     possession,
     statTrackingEnabled,
-    currentTeam,
-    savedTeams,
     team2Name,
     setPossession,
     gameTo,
@@ -88,8 +89,7 @@ export default function PreGameConfirm() {
 
   const [selectedTeam, setSelectedTeam] = useState<'team1' | 'team2' | ''>(possession ?? '');
   const [selectedRatio, setSelectedRatio] = useState<GenderRatio | ''>(firstPointRatio ?? '');
-  const canSwitchTeam =
-    savedTeams.length > 1 && savedTeams.some((team) => team.id !== currentTeam.id);
+  const canSwitchTeam = teams.length > 1;
   const [teamOrbitRunKey, setTeamOrbitRunKey] = useState(0);
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 

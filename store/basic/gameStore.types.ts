@@ -1,14 +1,9 @@
 import type { StateCreator } from 'zustand';
 
-import { PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage';
-import { MatchingType, PlayerRole } from '@/lib/storage/types';
+import { PointLineRecord, SavedGame } from '@/lib/storage';
 
 type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
-export type UpdateRosterPlayerResult =
-  | 'updated'
-  | 'blocked-current-game-participation'
-  | 'not-found';
 
 // Unified event model - all game events in chronological order
 // NOTE: gameId is optional because events are created during live gameplay before the game is saved.
@@ -57,26 +52,20 @@ export type EventToastSignal =
   | { id: number; kind: 'undo'; event: GameEvent }
   | { id: number; kind: 'opponentGoal' };
 
-export interface TeamSlice {
-  currentTeam: SavedTeam; // My team (id, name, roster) - defaults to Team 1
-  savedTeams: SavedTeam[];
-
-  setCurrentTeam: (team: SavedTeam) => void;
-  addPlayer: (name: string) => string | null;
-  updateRosterPlayer: (
-    playerId: string,
-    updates: {
-      isActive?: boolean;
-      matchingType?: MatchingType | null;
-      number?: string;
-      role?: PlayerRole | null;
-    },
-  ) => UpdateRosterPlayerResult;
-  clearRoster: () => void;
-  saveCurrentTeam: (teamOverride?: SavedTeam) => Promise<void>;
-  deleteTeam: (id: string) => Promise<void>;
-  loadTeam: (teamId: string) => Promise<void>;
-  importTeam: (team: SavedTeam) => Promise<void>;
+/**
+ * Team data as 2.6.x persisted it in this store's storage entry. Teams now live in
+ * `store/teamStore.ts`, which seeded itself from these two keys. They are hydrated and written back
+ * untouched so the old copy stays on disk until a later cleanup release; app code never reads them.
+ * Absent on an install that never ran 2.6.x.
+ *
+ * TODO: remove before this ships, in a follow-up PR. The aim is to rely on the storage checkpoint
+ * tests for the team-store seed instead of keeping a second copy on disk. Removing means deleting
+ * this interface and the two `partialize` lines in `gameStore.ts`; the next basic-store write then
+ * drops the keys, and `storageCheckpoint.test.ts` must expect that.
+ */
+interface LegacyPersistedTeamKeys {
+  currentTeam?: unknown;
+  savedTeams?: unknown;
 }
 
 export interface SavedGamesSlice {
@@ -162,6 +151,7 @@ export interface LiveGameSlice {
 
   currentLine: string[]; // numPlayers playerIds on field now
   pointLines: PointLineRecord[];
+  lineConfirmedForNextPoint: boolean;
 
   setTeam2Name: (name: string) => void;
   setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
@@ -235,9 +225,10 @@ export interface LiveGameSlice {
     subType?: 'injury' | 'replacement',
   ) => void;
   replacePointLine: (pointNumber: number, playerIds: string[]) => boolean;
+  setLineConfirmedForNextPoint: (confirmed: boolean) => void;
 }
 
-export interface GameState extends TeamSlice, SavedGamesSlice, LiveGameSlice {}
+export interface GameState extends SavedGamesSlice, LiveGameSlice, LegacyPersistedTeamKeys {}
 
 export type GameSliceCreator<Slice> = StateCreator<
   GameState,

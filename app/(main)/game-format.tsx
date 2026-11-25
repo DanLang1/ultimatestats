@@ -27,6 +27,7 @@ import type { GameEvent } from '@/store/basic/gameStore.types';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export default function GameFormatScreen() {
@@ -35,8 +36,8 @@ export default function GameFormatScreen() {
   const styles = createStyles(isLandscape, sizeClass);
   const activeGameType = useGameSessionStore((state) => state.activeGameType);
 
+  const currentTeam = useCurrentTeam();
   const {
-    currentTeam,
     team2Name,
     gameTo,
     team1Score,

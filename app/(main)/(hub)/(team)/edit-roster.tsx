@@ -24,14 +24,15 @@ import {
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { sortByPlayerNumber } from '@/lib/lineUtils';
 import { hasPlayerWithName } from '@/lib/playerUtils';
+import { clearRoster, updateRosterPlayer } from '@/lib/rosterActions';
 import { serializeTeam, uploadPayload } from '@/lib/sharing';
 import { SHARE_TEAM_UPLOAD_ERROR_MESSAGE } from '@/lib/sharing/shareActionUtils';
 import { SavedTeam } from '@/lib/storage';
 import { MatchingType, Player, PlayerRole } from '@/lib/storage/types';
 import { generateId } from '@/lib/utils';
-import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { LinePlayerSortOrder, useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 type RoleFilter = PlayerRole | 'unset' | null;
@@ -72,15 +73,10 @@ export default function EditRosterScreen() {
   const styles = createStyles(sizeClass);
   const metrics = createMetrics(sizeClass);
 
-  const {
-    currentTeam,
-    setCurrentTeam,
-    addPlayer,
-    updateRosterPlayer,
-    saveCurrentTeam,
-    clearRoster,
-    savedTeams,
-  } = useGameStore();
+  const currentTeam = useCurrentTeam();
+  const teams = useTeamStore((state) => state.teams);
+  const setCurrentTeam = useTeamStore((state) => state.setCurrentTeam);
+  const addPlayer = useTeamStore((state) => state.addPlayer);
   const { showAlert } = useAlert();
   const { palette } = useTheme();
   const { rosterViewMode, setRosterViewMode, linePlayerSortOrder } = useSettingsStore();
@@ -88,6 +84,7 @@ export default function EditRosterScreen() {
   const roster = currentTeam.roster;
   const { kind: activeGameKind } = useActiveGameSession();
   const gameActive = activeGameKind !== 'none';
+  const showClearRoster = !gameActive && roster.length > 0;
 
   const [showShareConfirm, setShowShareConfirm] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
@@ -128,9 +125,7 @@ export default function EditRosterScreen() {
   const isDuplicateName =
     newPlayerName.trim() !== '' && hasPlayerWithName(roster, newPlayerName.trim());
 
-  const hasOtherTeams = savedTeams.filter((t) => t.id !== currentTeam.id).length > 0;
-  const hasRoster = roster.length > 0;
-
+  const hasOtherTeams = teams.filter((t) => t.id !== currentTeam.id).length > 0;
   // Sorted roster: active first
   const displayRoster = sortPlayersForRosterDisplay(roster, linePlayerSortOrder);
   const filteredRoster = filterPlayersByRole(displayRoster, roleFilter);
@@ -143,14 +138,14 @@ export default function EditRosterScreen() {
 
   const teamNameExists =
     editTeamName.trim() !== '' &&
-    savedTeams.some(
+    teams.some(
       (t: SavedTeam) =>
         t.name.toLowerCase() === editTeamName.trim().toLowerCase() && t.id !== currentTeam.id,
     );
 
   const newTeamNameExists =
     newTeamName.trim() !== '' &&
-    savedTeams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
+    teams.some((t: SavedTeam) => t.name.toLowerCase() === newTeamName.trim().toLowerCase());
 
   const toggleSelectionMode = () => {
     setSelectionMode((prev) => {
@@ -184,18 +179,16 @@ export default function EditRosterScreen() {
     setSelectedPlayerIds(new Set());
   };
 
-  const handleBulkSetMatching = async (type: MatchingType) => {
+  const handleBulkSetMatching = (type: MatchingType) => {
     for (const playerId of selectedPlayerIds) {
       updateRosterPlayer(playerId, { matchingType: type });
     }
-    await saveCurrentTeam();
   };
 
-  const handleBulkSetRole = async (role: PlayerRole) => {
+  const handleBulkSetRole = (role: PlayerRole) => {
     for (const playerId of selectedPlayerIds) {
       updateRosterPlayer(playerId, { role });
     }
-    await saveCurrentTeam();
   };
 
   const handleRenameTeam = async () => {
@@ -206,8 +199,7 @@ export default function EditRosterScreen() {
     }
 
     const updatedTeam: SavedTeam = { ...currentTeam, name: newName };
-    setCurrentTeam(updatedTeam);
-    await saveCurrentTeam(updatedTeam);
+    await setCurrentTeam(updatedTeam);
     setRenameModalVisible(false);
   };
 
@@ -222,18 +214,13 @@ export default function EditRosterScreen() {
     if (!trimmedName || newTeamNameExists) return;
     resetSelectionState();
 
-    if (hasRoster) {
-      await saveCurrentTeam();
-    }
-
     const newTeam: SavedTeam = {
       id: generateId(),
       name: trimmedName,
       roster: [],
     };
-    setCurrentTeam(newTeam);
+    await setCurrentTeam(newTeam);
     setNewTeamModalVisible(false);
-    await saveCurrentTeam(newTeam);
   };
 
   const handleShareTeam = () => {
@@ -252,8 +239,7 @@ export default function EditRosterScreen() {
     resetSelectionState();
     const sampleTeam = buildSampleTeam(currentTeam.id, currentTeam.name);
     useLinePresetsStore.getState().clearPresetsForTeam(currentTeam.id);
-    setCurrentTeam(sampleTeam);
-    await saveCurrentTeam(sampleTeam);
+    await setCurrentTeam(sampleTeam);
   };
 
   const handleConfirmShare = async () => {
@@ -266,12 +252,11 @@ export default function EditRosterScreen() {
     setShowShareConfirm(false);
   };
 
-  const handleAddPlayer = async () => {
+  const handleAddPlayer = () => {
     const trimmed = newPlayerName.trim();
     if (trimmed && !hasPlayerWithName(roster, trimmed)) {
       addPlayer(trimmed);
       setNewPlayerName('');
-      await saveCurrentTeam();
     }
   };
 
@@ -279,24 +264,19 @@ export default function EditRosterScreen() {
     router.push({ pathname: '/edit-player-modal', params: { playerId: player.id } });
   };
 
-  const handleSetPlayerActive = async (playerId: string, isActive: boolean) => {
-    const updateResult = updateRosterPlayer(playerId, { isActive });
+  const handleSetPlayerActive = (playerId: string, isActive: boolean) => {
+    const { result: updateResult } = updateRosterPlayer(playerId, { isActive });
     if (updateResult === 'blocked-current-game-participation') {
       showAlert({
         title: 'Player Already Participated',
         message:
           'Players who already appeared in the current game cannot be set inactive until the game is over.',
       });
-      return;
     }
-    if (updateResult !== 'updated') return;
-    await saveCurrentTeam();
   };
 
-  const handleSetPlayerMatching = async (playerId: string, matchingType: MatchingType | null) => {
-    const updateResult = updateRosterPlayer(playerId, { matchingType });
-    if (updateResult !== 'updated') return;
-    await saveCurrentTeam();
+  const handleSetPlayerMatching = (playerId: string, matchingType: MatchingType | null) => {
+    updateRosterPlayer(playerId, { matchingType });
   };
 
   const handleSetPlayerNumber = async (playerId: string, number: string) => {
@@ -316,16 +296,12 @@ export default function EditRosterScreen() {
       return false;
     }
 
-    const updateResult = updateRosterPlayer(playerId, { number: normalizedNumber });
-    if (updateResult !== 'updated') return false;
-    await saveCurrentTeam();
-    return true;
+    const { result: updateResult } = updateRosterPlayer(playerId, { number: normalizedNumber });
+    return updateResult === 'updated';
   };
 
-  const handleSetPlayerRole = async (playerId: string, role: PlayerRole | null) => {
-    const updateResult = updateRosterPlayer(playerId, { role });
-    if (updateResult !== 'updated') return;
-    await saveCurrentTeam();
+  const handleSetPlayerRole = (playerId: string, role: PlayerRole | null) => {
+    updateRosterPlayer(playerId, { role });
   };
 
   const handleBack = () => {
@@ -335,9 +311,7 @@ export default function EditRosterScreen() {
   const handleClearAll = () => {
     showAlert({
       title: 'Clear Roster',
-      message: gameActive
-        ? 'There is a game in progress. Clearing the roster will affect stat tracking and may cause issues with the current game. Are you sure?'
-        : 'Remove all players from the roster?',
+      message: 'Remove all players from the roster?',
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -346,9 +320,6 @@ export default function EditRosterScreen() {
           onPress: () => {
             resetSelectionState();
             clearRoster();
-            if (currentTeam) {
-              setCurrentTeam({ ...currentTeam, roster: [] });
-            }
           },
         },
       ],
@@ -567,7 +538,7 @@ export default function EditRosterScreen() {
               showEditPresets={roster.length > 0}
               showShareTeam={roster.length > 0}
               showImportTeam={!gameActive}
-              showClearRoster={roster.length > 0}
+              showClearRoster={showClearRoster}
             />
           )}
 
@@ -814,7 +785,7 @@ export default function EditRosterScreen() {
           showEditPresets={roster.length > 0}
           showShareTeam={roster.length > 0}
           showImportTeam={!gameActive}
-          showClearRoster={roster.length > 0}
+          showClearRoster={showClearRoster}
         />
       </Modal>
     </View>

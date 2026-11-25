@@ -12,7 +12,8 @@ import { useStartupMigrationStore } from '../startupMigrationStore';
 import { useTournamentStore } from '../tournamentStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
+  // The team store reads storage while this module loads, before beforeEach configures the mock.
+  getItem: jest.fn().mockResolvedValue(null),
   setItem: jest.fn(),
   removeItem: jest.fn(),
 }));

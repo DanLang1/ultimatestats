@@ -8,6 +8,7 @@ import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useStartupMigrationStore } from '@/store/startupMigrationStore';
+import { useTeamStore } from '@/store/teamStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { useUIStore } from '@/store/uiStore';
@@ -23,6 +24,7 @@ const initialNumberPickerState = useNumberPickerStore.getInitialState();
 const initialPlayerStatsState = usePlayerStatsStore.getInitialState();
 const initialSettingsState = useSettingsStore.getInitialState();
 const initialStartupMigrationState = useStartupMigrationStore.getInitialState();
+const initialTeamState = useTeamStore.getInitialState();
 const initialTournamentState = useTournamentStore.getInitialState();
 const initialUIState = useUIStore.getInitialState();
 
@@ -49,6 +51,7 @@ export function resetAllStores() {
   usePlayerStatsStore.setState(initialPlayerStatsState, true);
   useSettingsStore.setState(initialSettingsState, true);
   useStartupMigrationStore.setState(initialStartupMigrationState, true);
+  useTeamStore.setState(initialTeamState, true);
   useTournamentStore.setState(initialTournamentState, true);
   useUIStore.setState(initialUIState, true);
 }

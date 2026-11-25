@@ -11,17 +11,17 @@ import { computePlayerStats } from '@/lib/basic/statsUtils';
 import { computeTeamStats } from '@/lib/basic/teamStatsUtils';
 import { MODAL_MAX_WIDTH_LARGE } from '@/lib/constants';
 import { useGameStore } from '@/store/basic/gameStore';
-import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export default function HalftimeModal() {
   const { palette } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
+  const currentTeam = useCurrentTeam();
   const {
     team1Score,
     team2Score,
-    currentTeam,
     team2Name,
     startingPossession,
     isHalftimeBreak,
@@ -54,7 +54,7 @@ export default function HalftimeModal() {
 
   const hasStats = statTrackingEnabled && events.length > 0;
 
-  const lineConfirmedForNextPoint = useLinePresetsStore((state) => state.lineConfirmedForNextPoint);
+  const lineConfirmedForNextPoint = useGameStore((state) => state.lineConfirmedForNextPoint);
   const lineCallingEnabled = useSettingsStore((state) => state.lineCallingEnabled);
 
   if (!isHalftimeBreak) {

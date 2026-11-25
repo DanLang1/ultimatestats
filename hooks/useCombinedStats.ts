@@ -21,7 +21,7 @@ import { resolveTeamName } from '@/lib/playerUtils';
 import { shareCsvExport } from '@/lib/shareCsvExport';
 import { GameEvent, Player, SavedGame, SavedTeam } from '@/lib/storage';
 import { GameKind } from '@/lib/storage/types';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useTeamStore } from '@/store/teamStore';
 
 export interface BasicCombinedStats {
   kind: 'basic';
@@ -94,7 +94,7 @@ function combineBasicGames(
 /** Combined results for one team's games of one kind, plus their CSV export. */
 export function useCombinedStats(kind: GameKind, gameIds: string[]) {
   const { showAlert } = useAlert();
-  const { savedTeams } = useGameStore();
+  const teams = useTeamStore((state) => state.teams);
   const savedGames = useSavedBasicGames();
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const gameIdSet = new Set(gameIds);
@@ -109,7 +109,7 @@ export function useCombinedStats(kind: GameKind, gameIds: string[]) {
 
   const getState = (): CombinedStatsState => {
     if (kind === 'basic') {
-      const stats = combineBasicGames(savedGames, gameIdSet, savedTeams);
+      const stats = combineBasicGames(savedGames, gameIdSet, teams);
       return stats ? { status: 'ready', stats } : { status: 'notFound' };
     }
 
@@ -138,7 +138,7 @@ export function useCombinedStats(kind: GameKind, gameIds: string[]) {
           games: advancedGames,
           gameItems: completedAdvancedSavedGameSummaries
             .filter((game) => gameIdSet.has(game.id))
-            .map((game) => advancedGameSummaryToTeamListItem(game, savedTeams)),
+            .map((game) => advancedGameSummaryToTeamListItem(game, teams)),
           initialPullWinStats: computeInitialPullWinStats(analyticsGames),
           flipStats: getRecordedFlipStats(analyticsGames),
         },

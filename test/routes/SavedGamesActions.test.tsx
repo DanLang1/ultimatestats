@@ -11,7 +11,7 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { createDeferred } from '@/test/deferred';
 import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
-import { createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import { arrangeOtherTeams, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
@@ -30,8 +30,8 @@ afterEach(() => {
 
 async function arrangeGames(kind: 'basic' | 'advanced') {
   if (kind === 'basic') {
+    arrangeOtherTeams([testTeam]);
     useGameStore.setState({
-      savedTeams: [testTeam],
       savedGames: ['first', 'second'].map((id) => ({
         ...createSavedBasicGame(),
         id,
@@ -464,7 +464,8 @@ async function arrangeMixedKinds() {
       }).build(),
     );
   }
-  useGameStore.setState({ savedTeams: [testTeam], savedGames: [createSavedBasicGame()] });
+  arrangeOtherTeams([testTeam]);
+  useGameStore.setState({ savedGames: [createSavedBasicGame()] });
   return tournamentId;
 }
 
@@ -729,8 +730,8 @@ describe('team scope', () => {
   const owls = { id: 'team-owls', name: 'Owls', roster: [] };
 
   async function arrangeTwoTeams() {
+    arrangeOtherTeams([testTeam, owls]);
     useGameStore.setState({
-      savedTeams: [testTeam, owls],
       savedGames: [
         { ...createSavedBasicGame(), id: 'windchill-basic', team2Name: 'Basic Rival' },
         {
@@ -850,8 +851,8 @@ describe('team scope', () => {
       name,
       roster: [],
     }));
+    arrangeOtherTeams(teams);
     useGameStore.setState({
-      savedTeams: teams,
       savedGames: teams.map((team, i) => ({
         ...createSavedBasicGame(),
         id: `${team.name}-game`,
@@ -875,8 +876,8 @@ describe('team scope', () => {
       name,
       roster: [],
     }));
+    arrangeOtherTeams(teams);
     useGameStore.setState({
-      savedTeams: teams,
       savedGames: teams.map((team, i) => ({
         ...createSavedBasicGame(),
         id: `${team.name}-game`,

@@ -14,6 +14,7 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { getCurrentTeam } from '@/store/teamStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -71,7 +72,7 @@ describe('tutorial routes', () => {
       pathname: '/tutorial-advanced-tracker',
       params: { origin: 'onboarding', variant: 'buttons' },
     });
-    expect(useGameStore.getState().currentTeam.roster).toEqual([]);
+    expect(getCurrentTeam().roster).toEqual([]);
     expect(useLinePresetsStore.getState().presets).toEqual([]);
     expect(useGameSessionStore.getState().activeGameType).toBeNull();
     expect(useAdvancedTrackingStore.getState().currentGame).toBeNull();

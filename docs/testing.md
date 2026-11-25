@@ -126,10 +126,10 @@ Basic and team seed modes:
 
 Every seed except `mode=onboarding` marks onboarding as seen, so flows that relaunch the app
 (`launchApp` mid-flow) re-enter through `/` to the active game or Dashboard even if an earlier
-onboarding flow was interrupted. Every seed deletes saved teams whose names start with `Maestro `
-(`MAESTRO_CREATED_TEAM_PREFIX`).
+onboarding flow was interrupted. Every seed deletes teams whose names start with `Maestro `
+(`MAESTRO_CREATED_TEAM_PREFIX`) and an empty default `Team 1` that is not the current team.
 Flows that create teams must use that prefix so a failed run cannot leak a team into later runs;
-other saved teams on the simulator are left alone.
+other teams on the simulator are left alone.
 
 Selector notes learned from the installed app:
 

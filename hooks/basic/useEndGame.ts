@@ -3,14 +3,15 @@ import { router } from 'expo-router';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useCurrentTeam } from '@/store/teamStore';
 
 export function useEndGame() {
   const { showAlert } = useAlert();
   const { finishActiveGameSession } = useGameSessionActions();
+  const currentTeam = useCurrentTeam();
   const {
     team1Score,
     team2Score,
-    currentTeam,
     team2Name,
     pauseGameClock,
     setCurrentGameStatus,

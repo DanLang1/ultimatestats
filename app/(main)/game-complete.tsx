@@ -6,13 +6,14 @@ import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver, getWinner } from '@/lib/basic/gameUtils';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useCurrentTeam } from '@/store/teamStore';
 
 export default function GameCompleteScreen() {
+  const currentTeam = useCurrentTeam();
   const {
     team1Score,
     team2Score,
     gameTo,
-    currentTeam,
     team2Name,
     statTrackingEnabled,
     undoLastAction,

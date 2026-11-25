@@ -9,8 +9,8 @@ import { getLatestLineForPoint, replacePointLineRecords } from '@/lib/lineUtils'
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { palette } from '@/theme/theme';
 
-import { useLinePresetsStore } from '../../linePresetsStore';
 import { useSettingsStore } from '../../settingsStore';
+import { getCurrentTeam } from '../../teamStore';
 import {
   EventToastSignal,
   GameSliceCreator,
@@ -84,6 +84,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
 
   currentLine: [],
   pointLines: [],
+  lineConfirmedForNextPoint: false,
 
   setTeam2Name: (name: string) =>
     set((state: GameState) => {
@@ -336,7 +337,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
           (record) => record.pointNumber <= state.currentPoint,
         );
         state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
-        useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
+        state.lineConfirmedForNextPoint = false;
         state.events.pop();
       } else {
         // Turnover: flip possession back
@@ -589,7 +590,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
         (record) => record.pointNumber <= state.currentPoint,
       );
       state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
-      useLinePresetsStore.getState().setLineConfirmedForNextPoint(false);
+      state.lineConfirmedForNextPoint = false;
 
       state.pendingStatEntry = null;
 
@@ -752,9 +753,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
     let didReplace = false;
     set((state: GameState) => {
       if (pointNumber >= state.currentPoint) return;
-      if (
-        !canReplacePointLine(state.pointLines, pointNumber, playerIds, state.currentTeam.roster)
-      ) {
+      if (!canReplacePointLine(state.pointLines, pointNumber, playerIds, getCurrentTeam().roster)) {
         return;
       }
 
@@ -853,4 +852,9 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
     });
     return result;
   },
+
+  setLineConfirmedForNextPoint: (confirmed: boolean) =>
+    set((state: GameState) => {
+      state.lineConfirmedForNextPoint = confirmed;
+    }),
 });

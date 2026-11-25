@@ -15,6 +15,7 @@ import {
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
+import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { createDeferred, holdAsyncStorageWrites } from '@/test/deferred';
 import { jsonResponse, requestUrl } from '@/test/fetch';
 import {
@@ -22,7 +23,7 @@ import {
   participantRef,
   UNTRACKED_PLAYER,
 } from '@/test/fixtures/advancedGameBuilder';
-import { createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import { arrangeCurrentTeam, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
@@ -149,7 +150,7 @@ describe('shared-link import', () => {
     'imports a roster with presets while a game is active=%s',
     async (active) => {
       const incoming = { ...testTeam, id: 'incoming', name: 'Imported Team' };
-      const previous = useGameStore.getState().currentTeam;
+      const previous = getCurrentTeam();
       if (active) useGameStore.setState({ team1Score: 1 });
       const preset = {
         id: 'preset',
@@ -163,16 +164,16 @@ describe('shared-link import', () => {
       const user = userEvent.setup();
       await user.press(screen.getByText('Import'));
       expect(await screen.findByText('Team imported!')).toBeVisible();
-      expect(useGameStore.getState().savedTeams).toContainEqual(incoming);
+      expect(useTeamStore.getState().teams).toContainEqual(incoming);
       expect(useLinePresetsStore.getState().presets).toContainEqual(preset);
-      expect(useGameStore.getState().currentTeam.id).toBe(active ? previous.id : incoming.id);
+      expect(getCurrentTeam().id).toBe(active ? previous.id : incoming.id);
       await user.press(screen.getByText('View Team'));
       expect(router.push).toHaveBeenCalledWith('/edit-roster');
     },
   );
 
   it('keeps an existing roster when the recipient declines the update', async () => {
-    useGameStore.setState({ savedTeams: [testTeam] });
+    arrangeCurrentTeam(testTeam);
     const client = createTestQueryClient();
     client.setQueryData(
       ['sharePayload', 'share-1'],
@@ -181,7 +182,7 @@ describe('shared-link import', () => {
     await renderScreen(<ImportScreen />, { queryClient: client });
     expect(screen.getByText('You already have Windchill')).toBeVisible();
     await userEvent.setup().press(screen.getByText('Keep Mine'));
-    expect(useGameStore.getState().savedTeams).toEqual([testTeam]);
+    expect(useTeamStore.getState().teams).toEqual([testTeam]);
     expect(router.dismissTo).toHaveBeenCalledWith('/');
   });
 
@@ -303,7 +304,7 @@ describe('shared-link import', () => {
 describe('USAU team import', () => {
   const teamLink = 'https://play.usaultimate.org/teams/events/team/?TeamId=123';
   beforeEach(() => {
-    useGameStore.setState({ currentTeam: testTeam, savedTeams: [testTeam] });
+    arrangeCurrentTeam(testTeam);
   });
 
   it.each([false, true])(
@@ -321,7 +322,7 @@ describe('USAU team import', () => {
       expect(screen.getByText('Importing Roster')).toBeVisible();
       expect(screen.getByText('Fetching...')).toBeDisabled();
       expect(new URL(fetchSpy.mock.calls[0][0] as string).searchParams.get('format')).toBe('full');
-      const save = holdAsyncStorageWrites((key) => key === 'ultimatestats-game-storage');
+      const save = holdAsyncStorageWrites((key) => key === 'ultimatestats-team-storage');
       await act(async () => {
         rosterResponse.resolve(
           new Response(
@@ -337,18 +338,18 @@ describe('USAU team import', () => {
       expect(screen.queryByText('Team Imported')).not.toBeOnTheScreen();
       await save.release();
       const persisted = JSON.parse(
-        (await AsyncStorage.getItem('ultimatestats-game-storage'))!,
+        (await AsyncStorage.getItem('ultimatestats-team-storage'))!,
       ).state;
       expect(
-        persisted.savedTeams.find((team: { name: string }) => team.name === 'Imported Club').roster,
+        persisted.teams.find((team: { name: string }) => team.name === 'Imported Club').roster,
       ).toEqual([expect.objectContaining({ name: 'Robin', role: 'handler', isActive: true })]);
       if (gameActive) {
         expect(screen.getByText('Team Imported')).toBeVisible();
-        expect(useGameStore.getState().currentTeam.id).toBe(testTeam.id);
+        expect(getCurrentTeam().id).toBe(testTeam.id);
         await user.press(screen.getByText('OK'));
         expect(router.back).toHaveBeenCalled();
       } else {
-        expect(useGameStore.getState().currentTeam.name).toBe('Imported Club');
+        expect(getCurrentTeam().name).toBe('Imported Club');
         expect(router.replace).toHaveBeenCalledWith({
           pathname: '/edit-roster',
           params: { teamName: 'Imported Club' },
@@ -413,7 +414,7 @@ describe('USAU team import', () => {
       await user.type(screen.getByPlaceholderText('USAU Team URL'), teamLink);
       await user.press(screen.getByText('Fetch Roster'));
       expect(await screen.findByText(title)).toBeVisible();
-      expect(useGameStore.getState().savedTeams).toEqual([testTeam]);
+      expect(useTeamStore.getState().teams).toEqual([testTeam]);
       expect(router.replace).not.toHaveBeenCalled();
       await user.press(screen.getByText('OK'));
       expect(screen.getByText('Fetch Roster')).toBeEnabled();

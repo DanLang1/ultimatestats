@@ -15,9 +15,9 @@ import { Participant } from '@/lib/advancedTracking/types';
 import { checkLineRatio, formatRatio, GenderRatio } from '@/lib/genderRatioUtils';
 import { LinePreset, Player, PointLineRecord } from '@/lib/storage/types';
 import { hasItems } from '@/lib/utils';
-import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useTeamStore } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export interface RecentLine {
@@ -105,7 +105,7 @@ export const TrackerLineScreen = ({
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
 
-  const currentTeamId = useGameStore((s) => s.currentTeam.id);
+  const currentTeamId = useTeamStore((state) => state.currentTeamId);
   const allPresets = useLinePresetsStore((s) => s.presets);
   const linePlayerSortOrder = useSettingsStore((s) => s.linePlayerSortOrder);
   const presets = allPresets.filter((p) => p.teamId === currentTeamId);

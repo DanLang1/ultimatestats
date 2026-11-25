@@ -5,6 +5,7 @@ import { useSavedBasicGame } from '@/hooks/basic/useSavedBasicGames';
 import { resolveEditableBasicPointLine } from '@/lib/basic/pointLineEditUtils';
 import { Player, PointLineRecord, SavedGame } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useCurrentTeam } from '@/store/teamStore';
 
 interface PointLineEditSource {
   roster: Player[];
@@ -21,14 +22,9 @@ function getSavedGameSource(game: SavedGame | undefined): PointLineEditSource | 
 
 export default function EditPointLineModal() {
   const params = useLocalSearchParams<{ pointNumber?: string; gameId?: string }>();
-  const {
-    currentTeam,
-    currentGameId,
-    currentPoint,
-    pointLines,
-    replacePointLine,
-    replaceSavedGamePointLine,
-  } = useGameStore();
+  const currentTeam = useCurrentTeam();
+  const { currentGameId, currentPoint, pointLines, replacePointLine, replaceSavedGamePointLine } =
+    useGameStore();
 
   const savedGameId = params.gameId && params.gameId !== 'current' ? params.gameId : null;
   const savedGame = useSavedBasicGame(savedGameId);

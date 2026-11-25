@@ -13,7 +13,7 @@ import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { arrangeBasicGame, testTeam } from '@/test/fixtures/domain';
+import { arrangeBasicGame, arrangeCurrentTeam, testTeam } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { renderScreen } from '@/test/render';
@@ -128,7 +128,7 @@ describe('basic game routes', () => {
   it('handles the empty-line route without replacing its real store hooks', async () => {
     const user = userEvent.setup();
     arrangeBasicGame();
-    useGameStore.setState({ currentTeam: { ...testTeam, roster: [] } });
+    arrangeCurrentTeam({ ...testTeam, roster: [] });
     await renderScreen(<LineEditorScreen />);
 
     expect(screen.getByText('No Active Players')).toBeVisible();
@@ -139,7 +139,7 @@ describe('basic game routes', () => {
   });
 
   it('renders the empty line-preset route from the real preset store', async () => {
-    useGameStore.setState({ currentTeam: testTeam });
+    arrangeCurrentTeam(testTeam);
 
     await renderScreen(<LinePresetEditor />);
 

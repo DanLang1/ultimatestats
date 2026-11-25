@@ -10,7 +10,13 @@ import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useTutorialStore } from '@/store/tutorialStore';
-import { arrangeAdvancedGame, createSavedBasicGame, testTeam } from '@/test/fixtures/domain';
+import {
+  arrangeAdvancedGame,
+  arrangeCurrentTeam,
+  arrangeOtherTeams,
+  createSavedBasicGame,
+  testTeam,
+} from '@/test/fixtures/domain';
 import { resetDashboardStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter } from '@/test/mocks/expoRouter';
 import { createTestQueryClient, renderScreen } from '@/test/render';
@@ -21,8 +27,8 @@ function arrangeDashboard() {
     hasUpdate: false,
     latestVersion: null,
   });
+  arrangeCurrentTeam({ id: 'team-1', name: 'Windchill', roster: [] });
   useGameStore.setState({
-    currentTeam: { id: 'team-1', name: 'Windchill', roster: [] },
     team2Name: 'Opponent',
     statTrackingEnabled: true,
   });
@@ -117,7 +123,7 @@ afterEach(() => {
 
 it('opens roster and help destinations when a roster exists', async () => {
   const queryClient = arrangeDashboard();
-  useGameStore.setState({ currentTeam: testTeam });
+  arrangeCurrentTeam(testTeam);
   const user = userEvent.setup();
   await renderScreen(<DashboardScreen />, { queryClient });
   const destinations = [
@@ -165,8 +171,8 @@ it('opens saved games in the Stats tab', async () => {
 
 it('opens the last saved game from the dashboard', async () => {
   const queryClient = arrangeDashboard();
+  arrangeOtherTeams([testTeam]);
   useGameStore.setState({
-    savedTeams: [testTeam],
     savedGames: [
       { ...createSavedBasicGame(), id: 'older', team2Name: 'Falcons', createdAt: 1000 },
       { ...createSavedBasicGame(), id: 'newest', team2Name: 'Eagles', createdAt: 2000 },
@@ -183,7 +189,8 @@ it('opens the last saved game from the dashboard', async () => {
 
 it('hides the last game while a game is live', async () => {
   const queryClient = arrangeDashboard();
-  useGameStore.setState({ savedTeams: [testTeam], savedGames: [createSavedBasicGame()] });
+  arrangeOtherTeams([testTeam]);
+  useGameStore.setState({ savedGames: [createSavedBasicGame()] });
   arrangeAdvancedGame();
   await renderScreen(<DashboardScreen />, { queryClient });
   expect(screen.queryByText('Last game')).not.toBeOnTheScreen();

@@ -21,6 +21,7 @@ import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
 
@@ -103,7 +104,7 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
     await seedAdvancedTrackerTestGame({ includeBench: true, trackerState: 'focusPossession' });
 
     const game = useAdvancedTrackingStore.getState().currentGame;
-    const currentTeam = useGameStore.getState().currentTeam;
+    const currentTeam = getCurrentTeam();
     expect(currentTeam.roster.map((player) => player.name)).toEqual([
       ...MAESTRO_SEED_PLAYERS,
       ...MAESTRO_SCRIMMAGE_BENCH_PLAYERS,
@@ -125,7 +126,7 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
   it('seeds the current team used by roster-backed advanced games', async () => {
     await seedAdvancedTrackerTestGame();
 
-    const currentTeam = useGameStore.getState().currentTeam;
+    const currentTeam = getCurrentTeam();
     const game = useAdvancedTrackingStore.getState().currentGame;
 
     expect(currentTeam.id).toBe(MAESTRO_SEED_TEAM_ID);
@@ -137,7 +138,8 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
 describe('basic Maestro seeds', () => {
   beforeEach(async () => {
     await AsyncStorage.clear();
-    useGameStore.setState({ savedGames: [], savedTeams: [] });
+    useGameStore.setState({ savedGames: [] });
+    useTeamStore.setState(useTeamStore.getInitialState(), true);
   });
 
   it('seeds one saved basic game whose score matches its goal events', async () => {
@@ -166,14 +168,17 @@ describe('basic Maestro seeds', () => {
     };
     useGameStore.setState((state) => {
       state.savedGames.push(otherGame);
-      state.savedTeams.push(otherTeam, { id: 'leaked', name: 'Maestro Leaked', roster: [] });
+    });
+    useTeamStore.setState((state) => {
+      state.teams.push(otherTeam, { id: 'leaked', name: 'Maestro Leaked', roster: [] });
     });
 
     await seedMaestroTeamPrerequisites({ clearActiveGame: true });
 
-    const { savedGames, savedTeams } = useGameStore.getState();
+    const { savedGames } = useGameStore.getState();
     expect(savedGames.map((game) => game.id)).toEqual(['real-game']);
-    expect(savedTeams.map((team) => team.id).sort()).toEqual([MAESTRO_SEED_TEAM_ID, 'real-team']);
+    const teamIds = useTeamStore.getState().teams.map((team) => team.id);
+    expect(teamIds.sort()).toEqual([MAESTRO_SEED_TEAM_ID, 'real-team']);
   });
 
   it('removes the seed team’s completed advanced game so Saved Games lists only the basic seeds', async () => {

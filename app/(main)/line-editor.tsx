@@ -21,6 +21,7 @@ import { getRecentLines, RecentLine } from '@/lib/lineUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useCurrentTeam } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
 export default function LineEditor() {
@@ -30,27 +31,25 @@ export default function LineEditor() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isEditLineMode = mode === 'edit-line';
 
+  const currentTeam = useCurrentTeam();
   const {
     events,
     startingPossession,
     gameTo,
     autoHalftimeEnabled,
     pointStartTimestamps,
-    currentTeam,
     currentPoint,
     currentLine,
     pointLines,
     setCurrentLine,
     recordLineForPoint,
+    setLineConfirmedForNextPoint,
   } = useGameStore();
 
   const { genderRatioEnabled, firstPointRatio, numPlayers, linePlayerSortOrder } =
     useSettingsStore();
 
   const allPresets = useLinePresetsStore((state) => state.presets);
-  const setLineConfirmedForNextPoint = useLinePresetsStore(
-    (state) => state.setLineConfirmedForNextPoint,
-  );
   const presets = allPresets.filter((p) => p.teamId === currentTeam.id);
   const recentLines: RecentLine[] = getRecentLines(pointLines, currentPoint);
 
