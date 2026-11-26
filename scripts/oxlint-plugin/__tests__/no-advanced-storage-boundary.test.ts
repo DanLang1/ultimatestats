@@ -8,6 +8,10 @@ createRuleTester().run('no-advanced-storage-boundary', rule, {
       code: `import * as SQLite from 'expo-sqlite';`,
     },
     {
+      filename: '/repo/lib/basic/savedGameStorage.ts',
+      code: `import * as SQLite from 'expo-sqlite';`,
+    },
+    {
       filename: '/repo/test/mocks/expoSqlite.ts',
       code: `import type { SQLiteDatabase } from 'expo-sqlite';`,
     },
@@ -27,6 +31,11 @@ createRuleTester().run('no-advanced-storage-boundary', rule, {
   invalid: [
     {
       filename: '/repo/lib/advancedTracking/__tests__/storage.test.ts',
+      code: `import * as SQLite from 'expo-sqlite';`,
+      errors: [{ messageId: 'sqliteOnlyInStorage' }],
+    },
+    {
+      filename: '/repo/lib/basic/statsUtils.ts',
       code: `import * as SQLite from 'expo-sqlite';`,
       errors: [{ messageId: 'sqliteOnlyInStorage' }],
     },

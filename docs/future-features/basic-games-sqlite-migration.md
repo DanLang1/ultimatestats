@@ -1,6 +1,6 @@
 # Basic Games SQLite Migration
 
-> **Status**: Thought exercise / Future feature
+> **Status**: In progress. The storage module exists (`lib/basic/savedGameStorage.ts`); nothing calls it yet.
 
 ## Overview
 
@@ -27,48 +27,41 @@ feature needs SQL-level querying across those fields.
 
 ### Summary Table Fields
 
-Likely summary columns:
+Summary columns:
 
 - `id`
 - `schema_version`
 - `created_at`
-- `played_at`
 - `sort_timestamp`
-- `imported_at`
-- `tournament_id`
 - `team1_id`
 - `team1_name`
 - `team2_name`
 - `team1_score`
 - `team2_score`
-- `points_tracked`
-- `updated_at`
 
 ### Record Table Fields
 
-Likely record columns:
+Record columns:
 
 - `id`
 - `schema_version`
-- `updated_at`
 - `data_json`
 
 ## Implementation Plan
 
 ### 1. Add Basic Game SQLite Storage
 
-Create a storage module, likely `lib/basicGames/storage.ts`, modeled after
+The storage module is `lib/basic/savedGameStorage.ts`, modeled after
 `lib/advancedTracking/storage.ts`.
 
-Expected API:
+API:
 
 ```typescript
 loadBasicGameSummaries(): Promise<BasicGameSummary[]>
 loadBasicGame(gameId: string): Promise<SavedGame | null>
 loadBasicGames(gameIds: string[]): Promise<SavedGame[]>
 upsertBasicGame(game: SavedGame): Promise<BasicGameSummary>
-deleteBasicGameRecord(gameId: string): Promise<void>
-deleteBasicGameRecords(gameIds: string[]): Promise<void>
+deleteBasicGames(gameIds: string[]): Promise<void>
 ```
 
 Use a queued write helper like advanced tracking to avoid overlapping SQLite
@@ -84,8 +77,6 @@ The summary should use existing helpers where practical:
 - `getGameDisplayTimestamp(game)` for display/sort date behavior.
 - `resolveTeamName(...)` only at the UI boundary if team names should reflect
   renamed saved teams.
-- `game.events.filter((event) => event.type === 'goal').length` for
-  `pointsTracked`, matching `basicGameToListItem(...)`.
 
 ### 3. Split Live Game State From Saved History
 

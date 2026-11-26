@@ -10,6 +10,10 @@ function isAdvancedStorageFile(filename: string) {
   return filename.endsWith('/lib/advancedTracking/storage.ts');
 }
 
+function isBasicSavedGameStorageFile(filename: string) {
+  return filename.endsWith('/lib/basic/savedGameStorage.ts');
+}
+
 // The stand-in tests use for expo-sqlite; it imports the real types so it cannot drift from them.
 function isExpoSqliteTestAdapterFile(filename: string) {
   return filename.endsWith('/test/mocks/expoSqlite.ts');
@@ -46,13 +50,14 @@ export default defineRule({
   meta: {
     type: 'problem',
     docs: {
-      description: 'enforce advanced tracking storage boundaries between SQLite and Zustand',
+      description:
+        'keep expo-sqlite inside the storage modules, and advanced tracking storage behind its saved games store',
       recommended: true,
     },
     schema: [],
     messages: {
       sqliteOnlyInStorage:
-        'expo-sqlite belongs in lib/advancedTracking/storage.ts. Keep SQLite access behind the saved advanced games store boundary. Tests run SQL through test/mocks/expoSqlite.ts.',
+        'expo-sqlite belongs in the storage modules: lib/advancedTracking/storage.ts and lib/basic/savedGameStorage.ts. Keep SQLite access behind them. Tests run SQL through test/mocks/expoSqlite.ts.',
       storageOnlyViaRepository:
         'Import advanced tracking storage only from store/advancedTracking/savedGamesStore.ts. App, hook, and domain code should use the saved advanced games store instead.',
       noReactQueryInDomain:
@@ -68,7 +73,9 @@ export default defineRule({
         if (typeof source !== 'string') return;
 
         const mayImportExpoSqlite =
-          isAdvancedStorageFile(filename) || isExpoSqliteTestAdapterFile(filename);
+          isAdvancedStorageFile(filename) ||
+          isBasicSavedGameStorageFile(filename) ||
+          isExpoSqliteTestAdapterFile(filename);
         if (source === 'expo-sqlite' && !mayImportExpoSqlite) {
           context.report({ node, messageId: 'sqliteOnlyInStorage' });
           return;

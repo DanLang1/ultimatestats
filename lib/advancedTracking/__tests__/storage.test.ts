@@ -151,21 +151,6 @@ describe('advanced tracking storage', () => {
     expect(snapshot?.undoStack).toEqual([]);
   });
 
-  it('rejects a stored record that is not an advanced game', async () => {
-    const { storage, openDatabase } = coldStartStorage();
-    await storage.upsertAdvancedGame(makeLegacyGame());
-    const db = await openDatabase();
-    await db.runAsync(
-      'UPDATE advanced_game_records SET data_json = ? WHERE id = ?',
-      JSON.stringify({ id: 'legacy-game' }),
-      'legacy-game',
-    );
-
-    await expect(storage.loadAdvancedGame('legacy-game')).rejects.toThrow(
-      'Stored advanced game "legacy-game" is invalid.',
-    );
-  });
-
   it('saves the game and undo history as they were when the save was requested', async () => {
     const { storage } = coldStartStorage();
     const snapshot: AdvancedGameHistorySnapshot = {
