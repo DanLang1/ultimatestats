@@ -41,10 +41,14 @@ type PersistedEntryWithLineConfirmedFlag = {
   state: { lineConfirmedForNextPoint?: boolean };
 };
 
+type PersistedBasicGameEntryChangedSince260 = {
+  state: { lineConfirmedForNextPoint?: boolean; currentTeam?: SavedTeam; savedTeams?: SavedTeam[] };
+};
+
 /**
  * The complete storage difference from 2.6.0: the basic-game entry gains
- * `lineConfirmedForNextPoint` (default false), the line-presets entry drops it, and a team entry
- * appears. The basic-game entry keeps its `currentTeam` and `savedTeams`.
+ * `lineConfirmedForNextPoint` (default false) and drops `currentTeam` and `savedTeams`, the
+ * line-presets entry drops the flag, and a team entry appears.
  */
 function withStorageChangesSince260(
   checkpoint: StorageCheckpoint,
@@ -53,12 +57,14 @@ function withStorageChangesSince260(
   const expectedStorage = structuredClone(checkpoint);
   const basicGameEntry = expectedStorage[
     BASIC_GAME_STORAGE_KEY
-  ] as PersistedEntryWithLineConfirmedFlag;
+  ] as PersistedBasicGameEntryChangedSince260;
   const linePresetsEntry = expectedStorage[
     LINE_PRESETS_STORAGE_KEY
   ] as PersistedEntryWithLineConfirmedFlag;
 
   basicGameEntry.state.lineConfirmedForNextPoint = false;
+  delete basicGameEntry.state.currentTeam;
+  delete basicGameEntry.state.savedTeams;
   delete linePresetsEntry.state.lineConfirmedForNextPoint;
   expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
 
@@ -93,10 +99,14 @@ describe('storage checkpoints', () => {
         ),
     },
   ])(
-    'cold-starts $checkpointPath, seeds the team entry, and writes the rest back with only the line-confirmed flag moved',
+    'cold-starts $checkpointPath, moves the teams to the team entry and the line-confirmed flag to the basic-game entry, and writes the rest back',
     async ({ checkpointPath, getExpectedTeamEntry }) => {
       const checkpoint = readCheckpointFile(checkpointPath);
-      const persistedBasicGame = getBasicGameEntry(checkpoint).state;
+      const {
+        currentTeam: _legacyCurrentTeam,
+        savedTeams: _legacySavedTeams,
+        ...persistedBasicGame
+      } = getBasicGameEntry(checkpoint).state;
       const expectedTeamEntry = getExpectedTeamEntry(checkpoint);
       await seedStorage(checkpoint);
 
@@ -110,8 +120,6 @@ describe('storage checkpoints', () => {
       expect(getSavedGameIds(hydratedBasicGame.savedGames)).toEqual(
         getSavedGameIds(persistedBasicGame.savedGames),
       );
-      expect(hydratedBasicGame.savedTeams).toEqual(persistedBasicGame.savedTeams);
-      expect(hydratedBasicGame.currentTeam).toEqual(persistedBasicGame.currentTeam);
       expect(hydratedBasicGame).toMatchObject(persistedBasicGame);
 
       await app.writeAllPersistedStores();

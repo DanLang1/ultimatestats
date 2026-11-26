@@ -33,10 +33,6 @@ export const useGameStore = create<GameState>()(
         },
         // Only persist game-related state, not UI state like pending entries
         partialize: (state: GameState) => ({
-          // Legacy 2.6.x team keys, written back exactly as hydrated.
-          // TODO: remove before this ships. See LegacyPersistedTeamKeys.
-          currentTeam: state.currentTeam,
-          savedTeams: state.savedTeams,
           team2Name: state.team2Name,
           team1BgColor: state.team1BgColor,
           team2BgColor: state.team2BgColor,

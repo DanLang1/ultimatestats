@@ -52,22 +52,6 @@ export type EventToastSignal =
   | { id: number; kind: 'undo'; event: GameEvent }
   | { id: number; kind: 'opponentGoal' };
 
-/**
- * Team data as 2.6.x persisted it in this store's storage entry. Teams now live in
- * `store/teamStore.ts`, which seeded itself from these two keys. They are hydrated and written back
- * untouched so the old copy stays on disk until a later cleanup release; app code never reads them.
- * Absent on an install that never ran 2.6.x.
- *
- * TODO: remove before this ships, in a follow-up PR. The aim is to rely on the storage checkpoint
- * tests for the team-store seed instead of keeping a second copy on disk. Removing means deleting
- * this interface and the two `partialize` lines in `gameStore.ts`; the next basic-store write then
- * drops the keys, and `storageCheckpoint.test.ts` must expect that.
- */
-interface LegacyPersistedTeamKeys {
-  currentTeam?: unknown;
-  savedTeams?: unknown;
-}
-
 export interface SavedGamesSlice {
   savedGames: SavedGame[];
 
@@ -228,7 +212,7 @@ export interface LiveGameSlice {
   setLineConfirmedForNextPoint: (confirmed: boolean) => void;
 }
 
-export interface GameState extends SavedGamesSlice, LiveGameSlice, LegacyPersistedTeamKeys {}
+export interface GameState extends SavedGamesSlice, LiveGameSlice {}
 
 export type GameSliceCreator<Slice> = StateCreator<
   GameState,

@@ -20,7 +20,8 @@ import {
 
 const TEAM_STORAGE_KEY = 'ultimatestats-team-storage';
 const TEAM_STORAGE_VERSION = 0;
-// Where 2.6.x kept team data. Read once to seed this store; this store never writes or deletes it.
+// Where 2.6.x kept team data. Read once to seed this store. The basic game store no longer persists
+// the team keys, so its next write drops them from this entry.
 const LEGACY_BASIC_GAME_STORAGE_KEY = 'ultimatestats-game-storage';
 
 interface TeamState extends PersistedTeamState {

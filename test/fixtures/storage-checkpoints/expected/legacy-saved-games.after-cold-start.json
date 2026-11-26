@@ -1,11 +1,6 @@
 {
   "ultimatestats-game-storage": {
     "state": {
-      "currentTeam": {
-        "id": "checkpoint-default-team",
-        "name": "Team 1",
-        "roster": []
-      },
       "team2Name": "Team 2",
       "team1BgColor": "#F8FAFC",
       "team2BgColor": "#0F172A",
@@ -275,7 +270,6 @@
           "schemaVersion": 6
         }
       ],
-      "savedTeams": [],
       "pointTimerEnabled": false,
       "currentPointStartTime": null,
       "pointStartTimestamps": {},

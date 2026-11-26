@@ -1,6 +1,6 @@
 # Shared Team And Roster Store
 
-> **Status**: Migration sketch steps 1-5 are done; step 6 remains.
+> **Status**: Done.
 
 ## Goal
 
