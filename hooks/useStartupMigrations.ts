@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 
+import { upsertBasicGames } from '@/lib/basic/savedGameStorage';
 import { reportError } from '@/lib/sentry';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useStartupMigrationStore } from '@/store/startupMigrationStore';
@@ -32,6 +33,22 @@ function createStartupMigrations(): StartupMigration[] {
       run: async () => {
         const { savedGames } = useGameStore.getState();
         await useTournamentStore.getState().migrateBasicTournamentLinks(savedGames);
+      },
+    },
+    {
+      // Copies saved basic games into SQLite. The app still reads them from the basic game store.
+      id: 'basic-games-sqlite',
+      version: 1,
+      // Waits for the tournament store although it does not read it: a store that finishes
+      // hydrating while this copy runs would not start the migration above until the next launch.
+      isReady: () =>
+        useGameStore.persist.hasHydrated() &&
+        useTournamentStore.persist.hasHydrated() &&
+        useStartupMigrationStore.persist.hasHydrated(),
+      isComplete: () => useStartupMigrationStore.getState().isComplete('basic-games-sqlite', 1),
+      run: async () => {
+        // Read after hydration, which has already brought every game up to the current schema.
+        await upsertBasicGames(useGameStore.getState().savedGames);
       },
     },
   ];

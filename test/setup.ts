@@ -44,6 +44,14 @@ afterEach(() => {
 });
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
+// Held here, outside the module registry, so the databases survive `jest.resetModules()` as a
+// device's files survive an app restart.
+const mockExpoSqlite =
+  jest.requireActual<typeof import('@/test/mocks/expoSqlite')>('@/test/mocks/expoSqlite');
+jest.mock('expo-sqlite', () => mockExpoSqlite);
+afterEach(() => {
+  mockExpoSqlite.deleteAllRowsInEveryDatabase();
+});
 jest.mock('@/lib/advancedTracking/storage', () =>
   jest.requireActual('@/test/mocks/advancedTrackingStorage'),
 );

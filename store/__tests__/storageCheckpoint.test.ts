@@ -14,6 +14,7 @@ import { PersistedTeamState } from '../teamStore.types';
 const BASIC_GAME_STORAGE_KEY = 'ultimatestats-game-storage';
 const LINE_PRESETS_STORAGE_KEY = 'ultimatestats-line-presets';
 const TEAM_STORAGE_KEY = 'ultimatestats-team-storage';
+const STARTUP_MIGRATIONS_STORAGE_KEY = 'ultimatestats_startup_migrations';
 
 type PersistedBasicGameEntry = {
   state: {
@@ -37,6 +38,10 @@ function getTeamEntry(storage: StorageCheckpoint) {
   return storage[TEAM_STORAGE_KEY] as PersistedTeamEntry;
 }
 
+type PersistedStartupMigrationsEntry = {
+  state: { migrations: Record<string, { completedAt: number; version: number }> };
+};
+
 type PersistedEntryWithLineConfirmedFlag = {
   state: { lineConfirmedForNextPoint?: boolean };
 };
@@ -48,7 +53,8 @@ type PersistedBasicGameEntryChangedSince260 = {
 /**
  * The complete storage difference from 2.6.0: the basic-game entry gains
  * `lineConfirmedForNextPoint` (default false) and drops `currentTeam` and `savedTeams`, the
- * line-presets entry drops the flag, and a team entry appears.
+ * line-presets entry drops the flag, a team entry appears, and the copy of saved basic games into
+ * SQLite is recorded as done.
  */
 function withStorageChangesSince260(
   checkpoint: StorageCheckpoint,
@@ -67,6 +73,13 @@ function withStorageChangesSince260(
   delete basicGameEntry.state.savedTeams;
   delete linePresetsEntry.state.lineConfirmedForNextPoint;
   expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
+  const startupMigrationsEntry = expectedStorage[
+    STARTUP_MIGRATIONS_STORAGE_KEY
+  ] as PersistedStartupMigrationsEntry;
+  startupMigrationsEntry.state.migrations['basic-games-sqlite'] = {
+    completedAt: expect.any(Number),
+    version: 1,
+  };
 
   return expectedStorage;
 }
@@ -207,6 +220,48 @@ describe('storage checkpoints', () => {
     expect({ [BASIC_GAME_STORAGE_KEY]: persistedBasicGame }).toEqual(
       readCheckpointFile('expected/legacy-saved-games.after-cold-start.json'),
     );
+  });
+
+  it.each(['2.6.0/mid-game.json', '2.6.0/legacy-saved-games.json'])(
+    'copies every saved basic game of %s into SQLite as the app holds it',
+    async (checkpointPath) => {
+      await seedStorage(readCheckpointFile(checkpointPath));
+
+      const app = await coldStartApp();
+
+      expect(app.reportedErrors).toEqual([]);
+      const savedGames = app.useGameStore.getState().savedGames;
+      expect(savedGames.length).toBeGreaterThan(0);
+      const copiedGames = await app.basicGameStorage.loadBasicGames(getSavedGameIds(savedGames));
+      expect(copiedGames).toHaveLength(savedGames.length);
+      expect(copiedGames).toEqual(expect.arrayContaining(savedGames));
+      // Loading a game upgrades it, so only the summaries show the schema that was stored.
+      const storedSchemaVersions = (await app.basicGameStorage.loadBasicGameSummaries()).map(
+        (summary) => summary.schemaVersion,
+      );
+      expect(storedSchemaVersions).toEqual(savedGames.map(() => CURRENT_SCHEMA_VERSION));
+    },
+  );
+
+  it('copies saved basic games on the next start when the first copy fails', async () => {
+    await seedStorage(readCheckpointFile('2.6.0/mid-game.json'));
+    const copyError = new Error('disk full');
+    const device = jest.requireMock<typeof import('@/test/mocks/expoSqlite')>('expo-sqlite');
+    const db = await device.openDatabaseAsync('ultimatestats_basic_games.db');
+    const failingCopy = jest.spyOn(db, 'withTransactionAsync').mockRejectedValueOnce(copyError);
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const firstStart = await coldStartApp();
+
+    expect(firstStart.reportedErrors.map(([error]) => error)).toEqual([copyError]);
+    expect(firstStart.useGameStore.getState().savedGames).toHaveLength(11);
+    expect(await firstStart.basicGameStorage.loadBasicGameSummaries()).toEqual([]);
+
+    const secondStart = await coldStartApp();
+
+    expect(await secondStart.basicGameStorage.loadBasicGameSummaries()).toHaveLength(11);
+    // The database outlives this test, so the spy would too.
+    failingCopy.mockRestore();
   });
 
   it('hydrates the seeded teams even when writing the seeded team entry fails', async () => {

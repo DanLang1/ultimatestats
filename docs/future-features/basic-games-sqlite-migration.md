@@ -1,6 +1,6 @@
 # Basic Games SQLite Migration
 
-> **Status**: In progress. The storage module exists (`lib/basic/savedGameStorage.ts`); nothing calls it yet.
+> **Status**: In progress. The storage module exists (`lib/basic/savedGameStorage.ts`); a startup migration copies saved games into it once, and the app still reads and writes them in `useGameStore`, so the SQLite copy is not yet authoritative.
 
 ## Overview
 
@@ -60,7 +60,7 @@ API:
 loadBasicGameSummaries(): Promise<BasicGameSummary[]>
 loadBasicGame(gameId: string): Promise<SavedGame | null>
 loadBasicGames(gameIds: string[]): Promise<SavedGame[]>
-upsertBasicGame(game: SavedGame): Promise<BasicGameSummary>
+upsertBasicGames(games: SavedGame[]): Promise<void>
 deleteBasicGames(gameIds: string[]): Promise<void>
 ```
 

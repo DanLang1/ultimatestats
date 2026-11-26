@@ -36,7 +36,7 @@ describe('saved basic game storage', () => {
     const { storage } = coldStartStorage();
     const game = savedGame();
 
-    await storage.upsertBasicGame(game);
+    await storage.upsertBasicGames([game]);
 
     expect(await storage.loadBasicGame(game.id)).toEqual(game);
     expect(await storage.loadBasicGameSummaries()).toEqual([
@@ -64,7 +64,7 @@ describe('saved basic game storage', () => {
   it('keeps saved games across a restart', async () => {
     const firstStart = coldStartStorage();
     const game = savedGame();
-    await firstStart.storage.upsertBasicGame(game);
+    await firstStart.storage.upsertBasicGames([game]);
 
     const secondStart = coldStartStorage(firstStart.device);
 
@@ -74,9 +74,9 @@ describe('saved basic game storage', () => {
 
   it('replaces the summary and record when the same game is saved again', async () => {
     const { storage } = coldStartStorage();
-    await storage.upsertBasicGame(savedGame({ team1Score: 14 }));
+    await storage.upsertBasicGames([savedGame({ team1Score: 14 })]);
 
-    await storage.upsertBasicGame(savedGame({ team1Score: 15 }));
+    await storage.upsertBasicGames([savedGame({ team1Score: 15 })]);
 
     expect((await storage.loadBasicGame('saved-basic-game-1'))?.team1Score).toBe(15);
     expect(await storage.loadBasicGameSummaries()).toEqual([
@@ -86,10 +86,10 @@ describe('saved basic game storage', () => {
 
   it('dates a game by when it was played, falling back to when it was saved', async () => {
     const { storage } = coldStartStorage();
-    await storage.upsertBasicGame(savedGame({ id: 'game-without-played-date', createdAt: 200 }));
-    await storage.upsertBasicGame(
+    await storage.upsertBasicGames([
+      savedGame({ id: 'game-without-played-date', createdAt: 200 }),
       savedGame({ id: 'game-with-played-date', createdAt: 300, playedAt: 100 }),
-    );
+    ]);
 
     const summaries = await storage.loadBasicGameSummaries();
 
@@ -101,22 +101,13 @@ describe('saved basic game storage', () => {
     );
   });
 
-  it('updates the date of a game when its played date is changed', async () => {
-    const { storage } = coldStartStorage();
-    await storage.upsertBasicGame(savedGame({ createdAt: 100 }));
-
-    await storage.upsertBasicGame(savedGame({ createdAt: 100, playedAt: 300 }));
-
-    expect(await storage.loadBasicGameSummaries()).toEqual([
-      expect.objectContaining({ id: 'saved-basic-game-1', sortTimestamp: 300 }),
-    ]);
-  });
-
   it('loads only the requested games and leaves out ids that match none', async () => {
     const { storage } = coldStartStorage();
-    await storage.upsertBasicGame(savedGame({ id: 'game-a' }));
-    await storage.upsertBasicGame(savedGame({ id: 'game-b' }));
-    await storage.upsertBasicGame(savedGame({ id: 'game-c' }));
+    await storage.upsertBasicGames([
+      savedGame({ id: 'game-a' }),
+      savedGame({ id: 'game-b' }),
+      savedGame({ id: 'game-c' }),
+    ]);
 
     const games = await storage.loadBasicGames(['game-a', 'game-c', 'missing-game']);
 
@@ -128,7 +119,7 @@ describe('saved basic game storage', () => {
     const { storage } = coldStartStorage();
     // A v2 record predates today's SavedGame type.
     const storedV2Game = legacyV2Game as unknown as SavedGame;
-    await storage.upsertBasicGame(storedV2Game);
+    await storage.upsertBasicGames([storedV2Game]);
 
     const loaded = await storage.loadBasicGame(storedV2Game.id);
     const [loadedInBulk] = await storage.loadBasicGames([storedV2Game.id]);
@@ -138,27 +129,29 @@ describe('saved basic game storage', () => {
     expect(loadedInBulk).toEqual(loaded);
   });
 
-  it('writes neither the summary nor the record when the record write fails', async () => {
+  it('saves none of the games in a request when one of them fails', async () => {
     const { storage, openDatabase } = coldStartStorage();
     const db = await openDatabase();
     const runStatement = db.runAsync.bind(db);
     jest.spyOn(db, 'runAsync').mockImplementation(async (source, ...bindValues) => {
-      if (source.includes('basic_game_records')) throw new Error('record write failed');
+      if (bindValues.includes('game-b')) throw new Error('write failed');
       return runStatement(source, ...bindValues);
     });
 
-    await expect(storage.upsertBasicGame(savedGame())).rejects.toThrow('record write failed');
+    await expect(
+      storage.upsertBasicGames([savedGame({ id: 'game-a' }), savedGame({ id: 'game-b' })]),
+    ).rejects.toThrow('write failed');
 
     expect(await storage.loadBasicGameSummaries()).toEqual([]);
-    expect(await storage.loadBasicGame('saved-basic-game-1')).toBeNull();
+    expect(await storage.loadBasicGame('game-a')).toBeNull();
   });
 
   it('saves two games requested at the same time', async () => {
     const { storage } = coldStartStorage();
 
     await Promise.all([
-      storage.upsertBasicGame(savedGame({ id: 'game-a' })),
-      storage.upsertBasicGame(savedGame({ id: 'game-b' })),
+      storage.upsertBasicGames([savedGame({ id: 'game-a' })]),
+      storage.upsertBasicGames([savedGame({ id: 'game-b' })]),
     ]);
 
     expect((await storage.loadBasicGame('game-a'))?.id).toBe('game-a');
@@ -170,19 +163,21 @@ describe('saved basic game storage', () => {
     const db = await openDatabase();
     jest.spyOn(db, 'withTransactionAsync').mockRejectedValueOnce(new Error('write failed'));
 
-    const first = storage.upsertBasicGame(savedGame({ id: 'game-a' }));
-    const second = storage.upsertBasicGame(savedGame({ id: 'game-b' }));
+    const first = storage.upsertBasicGames([savedGame({ id: 'game-a' })]);
+    const second = storage.upsertBasicGames([savedGame({ id: 'game-b' })]);
 
     await expect(first).rejects.toThrow('write failed');
-    await expect(second).resolves.toMatchObject({ id: 'game-b' });
+    await second;
     expect((await storage.loadBasicGame('game-b'))?.id).toBe('game-b');
   });
 
   it('deletes the chosen games with their summaries and keeps the rest', async () => {
     const { storage } = coldStartStorage();
-    await storage.upsertBasicGame(savedGame({ id: 'game-a' }));
-    await storage.upsertBasicGame(savedGame({ id: 'game-b' }));
-    await storage.upsertBasicGame(savedGame({ id: 'game-c' }));
+    await storage.upsertBasicGames([
+      savedGame({ id: 'game-a' }),
+      savedGame({ id: 'game-b' }),
+      savedGame({ id: 'game-c' }),
+    ]);
 
     await storage.deleteBasicGames(['game-a', 'game-c']);
 

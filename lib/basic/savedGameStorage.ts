@@ -126,44 +126,57 @@ export async function loadBasicGames(gameIds: string[]): Promise<SavedGame[]> {
   return rows.map(recordRowToGame);
 }
 
-export function upsertBasicGame(game: SavedGame): Promise<BasicGameSummary> {
-  const summary = deriveBasicGameSummary(game);
-  const gameJson = JSON.stringify(game);
+type BasicGameWrite = {
+  summary: BasicGameSummary;
+  gameJson: string;
+};
 
-  return enqueueWrite(async () => {
+async function writeBasicGame(db: SQLite.SQLiteDatabase, { summary, gameJson }: BasicGameWrite) {
+  await db.runAsync(
+    `INSERT OR REPLACE INTO basic_game_summaries (
+      id,
+      schema_version,
+      created_at,
+      sort_timestamp,
+      team1_id,
+      team1_name,
+      team2_name,
+      team1_score,
+      team2_score
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    summary.id,
+    summary.schemaVersion,
+    summary.createdAt,
+    summary.sortTimestamp,
+    summary.team1Id,
+    summary.team1Name,
+    summary.team2Name,
+    summary.team1Score,
+    summary.team2Score,
+  );
+  await db.runAsync(
+    `INSERT OR REPLACE INTO basic_game_records (id, schema_version, data_json)
+      VALUES (?, ?, ?)`,
+    summary.id,
+    summary.schemaVersion,
+    gameJson,
+  );
+}
+
+/** Saves every game or none of them. */
+export async function upsertBasicGames(games: SavedGame[]): Promise<void> {
+  const writes = games.map((game) => ({
+    summary: deriveBasicGameSummary(game),
+    gameJson: JSON.stringify(game),
+  }));
+
+  await enqueueWrite(async () => {
     const db = await getDb();
     await db.withTransactionAsync(async () => {
-      await db.runAsync(
-        `INSERT OR REPLACE INTO basic_game_summaries (
-          id,
-          schema_version,
-          created_at,
-          sort_timestamp,
-          team1_id,
-          team1_name,
-          team2_name,
-          team1_score,
-          team2_score
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        summary.id,
-        summary.schemaVersion,
-        summary.createdAt,
-        summary.sortTimestamp,
-        summary.team1Id,
-        summary.team1Name,
-        summary.team2Name,
-        summary.team1Score,
-        summary.team2Score,
-      );
-      await db.runAsync(
-        `INSERT OR REPLACE INTO basic_game_records (id, schema_version, data_json)
-          VALUES (?, ?, ?)`,
-        game.id,
-        game.schemaVersion,
-        gameJson,
-      );
+      for (const write of writes) {
+        await writeBasicGame(db, write);
+      }
     });
-    return summary;
   });
 }
 

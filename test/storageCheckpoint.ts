@@ -107,6 +107,9 @@ export async function coldStartApp() {
     jest.requireActual<typeof import('@/store/tournamentStore')>('@/store/tournamentStore');
   const { useTutorialStore } =
     jest.requireActual<typeof import('@/store/tutorialStore')>('@/store/tutorialStore');
+  const basicGameStorage = jest.requireActual<typeof import('@/lib/basic/savedGameStorage')>(
+    '@/lib/basic/savedGameStorage',
+  );
   const { runReadyStartupMigrations } = jest.requireActual<
     typeof import('@/hooks/useStartupMigrations')
   >('@/hooks/useStartupMigrations');
@@ -130,6 +133,8 @@ export async function coldStartApp() {
   return {
     useGameStore,
     useTeamStore,
+    /** Saved basic games in SQLite, which persists across cold starts within a test. */
+    basicGameStorage,
     /** Errors sent to Sentry during this start; hydration failures are otherwise silent. */
     reportedErrors: jest.mocked(Sentry.captureException).mock.calls,
     /** Makes every persisted store write its current state, as any later state change would. */

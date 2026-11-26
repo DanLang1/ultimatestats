@@ -6,12 +6,11 @@ import type { SQLiteBindParams, SQLiteBindValue, SQLiteDatabase } from 'expo-sql
  * A stand-in for `expo-sqlite` that runs real SQL in Node's built-in SQLite, so a storage test
  * executes its schema, migrations, and queries instead of asserting on SQL strings.
  *
- * Use it per test file:
+ * `test/setup.ts` installs one instance for every test and keeps it across `jest.resetModules()`,
+ * as a device keeps its files across an app restart; its rows are deleted after each test.
  *
- *   jest.mock('expo-sqlite', () => jest.requireActual('@/test/mocks/expoSqlite'));
- *
- * Databases are in memory and keyed by name, like files on a device. `jest.resetModules()` gives the
- * next `require` a fresh, empty set, which is how a test starts from a clean install.
+ * Databases are in memory and keyed by name, like files on a device. A storage test that needs a
+ * clean install mocks `expo-sqlite` with a fresh `jest.requireActual` of this module.
  *
  * Only the `expo-sqlite` methods the app's storage code calls are implemented; add one here when
  * storage code starts using it. The SQLite version is Node's, not the device's, so this proves the
@@ -26,6 +25,22 @@ export type InMemorySQLiteDatabase = Pick<
 type BindArguments = SQLiteBindValue[] | [SQLiteBindParams];
 
 const databasesByName = new Map<string, InMemorySQLiteDatabase>();
+const nodeDatabases: DatabaseSync[] = [];
+
+/**
+ * Empties every table of every open database and keeps the tables, so storage code that has
+ * already opened a database carries on against an empty one. Not part of `expo-sqlite`.
+ */
+export function deleteAllRowsInEveryDatabase() {
+  for (const db of nodeDatabases) {
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+      .all();
+    for (const table of tables) {
+      db.exec(`DELETE FROM "${String(table.name)}"`);
+    }
+  }
+}
 
 function toNodeBindValue(value: SQLiteBindValue): SQLInputValue {
   if (typeof value === 'boolean') return value ? 1 : 0;
@@ -61,6 +76,7 @@ function toRow<Row>(nodeRow: Record<string, unknown>): Row {
 
 function createInMemoryDatabase(): InMemorySQLiteDatabase {
   const db = new DatabaseSync(':memory:');
+  nodeDatabases.push(db);
 
   return {
     execAsync: async (source) => {
