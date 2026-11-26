@@ -10,6 +10,11 @@ function isAdvancedStorageFile(filename: string) {
   return filename.endsWith('/lib/advancedTracking/storage.ts');
 }
 
+// The stand-in tests use for expo-sqlite; it imports the real types so it cannot drift from them.
+function isExpoSqliteTestAdapterFile(filename: string) {
+  return filename.endsWith('/test/mocks/expoSqlite.ts');
+}
+
 function isSavedAdvancedGamesStoreFile(filename: string) {
   return filename.endsWith('/store/advancedTracking/savedGamesStore.ts');
 }
@@ -47,7 +52,7 @@ export default defineRule({
     schema: [],
     messages: {
       sqliteOnlyInStorage:
-        'expo-sqlite belongs in lib/advancedTracking/storage.ts. Keep SQLite access behind the saved advanced games store boundary.',
+        'expo-sqlite belongs in lib/advancedTracking/storage.ts. Keep SQLite access behind the saved advanced games store boundary. Tests run SQL through test/mocks/expoSqlite.ts.',
       storageOnlyViaRepository:
         'Import advanced tracking storage only from store/advancedTracking/savedGamesStore.ts. App, hook, and domain code should use the saved advanced games store instead.',
       noReactQueryInDomain:
@@ -62,7 +67,9 @@ export default defineRule({
         const source = node.source.value;
         if (typeof source !== 'string') return;
 
-        if (source === 'expo-sqlite' && !isAdvancedStorageFile(filename)) {
+        const mayImportExpoSqlite =
+          isAdvancedStorageFile(filename) || isExpoSqliteTestAdapterFile(filename);
+        if (source === 'expo-sqlite' && !mayImportExpoSqlite) {
           context.report({ node, messageId: 'sqliteOnlyInStorage' });
           return;
         }
