@@ -1,3 +1,9 @@
+import {
+  deleteBasicGames,
+  importAsyncStorageGamesOnce,
+  loadAllBasicGames,
+  upsertBasicGames,
+} from '@/lib/basic/savedGameStorage';
 import { replacePointLineRecords } from '@/lib/lineUtils';
 import { CURRENT_SCHEMA_VERSION, SavedGame } from '@/lib/storage';
 import { migrateSavedGame } from '@/lib/storage/migrations';
@@ -6,50 +12,62 @@ import { generateId } from '@/lib/utils';
 import { useSettingsStore } from '../../settingsStore';
 import { getCurrentTeam } from '../../teamStore';
 import { GameSliceCreator, GameState, SavedGamesSlice, TurnoverType } from '../gameStore.types';
-import { canReplacePointLine, resetGameState } from './gameStoreHelpers';
+import { canReplacePointLine, putSavedGame, resetGameState } from './gameStoreHelpers';
 
+// Saved games are stored in SQLite. Every action writes there first and updates this store only
+// once that write succeeds, so a failed save never shows as saved.
+//
+// Zustand Persist returns the AsyncStorage write promise from set() at runtime, although set is
+// typed as void. Await persisted updates before callers navigate or clear related state. Covered
+// by basicGameStorePersistence.test.ts.
 export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, get) => ({
   savedGames: [],
+
+  loadSavedGames: async () => {
+    await importAsyncStorageGamesOnce(get().savedGames);
+    const savedGames = await loadAllBasicGames();
+    await set({ savedGames });
+  },
 
   replaceSavedGamePointLine: async (
     gameId: string,
     pointNumber: number,
     playerIds: string[],
   ): Promise<boolean> => {
-    let didReplace = false;
-    // Zustand Persist returns the AsyncStorage write promise from set() at runtime,
-    // although set is typed as void. Await persisted updates before callers navigate
-    // or clear related state. Covered by basicGameStorePersistence.test.ts.
-    await set((state: GameState) => {
-      const game = state.savedGames.find((savedGame) => savedGame.id === gameId);
-      if (!game) return;
+    const state = get();
+    const game = state.savedGames.find((savedGame) => savedGame.id === gameId);
+    if (!game) return false;
 
-      const pointLines = game.pointLines ?? [];
-      if (!canReplacePointLine(pointLines, pointNumber, playerIds, game.team1.roster)) return;
+    const pointLines = game.pointLines ?? [];
+    if (!canReplacePointLine(pointLines, pointNumber, playerIds, game.team1.roster)) return false;
 
-      const isCurrentGame = state.currentGameId === gameId;
-      if (isCurrentGame) {
-        if (pointNumber >= state.currentPoint) return;
-        if (
-          !canReplacePointLine(state.pointLines, pointNumber, playerIds, getCurrentTeam().roster)
-        ) {
-          return;
-        }
+    const isCurrentGame = state.currentGameId === gameId;
+    if (isCurrentGame) {
+      if (pointNumber >= state.currentPoint) return false;
+      if (!canReplacePointLine(state.pointLines, pointNumber, playerIds, getCurrentTeam().roster)) {
+        return false;
       }
+    }
 
-      const timestamp = Date.now();
-      game.pointLines = replacePointLineRecords(pointLines, pointNumber, playerIds, timestamp);
+    const timestamp = Date.now();
+    const updatedGame: SavedGame = {
+      ...game,
+      pointLines: replacePointLineRecords(pointLines, pointNumber, playerIds, timestamp),
+    };
+
+    await upsertBasicGames([updatedGame]);
+    await set((draft: GameState) => {
+      putSavedGame(draft, updatedGame);
       if (isCurrentGame) {
-        state.pointLines = replacePointLineRecords(
-          state.pointLines,
+        draft.pointLines = replacePointLineRecords(
+          draft.pointLines,
           pointNumber,
           playerIds,
           timestamp,
         );
       }
-      didReplace = true;
     });
-    return didReplace;
+    return true;
   },
 
   updateSavedGameEvent: async (
@@ -114,9 +132,9 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
     updatedEvents[eventIndex] = updatedEvent;
     const updatedGame: SavedGame = { ...game, events: updatedEvents };
 
+    await upsertBasicGames([updatedGame]);
     await set((state: GameState) => {
-      const idx = state.savedGames.findIndex((g) => g.id === gameId);
-      state.savedGames[idx] = updatedGame;
+      putSavedGame(state, updatedGame);
     });
   },
 
@@ -133,9 +151,9 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
     updatedEvents.splice(eventIndex, 1);
     const updatedGame: SavedGame = { ...game, events: updatedEvents };
 
+    await upsertBasicGames([updatedGame]);
     await set((state: GameState) => {
-      const idx = state.savedGames.findIndex((g) => g.id === gameId);
-      state.savedGames[idx] = updatedGame;
+      putSavedGame(state, updatedGame);
     });
     return true;
   },
@@ -146,9 +164,9 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
 
     const updatedGame: SavedGame = { ...game, playedAt };
 
+    await upsertBasicGames([updatedGame]);
     await set((state: GameState) => {
-      const idx = state.savedGames.findIndex((g) => g.id === gameId);
-      state.savedGames[idx] = updatedGame;
+      putSavedGame(state, updatedGame);
     });
   },
 
@@ -178,13 +196,9 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
       team1Color: state.team1BgColor,
       team2Color: state.team2BgColor,
     };
+    await upsertBasicGames([game]);
     await set((draft: GameState) => {
-      const idx = draft.savedGames.findIndex((g) => g.id === gameId);
-      if (idx >= 0) {
-        draft.savedGames[idx] = game;
-      } else {
-        draft.savedGames.push(game);
-      }
+      putSavedGame(draft, game);
       draft.currentGameId = gameId; // Remember ID for subsequent saves
     });
   },
@@ -194,6 +208,7 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
       get().currentGameStatus === 'finished' && get().currentGameId === id;
     const hardCapMinutes = useSettingsStore.getState().hardCapMins;
 
+    await deleteBasicGames([id]);
     await set((state: GameState) => {
       state.savedGames = state.savedGames.filter((g) => g.id !== id);
       if (shouldClearCurrentFinishedGame) {
@@ -212,6 +227,7 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
       get().currentGameStatus === 'finished' && currentGameId !== null && idSet.has(currentGameId);
     const hardCapMinutes = useSettingsStore.getState().hardCapMins;
 
+    await deleteBasicGames(ids);
     await set((state: GameState) => {
       state.savedGames = state.savedGames.filter((g) => !idSet.has(g.id));
       if (shouldClearCurrentFinishedGame) {
@@ -225,13 +241,9 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
 
   importGame: async (game: SavedGame) => {
     const migrated = migrateSavedGame(game);
+    await upsertBasicGames([migrated]);
     await set((state: GameState) => {
-      const idx = state.savedGames.findIndex((g) => g.id === migrated.id);
-      if (idx >= 0) {
-        state.savedGames[idx] = migrated;
-      } else {
-        state.savedGames.push(migrated);
-      }
+      putSavedGame(state, migrated);
     });
   },
 });

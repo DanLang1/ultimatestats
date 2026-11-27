@@ -46,12 +46,25 @@ function isAdvancedStorageImport(source: string) {
   );
 }
 
+function isBasicSavedGameStorageImport(source: string) {
+  return (
+    source === '@/lib/basic/savedGameStorage' ||
+    source.endsWith('/lib/basic/savedGameStorage') ||
+    source === './savedGameStorage' ||
+    source === '../savedGameStorage'
+  );
+}
+
+function isBasicStoreFile(filename: string) {
+  return filename.includes('/store/basic/');
+}
+
 export default defineRule({
   meta: {
     type: 'problem',
     docs: {
       description:
-        'keep expo-sqlite inside the storage modules, and advanced tracking storage behind its saved games store',
+        'keep expo-sqlite inside the storage modules, advanced tracking storage behind its saved games store, and basic saved game storage behind the basic game store',
       recommended: true,
     },
     schema: [],
@@ -60,6 +73,8 @@ export default defineRule({
         'expo-sqlite belongs in the storage modules: lib/advancedTracking/storage.ts and lib/basic/savedGameStorage.ts. Keep SQLite access behind them. Tests run SQL through test/mocks/expoSqlite.ts.',
       storageOnlyViaRepository:
         'Import advanced tracking storage only from store/advancedTracking/savedGamesStore.ts. App, hook, and domain code should use the saved advanced games store instead.',
+      basicStorageOnlyViaStore:
+        'Import basic saved game storage only from store/basic/. App, hook, and domain code should use the basic game store instead.',
       noReactQueryInDomain:
         'Do not import TanStack Query in advanced tracking lib/store files. Keep React Query as a hook/component wrapper around the saved advanced games store.',
     },
@@ -88,6 +103,12 @@ export default defineRule({
           !isTestFile(filename)
         ) {
           context.report({ node, messageId: 'storageOnlyViaRepository' });
+          return;
+        }
+
+        const mayImportBasicSavedGameStorage = isBasicStoreFile(filename) || isTestFile(filename);
+        if (isBasicSavedGameStorageImport(source) && !mayImportBasicSavedGameStorage) {
+          context.report({ node, messageId: 'basicStorageOnlyViaStore' });
           return;
         }
 

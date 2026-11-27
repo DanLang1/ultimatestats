@@ -79,7 +79,8 @@ function waitForHydration(persist: PersistHydrationApi) {
 
 /**
  * Simulates a cold app start against whatever AsyncStorage currently holds: every store module is
- * evaluated fresh, all persisted stores hydrate, and the startup migrations run.
+ * evaluated fresh, all persisted stores hydrate, the startup migrations run, and the saved basic
+ * games load from SQLite.
  */
 export async function coldStartApp() {
   // After the reset, the first require of each module evaluates it again, as a new process would.
@@ -113,6 +114,9 @@ export async function coldStartApp() {
   const { runReadyStartupMigrations } = jest.requireActual<
     typeof import('@/hooks/useStartupMigrations')
   >('@/hooks/useStartupMigrations');
+  const { loadSavedBasicGamesAtStartup } = jest.requireActual<
+    typeof import('@/hooks/basic/useLoadSavedBasicGames')
+  >('@/hooks/basic/useLoadSavedBasicGames');
   const Sentry = jest.requireMock<typeof import('@sentry/react-native')>('@sentry/react-native');
 
   const persistedStores: PersistedStore[] = [
@@ -129,6 +133,7 @@ export async function coldStartApp() {
 
   await Promise.all(persistedStores.map((store) => waitForHydration(store.persist)));
   await runReadyStartupMigrations();
+  await loadSavedBasicGamesAtStartup();
 
   return {
     useGameStore,

@@ -54,6 +54,11 @@ export type EventToastSignal =
 
 export interface SavedGamesSlice {
   savedGames: SavedGame[];
+  /**
+   * Fills `savedGames` from SQLite. On the first run on a device it first moves the games
+   * AsyncStorage held into SQLite.
+   */
+  loadSavedGames: () => Promise<void>;
 
   updateSavedGameEvent: (
     gameId: string,
@@ -208,7 +213,7 @@ export interface LiveGameSlice {
     isSubstitution?: boolean,
     subType?: 'injury' | 'replacement',
   ) => void;
-  replacePointLine: (pointNumber: number, playerIds: string[]) => boolean;
+  replacePointLine: (pointNumber: number, playerIds: string[]) => Promise<boolean>;
   setLineConfirmedForNextPoint: (confirmed: boolean) => void;
 }
 

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { loadBasicGame } from '@/lib/basic/savedGameStorage';
 import { computePlayingTime } from '@/lib/lineUtils';
 import { Player, SavedGame, SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
@@ -73,7 +74,7 @@ describe('recordLineForPoint replacement handling', () => {
     });
   });
 
-  it('corrects a completed live point without changing later point order', () => {
+  it('corrects a completed live point without changing later point order', async () => {
     const roster = ['a', 'b', 'c', 'd', 'e'].map(makePlayer);
     const originalPointLines = [
       { pointNumber: 1, playerIds: ['a', 'b'], timestamp: 1 },
@@ -109,7 +110,7 @@ describe('recordLineForPoint replacement handling', () => {
       savedGames: [savedGame],
     });
 
-    expect(useGameStore.getState().replacePointLine(1, ['b', 'c'])).toBe(true);
+    expect(await useGameStore.getState().replacePointLine(1, ['b', 'c'])).toBe(true);
 
     expect(useGameStore.getState().pointLines).toEqual([
       expect.objectContaining({
@@ -122,9 +123,12 @@ describe('recordLineForPoint replacement handling', () => {
     expect(useGameStore.getState().savedGames[0].pointLines).toEqual(
       useGameStore.getState().pointLines,
     );
+    expect((await loadBasicGame(savedGame.id))?.pointLines).toEqual(
+      useGameStore.getState().pointLines,
+    );
   });
 
-  it('rejects edits to the live in-progress point', () => {
+  it('rejects edits to the live in-progress point', async () => {
     const roster = ['a', 'b', 'c'].map(makePlayer);
     const pointLines = [{ pointNumber: 2, playerIds: ['a', 'b'], timestamp: 1 }];
     setCurrentTeam({ id: 'team', name: 'Team', roster });
@@ -133,7 +137,7 @@ describe('recordLineForPoint replacement handling', () => {
       pointLines,
     });
 
-    expect(useGameStore.getState().replacePointLine(2, ['a', 'c'])).toBe(false);
+    expect(await useGameStore.getState().replacePointLine(2, ['a', 'c'])).toBe(false);
     expect(useGameStore.getState().pointLines).toEqual(pointLines);
   });
 
@@ -191,6 +195,9 @@ describe('recordLineForPoint replacement handling', () => {
         isSubstitution: false,
       }),
     ]);
+    expect((await loadBasicGame(game.id))?.pointLines).toEqual(
+      useGameStore.getState().savedGames[0].pointLines,
+    );
 
     await useGameStore.getState().saveCurrentGame();
 
@@ -203,7 +210,7 @@ describe('recordLineForPoint replacement handling', () => {
     ]);
   });
 
-  it('does not mirror a live correction into an incompatible saved roster snapshot', () => {
+  it('does not mirror a live correction into an incompatible saved roster snapshot', async () => {
     const liveRoster = ['a', 'b', 'c'].map(makePlayer);
     const savedRoster = ['a', 'b'].map(makePlayer);
     const pointLines = [{ pointNumber: 1, playerIds: ['a', 'b'], timestamp: 1 }];
@@ -228,7 +235,7 @@ describe('recordLineForPoint replacement handling', () => {
       savedGames: [game],
     });
 
-    expect(useGameStore.getState().replacePointLine(1, ['a', 'c'])).toBe(true);
+    expect(await useGameStore.getState().replacePointLine(1, ['a', 'c'])).toBe(true);
     expect(useGameStore.getState().pointLines[0]?.playerIds).toEqual(['a', 'c']);
     expect(useGameStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual(['a', 'b']);
   });

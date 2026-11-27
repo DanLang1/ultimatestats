@@ -185,17 +185,20 @@ describe('saved event persistence', () => {
     ['delete', () => useGameStore.getState().deleteSavedGameEvent(savedGameId, 0)],
   ] as const)('awaits the %s write and propagates persistence failure', async (_name, mutate) => {
     let finishWrite!: () => void;
-    jest.spyOn(AsyncStorage, 'setItem').mockImplementationOnce(
-      () =>
-        new Promise<void>((resolve) => {
+    // The SQLite write comes first, so the AsyncStorage write starts a few ticks into the action.
+    const writeStarted = new Promise<void>((resolveWriteStarted) => {
+      jest.spyOn(AsyncStorage, 'setItem').mockImplementationOnce(() => {
+        resolveWriteStarted();
+        return new Promise<void>((resolve) => {
           finishWrite = resolve;
-        }),
-    );
+        });
+      });
+    });
     let resolved = false;
     const pending = mutate().then(() => {
       resolved = true;
     });
-    await Promise.resolve();
+    await writeStarted;
     expect(resolved).toBe(false);
     finishWrite();
     await pending;

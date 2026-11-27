@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
+import { reportError } from '@/lib/sentry';
 import { Player, PointLineRecord } from '@/lib/storage/types';
 import { pluralize } from '@/lib/utils';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -64,7 +65,13 @@ export default function EditPointLineSheet({
     if (!canSave) return;
 
     setIsSaving(true);
-    if (await onSave(selectedIds)) {
+    let didSave = false;
+    try {
+      didSave = await onSave(selectedIds);
+    } catch (error) {
+      reportError('point-line-save', error);
+    }
+    if (didSave) {
       onDismiss();
       return;
     }

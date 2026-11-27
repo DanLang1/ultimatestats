@@ -27,6 +27,14 @@ createRuleTester().run('no-advanced-storage-boundary', rule, {
       filename: '/repo/store/advancedTracking/trackingStore.test.ts',
       code: `import { useQueryClient } from '@tanstack/react-query';`,
     },
+    {
+      filename: '/repo/store/basic/slices/savedGamesSlice.ts',
+      code: `import { upsertBasicGames } from '@/lib/basic/savedGameStorage';`,
+    },
+    {
+      filename: '/repo/lib/basic/__tests__/savedGameStorage.test.ts',
+      code: `import { upsertBasicGames } from '../savedGameStorage';`,
+    },
   ],
   invalid: [
     {
@@ -48,6 +56,16 @@ createRuleTester().run('no-advanced-storage-boundary', rule, {
       filename: '/repo/store/advancedTracking/trackingStore.ts',
       code: `import { loadAdvancedGame } from '@/lib/advancedTracking/storage';`,
       errors: [{ messageId: 'storageOnlyViaRepository' }],
+    },
+    {
+      filename: '/repo/hooks/basic/useSavedBasicGames.ts',
+      code: `import { loadAllBasicGames } from '@/lib/basic/savedGameStorage';`,
+      errors: [{ messageId: 'basicStorageOnlyViaStore' }],
+    },
+    {
+      filename: '/repo/lib/basic/statsUtils.ts',
+      code: `import { loadAllBasicGames } from './savedGameStorage';`,
+      errors: [{ messageId: 'basicStorageOnlyViaStore' }],
     },
     {
       filename: '/repo/store/advancedTracking/savedGamesStore.ts',

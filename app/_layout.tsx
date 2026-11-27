@@ -13,13 +13,14 @@ import { AlertProvider } from '@/components/ui/AlertProvider';
 import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
 import { ScreenErrorBoundary } from '@/components/ui/ScreenErrorBoundary';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useLoadSavedBasicGames } from '@/hooks/basic/useLoadSavedBasicGames';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
-import 'react-native-reanimated';
-
 import { useStartupMigrations } from '@/hooks/useStartupMigrations';
 import { queryClient } from '@/lib/queryClient';
 import { initializeSentry } from '@/lib/sentry';
 import { useSettingsStore } from '@/store/settingsStore';
+
+import 'react-native-reanimated';
 
 initializeSentry();
 
@@ -51,6 +52,7 @@ function RootLayoutInner() {
   const orientationMode = useSettingsStore((state) => state.orientationMode);
   useOrientationLock(orientationMode);
   useStartupMigrations();
+  useLoadSavedBasicGames();
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.chrome }}>

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { CURRENT_SCHEMA_VERSION, SavedGame, SavedTeam } from '@/lib/storage/types';
+import { createSavedBasicGame } from '@/test/fixtures/domain';
 import {
   coldStartApp,
   readCheckpointFile,
@@ -14,7 +15,6 @@ import { PersistedTeamState } from '../teamStore.types';
 const BASIC_GAME_STORAGE_KEY = 'ultimatestats-game-storage';
 const LINE_PRESETS_STORAGE_KEY = 'ultimatestats-line-presets';
 const TEAM_STORAGE_KEY = 'ultimatestats-team-storage';
-const STARTUP_MIGRATIONS_STORAGE_KEY = 'ultimatestats_startup_migrations';
 
 type PersistedBasicGameEntry = {
   state: {
@@ -38,10 +38,6 @@ function getTeamEntry(storage: StorageCheckpoint) {
   return storage[TEAM_STORAGE_KEY] as PersistedTeamEntry;
 }
 
-type PersistedStartupMigrationsEntry = {
-  state: { migrations: Record<string, { completedAt: number; version: number }> };
-};
-
 type PersistedEntryWithLineConfirmedFlag = {
   state: { lineConfirmedForNextPoint?: boolean };
 };
@@ -53,8 +49,7 @@ type PersistedBasicGameEntryChangedSince260 = {
 /**
  * The complete storage difference from 2.6.0: the basic-game entry gains
  * `lineConfirmedForNextPoint` (default false) and drops `currentTeam` and `savedTeams`, the
- * line-presets entry drops the flag, a team entry appears, and the copy of saved basic games into
- * SQLite is recorded as done.
+ * line-presets entry drops the flag, and a team entry appears.
  */
 function withStorageChangesSince260(
   checkpoint: StorageCheckpoint,
@@ -73,15 +68,15 @@ function withStorageChangesSince260(
   delete basicGameEntry.state.savedTeams;
   delete linePresetsEntry.state.lineConfirmedForNextPoint;
   expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
-  const startupMigrationsEntry = expectedStorage[
-    STARTUP_MIGRATIONS_STORAGE_KEY
-  ] as PersistedStartupMigrationsEntry;
-  startupMigrationsEntry.state.migrations['basic-games-sqlite'] = {
-    completedAt: expect.any(Number),
-    version: 1,
-  };
 
   return expectedStorage;
+}
+
+/** SQLite storage as the running process sees it; its databases persist across cold starts. */
+function openBasicGameStorage() {
+  return jest.requireActual<typeof import('@/lib/basic/savedGameStorage')>(
+    '@/lib/basic/savedGameStorage',
+  );
 }
 
 function getSavedGameIds(savedGames: SavedGame[]) {
@@ -223,45 +218,67 @@ describe('storage checkpoints', () => {
   });
 
   it.each(['2.6.0/mid-game.json', '2.6.0/legacy-saved-games.json'])(
-    'copies every saved basic game of %s into SQLite as the app holds it',
+    'makes the saved basic games of %s the games in SQLite on the first start',
     async (checkpointPath) => {
-      await seedStorage(readCheckpointFile(checkpointPath));
+      const checkpoint = readCheckpointFile(checkpointPath);
+      const storedGameIds = getSavedGameIds(getBasicGameEntry(checkpoint).state.savedGames);
+      await seedStorage(checkpoint);
+      // A game an earlier build copied to SQLite and the user has deleted since.
+      await openBasicGameStorage().upsertBasicGames([
+        { ...createSavedBasicGame(), id: 'game-deleted-since-the-copy' },
+      ]);
 
       const app = await coldStartApp();
 
       expect(app.reportedErrors).toEqual([]);
-      const savedGames = app.useGameStore.getState().savedGames;
-      expect(savedGames.length).toBeGreaterThan(0);
-      const copiedGames = await app.basicGameStorage.loadBasicGames(getSavedGameIds(savedGames));
-      expect(copiedGames).toHaveLength(savedGames.length);
-      expect(copiedGames).toEqual(expect.arrayContaining(savedGames));
+      const gamesInSqlite = await app.basicGameStorage.loadAllBasicGames();
+      expect(getSavedGameIds(gamesInSqlite).sort()).toEqual([...storedGameIds].sort());
+      expect(app.useGameStore.getState().savedGames).toEqual(gamesInSqlite);
       // Loading a game upgrades it, so only the summaries show the schema that was stored.
       const storedSchemaVersions = (await app.basicGameStorage.loadBasicGameSummaries()).map(
         (summary) => summary.schemaVersion,
       );
-      expect(storedSchemaVersions).toEqual(savedGames.map(() => CURRENT_SCHEMA_VERSION));
+      expect(storedSchemaVersions).toEqual(storedGameIds.map(() => CURRENT_SCHEMA_VERSION));
     },
   );
 
-  it('copies saved basic games on the next start when the first copy fails', async () => {
+  it('keeps the games in SQLite on a later start when AsyncStorage holds different ones', async () => {
     await seedStorage(readCheckpointFile('2.6.0/mid-game.json'));
-    const copyError = new Error('disk full');
+    const firstStart = await coldStartApp();
+    const gamesAfterFirstStart = await firstStart.basicGameStorage.loadAllBasicGames();
+    await firstStart.writeAllPersistedStores();
+    const storageWithOneGame = await readStorage();
+    const basicGameEntry = getBasicGameEntry(storageWithOneGame);
+    basicGameEntry.state.savedGames = basicGameEntry.state.savedGames.slice(0, 1);
+    await seedStorage(storageWithOneGame);
+
+    const secondStart = await coldStartApp();
+
+    expect(secondStart.reportedErrors).toEqual([]);
+    expect(gamesAfterFirstStart).toHaveLength(11);
+    expect(await secondStart.basicGameStorage.loadAllBasicGames()).toEqual(gamesAfterFirstStart);
+    expect(secondStart.useGameStore.getState().savedGames).toEqual(gamesAfterFirstStart);
+  });
+
+  it('keeps the AsyncStorage games in use when the move to SQLite fails, and moves them on the next start', async () => {
+    await seedStorage(readCheckpointFile('2.6.0/mid-game.json'));
+    const moveError = new Error('disk full');
     const device = jest.requireMock<typeof import('@/test/mocks/expoSqlite')>('expo-sqlite');
     const db = await device.openDatabaseAsync('ultimatestats_basic_games.db');
-    const failingCopy = jest.spyOn(db, 'withTransactionAsync').mockRejectedValueOnce(copyError);
+    const failingMove = jest.spyOn(db, 'withTransactionAsync').mockRejectedValueOnce(moveError);
     jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const firstStart = await coldStartApp();
 
-    expect(firstStart.reportedErrors.map(([error]) => error)).toEqual([copyError]);
+    expect(firstStart.reportedErrors.map(([error]) => error)).toEqual([moveError]);
     expect(firstStart.useGameStore.getState().savedGames).toHaveLength(11);
-    expect(await firstStart.basicGameStorage.loadBasicGameSummaries()).toEqual([]);
+    expect(await firstStart.basicGameStorage.loadAllBasicGames()).toEqual([]);
 
     const secondStart = await coldStartApp();
 
-    expect(await secondStart.basicGameStorage.loadBasicGameSummaries()).toHaveLength(11);
+    expect(await secondStart.basicGameStorage.loadAllBasicGames()).toHaveLength(11);
     // The database outlives this test, so the spy would too.
-    failingCopy.mockRestore();
+    failingMove.mockRestore();
   });
 
   it('hydrates the seeded teams even when writing the seeded team entry fails', async () => {

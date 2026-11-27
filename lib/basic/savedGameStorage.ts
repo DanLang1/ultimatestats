@@ -74,6 +74,11 @@ async function createBasicGameTables(db: SQLite.SQLiteDatabase) {
       schema_version INTEGER NOT NULL,
       data_json TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS basic_game_async_storage_import (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      imported_at INTEGER NOT NULL
+    );
   `);
 }
 
@@ -115,6 +120,13 @@ export async function loadBasicGame(gameId: string): Promise<SavedGame | null> {
   return row == null ? null : recordRowToGame(row);
 }
 
+/** Every saved game, in no particular order. */
+export async function loadAllBasicGames(): Promise<SavedGame[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<GameRecordRow>('SELECT id, data_json FROM basic_game_records');
+  return rows.map(recordRowToGame);
+}
+
 /** The saved games with these ids, in no particular order; ids that match no game are left out. */
 export async function loadBasicGames(gameIds: string[]): Promise<SavedGame[]> {
   const db = await getDb();
@@ -130,6 +142,10 @@ type BasicGameWrite = {
   summary: BasicGameSummary;
   gameJson: string;
 };
+
+function toBasicGameWrite(game: SavedGame): BasicGameWrite {
+  return { summary: deriveBasicGameSummary(game), gameJson: JSON.stringify(game) };
+}
 
 async function writeBasicGame(db: SQLite.SQLiteDatabase, { summary, gameJson }: BasicGameWrite) {
   await db.runAsync(
@@ -165,10 +181,7 @@ async function writeBasicGame(db: SQLite.SQLiteDatabase, { summary, gameJson }: 
 
 /** Saves every game or none of them. */
 export async function upsertBasicGames(games: SavedGame[]): Promise<void> {
-  const writes = games.map((game) => ({
-    summary: deriveBasicGameSummary(game),
-    gameJson: JSON.stringify(game),
-  }));
+  const writes = games.map(toBasicGameWrite);
 
   await enqueueWrite(async () => {
     const db = await getDb();
@@ -176,6 +189,34 @@ export async function upsertBasicGames(games: SavedGame[]): Promise<void> {
       for (const write of writes) {
         await writeBasicGame(db, write);
       }
+    });
+  });
+}
+
+/**
+ * Makes the games AsyncStorage held the stored games, the first time it is called on a device;
+ * later calls change nothing. It replaces what is stored because a copy made by an earlier build
+ * may hold games deleted since.
+ */
+export async function importAsyncStorageGamesOnce(games: SavedGame[]): Promise<void> {
+  await enqueueWrite(async () => {
+    const db = await getDb();
+    await db.withTransactionAsync(async () => {
+      const completedImport = await db.getFirstAsync<{ id: number }>(
+        'SELECT id FROM basic_game_async_storage_import',
+      );
+      if (completedImport != null) return;
+
+      await db.runAsync('DELETE FROM basic_game_summaries');
+      await db.runAsync('DELETE FROM basic_game_records');
+      for (const game of games) {
+        await writeBasicGame(db, toBasicGameWrite(game));
+      }
+      // Recorded with the games, so the import can never be half done.
+      await db.runAsync(
+        'INSERT INTO basic_game_async_storage_import (id, imported_at) VALUES (1, ?)',
+        Date.now(),
+      );
     });
   });
 }

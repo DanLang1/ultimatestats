@@ -3,10 +3,12 @@ import { current } from 'immer';
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
+import { upsertBasicGames } from '@/lib/basic/savedGameStorage';
 import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { getLatestLineForPoint, replacePointLineRecords } from '@/lib/lineUtils';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
+import { SavedGame } from '@/lib/storage';
 import { palette } from '@/theme/theme';
 
 import { useSettingsStore } from '../../settingsStore';
@@ -19,7 +21,7 @@ import {
   TurnoverEvent,
   TurnoverType,
 } from '../gameStore.types';
-import { canReplacePointLine, resetGameState } from './gameStoreHelpers';
+import { canReplacePointLine, putSavedGame, resetGameState } from './gameStoreHelpers';
 
 function applyHalftimeTransition(state: GameState) {
   state.gameHalf = 2;
@@ -35,7 +37,7 @@ function applyHalftimeTransition(state: GameState) {
   }
 }
 
-export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
+export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) => ({
   team2Name: 'Team 2',
 
   team1BgColor: palette.surface,
@@ -749,38 +751,39 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set) => ({
   // A completed-point line correction on the current game also updates that game's saved
   // record, and vice versa (replaceSavedGamePointLine). Otherwise a correction made after
   // undoing a finished game is overwritten when the resumed game is saved again.
-  replacePointLine: (pointNumber: number, playerIds: string[]) => {
-    let didReplace = false;
-    set((state: GameState) => {
-      if (pointNumber >= state.currentPoint) return;
-      if (!canReplacePointLine(state.pointLines, pointNumber, playerIds, getCurrentTeam().roster)) {
-        return;
-      }
+  replacePointLine: async (pointNumber: number, playerIds: string[]): Promise<boolean> => {
+    const state = get();
+    if (pointNumber >= state.currentPoint) return false;
+    if (!canReplacePointLine(state.pointLines, pointNumber, playerIds, getCurrentTeam().roster)) {
+      return false;
+    }
 
-      const timestamp = Date.now();
-      state.pointLines = replacePointLineRecords(
-        state.pointLines,
+    const timestamp = Date.now();
+    const savedGame = state.savedGames.find((game) => game.id === state.currentGameId);
+    const savedPointLines = savedGame?.pointLines;
+    const canReplaceSavedGameLine =
+      savedGame != null &&
+      savedPointLines != null &&
+      canReplacePointLine(savedPointLines, pointNumber, playerIds, savedGame.team1.roster);
+    const updatedSavedGame: SavedGame | null = canReplaceSavedGameLine
+      ? {
+          ...savedGame,
+          pointLines: replacePointLineRecords(savedPointLines, pointNumber, playerIds, timestamp),
+        }
+      : null;
+
+    // The saved game goes to SQLite before this store changes; see savedGamesSlice.ts.
+    if (updatedSavedGame) await upsertBasicGames([updatedSavedGame]);
+    await set((draft: GameState) => {
+      draft.pointLines = replacePointLineRecords(
+        draft.pointLines,
         pointNumber,
         playerIds,
         timestamp,
       );
-      const savedGame = state.currentGameId
-        ? state.savedGames.find((game) => game.id === state.currentGameId)
-        : undefined;
-      if (
-        savedGame?.pointLines &&
-        canReplacePointLine(savedGame.pointLines, pointNumber, playerIds, savedGame.team1.roster)
-      ) {
-        savedGame.pointLines = replacePointLineRecords(
-          savedGame.pointLines,
-          pointNumber,
-          playerIds,
-          timestamp,
-        );
-      }
-      didReplace = true;
+      if (updatedSavedGame) putSavedGame(draft, updatedSavedGame);
     });
-    return didReplace;
+    return true;
   },
 
   updateEvent: (

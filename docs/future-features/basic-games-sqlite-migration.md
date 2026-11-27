@@ -1,6 +1,6 @@
 # Basic Games SQLite Migration
 
-> **Status**: In progress. The storage module exists (`lib/basic/savedGameStorage.ts`); a startup migration copies saved games into it once, and the app still reads and writes them in `useGameStore`, so the SQLite copy is not yet authoritative.
+> **Status**: In progress. SQLite (`lib/basic/savedGameStorage.ts`) is the source of truth for saved games: the first start moves the AsyncStorage games into it once, and every save, edit, and delete writes there first. `useGameStore` still holds every game in memory and still mirrors them to AsyncStorage.
 
 ## Overview
 
@@ -60,7 +60,9 @@ API:
 loadBasicGameSummaries(): Promise<BasicGameSummary[]>
 loadBasicGame(gameId: string): Promise<SavedGame | null>
 loadBasicGames(gameIds: string[]): Promise<SavedGame[]>
+loadAllBasicGames(): Promise<SavedGame[]>
 upsertBasicGames(games: SavedGame[]): Promise<void>
+importAsyncStorageGamesOnce(games: SavedGame[]): Promise<void>
 deleteBasicGames(gameIds: string[]): Promise<void>
 ```
 
@@ -144,15 +146,14 @@ Recommended rollout:
 
 1. On app startup after `gameStore` rehydrates, read existing `state.savedGames`.
 2. Run `migrateSavedGames(...)` so older schema versions are normalized first.
-3. Bulk upsert migrated games into SQLite.
-4. Write a migration marker such as `basicGamesSqliteMigratedAt` or
-   `basicGamesStorageVersion`.
-5. Keep the old `savedGames` payload for at least one release as a fallback.
-6. In a later release, clear `savedGames` from the persisted Zustand payload once
-   the migration has proven stable.
+3. Replace the games stored in SQLite with the migrated games.
+4. Record the import in the `basic_game_async_storage_import` table, in the same
+   transaction as the games.
+5. Remove `savedGames` from the persisted Zustand payload. It is not read after
+   the import, so it is not kept as a fallback.
 
-The migration should be idempotent. Since games have stable ids, `INSERT OR
-REPLACE` can safely handle reruns without duplicating records.
+The import runs once per device: later starts find the import record and change
+nothing.
 
 ### Migration Risks
 
@@ -165,9 +166,8 @@ REPLACE` can safely handle reruns without duplicating records.
 
 Mitigations:
 
-- Upsert all records first, then write the migration marker.
+- Write the games and the import record in one transaction.
 - Make startup summary loading explicit.
-- Keep old `savedGames` as fallback during the first rollout.
 - Add tests for migration idempotency and legacy saved-game fixtures.
 
 ## Testing Plan

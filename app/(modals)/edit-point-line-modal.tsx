@@ -61,7 +61,7 @@ export default function EditPointLineModal() {
 
   const saveLine = (playerIds: string[]): Promise<boolean> => {
     if (savedGameId === null) {
-      return Promise.resolve(replacePointLine(editablePoint.pointNumber, playerIds));
+      return replacePointLine(editablePoint.pointNumber, playerIds);
     }
     return replaceSavedGamePointLine(savedGameId, editablePoint.pointNumber, playerIds);
   };

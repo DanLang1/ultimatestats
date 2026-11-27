@@ -20,6 +20,47 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
+## P2 - Basic Saved Games SQLite Error Paths
+
+- A failed SQLite write when a game ends is silent. `saveCurrentGame()` throws, so the game-over
+  flow stops before `setCurrentGameStatus('finished')` with no message, and the game is not in
+  `savedGames` until a later save succeeds. Cleanup: an alert with a retry at the three call sites.
+- A failed AsyncStorage hydration of `useGameStore` skips the SQLite load: zustand never fires
+  `onFinishHydration`, so `loadSavedBasicGamesAtStartup` waits forever and the saved list stays
+  empty for that session even though SQLite holds every game. Revisit when `savedGames` leaves the
+  AsyncStorage entry; the load then no longer needs to wait for hydration once the one-time import
+  has run.
+- References:
+  `hooks/basic/useEndGame.ts`
+  `components/basic/scoreboard/LiveScoreboard.tsx`
+  `components/basic/stat-entry/StatEntryOverlay.tsx`
+  `hooks/basic/useLoadSavedBasicGames.ts`
+  `docs/future-features/basic-games-sqlite-migration.md`
+
+## P2 - Maestro Menu and Sheet Steps Fail
+
+- In the Nov 2026 full run (maestro-runner 1.1.29, two iPhone 17 Pro simulators on iOS 26.3), 25 of
+  75 flows failed. All 25 failed again when run alone, and 9 of them failed the same way on commit
+  `a3046c6`, so the failures predate the SQLite source-of-truth change. Cause not investigated.
+- Symptom: after the flow taps a button that opens a menu or sheet, the next item is not found
+  (`tracker-menu-*`, `team-actions-new` on its second open, `.*Timeline`). The same buttons open
+  normally by hand, and Metro logged no app errors during the runs. Reduce Motion, which
+  maestro-runner turns on, was ruled out.
+- Until fixed, the basic saved-game edit flows (timeline edit, Callahan edit, full cycle) do not
+  reach their save steps, so those paths are verified by Jest only.
+- Failing flows, all under `.maestro/tests/`:
+  `advanced-tracker-edit-completed-touch.yml`, `advanced-tracker-edit-lineup.yml`,
+  `advanced-tracker-edit-live-completed-touch.yml`, `advanced-tracker-edit-turnover.yml`,
+  `advanced-tracker-game-complete-last-action.yml`, `advanced-tracker-halftime-timer.yml`,
+  `advanced-tracker-line-selection-autosave.yml`, `advanced-tracker-menus.yml`,
+  `advanced-tracker-preset-selection.yml`, `advanced-tracker-scrimmage-view-stats.yml`,
+  `advanced-tracker-view-stats-end-game.yml`, `advanced-tracker-view-stats-midpoint.yaml`,
+  `advanced-tracker-view-stats.yaml`, `basic-callahan-block-edit.yml`,
+  `basic-game-format-end-early.yml`, `basic-game-full-cycle.yml`, `basic-line-calling.yml`,
+  `basic-player-game-selector.yml`, `basic-scoreboard-live-stats.yml`, `basic-timeline-edit.yml`,
+  `line-presets.yml`, `pregame-team-switch.yml`, `team-management.yml`, `roster-management.yml`,
+  `team-modal-exits.yml`
+
 ## P3 - Share Schema Version Stamping
 
 - Any advanced schema bump (e.g. a new `ThrowResult`) blocks sharing every advanced game to older
