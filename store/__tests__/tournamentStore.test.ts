@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { SavedGame, Tournament, TournamentGameLink } from '@/lib/storage/types';
+import { Tournament, TournamentGameLink } from '@/lib/storage/types';
 
 import { useTournamentStore } from '../tournamentStore';
 
@@ -11,22 +11,6 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 const mockedAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
-
-function makeSavedGame(overrides: Partial<SavedGame> = {}): SavedGame {
-  return {
-    id: 'game-1',
-    schemaVersion: 6,
-    createdAt: 1000,
-    team1: { id: 'team-1', name: 'Timber', roster: [] },
-    team2Name: 'Rivals',
-    team1Score: 15,
-    team2Score: 10,
-    events: [],
-    gameTo: 15,
-    startingPossession: 'team1',
-    ...overrides,
-  };
-}
 
 function makeTournament(overrides: Partial<Tournament> = {}): Tournament {
   return {
@@ -166,45 +150,6 @@ describe('tournamentStore', () => {
 
       expect(useTournamentStore.getState().gameLinks).toHaveLength(1);
       expect(useTournamentStore.getState().gameLinks[0].tournamentId).toBe('tournament-2');
-    });
-  });
-
-  describe('migrateBasicTournamentLinks', () => {
-    it('creates links for valid local basic saved games', async () => {
-      useTournamentStore.setState({ tournaments: [makeTournament()] });
-      const game = makeSavedGame({ tournamentId: 'tournament-1' });
-
-      await useTournamentStore.getState().migrateBasicTournamentLinks([game]);
-
-      expect(useTournamentStore.getState().gameLinks[0]).toMatchObject({
-        tournamentId: 'tournament-1',
-        gameKind: 'basic',
-        gameId: 'game-1',
-      });
-    });
-
-    it('skips imported games and dangling tournament ids', async () => {
-      useTournamentStore.setState({ tournaments: [makeTournament()] });
-      const imported = makeSavedGame({
-        id: 'imported',
-        tournamentId: 'tournament-1',
-        importedAt: 2000,
-      });
-      const dangling = makeSavedGame({ id: 'dangling', tournamentId: 'missing' });
-
-      await useTournamentStore.getState().migrateBasicTournamentLinks([imported, dangling]);
-
-      expect(useTournamentStore.getState().gameLinks).toHaveLength(0);
-    });
-
-    it('is idempotent', async () => {
-      useTournamentStore.setState({ tournaments: [makeTournament()] });
-      const game = makeSavedGame({ tournamentId: 'tournament-1' });
-
-      await useTournamentStore.getState().migrateBasicTournamentLinks([game]);
-      await useTournamentStore.getState().migrateBasicTournamentLinks([game]);
-
-      expect(useTournamentStore.getState().gameLinks).toHaveLength(1);
     });
   });
 

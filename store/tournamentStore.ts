@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { reportHydrationError } from '@/lib/sentry';
-import { GameKind, SavedGame, Tournament, TournamentGameLink } from '@/lib/storage/types';
+import { GameKind, Tournament, TournamentGameLink } from '@/lib/storage/types';
 import { isTournamentCompatible } from '@/lib/tournamentRules';
 import { generateId } from '@/lib/utils';
 
@@ -55,7 +55,6 @@ interface TournamentState {
     gameIds: string[],
   ) => Promise<boolean>;
   removeGameFromTournament: (gameKind: GameKind, gameId: string) => Promise<void>;
-  migrateBasicTournamentLinks: (savedGames: SavedGame[]) => Promise<void>;
 }
 
 function getTournamentKind(tournament: Tournament | LegacyTournament): GameKind | null {
@@ -107,12 +106,6 @@ function normalizeLinks(links: TournamentGameLink[] | undefined): TournamentGame
   }
 
   return Array.from(linkByGame.values());
-}
-
-function getKnownTournamentIds(tournaments: Tournament[], kind: GameKind) {
-  return new Set(
-    tournaments.filter((tournament) => tournament.kind === kind).map((tournament) => tournament.id),
-  );
 }
 
 function unlockEmptyTournaments(
@@ -212,36 +205,6 @@ export const useTournamentStore = create<TournamentState>()(
               (link) => !(link.gameKind === gameKind && link.gameId === gameId),
             );
             unlockEmptyTournaments(state.tournaments, state.gameLinks, now);
-          });
-        },
-
-        migrateBasicTournamentLinks: async (savedGames) => {
-          const basicTournamentIds = getKnownTournamentIds(get().tournaments, 'basic');
-          const existingBasicGameIds = new Set(
-            get()
-              .gameLinks.filter((link) => link.gameKind === 'basic')
-              .map((link) => link.gameId),
-          );
-          const now = Date.now();
-          const linksToAdd: TournamentGameLink[] = [];
-
-          for (const game of savedGames) {
-            if (game.importedAt != null || !game.tournamentId) continue;
-            if (!basicTournamentIds.has(game.tournamentId)) continue;
-            if (existingBasicGameIds.has(game.id)) continue;
-            existingBasicGameIds.add(game.id);
-            linksToAdd.push({
-              id: generateId(),
-              schemaVersion: TOURNAMENT_LINK_SCHEMA_VERSION,
-              tournamentId: game.tournamentId,
-              gameKind: 'basic',
-              gameId: game.id,
-              createdAt: now,
-            });
-          }
-
-          set((state) => {
-            state.gameLinks.push(...linksToAdd);
           });
         },
       }),

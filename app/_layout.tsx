@@ -15,7 +15,6 @@ import { ScreenErrorBoundary } from '@/components/ui/ScreenErrorBoundary';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useLoadSavedBasicGames } from '@/hooks/basic/useLoadSavedBasicGames';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
-import { useStartupMigrations } from '@/hooks/useStartupMigrations';
 import { queryClient } from '@/lib/queryClient';
 import { initializeSentry } from '@/lib/sentry';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -51,7 +50,6 @@ function RootLayoutInner() {
   const { palette } = useTheme();
   const orientationMode = useSettingsStore((state) => state.orientationMode);
   useOrientationLock(orientationMode);
-  useStartupMigrations();
   useLoadSavedBasicGames();
 
   return (

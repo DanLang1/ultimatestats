@@ -79,8 +79,8 @@ function waitForHydration(persist: PersistHydrationApi) {
 
 /**
  * Simulates a cold app start against whatever AsyncStorage currently holds: every store module is
- * evaluated fresh, all persisted stores hydrate, the startup migrations run, and the saved basic
- * games load from SQLite.
+ * evaluated fresh, all persisted stores hydrate, and the saved basic games load from
+ * SQLite.
  */
 export async function coldStartApp() {
   // After the reset, the first require of each module evaluates it again, as a new process would.
@@ -99,9 +99,6 @@ export async function coldStartApp() {
   );
   const { useSettingsStore } =
     jest.requireActual<typeof import('@/store/settingsStore')>('@/store/settingsStore');
-  const { useStartupMigrationStore } = jest.requireActual<
-    typeof import('@/store/startupMigrationStore')
-  >('@/store/startupMigrationStore');
   const { useTeamStore } =
     jest.requireActual<typeof import('@/store/teamStore')>('@/store/teamStore');
   const { useTournamentStore } =
@@ -111,9 +108,6 @@ export async function coldStartApp() {
   const basicGameStorage = jest.requireActual<typeof import('@/lib/basic/savedGameStorage')>(
     '@/lib/basic/savedGameStorage',
   );
-  const { runReadyStartupMigrations } = jest.requireActual<
-    typeof import('@/hooks/useStartupMigrations')
-  >('@/hooks/useStartupMigrations');
   const { loadSavedBasicGamesAtStartup } = jest.requireActual<
     typeof import('@/hooks/basic/useLoadSavedBasicGames')
   >('@/hooks/basic/useLoadSavedBasicGames');
@@ -125,14 +119,12 @@ export async function coldStartApp() {
     useGameSessionStore,
     useLinePresetsStore,
     useSettingsStore,
-    useStartupMigrationStore,
     useTeamStore,
     useTournamentStore,
     useTutorialStore,
   ];
 
   await Promise.all(persistedStores.map((store) => waitForHydration(store.persist)));
-  await runReadyStartupMigrations();
   await loadSavedBasicGamesAtStartup();
 
   return {

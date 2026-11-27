@@ -16,7 +16,7 @@ export function initializeSentry() {
 /**
  * Reports an error the app handled itself (caught, shown to the user, or recovered from).
  * Uncaught errors, unhandled rejections, and route error boundaries are reported automatically.
- * `area` becomes a searchable Sentry tag; keep it short and stable, e.g. 'startup-migrations'.
+ * `area` becomes a searchable Sentry tag; keep it short and stable.
  */
 export function reportError(area: string, error: unknown, extra?: Record<string, unknown>): void {
   console.error(`[${area}]`, error);
