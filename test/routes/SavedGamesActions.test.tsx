@@ -136,7 +136,7 @@ it.each([
 });
 
 it('shows a loading state instead of the empty state until the saved basic games have loaded', async () => {
-  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'pending' });
+  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'loading' });
   await renderScreen(<StatsScreen />);
 
   expect(screen.getByTestId('saved-games-loading')).toBeVisible();

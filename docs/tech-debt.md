@@ -74,16 +74,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `hooks/basic/useLoadSavedBasicGames.ts`
   `lib/basic/savedGameStorage.ts`
 
-## P3 - Basic Saved Games Load Status Naming
-
-- `savedGamesLoadStatus` calls the not-yet-loaded state `'pending'`, while the rest of the app calls
-  it loading (`isLoading`, `status: 'loading'`), so callers translate one into the other. Cleanup:
-  rename `'pending'` to `'loading'`.
-- References:
-  `store/basic/savedGamesStore.ts`
-  `hooks/useCombinedStats.ts`
-  `app/(main)/(hub)/(analytics)/stats.tsx`
-
 ## P3 - Share Schema Version Stamping
 
 - Any advanced schema bump (e.g. a new `ThrowResult`) blocks sharing every advanced game to older

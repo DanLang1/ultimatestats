@@ -90,7 +90,7 @@ it('notes the scrimmages left out of an advanced combine', async () => {
 
 it('shows basic games as loading, not missing, until the saved basic games have loaded', async () => {
   setMockSearchParams({ kind: 'basic', gameIds: 'first,second', excludedScrimmageCount: '0' });
-  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'pending' });
+  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'loading' });
   await renderScreen(<CombinedStatsScreen />);
 
   expect(screen.getByText('Loading combined stats')).toBeVisible();

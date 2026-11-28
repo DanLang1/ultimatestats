@@ -56,13 +56,13 @@ function waitForHydration(persist: PersistHydrationApi) {
 
 // The seeds read and replace the saved basic games, which load from SQLite after hydration.
 function waitForSavedBasicGamesToLoad() {
-  if (useSavedBasicGamesStore.getState().savedGamesLoadStatus !== 'pending') {
+  if (useSavedBasicGamesStore.getState().savedGamesLoadStatus !== 'loading') {
     return Promise.resolve();
   }
 
   return new Promise<void>((resolve) => {
     const unsubscribe = useSavedBasicGamesStore.subscribe((state) => {
-      if (state.savedGamesLoadStatus === 'pending') return;
+      if (state.savedGamesLoadStatus === 'loading') return;
       unsubscribe();
       resolve();
     });

@@ -111,7 +111,7 @@ export function useCombinedStats(kind: GameKind, gameIds: string[]) {
 
   const getState = (): CombinedStatsState => {
     if (kind === 'basic') {
-      if (basicGamesLoadStatus === 'pending') return { status: 'loading' };
+      if (basicGamesLoadStatus === 'loading') return { status: 'loading' };
       const stats = combineBasicGames(savedGames, gameIdSet, teams);
       return stats ? { status: 'ready', stats } : { status: 'notFound' };
     }

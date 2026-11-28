@@ -56,7 +56,7 @@ export default function StatsScreen() {
   const basicGamesLoadStatus = useSavedBasicGamesStore((state) => state.savedGamesLoadStatus);
   const { data: completedAdvancedSavedGameSummaries, isLoading: advancedSummariesLoading } =
     useCompletedAdvancedGameSummaries();
-  const isLoadingSavedGames = basicGamesLoadStatus === 'pending' || advancedSummariesLoading;
+  const isLoadingSavedGames = basicGamesLoadStatus === 'loading' || advancedSummariesLoading;
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);

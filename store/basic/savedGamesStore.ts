@@ -13,7 +13,7 @@ import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
 import { TurnoverType } from './gameStore.types';
 
 /** Whether `savedGames` holds the games from SQLite yet. */
-type SavedGamesLoadStatus = 'pending' | 'loaded' | 'failed';
+type SavedGamesLoadStatus = 'loading' | 'loaded' | 'failed';
 
 type SavedGameEventUpdates = {
   playerId?: string | null;
@@ -52,7 +52,7 @@ type SavedBasicGamesState = {
 export const useSavedBasicGamesStore = create<SavedBasicGamesState>()(
   immer((set, get) => ({
     savedGames: [],
-    savedGamesLoadStatus: 'pending',
+    savedGamesLoadStatus: 'loading',
 
     loadSavedGames: async (asyncStorageSavedGames) => {
       const { games: gamesToImport } = migrateSavedGames(asyncStorageSavedGames);
