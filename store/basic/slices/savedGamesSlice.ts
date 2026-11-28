@@ -92,10 +92,6 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
     await set({ currentGameId: gameId }); // Remember ID for subsequent saves
   },
 
-  deleteSavedGame: async (id: string) => {
-    await get().deleteSavedGames([id]);
-  },
-
   deleteSavedGames: async (ids: string[]) => {
     const idSet = new Set(ids);
     const currentGameId = get().currentGameId;

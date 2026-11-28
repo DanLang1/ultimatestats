@@ -5,6 +5,9 @@ import { MatchingType, Player, PointLineRecord, SavedGame, SavedTeam } from './s
 /** Special ID for recording plays when the player is unknown */
 export const UNKNOWN_PLAYER_ID = 'UNKNOWN_PLAYER';
 
+/** Special ID for recording the opposing team as the assister of a Callahan */
+export const OTHER_TEAM_ID = 'OTHER_TEAM';
+
 /**
  * Resolve the current team name using ID lookup with snapshot fallback.
  * - If team is found in savedTeams by ID, returns the live name
@@ -33,7 +36,7 @@ export function getPlayerName(
   id: string | null,
 ): string | null {
   if (!id) return null;
-  if (id === 'OTHER_TEAM') return 'Other Team';
+  if (id === OTHER_TEAM_ID) return 'Other Team';
   if (id === UNKNOWN_PLAYER_ID) return 'Unknown';
   if (!roster) return id;
   return roster.find((p) => p.id === id)?.name ?? `Deleted Player (${id.slice(0, 4)})`;

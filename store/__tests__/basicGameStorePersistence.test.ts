@@ -89,13 +89,10 @@ describe('basic game store persistence', () => {
     await expect(useGameStore.getState().saveCurrentGame()).rejects.toThrow('storage unavailable');
   });
 
-  it.each([
-    ['single', (gameId: string) => useGameStore.getState().deleteSavedGame(gameId)],
-    ['bulk', (gameId: string) => useGameStore.getState().deleteSavedGames([gameId])],
-  ])('persists %s deletion and finished-game reset in one update', async (_label, deleteGame) => {
+  it('persists deletion and finished-game reset in one update', async () => {
     const gameId = await seedFinishedSavedGame();
 
-    await deleteGame(gameId);
+    await useGameStore.getState().deleteSavedGames([gameId]);
 
     expect(getBasicStorageWrites()).toHaveLength(1);
     expect(getPersistedBasicState().state).toMatchObject({
@@ -160,8 +157,7 @@ describe('basic game store persistence', () => {
         .getState()
         .importGame({ ...createSavedBasicGame(), id: 'game-c' });
 
-      await useGameStore.getState().deleteSavedGame('game-a');
-      await useGameStore.getState().deleteSavedGames(['game-b']);
+      await useGameStore.getState().deleteSavedGames(['game-a', 'game-b']);
 
       expect((await loadAllBasicGames()).map((game) => game.id)).toEqual(['game-c']);
     });

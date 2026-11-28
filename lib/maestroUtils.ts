@@ -12,6 +12,7 @@ import {
   MAESTRO_SCRIMMAGE_PLAYERS,
   MAESTRO_SEED_TEAM_ID,
 } from '@/lib/maestroConstants';
+import { OTHER_TEAM_ID } from '@/lib/playerUtils';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import type { GameEvent, PointLineRecord, SavedGame, SavedTeam } from '@/lib/storage/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -336,7 +337,7 @@ function buildSeedBasicCallahanSavedGame(team: SavedTeam): SavedGame {
       type: 'goal',
       team: 'team1',
       goalPlayerId: playerId('Kelly'),
-      assistPlayerId: 'OTHER_TEAM',
+      assistPlayerId: OTHER_TEAM_ID,
       pointNumber: 1,
     },
   ];

@@ -4,6 +4,7 @@ import { PointLineRecord, SavedGame } from '@/lib/storage';
 
 type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
+export type TeamSide = 'team1' | 'team2';
 
 // Unified event model - all game events in chronological order
 // NOTE: gameId is optional because events are created during live gameplay before the game is saved.
@@ -13,7 +14,7 @@ export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 // - Pre-populating it now avoids a data migration when that happens
 export type GoalEvent = {
   type: 'goal';
-  team: 'team1' | 'team2';
+  team: TeamSide;
   goalPlayerId: string | null;
   assistPlayerId: string | null;
   gameId?: string; // Populated on save - links to SavedGame.id
@@ -25,7 +26,7 @@ export type GoalEvent = {
 
 export type TurnoverEvent = {
   type: 'turnover';
-  team: 'team1' | 'team2'; // Team receiving the turnover attribution (blocker or team that lost possession)
+  team: TeamSide; // Team receiving the turnover attribution (blocker or team that lost possession)
   subtype: TurnoverType;
   playerId: string | null;
   player2Id?: string | null; // Second player ID for 50/50 turnovers
@@ -36,7 +37,7 @@ export type TurnoverEvent = {
 
 type TimeoutEvent = {
   type: 'timeout';
-  team: 'team1' | 'team2'; // Team that called the timeout
+  team: TeamSide; // Team that called the timeout
   index: number; // Which timeout slot (0, 1 for regular timeouts)
   isFloater: boolean;
   gameId?: string; // Populated on save - links to SavedGame.id
@@ -46,6 +47,16 @@ type TimeoutEvent = {
 };
 
 export type GameEvent = GoalEvent | TurnoverEvent | TimeoutEvent;
+
+export type EventUpdates = {
+  playerId?: string | null;
+  player2Id?: string | null;
+  subtype?: TurnoverType;
+  team?: TeamSide;
+  goalPlayerId?: string | null;
+  assistPlayerId?: string | null;
+  elapsedMs?: number | null;
+};
 
 export type EventToastSignal =
   | { id: number; kind: 'turnover'; event: TurnoverEvent }
@@ -69,7 +80,6 @@ export interface SavedGamesSlice {
   ) => Promise<boolean>;
 
   saveCurrentGame: () => Promise<void>;
-  deleteSavedGame: (id: string) => Promise<void>;
   deleteSavedGames: (ids: string[]) => Promise<void>;
 }
 
@@ -112,15 +122,15 @@ export interface LiveGameSlice {
 
   statTrackingEnabled: boolean;
   events: GameEvent[];
-  pendingStatEntry: { team: 'team1' | 'team2'; pointNumber: number } | null;
+  pendingStatEntry: { team: TeamSide; pointNumber: number } | null;
   pointTimerEnabled: boolean; // Optional: show "Start Point" button for accurate timing
   currentPointStartTime: number | null; // Working timestamp for current point
   pointStartTimestamps: Record<number, number>; // Finalized timestamps for completed points
   pointTimerPausedElapsed: number | null; // Elapsed ms when paused (null = running)
 
-  possession: 'team1' | 'team2' | null;
-  startingPossession: 'team1' | 'team2' | null;
-  pendingTurnoverEntry: { receivingTeam: 'team1' | 'team2' } | null;
+  possession: TeamSide | null;
+  startingPossession: TeamSide | null;
+  pendingTurnoverEntry: { receivingTeam: TeamSide } | null;
   eventToastSignal: EventToastSignal | null;
 
   currentPoint: number;
@@ -130,7 +140,7 @@ export interface LiveGameSlice {
   lineConfirmedForNextPoint: boolean;
 
   setTeam2Name: (name: string) => void;
-  setTeamBgColor: (team: 'team1' | 'team2', color: string) => void;
+  setTeamBgColor: (team: TeamSide, color: string) => void;
   setFloaterEnabled: (enabled: boolean) => void;
   setAutoHalftimeEnabled: (enabled: boolean) => void;
   setGameTo: (score: number) => void;
@@ -153,12 +163,10 @@ export interface LiveGameSlice {
   setTimerTimeLeft: (seconds: number) => void;
   setCurrentGameStatus: (status: GameSessionStatus) => void;
   setPostGameFlowPending: (pending: boolean) => void;
-  setHalftimeBreak: (active: boolean) => void;
   setHalftimeEndTime: (time: number | null) => void;
   setHalftimeTimeLeft: (seconds: number) => void;
   clearHalftimeBreak: () => void;
 
-  setPendingTimeoutModal: (pending: boolean) => void;
   setTimeoutEndTime: (time: number | null) => void;
   setTimeoutTimeLeft: (seconds: number) => void;
   clearTimeoutModal: () => void;
@@ -170,10 +178,10 @@ export interface LiveGameSlice {
   startPoint: () => void;
   togglePointTimerPause: () => void;
 
-  setPossession: (team: 'team1' | 'team2') => void;
+  setPossession: (team: TeamSide) => void;
   triggerTurnover: () => void;
   addTurnoverEvent: (event: {
-    team: 'team1' | 'team2';
+    team: TeamSide;
     subtype: TurnoverType;
     playerId: string | null;
     player2Id?: string | null;
@@ -181,17 +189,7 @@ export interface LiveGameSlice {
   clearEventToastSignal: () => void;
   clearPendingTurnoverEntry: () => void;
 
-  updateEvent: (
-    eventIndex: number,
-    updates: {
-      playerId?: string | null;
-      player2Id?: string | null;
-      subtype?: TurnoverType;
-      goalPlayerId?: string | null;
-      assistPlayerId?: string | null;
-      elapsedMs?: number | null;
-    },
-  ) => void;
+  updateEvent: (eventIndex: number, updates: EventUpdates) => void;
   deleteEvent: (eventIndex: number) => boolean; // Returns false if deletion blocked (goal/assist)
 
   setCurrentLine: (playerIds: string[]) => void;

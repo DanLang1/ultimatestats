@@ -199,8 +199,6 @@ rewrite it to describe only the remaining problem as it exists now.
 - Not planned while basic mode is stable; revisit if basic work resumes.
 - `TurnoverType` has no spec table (labels, icons, toasts, stats re-derived across ~10 files); the
   basic impact chain uses display strings as data.
-- `cancelPendingGoal` duplicates the goal branch of `undoLastAction`. They behave the same today,
-  but a change to one must be made in both.
 - Halftime, game-over, and soft-cap rules are implemented separately from advanced; share import
   does not validate basic events individually.
 - References:

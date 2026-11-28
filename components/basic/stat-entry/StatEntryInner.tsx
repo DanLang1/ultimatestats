@@ -6,7 +6,12 @@ import { AnimatedThemedView } from '@/components/AnimatedThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/context/ThemeContext';
 import { scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
-import { getActiveRoster, getPlayerName, UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
+import {
+  getActiveRoster,
+  getPlayerName,
+  OTHER_TEAM_ID,
+  UNKNOWN_PLAYER_ID,
+} from '@/lib/playerUtils';
 import { Player } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
 import { Fonts } from '@/theme/theme';
@@ -203,7 +208,7 @@ export function StatEntryInner({
             ]}
             onPress={() => {
               // For Callahan, the goal scorer is always the blocker
-              onComplete(blockerId, 'OTHER_TEAM');
+              onComplete(blockerId, OTHER_TEAM_ID);
             }}>
             <ThemedText style={[styles.skipText, { color: palette.textOnAccent }]}>
               Callahan

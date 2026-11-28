@@ -1,3 +1,4 @@
+import { produce } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
@@ -10,20 +11,11 @@ import {
 import { SavedGame } from '@/lib/storage';
 import { migrateSavedGame, migrateSavedGames } from '@/lib/storage/migrations';
 
-import { TurnoverType } from './gameStore.types';
+import { EventUpdates } from './gameStore.types';
+import { applyEventUpdates } from './slices/gameStoreHelpers';
 
 /** Whether `savedGames` holds the games from SQLite yet. */
 type SavedGamesLoadStatus = 'loading' | 'loaded' | 'failed';
-
-type SavedGameEventUpdates = {
-  playerId?: string | null;
-  player2Id?: string | null;
-  subtype?: TurnoverType;
-  team?: 'team1' | 'team2';
-  goalPlayerId?: string | null;
-  assistPlayerId?: string | null;
-  elapsedMs?: number | null;
-};
 
 type SavedBasicGamesState = {
   savedGames: SavedGame[];
@@ -40,7 +32,7 @@ type SavedBasicGamesState = {
   updateSavedGameEvent: (
     gameId: string,
     eventIndex: number,
-    updates: SavedGameEventUpdates,
+    updates: EventUpdates,
   ) => Promise<void>;
   deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
   updateSavedGamePlayedAt: (gameId: string, playedAt: number) => Promise<void>;
@@ -98,48 +90,8 @@ export const useSavedBasicGamesStore = create<SavedBasicGamesState>()(
       const event = game.events[eventIndex];
       if (!event) return;
 
-      const updatedEvents = [...game.events];
-
-      let updatedEvent;
-      if (event.type === 'turnover') {
-        updatedEvent = { ...event };
-        if (updates.playerId !== undefined) updatedEvent.playerId = updates.playerId;
-        if (updates.player2Id !== undefined) updatedEvent.player2Id = updates.player2Id;
-        if (updates.subtype !== undefined) updatedEvent.subtype = updates.subtype;
-        if (updates.team !== undefined) updatedEvent.team = updates.team;
-      } else if (event.type === 'goal') {
-        updatedEvent = { ...event };
-        const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
-
-        if (updates.goalPlayerId !== undefined) updatedEvent.goalPlayerId = updates.goalPlayerId;
-        if (updates.assistPlayerId !== undefined)
-          updatedEvent.assistPlayerId = updates.assistPlayerId;
-
-        // For Callahans: also update our block immediately before (edits can leave another event there)
-        if (isCallahan && updates.goalPlayerId !== undefined && eventIndex > 0) {
-          const prevEvent = game.events[eventIndex - 1];
-          if (
-            prevEvent.type === 'turnover' &&
-            prevEvent.subtype === 'block' &&
-            prevEvent.team === 'team1'
-          ) {
-            updatedEvents[eventIndex - 1] = { ...prevEvent, playerId: updates.goalPlayerId };
-          }
-        }
-      } else {
-        updatedEvent = { ...event };
-      }
-
-      if (updates.elapsedMs !== undefined) {
-        if (updates.elapsedMs === null) {
-          delete updatedEvent.elapsedMs;
-        } else {
-          updatedEvent.elapsedMs = updates.elapsedMs;
-        }
-      }
-
-      updatedEvents[eventIndex] = updatedEvent;
-      await get().saveGame({ ...game, events: updatedEvents });
+      const events = produce(game.events, (draft) => applyEventUpdates(draft, eventIndex, updates));
+      await get().saveGame({ ...game, events });
     },
 
     deleteSavedGameEvent: async (gameId, eventIndex) => {

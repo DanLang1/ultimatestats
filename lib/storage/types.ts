@@ -1,6 +1,6 @@
 // Types for persistent storage - designed for easy migration to SQLite later
 
-import { GameEvent } from '@/store/basic/gameStore.types';
+import { GameEvent, TeamSide } from '@/store/basic/gameStore.types';
 export type { GameEvent };
 
 export const CURRENT_SCHEMA_VERSION = 6;
@@ -17,7 +17,7 @@ export interface SavedGame {
   events: GameEvent[];
   autoHalftimeEnabled?: boolean; // Defaults to true for legacy saved games
   gameTo: number;
-  startingPossession: 'team1' | 'team2';
+  startingPossession: TeamSide;
   pointStartTimestamps?: Record<number, number>; // { [pointNumber]: timestamp when point started }
   pointLines?: PointLineRecord[]; // Line records per point - added in schema v2
   team1Color?: string; // hex color snapshot at save time - optional, falls back to theme default

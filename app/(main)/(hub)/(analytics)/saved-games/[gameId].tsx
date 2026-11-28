@@ -43,7 +43,7 @@ export default function SavedGameStatsScreen() {
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const deleteSavedGame = useGameStore((state) => state.deleteSavedGame);
+  const deleteSavedGames = useGameStore((state) => state.deleteSavedGames);
   const updateSavedGamePlayedAt = useSavedBasicGamesStore((state) => state.updateSavedGamePlayedAt);
   const teams = useTeamStore((state) => state.teams);
   const selectedGame = useSavedBasicGame(gameId);
@@ -120,7 +120,7 @@ export default function SavedGameStatsScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteSavedGame(selectedGame.id);
+            await deleteSavedGames([selectedGame.id]);
             await removeGameFromTournament('basic', selectedGame.id);
             router.dismissTo('/stats');
           },

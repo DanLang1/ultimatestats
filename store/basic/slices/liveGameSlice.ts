@@ -2,10 +2,9 @@ import { current } from 'immer';
 
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
-import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
-import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
+import { canTriggerHalftimeEarly } from '@/lib/basic/halftimeUtils';
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
-import { getLatestLineForPoint, replacePointLineRecords } from '@/lib/lineUtils';
+import { replacePointLineRecords } from '@/lib/lineUtils';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { SavedGame } from '@/lib/storage';
 import { palette } from '@/theme/theme';
@@ -14,14 +13,24 @@ import { useSettingsStore } from '../../settingsStore';
 import { getCurrentTeam } from '../../teamStore';
 import {
   EventToastSignal,
+  EventUpdates,
   GameSliceCreator,
   GameState,
+  GoalEvent,
   LiveGameSlice,
+  TeamSide,
   TurnoverEvent,
   TurnoverType,
 } from '../gameStore.types';
 import { useSavedBasicGamesStore } from '../savedGamesStore';
-import { canReplacePointLine, resetGameState } from './gameStoreHelpers';
+import {
+  applyEventUpdates,
+  canReplacePointLine,
+  getPointElapsedMs,
+  rederiveHalftimeAndTimeouts,
+  resetGameState,
+  revertLastGoal,
+} from './gameStoreHelpers';
 
 function applyHalftimeTransition(state: GameState) {
   state.gameHalf = 2;
@@ -93,7 +102,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       state.team2Name = name;
     }),
 
-  setTeamBgColor: (team: 'team1' | 'team2', color: string) =>
+  setTeamBgColor: (team: TeamSide, color: string) =>
     set((state: GameState) => {
       if (team === 'team1') state.team1BgColor = color;
       else state.team2BgColor = color;
@@ -207,18 +216,20 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
 
       const triggeredHalftime = isHalftime;
 
+      const goalEvent: GoalEvent = {
+        type: 'goal',
+        team: isTeam1 ? 'team1' : 'team2',
+        goalPlayerId: null,
+        assistPlayerId: null,
+        pointNumber: state.currentPoint,
+        ...(triggeredHalftime && { triggeredHalftime: true }),
+        ...(triggeredSoftcap && { triggeredSoftcap: true }),
+      };
+
       state.currentPoint++;
 
       if (!state.statTrackingEnabled) {
-        state.events.push({
-          type: 'goal',
-          team: isTeam1 ? 'team1' : 'team2',
-          goalPlayerId: null,
-          assistPlayerId: null,
-          pointNumber: state.currentPoint - 1, // currentPoint already incremented
-          ...(triggeredHalftime && { triggeredHalftime: true }),
-          ...(triggeredSoftcap && { triggeredSoftcap: true }),
-        });
+        state.events.push(goalEvent);
         return;
       }
 
@@ -231,23 +242,9 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       if (state.currentPointStartTime !== null) {
         state.pointStartTimestamps[state.currentPoint - 1] = state.currentPointStartTime;
       }
-      const elapsedMs =
-        state.currentPointStartTime !== null
-          ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
-          : undefined;
-
       // Push goal event immediately (with null players for now)
       // This ensures score and events stay in sync even if stat entry is dismissed
-      state.events.push({
-        type: 'goal',
-        team: isTeam1 ? 'team1' : 'team2',
-        goalPlayerId: null,
-        assistPlayerId: null,
-        elapsedMs,
-        pointNumber: state.currentPoint - 1, // currentPoint already incremented
-        ...(triggeredHalftime && { triggeredHalftime: true }),
-        ...(triggeredSoftcap && { triggeredSoftcap: true }),
-      });
+      state.events.push({ ...goalEvent, elapsedMs: getPointElapsedMs(state) });
       state.currentPointStartTime = null;
       state.pointTimerPausedElapsed = null;
 
@@ -282,7 +279,6 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
     set((state: GameState) => {
       const lastEvent = state.events[state.events.length - 1];
       if (!lastEvent) {
-        result = false;
         return;
       }
       // Snapshot before any mutation so we can reference it in the signal
@@ -301,46 +297,11 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
         state.timeoutTimeLeft = DEFAULT_TIMEOUT_SECONDS;
         state.events.pop();
       } else if (lastEvent.type === 'goal') {
-        const isTeam1 = lastEvent.team === 'team1';
-        const targetScore = isTeam1 ? state.team1Score : state.team2Score;
-
-        if (targetScore <= 0) {
-          result = false;
+        const scoringTeamScore = lastEvent.team === 'team1' ? state.team1Score : state.team2Score;
+        if (scoringTeamScore <= 0) {
           return;
         }
-
-        if (isTeam1) state.team1Score--;
-        else state.team2Score--;
-
-        if (lastEvent.triggeredSoftcap) {
-          state.isSoftCap = false;
-          state.softCapPending = true;
-          state.gameTo = state.baseGameTo;
-        }
-
-        state.possession = lastEvent.team;
-        state.pendingStatEntry = null;
-        state.currentPoint = Math.max(1, state.currentPoint - 1);
-        // Restore point timer state from the undone point
-        // Resume timer running from where it left off by adjusting start time
-        if (lastEvent.elapsedMs !== undefined) {
-          state.currentPointStartTime = Date.now() - lastEvent.elapsedMs;
-          state.pointTimerPausedElapsed = null;
-        } else {
-          state.currentPointStartTime = null;
-          state.pointTimerPausedElapsed = null;
-        }
-        // Remove entry from pointStartTimestamps since point is in-progress again
-        delete state.pointStartTimestamps[state.currentPoint];
-        // Remove any line records for future points
-        // (user may have set a line for the next point before undoing)
-        // Use <= because currentPoint now represents the in-progress point we're reverting to
-        state.pointLines = state.pointLines.filter(
-          (record) => record.pointNumber <= state.currentPoint,
-        );
-        state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
-        state.lineConfirmedForNextPoint = false;
-        state.events.pop();
+        revertLastGoal(state, lastEvent);
       } else {
         // Turnover: flip possession back
         state.possession = state.possession === 'team1' ? 'team2' : 'team1';
@@ -348,24 +309,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
         state.events.pop();
       }
 
-      const halftimeReached = hasReachedHalftime(state.events, state.autoHalftimeEnabled);
-      state.gameHalf = halftimeReached ? 2 : 1;
-      if (!halftimeReached) {
-        state.isHalftimeBreak = false;
-      }
-
-      // Re-derive timeout state from remaining events
-      // This ensures correct state after undoing across halftime
-      const derived = deriveTimeoutState(
-        state.events,
-        state.baseGameTo,
-        state.autoHalftimeEnabled,
-        state.team1Timeouts.length,
-      );
-      state.team1Timeouts = derived.team1Timeouts;
-      state.team2Timeouts = derived.team2Timeouts;
-      state.team1Floater = derived.team1Floater;
-      state.team2Floater = derived.team2Floater;
+      rederiveHalftimeAndTimeouts(state);
 
       state.currentGameStatus = 'inProgress';
       state.isPostGameFlowPending = false;
@@ -397,18 +341,13 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
         state.pointTimerPausedElapsed = Date.now() - startTime;
       }
 
-      // Calculate elapsed for timeline positioning
-      const elapsedMs =
-        state.currentPointStartTime !== null
-          ? (state.pointTimerPausedElapsed ?? Date.now() - state.currentPointStartTime)
-          : undefined;
-
       state.events.push({
         type: 'timeout',
         team: isTeam1 ? 'team1' : 'team2',
         index: isFloater ? 0 : index,
         isFloater,
-        elapsedMs,
+        // Elapsed for timeline positioning
+        elapsedMs: getPointElapsedMs(state),
         pointTimerWasPaused: !pointTimerWasRunning,
         pointNumber: state.currentPoint,
       });
@@ -481,11 +420,6 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       state.isPostGameFlowPending = pending;
     }),
 
-  setHalftimeBreak: (active: boolean) =>
-    set((state: GameState) => {
-      state.isHalftimeBreak = active;
-    }),
-
   setHalftimeEndTime: (time: number | null) =>
     set((state: GameState) => {
       state.halftimeEndTime = time;
@@ -501,11 +435,6 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       state.isHalftimeBreak = false;
       state.halftimeEndTime = null;
       state.halftimeTimeLeft = DEFAULT_HALFTIME_BREAK_SECONDS;
-    }),
-
-  setPendingTimeoutModal: (pending: boolean) =>
-    set((state: GameState) => {
-      state.pendingTimeoutModal = pending;
     }),
 
   setTimeoutEndTime: (time: number | null) =>
@@ -541,15 +470,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       state.pendingStatEntry = null;
     }),
 
-  clearPendingStatEntry: () =>
-    set((state: GameState) => {
-      state.pendingStatEntry = null;
-    }),
-
-  // Cancel a pending goal entry - reverts the score and removes the goal event.
-  // This and undoLastAction each re-derive score, possession, point number, line history,
-  // halftime, and point-timer state; a change to goal, turnover, timeout, halftime, line, or
-  // timer semantics must update both paths.
+  // Cancel a pending goal entry - reverts the score and removes the goal event
   cancelPendingGoal: () =>
     set((state: GameState) => {
       if (!state.pendingStatEntry) return;
@@ -557,57 +478,8 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       const lastEvent = state.events[state.events.length - 1];
       if (lastEvent?.type !== 'goal') return;
 
-      // Revert the score (stat entry only shows for team1 goals)
-      state.team1Score--;
-
-      if (lastEvent.triggeredSoftcap) {
-        state.isSoftCap = false;
-        state.softCapPending = true;
-        state.gameTo = state.baseGameTo;
-      }
-
-      // Restore point timer state from the goal event
-      if (lastEvent.elapsedMs !== undefined) {
-        state.currentPointStartTime = Date.now() - lastEvent.elapsedMs;
-        state.pointTimerPausedElapsed = null;
-      }
-
-      state.events.pop();
-
-      const halftimeReached = hasReachedHalftime(state.events, state.autoHalftimeEnabled);
-      state.gameHalf = halftimeReached ? 2 : 1;
-      if (!halftimeReached) {
-        state.isHalftimeBreak = false;
-      }
-
-      // Reset possession to team1 (they were attacking)
-      state.possession = 'team1';
-
-      state.currentPoint = Math.max(1, state.currentPoint - 1);
-
-      delete state.pointStartTimestamps[state.currentPoint];
-
-      // Remove any future line records and restore the active line for the reverted point
-      state.pointLines = state.pointLines.filter(
-        (record) => record.pointNumber <= state.currentPoint,
-      );
-      state.currentLine = getLatestLineForPoint(state.pointLines, state.currentPoint);
-      state.lineConfirmedForNextPoint = false;
-
-      state.pendingStatEntry = null;
-
-      // Re-derive timeout state from remaining events. The canceled goal may have
-      // triggered halftime, which temporarily reset the cached timeout state.
-      const derived = deriveTimeoutState(
-        state.events,
-        state.baseGameTo,
-        state.autoHalftimeEnabled,
-        state.team1Timeouts.length,
-      );
-      state.team1Timeouts = derived.team1Timeouts;
-      state.team2Timeouts = derived.team2Timeouts;
-      state.team1Floater = derived.team1Floater;
-      state.team2Floater = derived.team2Floater;
+      revertLastGoal(state, lastEvent);
+      rederiveHalftimeAndTimeouts(state);
     }),
 
   setPointTimerEnabled: (enabled: boolean) =>
@@ -635,7 +507,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       }
     }),
 
-  setPossession: (team: 'team1' | 'team2') =>
+  setPossession: (team: TeamSide) =>
     set((state: GameState) => {
       state.possession = team;
       if (state.startingPossession === null) {
@@ -654,7 +526,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
     }),
 
   addTurnoverEvent: (event: {
-    team: 'team1' | 'team2';
+    team: TeamSide;
     subtype: TurnoverType;
     playerId: string | null;
     player2Id?: string | null;
@@ -786,67 +658,19 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
     return true;
   },
 
-  updateEvent: (
-    eventIndex: number,
-    updates: {
-      playerId?: string | null;
-      player2Id?: string | null;
-      subtype?: TurnoverType;
-      team?: 'team1' | 'team2';
-      goalPlayerId?: string | null;
-      assistPlayerId?: string | null;
-      elapsedMs?: number | null;
-    },
-  ) =>
-    set((state: GameState) => {
-      const event = state.events[eventIndex];
-      if (!event) return;
-
-      if (updates.elapsedMs !== undefined) {
-        if (updates.elapsedMs === null) {
-          delete event.elapsedMs;
-        } else {
-          event.elapsedMs = updates.elapsedMs;
-        }
-      }
-
-      if (event.type === 'turnover') {
-        if (updates.playerId !== undefined) event.playerId = updates.playerId;
-        if (updates.player2Id !== undefined) event.player2Id = updates.player2Id;
-        if (updates.subtype !== undefined) event.subtype = updates.subtype;
-        if (updates.team !== undefined) event.team = updates.team;
-      } else if (event.type === 'goal') {
-        const isCallahan = event.assistPlayerId === 'OTHER_TEAM';
-
-        if (updates.goalPlayerId !== undefined) event.goalPlayerId = updates.goalPlayerId;
-        if (updates.assistPlayerId !== undefined) event.assistPlayerId = updates.assistPlayerId;
-
-        // For Callahans: also update our block immediately before (edits can leave another event there)
-        if (isCallahan && updates.goalPlayerId !== undefined && eventIndex > 0) {
-          const prevEvent = state.events[eventIndex - 1];
-          if (
-            prevEvent.type === 'turnover' &&
-            prevEvent.subtype === 'block' &&
-            prevEvent.team === 'team1'
-          ) {
-            prevEvent.playerId = updates.goalPlayerId;
-          }
-        }
-      }
-    }),
+  updateEvent: (eventIndex: number, updates: EventUpdates) =>
+    set((state: GameState) => applyEventUpdates(state.events, eventIndex, updates)),
 
   deleteEvent: (eventIndex: number) => {
     let result = false;
     set((state: GameState) => {
       const event = state.events[eventIndex];
       if (!event) {
-        result = false;
         return;
       }
 
       // Block deletion of goals (and implicitly assists, since they're part of goal events)
       if (event.type === 'goal') {
-        result = false;
         return;
       }
 

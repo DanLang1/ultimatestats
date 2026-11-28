@@ -2,7 +2,7 @@ import { GameEvent, Player, PointLineRecord, SavedGame } from '@/lib/storage';
 
 import { csvRow } from '../csvUtils';
 import { formatTimestampForCSV, formatTimestampForDisplay } from '../dateUtils';
-import { getPlayerName, UNKNOWN_PLAYER_ID } from '../playerUtils';
+import { getPlayerName, OTHER_TEAM_ID, UNKNOWN_PLAYER_ID } from '../playerUtils';
 import { getGameDisplayTimestamp } from '../savedGameUtils';
 import { hasItems } from '../utils';
 import {
@@ -129,11 +129,11 @@ export function computePlayerStats(
 
       const stats = getOrCreate(goalPlayerId);
       stats.goals++;
-      if (assistPlayerId === 'OTHER_TEAM') {
+      if (assistPlayerId === OTHER_TEAM_ID) {
         stats.callahans++;
       }
 
-      if (assistPlayerId && assistPlayerId !== 'OTHER_TEAM') {
+      if (assistPlayerId && assistPlayerId !== OTHER_TEAM_ID) {
         const assistStats = getOrCreate(assistPlayerId);
         assistStats.assists++;
       }
@@ -192,7 +192,7 @@ export function computeRelativePlayerStats(
     ? new Set(pointLines.flatMap((pl) => pl.playerIds))
     : null;
   const comparisonPool = allPlayerStats.filter((stats) => {
-    if (stats.id === UNKNOWN_PLAYER_ID || stats.id === 'OTHER_TEAM') {
+    if (stats.id === UNKNOWN_PLAYER_ID || stats.id === OTHER_TEAM_ID) {
       return false;
     }
 
@@ -450,7 +450,7 @@ export function getChemistryStats(
       const goalPlayerId = event.goalPlayerId;
       const assistPlayerId = event.assistPlayerId;
 
-      if (goalPlayerId === playerId && assistPlayerId && assistPlayerId !== 'OTHER_TEAM') {
+      if (goalPlayerId === playerId && assistPlayerId && assistPlayerId !== OTHER_TEAM_ID) {
         const stats = getOrCreate(assistPlayerId);
         stats.goalsFrom++;
         stats.totalConnections++;
@@ -547,7 +547,7 @@ export function getImpactStats(
         const lastPendingEvent = pendingPointEvents[pendingPointEvents.length - 1];
         const isCallahan =
           event.goalPlayerId === playerId &&
-          event.assistPlayerId === 'OTHER_TEAM' &&
+          event.assistPlayerId === OTHER_TEAM_ID &&
           lastPendingEvent?.description === 'Block';
         const isSelfAssistGoal =
           event.goalPlayerId === playerId && event.assistPlayerId === playerId;

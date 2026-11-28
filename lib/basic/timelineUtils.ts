@@ -3,6 +3,7 @@ import { MatchingType, PointLineRecord } from '@/lib/storage/types';
 import { GameEvent, TurnoverType } from '@/store/basic/gameStore.types';
 
 import { formatClockDuration, formatSplitDuration } from '../durationFormatUtils';
+import { OTHER_TEAM_ID } from '../playerUtils';
 
 export { formatClockDuration, formatSplitDuration };
 
@@ -353,7 +354,7 @@ export function buildPointCardTimelineData(
     showSplitSeparators: boolean;
   },
 ): PointCardTimelineData {
-  const isCallahan = options.isTeam1 && point.assistPlayerId === 'OTHER_TEAM';
+  const isCallahan = options.isTeam1 && point.assistPlayerId === OTHER_TEAM_ID;
 
   let callahanBlockEventIndex: number | undefined;
   if (isCallahan && point.goalPlayerId !== null) {
