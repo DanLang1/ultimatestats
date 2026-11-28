@@ -14,6 +14,7 @@ import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
 import { ScreenErrorBoundary } from '@/components/ui/ScreenErrorBoundary';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useLoadSavedBasicGames } from '@/hooks/basic/useLoadSavedBasicGames';
+import { useMoveLegacyPreGameSettings } from '@/hooks/basic/useMoveLegacyPreGameSettings';
 import { useOrientationLock } from '@/hooks/useOrientationLock';
 import { queryClient } from '@/lib/queryClient';
 import { initializeSentry } from '@/lib/sentry';
@@ -51,6 +52,7 @@ function RootLayoutInner() {
   const orientationMode = useSettingsStore((state) => state.orientationMode);
   useOrientationLock(orientationMode);
   useLoadSavedBasicGames();
+  useMoveLegacyPreGameSettings();
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.chrome }}>

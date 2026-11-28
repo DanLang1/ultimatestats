@@ -114,6 +114,9 @@ export async function coldStartApp() {
   const { loadSavedBasicGamesAtStartup } = jest.requireActual<
     typeof import('@/hooks/basic/useLoadSavedBasicGames')
   >('@/hooks/basic/useLoadSavedBasicGames');
+  const { moveLegacyPreGameSettingsAtStartup } = jest.requireActual<
+    typeof import('@/hooks/basic/useMoveLegacyPreGameSettings')
+  >('@/hooks/basic/useMoveLegacyPreGameSettings');
   const Sentry = jest.requireMock<typeof import('@sentry/react-native')>('@sentry/react-native');
 
   const persistedStores: PersistedStore[] = [
@@ -128,11 +131,12 @@ export async function coldStartApp() {
   ];
 
   await Promise.all(persistedStores.map((store) => waitForHydration(store.persist)));
-  await loadSavedBasicGamesAtStartup();
+  await Promise.all([loadSavedBasicGamesAtStartup(), moveLegacyPreGameSettingsAtStartup()]);
 
   return {
     useGameStore,
     useSavedBasicGamesStore,
+    useSettingsStore,
     useTeamStore,
     /** Saved basic games in SQLite, which persists across cold starts within a test. */
     basicGameStorage,

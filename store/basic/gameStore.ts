@@ -35,14 +35,36 @@ export const useGameStore = create<GameState>()(
         // The entry's `savedGames` are the pre-SQLite copy, not this store's saved games.
         merge: (persistedEntry, currentState) => {
           if (!isRecord(persistedEntry)) return currentState;
-          const { savedGames: asyncStorageSavedGames, ...persistedLiveGame } = persistedEntry;
-
-          return {
+          const {
+            savedGames: asyncStorageSavedGames,
+            team1BgColor,
+            team2BgColor,
+            ...persistedLiveGame
+          } = persistedEntry;
+          const mergedState: GameState = {
             ...currentState,
             ...persistedLiveGame,
             asyncStorageSavedGames: isSavedGameList(asyncStorageSavedGames)
               ? asyncStorageSavedGames
               : null,
+          };
+          // Entries written before the pre-game settings moved to the settings store hold the team
+          // colors, and the rest of those settings as live-game fields.
+          const hasLegacyPreGameSettings =
+            typeof team1BgColor === 'string' && typeof team2BgColor === 'string';
+          if (!hasLegacyPreGameSettings) return mergedState;
+
+          return {
+            ...mergedState,
+            legacyPreGameSettings: {
+              team1Color: team1BgColor,
+              team2Color: team2BgColor,
+              otherSideTeamName: mergedState.team2Name,
+              gameTo: mergedState.baseGameTo,
+              timeoutsPerHalf: mergedState.team1Timeouts.length,
+              autoHalftimeEnabled: mergedState.autoHalftimeEnabled,
+              floaterEnabled: mergedState.floaterEnabled,
+            },
           };
         },
         // Only persist game-related state, not UI state like pending entries
@@ -50,6 +72,16 @@ export const useGameStore = create<GameState>()(
           // Saved games live in SQLite. Until a start has loaded them from there, the entry
           // keeps the games it held, so a failed move to SQLite cannot lose them.
           const hasAsyncStorageSavedGames = state.asyncStorageSavedGames != null;
+          // Likewise the team colors, which mark the pre-game settings as not yet moved, stay
+          // until the settings store has them.
+          const { legacyPreGameSettings } = state;
+          const legacyTeamColors =
+            legacyPreGameSettings == null
+              ? {}
+              : {
+                  team1BgColor: legacyPreGameSettings.team1Color,
+                  team2BgColor: legacyPreGameSettings.team2Color,
+                };
 
           return {
             team2Name: state.team2Name,
@@ -91,6 +123,7 @@ export const useGameStore = create<GameState>()(
             pointLines: state.pointLines,
             lineConfirmedForNextPoint: state.lineConfirmedForNextPoint,
             ...(hasAsyncStorageSavedGames ? { savedGames: state.asyncStorageSavedGames } : {}),
+            ...legacyTeamColors,
           };
         },
       },

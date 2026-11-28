@@ -17,22 +17,37 @@ const LINE_PRESETS_STORAGE_KEY = 'ultimatestats-line-presets';
 const TEAM_STORAGE_KEY = 'ultimatestats-team-storage';
 const SETTINGS_STORAGE_KEY = 'ultimatestats-settings';
 
-// Settings added since 2.6.0 start at their defaults; the old basic-store values are not carried over.
-const SETTINGS_ADDED_SINCE_260 = {
-  otherSideTeamName: 'Team 2',
-  gameTo: 15,
-  timeoutsPerHalf: 2,
-  autoHalftimeEnabled: true,
-  floaterEnabled: true,
-  team1Color: '#F8FAFC',
-  team2Color: '#0F172A',
+/** The basic-game entry fields 2.6.0 kept the pre-game settings in. */
+type PersistedPreGameFields = {
+  team1BgColor: string;
+  team2BgColor: string;
+  team2Name: string;
+  baseGameTo: number;
+  team1Timeouts: boolean[];
+  autoHalftimeEnabled: boolean;
+  floaterEnabled: boolean;
 };
+
+function getMovedPreGameSettings(storage: StorageCheckpoint) {
+  const fields = (storage[BASIC_GAME_STORAGE_KEY] as { state: PersistedPreGameFields }).state;
+  return {
+    team1Color: fields.team1BgColor,
+    team2Color: fields.team2BgColor,
+    otherSideTeamName: fields.team2Name,
+    gameTo: fields.baseGameTo,
+    timeoutsPerHalf: fields.team1Timeouts.length,
+    autoHalftimeEnabled: fields.autoHalftimeEnabled,
+    floaterEnabled: fields.floaterEnabled,
+  };
+}
 
 type PersistedBasicGameEntry = {
   state: {
     currentTeam: SavedTeam;
     savedGames: SavedGame[];
     savedTeams: SavedTeam[];
+    team1BgColor: string;
+    team2BgColor: string;
   };
   version: number;
 };
@@ -68,8 +83,8 @@ type PersistedBasicGameEntryChangedSince260 = {
 /**
  * The complete storage difference from 2.6.0: the basic-game entry gains
  * `lineConfirmedForNextPoint` (default false) and drops `currentTeam`, `savedTeams`, and
- * `savedGames` (now in SQLite) and its team colors, the settings entry gains the game-format and
- * team-color defaults, the line-presets entry drops the flag, and a team entry appears.
+ * `savedGames` (now in SQLite) and its team colors, the settings entry gains the pre-game settings
+ * that entry held, the line-presets entry drops the flag, and a team entry appears.
  */
 function withStorageChangesSince260(
   checkpoint: StorageCheckpoint,
@@ -92,7 +107,7 @@ function withStorageChangesSince260(
   delete basicGameEntry.state.savedGames;
   delete basicGameEntry.state.team1BgColor;
   delete basicGameEntry.state.team2BgColor;
-  settingsEntry.state = { ...settingsEntry.state, ...SETTINGS_ADDED_SINCE_260 };
+  settingsEntry.state = { ...settingsEntry.state, ...getMovedPreGameSettings(checkpoint) };
   delete linePresetsEntry.state.lineConfirmedForNextPoint;
   expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
 
@@ -134,13 +149,15 @@ describe('storage checkpoints', () => {
         ),
     },
   ])(
-    'cold-starts $checkpointPath, moves the teams to the team entry and the line-confirmed flag to the basic-game entry, and writes the rest back',
+    'cold-starts $checkpointPath, moves the teams to the team entry, the pre-game settings to the settings entry and the line-confirmed flag to the basic-game entry, and writes the rest back',
     async ({ checkpointPath, getExpectedTeamEntry }) => {
       const checkpoint = readCheckpointFile(checkpointPath);
       const {
         currentTeam: _legacyCurrentTeam,
         savedTeams: _legacySavedTeams,
         savedGames: persistedSavedGames,
+        team1BgColor: _legacyTeam1Color,
+        team2BgColor: _legacyTeam2Color,
         ...persistedLiveGame
       } = getBasicGameEntry(checkpoint).state;
       const expectedTeamEntry = getExpectedTeamEntry(checkpoint);
@@ -207,6 +224,75 @@ describe('storage checkpoints', () => {
       expect(await readStorage()).toEqual(storageAfterFirstStart);
     },
   );
+
+  it('moves the pre-game settings to the settings entry once, so a later change to them stays', async () => {
+    const checkpoint = readCheckpointFile('2.6.0/mid-game.json');
+    const basicGameEntry = checkpoint[BASIC_GAME_STORAGE_KEY] as { state: PersistedPreGameFields };
+    Object.assign(basicGameEntry.state, {
+      team1BgColor: '#3F296E',
+      team2BgColor: '#4F46E5',
+      team2Name: 'Last Opponent',
+      baseGameTo: 6,
+      team1Timeouts: [true, true, true],
+      autoHalftimeEnabled: false,
+      floaterEnabled: false,
+    });
+    await seedStorage(checkpoint);
+
+    const firstStart = await coldStartApp();
+
+    expect(firstStart.reportedErrors).toEqual([]);
+    expect(firstStart.useSettingsStore.getState()).toMatchObject({
+      team1Color: '#3F296E',
+      team2Color: '#4F46E5',
+      otherSideTeamName: 'Last Opponent',
+      gameTo: 6,
+      timeoutsPerHalf: 3,
+      autoHalftimeEnabled: false,
+      floaterEnabled: false,
+    });
+    expect(getBasicGameEntry(await readStorage()).state).not.toHaveProperty('team1BgColor');
+
+    firstStart.useSettingsStore.getState().setGameTo(11);
+    const secondStart = await coldStartApp();
+
+    expect(secondStart.useSettingsStore.getState().gameTo).toBe(11);
+  });
+
+  it('keeps the pre-game settings in the basic-game entry when the settings write fails, and moves them on the next start', async () => {
+    const checkpoint = readCheckpointFile('2.6.0/mid-game.json');
+    const basicGameEntry = checkpoint[BASIC_GAME_STORAGE_KEY] as { state: PersistedPreGameFields };
+    basicGameEntry.state.baseGameTo = 6;
+    await seedStorage(checkpoint);
+    const setItem = jest.mocked(AsyncStorage.setItem);
+    const writeItem = setItem.getMockImplementation();
+    if (writeItem == null) throw new Error('Expected the AsyncStorage mock to write.');
+    const settingsWriteError = new Error('disk full');
+    let didFailSettingsWrite = false;
+    setItem.mockImplementation(async (key, value) => {
+      if (key === SETTINGS_STORAGE_KEY && !didFailSettingsWrite) {
+        didFailSettingsWrite = true;
+        throw settingsWriteError;
+      }
+      return writeItem(key, value);
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const failedStart = await coldStartApp();
+    await failedStart.writeAllPersistedStores();
+
+    expect(failedStart.reportedErrors.map(([error]) => error)).toEqual([settingsWriteError]);
+    expect(getBasicGameEntry(await readStorage()).state).toMatchObject({
+      team1BgColor: '#F8FAFC',
+      team2BgColor: '#0F172A',
+    });
+
+    setItem.mockImplementation(writeItem);
+    const nextStart = await coldStartApp();
+
+    expect(nextStart.useSettingsStore.getState().gameTo).toBe(6);
+    expect(getBasicGameEntry(await readStorage()).state).not.toHaveProperty('team1BgColor');
+  });
 
   it('seeds one team from an unsaved default team', async () => {
     await seedStorage(readCheckpointFile('2.6.0/legacy-saved-games.json'));

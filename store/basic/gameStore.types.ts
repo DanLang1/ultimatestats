@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 
 import { PointLineRecord, SavedGame } from '@/lib/storage';
+import type { BasicGameFormatSettings } from '@/store/settingsStore';
 
 /** 'fresh' means the game is still on the pre-game screen. */
 type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
@@ -84,7 +85,18 @@ export interface SavedGamesSlice {
   deleteSavedGames: (ids: string[]) => Promise<void>;
 }
 
+/** The pre-game settings the AsyncStorage entry held before they moved to the settings store. */
+type LegacyPreGameSettings = Omit<BasicGameFormatSettings, 'hardCapMins'> & {
+  team1Color: string;
+  team2Color: string;
+};
+
 export interface LiveGameSlice {
+  /** Kept only until they have moved to the settings store; null when the entry holds none. */
+  legacyPreGameSettings: LegacyPreGameSettings | null;
+  /** Takes the pre-game settings out of the AsyncStorage entry. */
+  dropLegacyPreGameSettings: () => Promise<void>;
+
   team2Name: string; // Opposing team name (no roster/ID needed)
 
   team1Score: number;

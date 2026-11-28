@@ -54,6 +54,11 @@ function applyHalftimeTransition(state: GameState) {
 }
 
 export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) => ({
+  legacyPreGameSettings: null,
+  dropLegacyPreGameSettings: async () => {
+    await set({ legacyPreGameSettings: null });
+  },
+
   team2Name: DEFAULT_OTHER_SIDE_TEAM_NAME,
 
   team1Score: 0,
