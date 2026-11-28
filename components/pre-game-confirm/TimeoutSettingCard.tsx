@@ -14,7 +14,7 @@ interface TimeoutSettingCardProps {
   timeoutCount: number;
   autoHalftimeEnabled: boolean;
   floaterEnabled: boolean;
-  onResetTimeouts: (count: number) => void;
+  onSetTimeoutCount: (count: number) => void;
   onSetFloaterEnabled: (enabled: boolean) => void;
 }
 
@@ -22,7 +22,7 @@ export function TimeoutSettingCard({
   timeoutCount,
   autoHalftimeEnabled,
   floaterEnabled,
-  onResetTimeouts,
+  onSetTimeoutCount,
   onSetFloaterEnabled,
 }: TimeoutSettingCardProps) {
   const { sizeClass } = useLayout();
@@ -50,7 +50,7 @@ export function TimeoutSettingCard({
               { value: '2', label: '2' },
             ]}
             value={String(timeoutCount)}
-            onChange={(val) => onResetTimeouts(Number(val))}
+            onChange={(val) => onSetTimeoutCount(Number(val))}
           />
 
           {autoHalftimeEnabled && (

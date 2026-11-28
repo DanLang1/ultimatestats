@@ -2,8 +2,6 @@
   "ultimatestats-game-storage": {
     "state": {
       "team2Name": "Team 2",
-      "team1BgColor": "#F8FAFC",
-      "team2BgColor": "#0F172A",
       "team1Score": 0,
       "team2Score": 0,
       "team1Timeouts": [true, true],

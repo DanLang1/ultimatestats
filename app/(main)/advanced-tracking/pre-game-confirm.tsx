@@ -27,7 +27,6 @@ import { getContrastingTextColor } from '@/lib/colorUtils';
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/constants';
 import { formatRatioFull } from '@/lib/genderRatioUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/basic/gameStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useCurrentTeam, useTeamStore } from '@/store/teamStore';
@@ -53,21 +52,6 @@ export default function AdvancedPreGameConfirm() {
   const currentTeam = useCurrentTeam();
   const teams = useTeamStore((state) => state.teams);
   const {
-    team2Name,
-    gameTo,
-    setGameTo,
-    setTimerTimeLeft,
-    team1Timeouts,
-    autoHalftimeEnabled,
-    setAutoHalftimeEnabled,
-    floaterEnabled,
-    setFloaterEnabled,
-    resetTimeouts,
-    team1BgColor,
-    team2BgColor,
-  } = useGameStore();
-
-  const {
     genderRatioEnabled,
     setGenderRatioEnabled,
     firstPointRatio,
@@ -84,12 +68,20 @@ export default function AdvancedPreGameConfirm() {
     setAdvancedSoftCapEnabled,
     numPlayers,
     setNumPlayers,
+    gameTo,
+    setGameTo,
+    timeoutsPerHalf,
+    setTimeoutsPerHalf,
+    autoHalftimeEnabled,
+    setAutoHalftimeEnabled,
+    floaterEnabled,
+    setFloaterEnabled,
+    team1Color: t1Color,
+    team2Color: t2Color,
   } = useSettingsStore();
 
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
   const mmpTextColor = getContrastingTextColor(palette.mmpColor);
-  const t1Color = team1BgColor || palette.primary;
-  const t2Color = team2BgColor || palette.accent;
   const t1TextColor = getContrastingTextColor(t1Color);
   const t2TextColor = getContrastingTextColor(t2Color);
 
@@ -97,12 +89,11 @@ export default function AdvancedPreGameConfirm() {
 
   const openPicker = useNumberPickerStore((s) => s.open);
 
-  const timeoutCount = team1Timeouts.length;
-
   const [receivingTeam, setReceivingTeam] = useState<'us' | 'them' | ''>('');
   const [flipResult, setFlipResult] = useState<FlipResult | null>(null);
   const [flipChoice, setFlipChoice] = useState<FlipChoice | null>(null);
   const {
+    otherSideTeamName,
     opponentNameDraft,
     setOpponentNameDraft,
     commitOpponentName,
@@ -123,7 +114,7 @@ export default function AdvancedPreGameConfirm() {
     firstPointRatio === 'more-men' ? palette.mmpColor : palette.fmpColor;
 
   const handleSetLine = () => {
-    const opponentName = isScrimmage ? team2Name : commitOpponentName();
+    const opponentLabel = isScrimmage ? 'Dark' : commitOpponentName();
     const sides: GameSide[] = [
       {
         id: FOCUS_SIDE_ID,
@@ -133,7 +124,7 @@ export default function AdvancedPreGameConfirm() {
       },
       {
         id: OPP_SIDE_ID,
-        label: isScrimmage ? 'Dark' : opponentName,
+        label: opponentLabel,
         sourceTeamId: isScrimmage ? currentTeam.id : undefined,
         trackingMode: isScrimmage ? 'full-roster' : 'anonymous',
       },
@@ -168,7 +159,7 @@ export default function AdvancedPreGameConfirm() {
         halftimeEnabled: autoHalftimeEnabled,
         softCapEnabled: advancedSoftCapEnabled,
         hardCapEnabled: advancedHardCapEnabled,
-        timeoutsPerHalf: timeoutCount,
+        timeoutsPerHalf,
         floaterEnabled: floaterEnabledForGame,
       },
     });
@@ -314,7 +305,6 @@ export default function AdvancedPreGameConfirm() {
                   quickOptions: [90, 105, 110, 120],
                   onChange: (val) => {
                     setHardCapMins(val);
-                    setTimerTimeLeft(val * 60);
                     if (softCapMins > val) setSoftCapMins(val);
                     if (advancedSoftCapAtMins > val) setAdvancedSoftCapAtMins(val);
                   },
@@ -374,10 +364,10 @@ export default function AdvancedPreGameConfirm() {
           </EditableSettingCard>
 
           <TimeoutSettingCard
-            timeoutCount={timeoutCount}
+            timeoutCount={timeoutsPerHalf}
             autoHalftimeEnabled={autoHalftimeEnabled}
             floaterEnabled={floaterEnabled}
-            onResetTimeouts={resetTimeouts}
+            onSetTimeoutCount={setTimeoutsPerHalf}
             onSetFloaterEnabled={setFloaterEnabled}
           />
 
@@ -426,7 +416,7 @@ export default function AdvancedPreGameConfirm() {
             },
             {
               value: 'them',
-              label: isScrimmage ? 'Dark' : team2Name || 'Them',
+              label: isScrimmage ? 'Dark' : otherSideTeamName,
               testID: 'advanced-tracker-receiving-opponent',
               actionIcon: !isScrimmage ? 'pencil-outline' : undefined,
               actionTestID: 'advanced-tracker-opponent-name-edit',

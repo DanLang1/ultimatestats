@@ -18,10 +18,8 @@ describe('setGameToInGame', () => {
     mockedAsyncStorage.setItem.mockResolvedValue(undefined);
     mockedAsyncStorage.removeItem.mockResolvedValue(undefined);
 
-    const { setAutoHalftimeEnabled, setGameTo, resetGame } = useGameStore.getState();
-    setAutoHalftimeEnabled(true);
-    setGameTo(15);
-    resetGame();
+    useGameStore.getState().resetGame();
+    useGameStore.setState({ gameTo: 15, baseGameTo: 15, autoHalftimeEnabled: true });
   });
 
   it('updates gameTo and baseGameTo in the first half when soft cap is inactive', () => {

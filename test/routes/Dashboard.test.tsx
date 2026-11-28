@@ -212,3 +212,11 @@ it.each(['ios', 'android'] as const)(
     expect(screen.queryByText('New Version Available')).not.toBeOnTheScreen();
   },
 );
+
+it('suggests finishing the live game before updating', async () => {
+  const queryClient = arrangeDashboard();
+  queryClient.setQueryData(['remoteVersion'], { hasUpdate: true, latestVersion: '2.0.0' });
+  arrangeAdvancedGame();
+  await renderScreen(<DashboardScreen />, { queryClient });
+  expect(screen.getByText('Finish your current game, then tap to update')).toBeVisible();
+});

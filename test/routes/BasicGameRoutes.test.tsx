@@ -52,12 +52,30 @@ describe('basic game routes', () => {
   it('starts a fresh basic game from the real pre-game settings', async () => {
     const user = userEvent.setup();
     arrangeBasicGame({ status: 'fresh' });
+    useSettingsStore.setState({
+      gameTo: 11,
+      timeoutsPerHalf: 1,
+      autoHalftimeEnabled: false,
+      floaterEnabled: false,
+      hardCapMins: 100,
+    });
     await renderScreen(<PreGameConfirm />);
 
     expect(screen.getByText('Settings lock once the game starts')).toBeVisible();
 
     await user.press(screen.getByText('Start Game'));
 
+    expect(useGameStore.getState()).toMatchObject({
+      currentGameStatus: 'inProgress',
+      gameTo: 11,
+      baseGameTo: 11,
+      team1Timeouts: [true],
+      team2Timeouts: [true],
+      autoHalftimeEnabled: false,
+      floaterEnabled: false,
+      timerTimeLeft: 6000,
+      timerEndTime: null,
+    });
     expect(router.dismissTo).toHaveBeenCalledWith('/scoreboard');
   });
 
@@ -146,7 +164,8 @@ describe('basic game routes', () => {
   it('commits the opponent when starting a scoreboard-only game with the input focused', async () => {
     const user = userEvent.setup();
     arrangeBasicGame({ status: 'fresh' });
-    useGameStore.setState({ statTrackingEnabled: false, team2Name: '' });
+    useGameStore.setState({ statTrackingEnabled: false });
+    useSettingsStore.setState({ otherSideTeamName: '' });
     await renderScreen(<PreGameConfirm />);
     expect(screen.queryByText('WHO IS RECEIVING?')).not.toBeOnTheScreen();
     await user.press(screen.getByTestId('basic-opponent-name-edit'));
@@ -190,12 +209,12 @@ describe('pre-game settings', () => {
   });
 
   it.each([
-    ['Game To', '11', { gameTo: 11 }, {}],
-    ['Hard Cap', '90', { timerTimeLeft: 5400 }, { hardCapMins: 90, softCapMins: 15 }],
-    ['Soft Cap', '80', {}, { softCapMins: 30 }],
+    ['Game To', '11', { gameTo: 11 }],
+    ['Hard Cap', '90', { hardCapMins: 90, softCapMins: 15 }],
+    ['Soft Cap', '80', { softCapMins: 30 }],
   ] as const)(
     'saves %s through its real number-picker route',
-    async (label, value, gameState, settingsState) => {
+    async (label, value, settingsState) => {
       useSettingsStore.setState({ hardCapMins: 110, softCapMins: 15 });
       const user = userEvent.setup();
       const view = await renderScreen(<PreGameConfirm />);
@@ -205,9 +224,7 @@ describe('pre-game settings', () => {
       await user.press(screen.getByText('C'));
       for (const digit of value) await user.press(screen.getAllByText(digit).at(-1)!);
       await user.press(screen.getByText('Save'));
-      if (Object.keys(gameState).length) expect(useGameStore.getState()).toMatchObject(gameState);
-      if (Object.keys(settingsState).length)
-        expect(useSettingsStore.getState()).toMatchObject(settingsState);
+      expect(useSettingsStore.getState()).toMatchObject(settingsState);
       expect(router.back).toHaveBeenCalled();
     },
   );
@@ -221,20 +238,19 @@ describe('pre-game settings', () => {
     await user.press(screen.getByText('90'));
     await user.press(screen.getByText('Save'));
     expect(useSettingsStore.getState()).toMatchObject({ hardCapMins: 90, softCapMins: 90 });
-    expect(useGameStore.getState().timerTimeLeft).toBe(5400);
   });
 
   it('turns off dependent features when stat tracking and halftime are disabled', async () => {
-    useGameStore.setState({
-      pointTimerEnabled: true,
+    useGameStore.setState({ pointTimerEnabled: true });
+    useSettingsStore.setState({
+      lineCallingEnabled: true,
       autoHalftimeEnabled: true,
       floaterEnabled: true,
     });
-    useSettingsStore.setState({ lineCallingEnabled: true });
     const user = userEvent.setup();
     await renderScreen(<PreGameConfirm />);
     await user.press(screen.getByText('Halftime'));
-    expect(useGameStore.getState()).toMatchObject({
+    expect(useSettingsStore.getState()).toMatchObject({
       autoHalftimeEnabled: false,
       floaterEnabled: false,
     });

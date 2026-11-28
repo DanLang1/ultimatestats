@@ -15,6 +15,18 @@ import { PersistedTeamState } from '../teamStore.types';
 const BASIC_GAME_STORAGE_KEY = 'ultimatestats-game-storage';
 const LINE_PRESETS_STORAGE_KEY = 'ultimatestats-line-presets';
 const TEAM_STORAGE_KEY = 'ultimatestats-team-storage';
+const SETTINGS_STORAGE_KEY = 'ultimatestats-settings';
+
+// Settings added since 2.6.0 start at their defaults; the old basic-store values are not carried over.
+const SETTINGS_ADDED_SINCE_260 = {
+  otherSideTeamName: 'Team 2',
+  gameTo: 15,
+  timeoutsPerHalf: 2,
+  autoHalftimeEnabled: true,
+  floaterEnabled: true,
+  team1Color: '#F8FAFC',
+  team2Color: '#0F172A',
+};
 
 type PersistedBasicGameEntry = {
   state: {
@@ -45,6 +57,8 @@ type PersistedEntryWithLineConfirmedFlag = {
 type PersistedBasicGameEntryChangedSince260 = {
   state: {
     lineConfirmedForNextPoint?: boolean;
+    team1BgColor?: string;
+    team2BgColor?: string;
     currentTeam?: SavedTeam;
     savedTeams?: SavedTeam[];
     savedGames?: SavedGame[];
@@ -54,7 +68,8 @@ type PersistedBasicGameEntryChangedSince260 = {
 /**
  * The complete storage difference from 2.6.0: the basic-game entry gains
  * `lineConfirmedForNextPoint` (default false) and drops `currentTeam`, `savedTeams`, and
- * `savedGames` (now in SQLite), the line-presets entry drops the flag, and a team entry appears.
+ * `savedGames` (now in SQLite) and its team colors, the settings entry gains the game-format and
+ * team-color defaults, the line-presets entry drops the flag, and a team entry appears.
  */
 function withStorageChangesSince260(
   checkpoint: StorageCheckpoint,
@@ -67,11 +82,17 @@ function withStorageChangesSince260(
   const linePresetsEntry = expectedStorage[
     LINE_PRESETS_STORAGE_KEY
   ] as PersistedEntryWithLineConfirmedFlag;
+  const settingsEntry = expectedStorage[SETTINGS_STORAGE_KEY] as {
+    state: Record<string, unknown>;
+  };
 
   basicGameEntry.state.lineConfirmedForNextPoint = false;
   delete basicGameEntry.state.currentTeam;
   delete basicGameEntry.state.savedTeams;
   delete basicGameEntry.state.savedGames;
+  delete basicGameEntry.state.team1BgColor;
+  delete basicGameEntry.state.team2BgColor;
+  settingsEntry.state = { ...settingsEntry.state, ...SETTINGS_ADDED_SINCE_260 };
   delete linePresetsEntry.state.lineConfirmedForNextPoint;
   expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
 

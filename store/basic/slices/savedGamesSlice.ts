@@ -64,6 +64,7 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
 
   saveCurrentGame: async () => {
     const state = get();
+    const { team1Color, team2Color } = useSettingsStore.getState();
     // Use existing gameId if we've already saved this game (e.g., after undo+re-win)
     const gameId = state.currentGameId ?? generateId();
     // Stamp gameId on all events for aggregation lookups
@@ -85,8 +86,8 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
       startingPossession: state.startingPossession ?? 'team1',
       pointStartTimestamps: state.pointStartTimestamps,
       pointLines: state.pointLines,
-      team1Color: state.team1BgColor,
-      team2Color: state.team2BgColor,
+      team1Color,
+      team2Color,
     };
     await useSavedBasicGamesStore.getState().saveGame(game);
     await set({ currentGameId: gameId }); // Remember ID for subsequent saves
@@ -97,12 +98,10 @@ export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, ge
     const currentGameId = get().currentGameId;
     const shouldClearCurrentFinishedGame =
       get().currentGameStatus === 'finished' && currentGameId !== null && idSet.has(currentGameId);
-    const hardCapMinutes = useSettingsStore.getState().hardCapMins;
-
     await useSavedBasicGamesStore.getState().deleteGames(ids);
     if (shouldClearCurrentFinishedGame) {
       await set((state: GameState) => {
-        resetGameState(state, hardCapMinutes);
+        resetGameState(state, useSettingsStore.getState());
       });
       useSettingsStore.getState().setFirstPointRatio(null);
     }

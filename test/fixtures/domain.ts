@@ -5,6 +5,7 @@ import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesS
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTeamStore } from '@/store/teamStore';
 import {
   ADVANCED_TEST_SIDES,
@@ -63,6 +64,7 @@ export function arrangeBasicGame(options?: {
     possession: options?.statTrackingEnabled ? 'team1' : null,
     startingPossession: options?.statTrackingEnabled ? 'team1' : null,
   });
+  useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
   useGameSessionStore.getState().setActiveGameType('basic');
 }
 

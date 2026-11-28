@@ -38,22 +38,11 @@ export default function PreGameConfirm() {
   const {
     possession,
     statTrackingEnabled,
-    team2Name,
     setPossession,
-    gameTo,
-    setGameTo,
-    setTimerTimeLeft,
-    team1Timeouts,
-    autoHalftimeEnabled,
-    setAutoHalftimeEnabled,
-    floaterEnabled,
-    setFloaterEnabled,
     pointTimerEnabled,
     setPointTimerEnabled,
     setStatTrackingEnabled,
-    resetTimeouts,
-    team1BgColor,
-    team2BgColor,
+    startGame,
   } = useGameStore();
 
   const {
@@ -69,6 +58,16 @@ export default function PreGameConfirm() {
     setHardCapMins,
     softCapMins,
     setSoftCapMins,
+    gameTo,
+    setGameTo,
+    timeoutsPerHalf,
+    setTimeoutsPerHalf,
+    autoHalftimeEnabled,
+    setAutoHalftimeEnabled,
+    floaterEnabled,
+    setFloaterEnabled,
+    team1Color: t1Color,
+    team2Color: t2Color,
   } = useSettingsStore();
   const { hasSeenStatsTutorial, queueStatsTutorialForNextGameStart } = useTutorialStore();
   const statsTutorialPending = useStatsTutorialPending();
@@ -77,6 +76,7 @@ export default function PreGameConfirm() {
 
   const team1Name = currentTeam.name;
   const {
+    otherSideTeamName,
     opponentNameDraft,
     setOpponentNameDraft,
     commitOpponentName,
@@ -94,14 +94,11 @@ export default function PreGameConfirm() {
   const [ratioOrbitRunKey, setRatioOrbitRunKey] = useState(0);
 
   const softCapTime = hardCapMins - softCapMins;
-  const timeoutCount = team1Timeouts.length;
 
   const possessionReady = !needPossession || selectedTeam !== '';
   const ratioReady = !needRatio || selectedRatio !== '';
   const canStart = possessionReady && ratioReady;
 
-  const t1Color = team1BgColor || palette.primary;
-  const t2Color = team2BgColor || palette.accent;
   const t1TextColor = getContrastingTextColor(t1Color);
   const t2TextColor = getContrastingTextColor(t2Color);
   const fmpTextColor = getContrastingTextColor(palette.fmpColor);
@@ -116,6 +113,7 @@ export default function PreGameConfirm() {
 
   const handleStart = () => {
     commitOpponentName();
+    startGame();
     if (needPossession && selectedTeam) {
       setPossession(selectedTeam);
     }
@@ -239,7 +237,6 @@ export default function PreGameConfirm() {
                     quickOptions: [90, 105, 110, 120],
                     onChange: (val) => {
                       setHardCapMins(val);
-                      setTimerTimeLeft(val * 60);
                       if (softCapMins > val) {
                         setSoftCapMins(val);
                       }
@@ -289,10 +286,10 @@ export default function PreGameConfirm() {
               </EditableSettingCard>
 
               <TimeoutSettingCard
-                timeoutCount={timeoutCount}
+                timeoutCount={timeoutsPerHalf}
                 autoHalftimeEnabled={autoHalftimeEnabled}
                 floaterEnabled={floaterEnabled}
-                onResetTimeouts={resetTimeouts}
+                onSetTimeoutCount={setTimeoutsPerHalf}
                 onSetFloaterEnabled={setFloaterEnabled}
               />
 
@@ -393,7 +390,7 @@ export default function PreGameConfirm() {
                   },
                   {
                     value: 'team2',
-                    label: team2Name,
+                    label: otherSideTeamName,
                     actionIcon: 'pencil-outline',
                     actionTestID: 'basic-opponent-name-edit',
                     onAction: startEditingOpponentName,

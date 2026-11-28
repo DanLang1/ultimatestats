@@ -47,8 +47,6 @@ export default function LiveScoreboard() {
   const currentTeam = useCurrentTeam();
   const {
     team2Name,
-    team1BgColor,
-    team2BgColor,
     team1Score,
     team2Score,
     team1Timeouts,
@@ -74,12 +72,12 @@ export default function LiveScoreboard() {
     clearEventToastSignal,
   } = useGameStore();
   const finishGame = useFinishBasicGame();
-  const { lineCallingEnabled } = useSettingsStore();
+  const { lineCallingEnabled, team1Color, team2Color } = useSettingsStore();
   const [pendingTurnoverType, setPendingTurnoverType] = useState<TurnoverType | null>(null);
 
   const { handleContinue: endTimeout } = useTimeoutTimer();
   const floatingEditIconColor = getContrastingTextColor(
-    layout.isLandscape ? team2BgColor : team1BgColor,
+    layout.isLandscape ? team2Color : team1Color,
   );
   const roster = currentTeam.roster;
   const { toast, toastInstanceId } = useEventToast({
@@ -213,8 +211,8 @@ export default function LiveScoreboard() {
         score={team1Score}
         scoreTestID="scoreboard-team1-score"
         onIncrement={() => handleIncrement(true)}
-        textColor={getContrastingTextColor(team1BgColor)}
-        backgroundColor={team1BgColor}
+        textColor={getContrastingTextColor(team1Color)}
+        backgroundColor={team1Color}
         isCompactVertical={isCompactVertical}
         contentInsetTop={topSafeInset}
         contentInsetBottom={centerBarClearance}
@@ -240,7 +238,7 @@ export default function LiveScoreboard() {
         <MaterialCommunityIcons
           name="home"
           size={homeIconSize}
-          color={getContrastingTextColor(team1BgColor)}
+          color={getContrastingTextColor(team1Color)}
         />
       </Pressable>
 
@@ -265,8 +263,8 @@ export default function LiveScoreboard() {
         score={team2Score}
         scoreTestID="scoreboard-team2-score"
         onIncrement={() => handleIncrement(false)}
-        textColor={getContrastingTextColor(team2BgColor)}
-        backgroundColor={team2BgColor}
+        textColor={getContrastingTextColor(team2Color)}
+        backgroundColor={team2Color}
         isCompactVertical={isCompactVertical}
         contentInsetTop={centerBarClearance}
         contentInsetBottom={bottomSafeInset}

@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 
 import { PointLineRecord, SavedGame } from '@/lib/storage';
 
+/** 'fresh' means the game is still on the pre-game screen. */
 type GameSessionStatus = 'fresh' | 'inProgress' | 'finished';
 export type TurnoverType = 'block' | 'throwaway' | 'drop' | 'fiftyfifty';
 export type TeamSide = 'team1' | 'team2';
@@ -86,8 +87,6 @@ export interface SavedGamesSlice {
 export interface LiveGameSlice {
   team2Name: string; // Opposing team name (no roster/ID needed)
 
-  team1BgColor: string;
-  team2BgColor: string;
   team1Score: number;
   team2Score: number;
   team1Timeouts: boolean[];
@@ -139,17 +138,16 @@ export interface LiveGameSlice {
   pointLines: PointLineRecord[];
   lineConfirmedForNextPoint: boolean;
 
-  setTeam2Name: (name: string) => void;
-  setTeamBgColor: (team: TeamSide, color: string) => void;
-  setFloaterEnabled: (enabled: boolean) => void;
-  setAutoHalftimeEnabled: (enabled: boolean) => void;
-  setGameTo: (score: number) => void;
+  /**
+   * Leaves pre-game: copies the pre-game settings (opponent name and format) into the live game
+   * and marks it in progress, so a relaunch returns to the scoreboard instead of pre-game.
+   */
+  startGame: () => void;
   setGameToInGame: (score: number) => void;
   incrementScore: (isTeam1: boolean) => { didIncrement: boolean; isHalftime: boolean };
   triggerHalftimeEarly: () => boolean;
   undoLastAction: () => boolean; // Returns true if something was undone
   toggleTimeout: (isTeam1: boolean, index: number) => void;
-  resetTimeouts: (count: number) => void;
   resetGame: () => void;
   setSoftCapPending: (pending: boolean) => void;
   /** Starts the hard-cap countdown from `timerTimeLeft`; no-op while already running. */
@@ -160,7 +158,6 @@ export interface LiveGameSlice {
   expireGameClock: () => void;
   /** Stops the countdown and sets a fresh duration in seconds. */
   resetGameClock: (seconds: number) => void;
-  setTimerTimeLeft: (seconds: number) => void;
   setCurrentGameStatus: (status: GameSessionStatus) => void;
   setPostGameFlowPending: (pending: boolean) => void;
   setHalftimeEndTime: (time: number | null) => void;

@@ -4,6 +4,7 @@ import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/c
 import { getLatestLineForPoint } from '@/lib/lineUtils';
 import { OTHER_TEAM_ID } from '@/lib/playerUtils';
 import { Player, PointLineRecord } from '@/lib/storage';
+import type { BasicGameFormatSettings } from '@/store/settingsStore';
 
 import { EventUpdates, GameEvent, GameState, GoalEvent } from '../gameStore.types';
 
@@ -21,17 +22,28 @@ export function canReplacePointLine(
   return playerIds.every((playerId) => rosterPlayerIds.has(playerId));
 }
 
-export function resetGameState(state: GameState, hardCapMinutes: number) {
+/** Copies the pre-game settings into the live game. */
+export function applyGameFormatState(state: GameState, format: BasicGameFormatSettings) {
+  state.team2Name = format.otherSideTeamName;
+  state.gameTo = format.gameTo;
+  state.baseGameTo = format.gameTo;
+  state.team1Timeouts = Array.from({ length: format.timeoutsPerHalf }, () => true);
+  state.team2Timeouts = Array.from({ length: format.timeoutsPerHalf }, () => true);
+  state.autoHalftimeEnabled = format.autoHalftimeEnabled;
+  state.floaterEnabled = format.floaterEnabled;
+  state.timerEndTime = null;
+  state.timerTimeLeft = format.hardCapMins * 60;
+}
+
+export function resetGameState(state: GameState, format: BasicGameFormatSettings) {
+  applyGameFormatState(state, format);
   state.team1Score = 0;
   state.team2Score = 0;
-  state.team1Timeouts.fill(true);
-  state.team2Timeouts.fill(true);
   state.team1Floater = true;
   state.team2Floater = true;
   state.gameHalf = 1;
   state.isSoftCap = false;
   state.softCapPending = false;
-  state.gameTo = state.baseGameTo;
   state.events = [];
   state.pendingStatEntry = null;
   state.possession = null;
@@ -39,8 +51,6 @@ export function resetGameState(state: GameState, hardCapMinutes: number) {
   state.pendingTurnoverEntry = null;
   state.eventToastSignal = null;
   state.currentPoint = 1;
-  state.timerEndTime = null;
-  state.timerTimeLeft = hardCapMinutes * 60;
   state.currentGameStatus = 'fresh';
   state.isPostGameFlowPending = false;
   state.currentGameId = null;

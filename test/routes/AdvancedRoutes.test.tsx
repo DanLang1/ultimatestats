@@ -16,7 +16,6 @@ import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import { DEFAULT_LINE_SIZE } from '@/lib/constants';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/basic/gameStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { createAdvancedGameScenario, participantRef } from '@/test/fixtures/advancedGameBuilder';
 import {
@@ -836,7 +835,7 @@ describe('advanced tracking routes', () => {
   it('offers roster editing when advanced tracking has too few active players', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(testTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     expect(
@@ -851,7 +850,7 @@ describe('advanced tracking routes', () => {
   it('creates an advanced game through the real pre-game route', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(advancedTestTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     expect(screen.getByText('ADVANCED TRACKER')).toBeVisible();
@@ -867,7 +866,7 @@ describe('advanced tracking routes', () => {
   it('creates the game with the line size chosen in the Players setting', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(testTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByText('7v7'));
@@ -887,7 +886,7 @@ describe('advanced tracking routes', () => {
   it('uses the focused opponent draft when creating a game', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(advancedTestTeam);
-    useGameStore.setState({ team2Name: '' });
+    useSettingsStore.setState({ otherSideTeamName: '' });
     await renderScreen(<AdvancedPreGameConfirm />);
     await user.press(screen.getByTestId('advanced-tracker-receiving-focus'));
     await user.press(screen.getByTestId('advanced-tracker-opponent-name-edit'));
@@ -901,7 +900,7 @@ describe('advanced tracking routes', () => {
   it('records an optional flip result and choice through the pre-game route', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(advancedTestTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByTestId('advanced-tracker-receiving-focus'));
@@ -918,7 +917,7 @@ describe('advanced tracking routes', () => {
   it('does not collect a flip result for a scrimmage', async () => {
     setMockSearchParams({ gameType: 'scrimmage' });
     arrangeCurrentTeam(testTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
 
     await renderScreen(<AdvancedPreGameConfirm />);
 
@@ -933,7 +932,7 @@ describe('advanced tracking routes', () => {
   it('keeps the opening receiver consistent with an offense flip choice', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(advancedTestTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByText('Won'));
@@ -948,7 +947,7 @@ describe('advanced tracking routes', () => {
   it('preserves a flip win but clears a choice contradicted by the opening receiver', async () => {
     const user = userEvent.setup();
     arrangeCurrentTeam(advancedTestTeam);
-    useGameStore.setState({ team2Name: 'Rivals' });
+    useSettingsStore.setState({ otherSideTeamName: 'Rivals' });
     await renderScreen(<AdvancedPreGameConfirm />);
 
     await user.press(screen.getByText('Won'));

@@ -16,8 +16,8 @@ store/
   teamStore.ts        # Shared team list, current team, roster CRUD
 ```
 
-Advanced tracking no longer reads team data from `store/basic`; its pre-game screen still reads
-shared game config (opponent name, game-to, timeouts) from there.
+Advanced tracking no longer reads team data from `store/basic`; its pre-game screen reads game
+format defaults and the opponent name from `store/settingsStore.ts`.
 
 ## Basic Store State
 
@@ -42,8 +42,6 @@ Keep these in `store/basic`:
 
 ## Open Questions
 
-- Should `team2Name` remain basic game config, or become part of a broader
-  opponent/game setup model?
 - Should `savedTeams` remain AsyncStorage/Zustand-backed, or move toward the same
   future SQLite direction as saved games?
 - Mid-game roster changes now flow one way into a live advanced game:

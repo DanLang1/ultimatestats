@@ -1,28 +1,29 @@
 import { useState } from 'react';
 
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export function useOpponentNameDraft() {
-  const team2Name = useGameStore((state) => state.team2Name);
-  const [opponentNameDraft, setOpponentNameDraft] = useState(team2Name);
+  const otherSideTeamName = useSettingsStore((state) => state.otherSideTeamName);
+  const [opponentNameDraft, setOpponentNameDraft] = useState(otherSideTeamName);
 
   const [isEditingOpponentName, setIsEditingOpponentName] = useState(false);
 
   const startEditingOpponentName = () => {
-    setOpponentNameDraft(team2Name);
+    setOpponentNameDraft(otherSideTeamName);
     setIsEditingOpponentName(true);
   };
 
   const commitOpponentName = () => {
-    const store = useGameStore.getState();
-    const name = opponentNameDraft.trim() || store.team2Name;
-    store.setTeam2Name(name);
+    const settings = useSettingsStore.getState();
+    const name = opponentNameDraft.trim() || settings.otherSideTeamName;
+    settings.setOtherSideTeamName(name);
     setOpponentNameDraft(name);
     setIsEditingOpponentName(false);
     return name;
   };
 
   return {
+    otherSideTeamName,
     opponentNameDraft,
     setOpponentNameDraft,
     commitOpponentName,

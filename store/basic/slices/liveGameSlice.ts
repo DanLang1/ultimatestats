@@ -3,11 +3,17 @@ import { current } from 'immer';
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { canTriggerHalftimeEarly } from '@/lib/basic/halftimeUtils';
-import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
+import {
+  DEFAULT_GAME_TO,
+  DEFAULT_HALFTIME_BREAK_SECONDS,
+  DEFAULT_HARD_CAP_MINS,
+  DEFAULT_OTHER_SIDE_TEAM_NAME,
+  DEFAULT_TIMEOUT_SECONDS,
+  DEFAULT_TIMEOUTS_PER_HALF,
+} from '@/lib/constants';
 import { replacePointLineRecords } from '@/lib/lineUtils';
 import { UNKNOWN_PLAYER_ID } from '@/lib/playerUtils';
 import { SavedGame } from '@/lib/storage';
-import { palette } from '@/theme/theme';
 
 import { useSettingsStore } from '../../settingsStore';
 import { getCurrentTeam } from '../../teamStore';
@@ -25,6 +31,7 @@ import {
 import { useSavedBasicGamesStore } from '../savedGamesStore';
 import {
   applyEventUpdates,
+  applyGameFormatState,
   canReplacePointLine,
   getPointElapsedMs,
   rederiveHalftimeAndTimeouts,
@@ -47,25 +54,23 @@ function applyHalftimeTransition(state: GameState) {
 }
 
 export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) => ({
-  team2Name: 'Team 2',
+  team2Name: DEFAULT_OTHER_SIDE_TEAM_NAME,
 
-  team1BgColor: palette.surface,
-  team2BgColor: palette.primary,
   team1Score: 0,
   team2Score: 0,
-  team1Timeouts: [true, true],
-  team2Timeouts: [true, true],
+  team1Timeouts: Array.from({ length: DEFAULT_TIMEOUTS_PER_HALF }, () => true),
+  team2Timeouts: Array.from({ length: DEFAULT_TIMEOUTS_PER_HALF }, () => true),
   team1Floater: true,
   team2Floater: true,
   floaterEnabled: true,
   autoHalftimeEnabled: true,
   gameHalf: 1,
-  gameTo: 15,
-  baseGameTo: 15,
+  gameTo: DEFAULT_GAME_TO,
+  baseGameTo: DEFAULT_GAME_TO,
   isSoftCap: false,
   softCapPending: false,
   timerEndTime: null,
-  timerTimeLeft: 90 * 60,
+  timerTimeLeft: DEFAULT_HARD_CAP_MINS * 60,
   currentGameStatus: 'fresh',
   isPostGameFlowPending: false,
   currentGameId: null,
@@ -97,32 +102,13 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
   pointLines: [],
   lineConfirmedForNextPoint: false,
 
-  setTeam2Name: (name: string) =>
+  startGame: () => {
+    const format = useSettingsStore.getState();
     set((state: GameState) => {
-      state.team2Name = name;
-    }),
-
-  setTeamBgColor: (team: TeamSide, color: string) =>
-    set((state: GameState) => {
-      if (team === 'team1') state.team1BgColor = color;
-      else state.team2BgColor = color;
-    }),
-
-  setFloaterEnabled: (enabled: boolean) =>
-    set((state: GameState) => {
-      state.floaterEnabled = enabled;
-    }),
-
-  setAutoHalftimeEnabled: (enabled: boolean) =>
-    set((state: GameState) => {
-      state.autoHalftimeEnabled = enabled;
-    }),
-
-  setGameTo: (gameTo: number) =>
-    set((state: GameState) => {
-      state.gameTo = gameTo;
-      state.baseGameTo = gameTo;
-    }),
+      applyGameFormatState(state, format);
+      state.currentGameStatus = 'inProgress';
+    });
+  },
 
   setGameToInGame: (newGameTo: number) =>
     set((state: GameState) => {
@@ -363,16 +349,10 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       state.pendingTimeoutModal = true;
     }),
 
-  resetTimeouts: (count: number) =>
-    set((state: GameState) => {
-      state.team1Timeouts = Array.from({ length: count }, () => true);
-      state.team2Timeouts = Array.from({ length: count }, () => true);
-    }),
-
   resetGame: () => {
-    const hardCapMinutes = useSettingsStore.getState().hardCapMins;
+    const format = useSettingsStore.getState();
     set((state: GameState) => {
-      resetGameState(state, hardCapMinutes);
+      resetGameState(state, format);
     });
     useSettingsStore.getState().setFirstPointRatio(null);
   },
@@ -403,11 +383,6 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
     set((state: GameState) => {
       state.timerTimeLeft = seconds;
       state.timerEndTime = null;
-    }),
-
-  setTimerTimeLeft: (seconds: number) =>
-    set((state: GameState) => {
-      state.timerTimeLeft = seconds;
     }),
 
   setCurrentGameStatus: (status) =>
@@ -512,9 +487,6 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       state.possession = team;
       if (state.startingPossession === null) {
         state.startingPossession = team;
-      }
-      if (state.currentGameStatus === 'fresh') {
-        state.currentGameStatus = 'inProgress';
       }
     }),
 

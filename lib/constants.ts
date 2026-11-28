@@ -18,6 +18,10 @@ export const MIN_HALFTIME_BREAK_SECONDS = 0;
 export const MAX_HALFTIME_BREAK_SECONDS = 15 * 60;
 
 export const DEFAULT_TIMEOUT_SECONDS = 70;
+export const DEFAULT_GAME_TO = 15;
+export const DEFAULT_TIMEOUTS_PER_HALF = 2;
+export const DEFAULT_HARD_CAP_MINS = 90;
+export const DEFAULT_OTHER_SIDE_TEAM_NAME = 'Team 2';
 
 export const MIN_TIMEOUT_SECONDS = 0;
 

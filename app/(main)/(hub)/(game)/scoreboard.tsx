@@ -5,7 +5,6 @@ import { useStatsTutorialPending } from '@/hooks/basic/useStatsTutorialPending';
 import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { useGameStore } from '@/store/basic/gameStore';
-import { useSettingsStore } from '@/store/settingsStore';
 
 export default function BasicScoreboard() {
   const {
@@ -17,15 +16,10 @@ export default function BasicScoreboard() {
     timerTimeLeft,
     isHalftimeBreak,
     pendingStatEntry,
-    possession,
-    statTrackingEnabled,
   } = useGameStore();
-  const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
   const statsTutorialPending = useStatsTutorialPending();
   const pathname = usePathname();
 
-  const needPossession = statTrackingEnabled && possession === null;
-  const needRatio = genderRatioEnabled && firstPointRatio === null;
   const isGameOver = checkGameOver({
     team1Score,
     team2Score,
@@ -41,6 +35,11 @@ export default function BasicScoreboard() {
     return <Redirect href="/dashboard" />;
   }
 
+  // The app can be closed on pre-game; Start is what copies its settings into the live game.
+  if (currentGameStatus === 'fresh' && pathname === '/scoreboard') {
+    return <Redirect href="/pre-game-confirm" />;
+  }
+
   if (isHalftimeBreak && !pendingStatEntry && !isGameOver) {
     return <Redirect href="/halftime-modal" />;
   }
@@ -49,10 +48,6 @@ export default function BasicScoreboard() {
     return (
       <Redirect href={{ pathname: '/tutorial-stat-intro', params: { origin: 'onboarding' } }} />
     );
-  }
-
-  if (!isGameOver && (needPossession || needRatio)) {
-    return <Redirect href="/pre-game-confirm" />;
   }
 
   return <LiveScoreboard />;

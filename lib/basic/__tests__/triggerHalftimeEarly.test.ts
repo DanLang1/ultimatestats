@@ -20,8 +20,7 @@ describe('triggerHalftimeEarly', () => {
 
     const state = useGameStore.getState();
     state.resetGame();
-    state.setGameTo(15);
-    state.setAutoHalftimeEnabled(true);
+    useGameStore.setState({ gameTo: 15, baseGameTo: 15, autoHalftimeEnabled: true });
     state.setStatTrackingEnabled(false);
   });
 
@@ -50,7 +49,7 @@ describe('triggerHalftimeEarly', () => {
   it('restores pre-halftime timeout state when canceling a halftime goal entry', () => {
     const state = useGameStore.getState();
 
-    state.setGameTo(2);
+    useGameStore.setState({ gameTo: 2, baseGameTo: 2 });
     state.setStatTrackingEnabled(true);
     state.setPossession('team1');
     state.toggleTimeout(true, 0);
@@ -71,7 +70,7 @@ describe('triggerHalftimeEarly', () => {
     const state = useGameStore.getState();
 
     state.incrementScore(true);
-    state.setAutoHalftimeEnabled(false);
+    useGameStore.setState({ autoHalftimeEnabled: false });
 
     const didTrigger = state.triggerHalftimeEarly();
     const updatedState = useGameStore.getState();

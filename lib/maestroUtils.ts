@@ -1,6 +1,12 @@
 import { getDefaultHalftimeTimerState } from '@/lib/advancedTracking/halftimeTimerUtils';
 import type { AdvancedGameType, Participant, PlayerRef } from '@/lib/advancedTracking/types';
-import { DEFAULT_LINE_SIZE } from '@/lib/constants';
+import {
+  DEFAULT_GAME_TO,
+  DEFAULT_HARD_CAP_MINS,
+  DEFAULT_LINE_SIZE,
+  DEFAULT_OTHER_SIDE_TEAM_NAME,
+  DEFAULT_TIMEOUTS_PER_HALF,
+} from '@/lib/constants';
 import {
   getMaestroSeedPlayerId,
   MAESTRO_CREATED_TEAM_PREFIX,
@@ -141,8 +147,15 @@ function resetMaestroSetupState(team: SavedTeam) {
     numPlayers: DEFAULT_LINE_SIZE,
     rosterViewMode: 'chips',
     orientationMode: 'portrait',
-    hardCapMins: 90,
+    hardCapMins: DEFAULT_HARD_CAP_MINS,
     softCapMins: 20,
+    otherSideTeamName: DEFAULT_OTHER_SIDE_TEAM_NAME,
+    gameTo: DEFAULT_GAME_TO,
+    timeoutsPerHalf: DEFAULT_TIMEOUTS_PER_HALF,
+    autoHalftimeEnabled: true,
+    floaterEnabled: true,
+    team1Color: palette.surface,
+    team2Color: palette.primary,
     advancedSoftCapAtMins: 70,
     advancedHardCapEnabled: true,
     advancedSoftCapEnabled: true,
@@ -152,7 +165,6 @@ function resetMaestroSetupState(team: SavedTeam) {
 
   setSeedTeam(team);
   useGameStore.setState((state) => {
-    state.team2Name = 'Team 2';
     state.autoHalftimeEnabled = true;
     state.floaterEnabled = true;
     state.gameTo = 15;
@@ -630,7 +642,7 @@ export async function seedAdvancedTrackerTestGame(
       },
       {
         id: OPP_SIDE_ID,
-        label: isScrimmage ? 'Dark' : gameStore.team2Name,
+        label: isScrimmage ? 'Dark' : useSettingsStore.getState().otherSideTeamName,
         sourceTeamId: isScrimmage ? team.id : undefined,
         trackingMode: isScrimmage ? 'full-roster' : 'anonymous',
       },

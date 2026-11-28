@@ -59,6 +59,11 @@ export default function DashboardScreen() {
   const activeSession = useActiveGameSession();
   const { hasNewVersion } = useVersionCheck();
   const { hasUpdate: hasRemoteUpdate, dismiss: dismissRemoteUpdate } = useRemoteVersionCheck();
+  // An update can change how a saved in-progress game is read, so suggest finishing it first.
+  const updateBannerSubtitle =
+    activeSession.kind === 'none'
+      ? 'Tap to update'
+      : 'Finish your current game, then tap to update';
   const statTrackingEnabled = useGameStore((state) => state.statTrackingEnabled);
   const team1Name = useTeamStore((state) => selectCurrentTeam(state).name);
   const rosterCount = useTeamStore((state) => selectCurrentTeam(state).roster.length);
@@ -192,7 +197,7 @@ export default function DashboardScreen() {
                 New Version Available
               </ThemedText>
               <ThemedText style={[styles.updateBannerSubtitle, { color: palette.textMuted }]}>
-                Tap to update
+                {updateBannerSubtitle}
               </ThemedText>
             </View>
             <Pressable onPress={dismissRemoteUpdate} hitSlop={8}>

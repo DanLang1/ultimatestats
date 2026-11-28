@@ -53,8 +53,6 @@ export const useGameStore = create<GameState>()(
 
           return {
             team2Name: state.team2Name,
-            team1BgColor: state.team1BgColor,
-            team2BgColor: state.team2BgColor,
             team1Score: state.team1Score,
             team2Score: state.team2Score,
             team1Timeouts: state.team1Timeouts,

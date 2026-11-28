@@ -82,7 +82,6 @@ export default function GameFormatScreen() {
     ? buildAdvancedFormatRows({
         game: advancedGame,
         team1Name,
-        team2Name,
         advancedSoftCapAtMins,
         hardCapMins,
         genderRatioEnabled,
@@ -233,7 +232,6 @@ export default function GameFormatScreen() {
 interface AdvancedFormatRowsInput {
   game: AdvancedTrackedGame;
   team1Name: string;
-  team2Name: string;
   advancedSoftCapAtMins: number;
   hardCapMins: number;
   genderRatioEnabled: boolean;
@@ -243,7 +241,6 @@ interface AdvancedFormatRowsInput {
 function buildAdvancedFormatRows({
   game,
   team1Name,
-  team2Name,
   advancedSoftCapAtMins,
   hardCapMins,
   genderRatioEnabled,
@@ -253,6 +250,7 @@ function buildAdvancedFormatRows({
   const lineSize = getLineSize(game);
   const focusSide = game.sides.find((side) => side.id === game.focusSideId);
   const opponentSide = game.sides.find((side) => side.id !== game.focusSideId);
+  if (!opponentSide) throw new Error(`Advanced game ${game.id} has no opponent side`);
   const initialReceivingSide = game.sides.find((side) => side.id === game.initialReceivingSideId);
   const capThresholds = getCapThresholdMinutes(game, {
     softCapAtMinutes: advancedSoftCapAtMins,
@@ -261,7 +259,7 @@ function buildAdvancedFormatRows({
 
   return [
     { label: 'My Team', value: focusSide?.label ?? team1Name },
-    { label: 'Opponent', value: opponentSide?.label ?? team2Name },
+    { label: 'Opponent', value: opponentSide.label },
     { label: 'Game To', value: formatValue(format?.gameTo) },
     { label: 'Players', value: `${lineSize}v${lineSize}` },
     {

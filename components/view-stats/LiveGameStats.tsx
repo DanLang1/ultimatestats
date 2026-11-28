@@ -13,6 +13,7 @@ import { areBothSidesFullyTracked } from '@/lib/advancedTracking/trackingModeUti
 import { getLiveInProgressGame } from '@/lib/advancedTracking/trackingUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useCurrentTeam } from '@/store/teamStore';
 
 /** Live stats for the current game: advanced analytics while one is in progress, else basic. */
@@ -29,9 +30,9 @@ export default function LiveGameStats() {
     gameTo,
     autoHalftimeEnabled,
     pointLines,
-    team1BgColor,
-    team2BgColor,
   } = useGameStore();
+  const team1Color = useSettingsStore((state) => state.team1Color);
+  const team2Color = useSettingsStore((state) => state.team2Color);
   const [selectedSideId, setSelectedSideId] = useState<string | null>(null);
 
   if (liveAdvancedGame == null) {
@@ -49,8 +50,8 @@ export default function LiveGameStats() {
         gameTo={gameTo}
         autoHalftimeEnabled={autoHalftimeEnabled}
         pointLines={pointLines}
-        team1Color={team1BgColor}
-        team2Color={team2BgColor}
+        team1Color={team1Color}
+        team2Color={team2Color}
       />
     );
   }

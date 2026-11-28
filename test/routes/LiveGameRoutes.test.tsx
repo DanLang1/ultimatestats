@@ -34,6 +34,14 @@ describe('live basic-game routes', () => {
     expect(useGameStore.getState().team1Score).toBe(1);
   });
 
+  it('returns a game the app closed on pre-game to pre-game instead of the scoreboard', async () => {
+    arrangeBasicGame({ status: 'fresh' });
+    setMockPathname('/scoreboard');
+    await renderScreen(<BasicScoreboard />);
+
+    expect(router.replace).toHaveBeenCalledWith('/pre-game-confirm', expect.anything());
+  });
+
   it('shows match status and ends the game from the game actions', async () => {
     const user = userEvent.setup();
     arrangeBasicGame();
