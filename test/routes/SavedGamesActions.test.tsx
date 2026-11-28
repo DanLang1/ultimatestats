@@ -4,6 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 
 import StatsScreen from '@/app/(main)/(hub)/(analytics)/stats';
+import { loadAllBasicGames, upsertBasicGames } from '@/lib/basic/savedGameStorage';
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -31,13 +32,13 @@ afterEach(() => {
 async function arrangeGames(kind: 'basic' | 'advanced') {
   if (kind === 'basic') {
     arrangeOtherTeams([testTeam]);
-    useGameStore.setState({
-      savedGames: ['first', 'second'].map((id) => ({
-        ...createSavedBasicGame(),
-        id,
-        team2Name: id === 'first' ? 'First Rival' : 'Second Rival',
-      })),
-    });
+    const savedGames = ['first', 'second'].map((id) => ({
+      ...createSavedBasicGame(),
+      id,
+      team2Name: id === 'first' ? 'First Rival' : 'Second Rival',
+    }));
+    await upsertBasicGames(savedGames);
+    useGameStore.setState({ savedGames });
   } else {
     for (const id of ['first', 'second']) {
       await useSavedAdvancedGamesStore.getState().saveGame(
@@ -132,6 +133,21 @@ it.each([
     expect(router.push).toHaveBeenCalledWith({ pathname, params: { gameId: 'first' } }),
   );
   expect(screen.getByText(/^1 selected/)).toBeVisible();
+});
+
+it('shows a loading state instead of the empty state until the saved basic games have loaded', async () => {
+  useGameStore.setState({ savedGamesLoadStatus: 'pending' });
+  await renderScreen(<StatsScreen />);
+
+  expect(screen.getByTestId('saved-games-loading')).toBeVisible();
+  expect(screen.queryByText('No saved games yet')).not.toBeOnTheScreen();
+
+  await act(() =>
+    useGameStore.setState({ savedGames: [createSavedBasicGame()], savedGamesLoadStatus: 'loaded' }),
+  );
+
+  expect(screen.queryByTestId('saved-games-loading')).not.toBeOnTheScreen();
+  expect(screen.getByText('Rivals')).toBeVisible();
 });
 
 it('leaves the Stats tab for the Dashboard on Back', async () => {
@@ -238,11 +254,7 @@ it.each(['basic', 'advanced'] as const)(
     expect(screen.getByText('Second Rival')).toBeVisible();
     expect(useTournamentStore.getState().gameLinks.map((link) => link.gameId)).toEqual(['second']);
     if (kind === 'basic') {
-      expect(
-        JSON.parse(
-          (await AsyncStorage.getItem('ultimatestats-game-storage'))!,
-        ).state.savedGames.map((game: { id: string }) => game.id),
-      ).toEqual(['second']);
+      expect((await loadAllBasicGames()).map((game) => game.id)).toEqual(['second']);
     } else {
       expect(await useSavedAdvancedGamesStore.getState().loadGame('first')).toBeNull();
       expect(await useSavedAdvancedGamesStore.getState().loadGame('second')).toMatchObject({

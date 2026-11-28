@@ -22,11 +22,19 @@ import { canReplacePointLine, putSavedGame, resetGameState } from './gameStoreHe
 // by basicGameStorePersistence.test.ts.
 export const createSavedGamesSlice: GameSliceCreator<SavedGamesSlice> = (set, get) => ({
   savedGames: [],
+  savedGamesLoadStatus: 'pending',
 
   loadSavedGames: async () => {
-    await importAsyncStorageGamesOnce(get().savedGames);
-    const savedGames = await loadAllBasicGames();
-    await set({ savedGames });
+    let savedGames: SavedGame[];
+    try {
+      await importAsyncStorageGamesOnce(get().savedGames);
+      savedGames = await loadAllBasicGames();
+    } catch (error) {
+      set({ savedGamesLoadStatus: 'failed' });
+      throw error;
+    }
+    // This write is the one that drops the games from the AsyncStorage entry; see partialize.
+    await set({ savedGames, savedGamesLoadStatus: 'loaded' });
   },
 
   replaceSavedGamePointLine: async (

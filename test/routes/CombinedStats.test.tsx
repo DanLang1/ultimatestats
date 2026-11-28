@@ -88,6 +88,14 @@ it('notes the scrimmages left out of an advanced combine', async () => {
   expect(await screen.findByText('2 games · 1 scrimmage excluded')).toBeVisible();
 });
 
+it('shows basic games as loading, not missing, until the saved basic games have loaded', async () => {
+  setMockSearchParams({ kind: 'basic', gameIds: 'first,second', excludedScrimmageCount: '0' });
+  useGameStore.setState({ savedGamesLoadStatus: 'pending' });
+  await renderScreen(<CombinedStatsScreen />);
+
+  expect(screen.getByText('Loading combined stats')).toBeVisible();
+});
+
 it('combines basic games into one box score', async () => {
   await arrangeGames('basic');
   await renderScreen(<CombinedStatsScreen />);

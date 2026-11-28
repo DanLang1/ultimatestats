@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
@@ -52,7 +52,10 @@ export default function StatsScreen() {
   const deleteSavedGames = useGameStore((state) => state.deleteSavedGames);
   const teams = useTeamStore((state) => state.teams);
   const savedGames = useSavedBasicGames();
-  const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
+  const basicGamesLoadStatus = useGameStore((state) => state.savedGamesLoadStatus);
+  const { data: completedAdvancedSavedGameSummaries, isLoading: advancedSummariesLoading } =
+    useCompletedAdvancedGameSummaries();
+  const isLoadingSavedGames = basicGamesLoadStatus === 'pending' || advancedSummariesLoading;
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);
@@ -307,35 +310,41 @@ export default function StatsScreen() {
         onBack={() => router.navigate('/dashboard')}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {hasLiveStats ? <LiveGameRow /> : null}
-        {currentTeam === null ? (
-          <SavedGamesEmptyState />
-        ) : (
-          <SavedGamesList
-            // Remounting resets the tournament and game type filters when the team changes.
-            key={currentTeam.id}
-            games={teamGames}
-            teamName={currentTeam.name}
-            sortKey={sortKey}
-            onChangeSortKey={setSortKey}
-            onSelectGame={handleSelectGame}
-            selectedGameIds={selectedSavedGameIds}
-            onToggleGameSelection={handleToggleSavedGameSelection}
-            onEnterSelectionWithGame={handleEnterSelectionWithGame}
-            onClearSelection={() => setSelectedSavedGameIds(new Set())}
-            onSelectGames={(gameIds) => setSelectedSavedGameIds(new Set(gameIds))}
-            selectionMode={selectionMode}
-            searchQuery={searchQuery}
-            onChangeSearchQuery={setSearchQuery}
-            otherTeams={otherTeams}
-            onSelectTeam={handleSelectTeam}
-            onShowAllTeams={() => setShowTeamSheet(true)}
-            otherTeamSearchMatches={otherTeamSearchMatches}
-            onSearchTeam={handleSearchTeam}
-          />
-        )}
-      </ScrollView>
+      {isLoadingSavedGames ? (
+        <View testID="saved-games-loading" style={styles.loading}>
+          <ActivityIndicator color={palette.accent} />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {hasLiveStats ? <LiveGameRow /> : null}
+          {currentTeam === null ? (
+            <SavedGamesEmptyState />
+          ) : (
+            <SavedGamesList
+              // Remounting resets the tournament and game type filters when the team changes.
+              key={currentTeam.id}
+              games={teamGames}
+              teamName={currentTeam.name}
+              sortKey={sortKey}
+              onChangeSortKey={setSortKey}
+              onSelectGame={handleSelectGame}
+              selectedGameIds={selectedSavedGameIds}
+              onToggleGameSelection={handleToggleSavedGameSelection}
+              onEnterSelectionWithGame={handleEnterSelectionWithGame}
+              onClearSelection={() => setSelectedSavedGameIds(new Set())}
+              onSelectGames={(gameIds) => setSelectedSavedGameIds(new Set(gameIds))}
+              selectionMode={selectionMode}
+              searchQuery={searchQuery}
+              onChangeSearchQuery={setSearchQuery}
+              otherTeams={otherTeams}
+              onSelectTeam={handleSelectTeam}
+              onShowAllTeams={() => setShowTeamSheet(true)}
+              otherTeamSearchMatches={otherTeamSearchMatches}
+              onSearchTeam={handleSearchTeam}
+            />
+          )}
+        </ScrollView>
+      )}
 
       <SavedGamesSelectBar
         selectedGames={selectedGames}
@@ -380,6 +389,11 @@ function createStyles(sizeClass: SizeClass) {
   return StyleSheet.create({
     container: {
       flex: 1,
+    },
+    loading: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     scrollContent: {
       padding: 16,

@@ -167,5 +167,19 @@ describe('basic game store persistence', () => {
       // The database outlives this test, so the spy would too.
       failingWrite.mockRestore();
     });
+
+    it('counts the games as loaded when only the AsyncStorage write after the load fails', async () => {
+      const game = createSavedBasicGame();
+      await useGameStore.getState().importGame(game);
+      useGameStore.setState({ savedGamesLoadStatus: 'pending' });
+      mockedAsyncStorage.setItem.mockRejectedValueOnce(new Error('storage unavailable'));
+
+      await expect(useGameStore.getState().loadSavedGames()).rejects.toThrow('storage unavailable');
+
+      expect(useGameStore.getState().savedGamesLoadStatus).toBe('loaded');
+      expect(useGameStore.getState().savedGames.map((savedGame) => savedGame.id)).toEqual([
+        game.id,
+      ]);
+    });
   });
 });

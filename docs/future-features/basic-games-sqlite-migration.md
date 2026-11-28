@@ -1,6 +1,6 @@
 # Basic Games SQLite Migration
 
-> **Status**: In progress. SQLite (`lib/basic/savedGameStorage.ts`) is the source of truth for saved games: the first start moves the AsyncStorage games into it once, and every save, edit, and delete writes there first. `useGameStore` still holds every game in memory and still mirrors them to AsyncStorage.
+> **Status**: In progress. SQLite (`lib/basic/savedGameStorage.ts`) is the source of truth for saved games: the first start moves the AsyncStorage games into it once, and every save, edit, and delete writes there first. `useGameStore` still holds every game in memory, loaded from SQLite at startup; once that load succeeds the games are no longer written to AsyncStorage.
 
 ## Overview
 
@@ -149,8 +149,9 @@ Recommended rollout:
 3. Replace the games stored in SQLite with the migrated games.
 4. Record the import in the `basic_game_async_storage_import` table, in the same
    transaction as the games.
-5. Remove `savedGames` from the persisted Zustand payload. It is not read after
-   the import, so it is not kept as a fallback.
+5. Remove `savedGames` from the persisted Zustand payload once a load from
+   SQLite has succeeded. Until then the entry keeps the games, so a failed move
+   to SQLite cannot lose them; after that there is no AsyncStorage copy.
 
 The import runs once per device: later starts find the import record and change
 nothing.

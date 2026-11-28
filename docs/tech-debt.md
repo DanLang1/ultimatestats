@@ -26,10 +26,12 @@ rewrite it to describe only the remaining problem as it exists now.
   flow stops before `setCurrentGameStatus('finished')` with no message, and the game is not in
   `savedGames` until a later save succeeds. Cleanup: an alert with a retry at the three call sites.
 - A failed AsyncStorage hydration of `useGameStore` skips the SQLite load: zustand never fires
-  `onFinishHydration`, so `loadSavedBasicGamesAtStartup` waits forever and the saved list stays
-  empty for that session even though SQLite holds every game. Revisit when `savedGames` leaves the
-  AsyncStorage entry; the load then no longer needs to wait for hydration once the one-time import
-  has run.
+  `onFinishHydration`, so `loadSavedBasicGamesAtStartup` waits forever and Saved Games shows its
+  loading spinner for that session even though SQLite holds every game. The load only needs
+  hydration for the one-time import; once that has run it could go ahead without it.
+- A failed SQLite load (`savedGamesLoadStatus` `'failed'`) shows no message. On any start after the
+  first, the basic games are then missing for the session: Saved Games lists none, combined stats
+  reports them not found, and the share-import preview does not say a game will be re-imported.
 - References:
   `hooks/basic/useEndGame.ts`
   `components/basic/scoreboard/LiveScoreboard.tsx`
@@ -60,6 +62,16 @@ rewrite it to describe only the remaining problem as it exists now.
   `basic-player-game-selector.yml`, `basic-scoreboard-live-stats.yml`, `basic-timeline-edit.yml`,
   `line-presets.yml`, `pregame-team-switch.yml`, `team-management.yml`, `roster-management.yml`,
   `team-modal-exits.yml`
+
+## P3 - Basic Saved Games Load Status Naming
+
+- `savedGamesLoadStatus` calls the not-yet-loaded state `'pending'`, while the rest of the app calls
+  it loading (`isLoading`, `status: 'loading'`), so callers translate one into the other. Cleanup:
+  rename `'pending'` to `'loading'`.
+- References:
+  `store/basic/gameStore.types.ts`
+  `hooks/useCombinedStats.ts`
+  `app/(main)/(hub)/(analytics)/stats.tsx`
 
 ## P3 - Share Schema Version Stamping
 

@@ -52,8 +52,12 @@ export type EventToastSignal =
   | { id: number; kind: 'undo'; event: GameEvent }
   | { id: number; kind: 'opponentGoal' };
 
+/** Whether `savedGames` holds the games from SQLite yet. */
+type SavedGamesLoadStatus = 'pending' | 'loaded' | 'failed';
+
 export interface SavedGamesSlice {
   savedGames: SavedGame[];
+  savedGamesLoadStatus: SavedGamesLoadStatus;
   /**
    * Fills `savedGames` from SQLite. On the first run on a device it first moves the games
    * AsyncStorage held into SQLite.
@@ -106,8 +110,8 @@ export interface LiveGameSlice {
   isSoftCap: boolean;
   softCapPending: boolean;
   // Timers (game clock, halftime, timeout, point) persist only deadlines and paused remainders and
-  // are written only on start, pause, adjust, and cap transitions, never per tick: this whole store,
-  // saved games included, is one AsyncStorage record. Derive seconds left from the deadline.
+  // are written only on start, pause, adjust, and cap transitions, never per tick: this whole store
+  // is one AsyncStorage record. Derive seconds left from the deadline.
   /** Absolute hard-cap deadline while the clock runs; null while paused, reset, or expired. */
   timerEndTime: number | null;
   timerTimeLeft: number;

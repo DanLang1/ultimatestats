@@ -3,6 +3,7 @@ import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import ShowcaseScreen from '@/app/(main)/(hub)/(home)/showcase';
+import { loadAllBasicGames } from '@/lib/basic/savedGameStorage';
 import { serializeAdvancedGame, serializeGame } from '@/lib/sharing/serialize';
 import type { ShowcaseGameMeta } from '@/lib/sharing/showcaseTypes';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
@@ -76,9 +77,9 @@ it.each(['game', 'advanced-game'] as const)(
       expect(useGameStore.getState().savedGames).toEqual([
         expect.objectContaining({ id: payload.data.id, importedAt: expect.any(Number) }),
       ]);
-      expect(
-        JSON.parse((await AsyncStorage.getItem('ultimatestats-game-storage'))!).state.savedGames,
-      ).toEqual([expect.objectContaining({ id: payload.data.id, importedAt: expect.any(Number) })]);
+      expect(await loadAllBasicGames()).toEqual([
+        expect.objectContaining({ id: payload.data.id, importedAt: expect.any(Number) }),
+      ]);
     } else {
       const saved = await useSavedAdvancedGamesStore.getState().loadGame(payload.data.id);
       expect(saved).toMatchObject({ id: payload.data.id, importedAt: expect.any(Number) });

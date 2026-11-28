@@ -27,7 +27,7 @@ const initialTournamentState = useTournamentStore.getInitialState();
 const initialUIState = useUIStore.getInitialState();
 
 export function resetDashboardStores() {
-  useGameStore.setState(initialGameState, true);
+  useGameStore.setState({ ...initialGameState, savedGamesLoadStatus: 'loaded' }, true);
   useGameSessionStore.setState(initialGameSessionState, true);
   useAdvancedTrackingStore.setState(initialAdvancedTrackingState, true);
   useSavedAdvancedGamesStore.setState(

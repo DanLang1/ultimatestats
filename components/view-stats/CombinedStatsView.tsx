@@ -127,9 +127,6 @@ export default function CombinedStatsView({
         <ThemedText style={[styles.statusTitle, { color: palette.textInverse }]}>
           Loading combined stats
         </ThemedText>
-        <ThemedText style={[styles.statusText, { color: palette.textMuted }]}>
-          Fetching full advanced game records...
-        </ThemedText>
       </View>
     );
   } else if (state.status === 'unavailable' || state.status === 'notFound') {

@@ -53,6 +53,19 @@ function waitForHydration(persist: PersistHydrationApi) {
   });
 }
 
+// The seeds read and replace the saved basic games, which load from SQLite after hydration.
+function waitForSavedBasicGamesToLoad() {
+  if (useGameStore.getState().savedGamesLoadStatus !== 'pending') return Promise.resolve();
+
+  return new Promise<void>((resolve) => {
+    const unsubscribe = useGameStore.subscribe((state) => {
+      if (state.savedGamesLoadStatus === 'pending') return;
+      unsubscribe();
+      resolve();
+    });
+  });
+}
+
 export async function waitForMaestroStoresToHydrate() {
   await Promise.all([
     waitForHydration(useAdvancedTrackingStore.persist),
@@ -63,6 +76,7 @@ export async function waitForMaestroStoresToHydrate() {
     waitForHydration(useTeamStore.persist),
     waitForHydration(useTutorialStore.persist),
   ]);
+  await waitForSavedBasicGamesToLoad();
 }
 
 function buildSeedTeam(playerNames: string[] = MAESTRO_SEED_PLAYERS): SavedTeam {

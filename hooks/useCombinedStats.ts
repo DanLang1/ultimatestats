@@ -21,6 +21,7 @@ import { resolveTeamName } from '@/lib/playerUtils';
 import { shareCsvExport } from '@/lib/shareCsvExport';
 import { GameEvent, Player, SavedGame, SavedTeam } from '@/lib/storage';
 import { GameKind } from '@/lib/storage/types';
+import { useGameStore } from '@/store/basic/gameStore';
 import { useTeamStore } from '@/store/teamStore';
 
 export interface BasicCombinedStats {
@@ -96,6 +97,7 @@ export function useCombinedStats(kind: GameKind, gameIds: string[]) {
   const { showAlert } = useAlert();
   const teams = useTeamStore((state) => state.teams);
   const savedGames = useSavedBasicGames();
+  const basicGamesLoadStatus = useGameStore((state) => state.savedGamesLoadStatus);
   const { data: completedAdvancedSavedGameSummaries } = useCompletedAdvancedGameSummaries();
   const gameIdSet = new Set(gameIds);
 
@@ -109,6 +111,7 @@ export function useCombinedStats(kind: GameKind, gameIds: string[]) {
 
   const getState = (): CombinedStatsState => {
     if (kind === 'basic') {
+      if (basicGamesLoadStatus === 'pending') return { status: 'loading' };
       const stats = combineBasicGames(savedGames, gameIdSet, teams);
       return stats ? { status: 'ready', stats } : { status: 'notFound' };
     }

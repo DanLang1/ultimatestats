@@ -43,13 +43,18 @@ type PersistedEntryWithLineConfirmedFlag = {
 };
 
 type PersistedBasicGameEntryChangedSince260 = {
-  state: { lineConfirmedForNextPoint?: boolean; currentTeam?: SavedTeam; savedTeams?: SavedTeam[] };
+  state: {
+    lineConfirmedForNextPoint?: boolean;
+    currentTeam?: SavedTeam;
+    savedTeams?: SavedTeam[];
+    savedGames?: SavedGame[];
+  };
 };
 
 /**
  * The complete storage difference from 2.6.0: the basic-game entry gains
- * `lineConfirmedForNextPoint` (default false) and drops `currentTeam` and `savedTeams`, the
- * line-presets entry drops the flag, and a team entry appears.
+ * `lineConfirmedForNextPoint` (default false) and drops `currentTeam`, `savedTeams`, and
+ * `savedGames` (now in SQLite), the line-presets entry drops the flag, and a team entry appears.
  */
 function withStorageChangesSince260(
   checkpoint: StorageCheckpoint,
@@ -66,6 +71,7 @@ function withStorageChangesSince260(
   basicGameEntry.state.lineConfirmedForNextPoint = false;
   delete basicGameEntry.state.currentTeam;
   delete basicGameEntry.state.savedTeams;
+  delete basicGameEntry.state.savedGames;
   delete linePresetsEntry.state.lineConfirmedForNextPoint;
   expectedStorage[TEAM_STORAGE_KEY] = expectedTeamEntry;
 
@@ -151,7 +157,7 @@ describe('storage checkpoints', () => {
     const persistedBasicGame = getBasicGameEntry(storageAfterFirstStart).state;
     expect(persistedBasicGame).not.toHaveProperty('currentTeam');
     expect(persistedBasicGame).not.toHaveProperty('savedTeams');
-    expect(persistedBasicGame.savedGames).toEqual([]);
+    expect(persistedBasicGame).not.toHaveProperty('savedGames');
     const persistedTeams = getTeamEntry(storageAfterFirstStart).state;
     expect(persistedTeams.teams).toEqual([
       { id: persistedTeams.currentTeamId, name: 'Team 1', roster: [] },
@@ -196,22 +202,13 @@ describe('storage checkpoints', () => {
     });
   });
 
-  it('migrates legacy saved games at hydration and persists the result', async () => {
-    const checkpoint = readCheckpointFile('2.6.0/legacy-saved-games.json');
-    const legacySavedGames = getBasicGameEntry(checkpoint).state.savedGames;
-    await seedStorage(checkpoint);
+  it('takes the saved games out of the basic-game entry once the first start has moved them to SQLite', async () => {
+    await seedStorage(readCheckpointFile('2.6.0/legacy-saved-games.json'));
 
     const app = await coldStartApp();
 
     expect(app.reportedErrors).toEqual([]);
     const persistedBasicGame = getBasicGameEntry(await readStorage());
-    const migratedSavedGames = persistedBasicGame.state.savedGames;
-    expect(getSavedGameIds(migratedSavedGames)).toEqual(getSavedGameIds(legacySavedGames));
-    expect(migratedSavedGames.map((game) => game.schemaVersion)).toEqual([
-      CURRENT_SCHEMA_VERSION,
-      CURRENT_SCHEMA_VERSION,
-      CURRENT_SCHEMA_VERSION,
-    ]);
     expect({ [BASIC_GAME_STORAGE_KEY]: persistedBasicGame }).toEqual(
       readCheckpointFile('expected/legacy-saved-games.after-cold-start.json'),
     );
@@ -247,9 +244,9 @@ describe('storage checkpoints', () => {
     const firstStart = await coldStartApp();
     const gamesAfterFirstStart = await firstStart.basicGameStorage.loadAllBasicGames();
     await firstStart.writeAllPersistedStores();
+    // A start whose SQLite load failed keeps writing the games it has in memory to the entry.
     const storageWithOneGame = await readStorage();
-    const basicGameEntry = getBasicGameEntry(storageWithOneGame);
-    basicGameEntry.state.savedGames = basicGameEntry.state.savedGames.slice(0, 1);
+    getBasicGameEntry(storageWithOneGame).state.savedGames = gamesAfterFirstStart.slice(0, 1);
     await seedStorage(storageWithOneGame);
 
     const secondStart = await coldStartApp();
@@ -273,6 +270,9 @@ describe('storage checkpoints', () => {
     expect(firstStart.reportedErrors.map(([error]) => error)).toEqual([moveError]);
     expect(firstStart.useGameStore.getState().savedGames).toHaveLength(11);
     expect(await firstStart.basicGameStorage.loadAllBasicGames()).toEqual([]);
+    // A later write must not drop the only copy of the games.
+    await firstStart.writeAllPersistedStores();
+    expect(getBasicGameEntry(await readStorage()).state.savedGames).toHaveLength(11);
 
     const secondStart = await coldStartApp();
 
