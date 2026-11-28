@@ -20,30 +20,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
 
-## P2 - Maestro Menu and Sheet Steps Fail
-
-- In the Nov 2026 full run (maestro-runner 1.1.29, two iPhone 17 Pro simulators on iOS 26.3), 25 of
-  75 flows failed. All 25 failed again when run alone, and 9 of them failed the same way on commit
-  `a3046c6`, so the failures predate the SQLite source-of-truth change. Cause not investigated.
-- Symptom: after the flow taps a button that opens a menu or sheet, the next item is not found
-  (`tracker-menu-*`, `team-actions-new` on its second open, `.*Timeline`). The same buttons open
-  normally by hand, and Metro logged no app errors during the runs. Reduce Motion, which
-  maestro-runner turns on, was ruled out.
-- Until fixed, the basic saved-game edit flows (timeline edit, Callahan edit, full cycle) do not
-  reach their save steps, so those paths are verified by Jest only.
-- Failing flows, all under `.maestro/tests/`:
-  `advanced-tracker-edit-completed-touch.yml`, `advanced-tracker-edit-lineup.yml`,
-  `advanced-tracker-edit-live-completed-touch.yml`, `advanced-tracker-edit-turnover.yml`,
-  `advanced-tracker-game-complete-last-action.yml`, `advanced-tracker-halftime-timer.yml`,
-  `advanced-tracker-line-selection-autosave.yml`, `advanced-tracker-menus.yml`,
-  `advanced-tracker-preset-selection.yml`, `advanced-tracker-scrimmage-view-stats.yml`,
-  `advanced-tracker-view-stats-end-game.yml`, `advanced-tracker-view-stats-midpoint.yaml`,
-  `advanced-tracker-view-stats.yaml`, `basic-callahan-block-edit.yml`,
-  `basic-game-format-end-early.yml`, `basic-game-full-cycle.yml`, `basic-line-calling.yml`,
-  `basic-player-game-selector.yml`, `basic-scoreboard-live-stats.yml`, `basic-timeline-edit.yml`,
-  `line-presets.yml`, `pregame-team-switch.yml`, `team-management.yml`, `roster-management.yml`,
-  `team-modal-exits.yml`
-
 ## P3 - Remove the Basic Saved Games AsyncStorage Copy
 
 - The move of saved basic games to SQLite keeps the old AsyncStorage copy until a load succeeds:

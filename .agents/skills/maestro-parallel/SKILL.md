@@ -54,7 +54,7 @@ Maestro 2.5.1 rows used `--shard-split`; maestro-runner 1.1.28 rows used `--para
 | 2026-10-30 | maestro-runner | 3      | 73    | 8m10s     | 4.1x    | 0      |
 | 2026-10-31 | maestro-runner | 2      | 73    | 11m09s    | 3.0x    | 2      |
 | 2026-10-31 | maestro-runner | 2      | 73    | 11m07s    | 3.0x    | 0      |
-| 2026-11-28 | maestro-runner | 2      | 75    | 13m18s    | 2.5x    | 2      |
+| 2026-11-28 | maestro-runner | 2      | 75    | 11m32s    | 2.9x    | 2      |
 
 With Maestro, each added shard returns less: 2 shards run at about 80% per-device efficiency, 3 at
 about 65%, and flakes grow with load. maestro-runner's shared queue keeps 3 simulators at about 87%
@@ -78,6 +78,11 @@ on one simulator; only failures that reproduce alone are real. Without `--output
 writes reports to an untracked `reports/` folder in the repo root. Read the failing command and `bounds`
 in `maestro-runner.log` next to the screenshot. Under load, a menu item missing right after the menu
 opens has been a load flake in both runners. Patterns seen so far:
+
+- Taps near the top of the screen (menu buttons, header back) pass but do nothing, and the failure
+  screenshot shows a "Refreshing..." banner: Metro is pushing a hot update because a file it
+  watches changed. `metro.config.js` blocks `.maestro/`, so check that Metro was restarted after
+  any config change and that nothing else writes into the repo during the run.
 
 - A tap that lands on the hub tab bar (target bounds below roughly the bottom 100pt on a phone):
   the element is visible to Maestro but covered. Add `scrollUntilVisible` with
