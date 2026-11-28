@@ -30,6 +30,7 @@ import {
 } from '@/lib/sharing/shareActionUtils';
 import { leaveStatsScreen, type StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useTeamStore } from '@/store/teamStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { Fonts } from '@/theme/theme';
@@ -42,7 +43,8 @@ export default function SavedGameStatsScreen() {
   const { palette, themeMode } = useTheme();
   const { isLandscape, sizeClass } = useLayout();
   const styles = createStyles(isLandscape, sizeClass);
-  const { updateSavedGamePlayedAt, deleteSavedGame } = useGameStore();
+  const deleteSavedGame = useGameStore((state) => state.deleteSavedGame);
+  const updateSavedGamePlayedAt = useSavedBasicGamesStore((state) => state.updateSavedGamePlayedAt);
   const teams = useTeamStore((state) => state.teams);
   const selectedGame = useSavedBasicGame(gameId);
   const removeGameFromTournament = useTournamentStore((state) => state.removeGameFromTournament);

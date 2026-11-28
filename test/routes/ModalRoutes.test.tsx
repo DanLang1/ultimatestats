@@ -12,6 +12,7 @@ import PointSummaryModal from '@/app/(modals)/point-summary-modal';
 import TeamManagementModal from '@/app/(modals)/team-management-modal';
 import TimeoutModal from '@/app/(modals)/timeout-modal';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
@@ -148,7 +149,7 @@ describe('modal routes', () => {
         },
       ],
     };
-    useGameStore.setState({ savedGames: [savedGame] });
+    useSavedBasicGamesStore.setState({ savedGames: [savedGame] });
     setMockSearchParams({ pointNumber: '1', gameId: savedGame.id });
 
     await renderScreen(<EditPointLineModal />);
@@ -159,7 +160,7 @@ describe('modal routes', () => {
     await user.press(screen.getByTestId('player-chip-Cara'));
     await user.press(screen.getByText('Save Line'));
 
-    expect(useGameStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual([
+    expect(useSavedBasicGamesStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual([
       'player-alex',
       'player-cara',
     ]);
@@ -482,7 +483,7 @@ describe('event correction controls', () => {
       },
     ];
     game.pointLines = [{ pointNumber: 1, playerIds: ['player-alex'], timestamp: 1 }];
-    useGameStore.setState({ savedGames: [game] });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
     setMockSearchParams({
       eventIndex: '0',
       eventType: 'turnover',
@@ -544,7 +545,7 @@ describe('event correction controls', () => {
         pointNumber: 1,
       },
     ];
-    useGameStore.setState({ savedGames: [game] });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
     setMockSearchParams({
       eventIndex: '0',
       eventType: 'turnover',
@@ -560,7 +561,7 @@ describe('event correction controls', () => {
     await user.press(screen.getByTestId('edit-event-delete-confirm'));
 
     await waitFor(() => expect(router.back).toHaveBeenCalled());
-    expect(useGameStore.getState().savedGames[0].events).toHaveLength(0);
+    expect(useSavedBasicGamesStore.getState().savedGames[0].events).toHaveLength(0);
   });
 
   it.each(['Alex', 'Unknown'])(

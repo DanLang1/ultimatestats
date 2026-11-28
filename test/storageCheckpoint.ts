@@ -91,6 +91,9 @@ export async function coldStartApp() {
   >('@/store/advancedTracking/trackingStore');
   const { useGameStore } =
     jest.requireActual<typeof import('@/store/basic/gameStore')>('@/store/basic/gameStore');
+  const { useSavedBasicGamesStore } = jest.requireActual<
+    typeof import('@/store/basic/savedGamesStore')
+  >('@/store/basic/savedGamesStore');
   const { useGameSessionStore } = jest.requireActual<typeof import('@/store/gameSessionStore')>(
     '@/store/gameSessionStore',
   );
@@ -129,6 +132,7 @@ export async function coldStartApp() {
 
   return {
     useGameStore,
+    useSavedBasicGamesStore,
     useTeamStore,
     /** Saved basic games in SQLite, which persists across cold starts within a test. */
     basicGameStorage,

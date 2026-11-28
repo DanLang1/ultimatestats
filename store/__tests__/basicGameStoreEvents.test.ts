@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useGameStore } from '@/store/basic/gameStore';
 import type { GameEvent } from '@/store/basic/gameStore.types';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { createSavedBasicGame } from '@/test/fixtures/domain';
 
 type EventUpdates = Parameters<ReturnType<typeof useGameStore.getState>['updateEvent']>[1] & {
@@ -52,12 +53,13 @@ const eventOwners = [
   {
     name: 'saved',
     arrange: async (events: GameEvent[]) => {
-      await useGameStore.setState({ savedGames: [{ ...createSavedBasicGame(), events }] });
+      useSavedBasicGamesStore.setState({ savedGames: [{ ...createSavedBasicGame(), events }] });
     },
-    read: () => useGameStore.getState().savedGames[0].events,
+    read: () => useSavedBasicGamesStore.getState().savedGames[0].events,
     update: (index: number, updates: EventUpdates) =>
-      useGameStore.getState().updateSavedGameEvent(savedGameId, index, updates),
-    remove: (index: number) => useGameStore.getState().deleteSavedGameEvent(savedGameId, index),
+      useSavedBasicGamesStore.getState().updateSavedGameEvent(savedGameId, index, updates),
+    remove: (index: number) =>
+      useSavedBasicGamesStore.getState().deleteSavedGameEvent(savedGameId, index),
   },
 ];
 
@@ -65,6 +67,7 @@ describe.each(eventOwners)('$name event corrections', (owner) => {
   beforeEach(async () => {
     jest.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
     await useGameStore.setState(useGameStore.getInitialState(), true);
+    useSavedBasicGamesStore.setState(useSavedBasicGamesStore.getInitialState(), true);
   });
 
   afterEach(() => {
@@ -161,60 +164,18 @@ describe.each(eventOwners)('$name event corrections', (owner) => {
   });
 });
 
-describe('saved event persistence', () => {
-  beforeEach(async () => {
-    jest.mocked(AsyncStorage.setItem).mockResolvedValue(undefined);
-    await useGameStore.setState(
-      {
-        ...useGameStore.getInitialState(),
-        savedGames: [{ ...createSavedBasicGame(), events: [turnover] }],
-      },
-      true,
-    );
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  it.each([
-    [
-      'edit',
-      () => useGameStore.getState().updateSavedGameEvent(savedGameId, 0, { playerId: 'corrected' }),
-    ],
-    ['delete', () => useGameStore.getState().deleteSavedGameEvent(savedGameId, 0)],
-  ] as const)('awaits the %s write and propagates persistence failure', async (_name, mutate) => {
-    let finishWrite!: () => void;
-    // The SQLite write comes first, so the AsyncStorage write starts a few ticks into the action.
-    const writeStarted = new Promise<void>((resolveWriteStarted) => {
-      jest.spyOn(AsyncStorage, 'setItem').mockImplementationOnce(() => {
-        resolveWriteStarted();
-        return new Promise<void>((resolve) => {
-          finishWrite = resolve;
-        });
-      });
-    });
-    let resolved = false;
-    const pending = mutate().then(() => {
-      resolved = true;
-    });
-    await writeStarted;
-    expect(resolved).toBe(false);
-    finishWrite();
-    await pending;
-    expect(resolved).toBe(true);
-
-    await useGameStore.setState({
+describe('saved event corrections', () => {
+  it('does not edit or delete events in a missing saved game', async () => {
+    useSavedBasicGamesStore.setState({
       savedGames: [{ ...createSavedBasicGame(), events: [turnover] }],
     });
-    const error = new Error('Storage unavailable');
-    jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(error);
-    await expect(mutate()).rejects.toBe(error);
-  });
 
-  it('does not edit or delete events in a missing saved game', async () => {
-    await useGameStore.getState().updateSavedGameEvent('missing', 0, { playerId: 'wrong' });
-    await expect(useGameStore.getState().deleteSavedGameEvent('missing', 0)).resolves.toBe(false);
-    expect(useGameStore.getState().savedGames[0].events).toEqual([turnover]);
+    await useSavedBasicGamesStore
+      .getState()
+      .updateSavedGameEvent('missing', 0, { playerId: 'wrong' });
+    await expect(
+      useSavedBasicGamesStore.getState().deleteSavedGameEvent('missing', 0),
+    ).resolves.toBe(false);
+    expect(useSavedBasicGamesStore.getState().savedGames[0].events).toEqual([turnover]);
   });
 });

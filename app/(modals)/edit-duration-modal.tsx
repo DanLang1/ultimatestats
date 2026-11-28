@@ -14,6 +14,7 @@ import {
 } from '@/lib/basic/timelineUtils';
 import { MAX_POINT_DURATION_MINUTES, MODAL_MAX_WIDTH_PICKER } from '@/lib/constants';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { Fonts } from '@/theme/theme';
 
 type ActiveField = 'minutes' | 'seconds';
@@ -36,8 +37,8 @@ export default function EditDurationModal() {
     gameTo: currentGameTo,
     autoHalftimeEnabled: currentAutoHalftimeEnabled,
     updateEvent,
-    updateSavedGameEvent,
   } = useGameStore();
+  const updateSavedGameEvent = useSavedBasicGamesStore((state) => state.updateSavedGameEvent);
 
   const eventIndex = parseInt(params.eventIndex, 10);
   const gameId = params.gameId;

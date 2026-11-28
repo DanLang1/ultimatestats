@@ -1,18 +1,8 @@
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { getLatestLineForPoint } from '@/lib/lineUtils';
-import { Player, PointLineRecord, SavedGame } from '@/lib/storage';
+import { Player, PointLineRecord } from '@/lib/storage';
 
 import { GameState } from '../gameStore.types';
-
-/** Adds the game, or replaces the saved game with its id. */
-export function putSavedGame(state: GameState, game: SavedGame) {
-  const savedGameIndex = state.savedGames.findIndex((savedGame) => savedGame.id === game.id);
-  if (savedGameIndex >= 0) {
-    state.savedGames[savedGameIndex] = game;
-  } else {
-    state.savedGames.push(game);
-  }
-}
 
 export function canReplacePointLine(
   pointLines: PointLineRecord[],

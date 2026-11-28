@@ -63,13 +63,24 @@ rewrite it to describe only the remaining problem as it exists now.
   `line-presets.yml`, `pregame-team-switch.yml`, `team-management.yml`, `roster-management.yml`,
   `team-modal-exits.yml`
 
+## P3 - Remove the Basic Saved Games AsyncStorage Copy
+
+- The move of saved basic games to SQLite keeps the old AsyncStorage copy until a load succeeds:
+  `asyncStorageSavedGames` and the `merge` in `useGameStore`, the copy handling in
+  `useLoadSavedBasicGames`, and `importAsyncStorageGamesOnce`. Cleanup: once the releases that
+  still wrote saved games to AsyncStorage are no longer in use, remove all of it.
+- References:
+  `store/basic/gameStore.ts`
+  `hooks/basic/useLoadSavedBasicGames.ts`
+  `lib/basic/savedGameStorage.ts`
+
 ## P3 - Basic Saved Games Load Status Naming
 
 - `savedGamesLoadStatus` calls the not-yet-loaded state `'pending'`, while the rest of the app calls
   it loading (`isLoading`, `status: 'loading'`), so callers translate one into the other. Cleanup:
   rename `'pending'` to `'loading'`.
 - References:
-  `store/basic/gameStore.types.ts`
+  `store/basic/savedGamesStore.ts`
   `hooks/useCombinedStats.ts`
   `app/(main)/(hub)/(analytics)/stats.tsx`
 
@@ -126,9 +137,8 @@ rewrite it to describe only the remaining problem as it exists now.
 
 ## P3 - Store Architecture Refactor
 
-- `gameStore` is a god store spanning five concerns: live game state, timers, game catalog, UI signals, and game config.
-- Start with the proven ownership seams: evaluate basic saved-game persistence alongside the
-  SQLite proposal. Reassess the remaining store before extracting config or timers.
+- `gameStore` is a god store spanning four concerns: live game state, timers, UI signals, and game config.
+- Reassess the remaining store before extracting config or timers.
 - Store boundaries can be redrawn without changing the `SavedGame` record shape, but moving
   persisted ownership still requires a deliberate storage migration and hydration plan.
 - References:
@@ -238,6 +248,6 @@ rewrite it to describe only the remaining problem as it exists now.
   does not validate basic events individually.
 - References:
   `store/basic/slices/liveGameSlice.ts`
-  `store/basic/slices/savedGamesSlice.ts`
+  `store/basic/savedGamesStore.ts`
   `lib/basic/statsUtils.ts`
   `lib/sharing/validate.ts`

@@ -7,7 +7,7 @@ import { loadAllBasicGames } from '@/lib/basic/savedGameStorage';
 import { serializeAdvancedGame, serializeGame } from '@/lib/sharing/serialize';
 import type { ShowcaseGameMeta } from '@/lib/sharing/showcaseTypes';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { jsonResponse, requestUrl } from '@/test/fetch';
 import {
   createAdvancedGameScenario,
@@ -74,7 +74,7 @@ it.each(['game', 'advanced-game'] as const)(
       expect(screen.getByText('View Game')).toBeVisible();
     });
     if (type === 'game') {
-      expect(useGameStore.getState().savedGames).toEqual([
+      expect(useSavedBasicGamesStore.getState().savedGames).toEqual([
         expect.objectContaining({ id: payload.data.id, importedAt: expect.any(Number) }),
       ]);
       expect(await loadAllBasicGames()).toEqual([
@@ -112,7 +112,7 @@ it('keeps a failed import retryable without recording or counting it', async () 
   await waitFor(() => {
     expect(screen.getByText('Failed to import. Please try again.')).toBeVisible();
   });
-  expect(useGameStore.getState().savedGames).toEqual([]);
+  expect(useSavedBasicGamesStore.getState().savedGames).toEqual([]);
   expect(fetchMock).toHaveBeenCalledTimes(1);
   fetchMock.mockImplementation(async (input) =>
     requestUrl(input).includes('/rpc/')

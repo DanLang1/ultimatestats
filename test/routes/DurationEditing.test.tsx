@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import EditDurationModal from '@/app/(modals)/edit-duration-modal';
 import type { GameEvent } from '@/lib/storage/types';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { arrangeBasicGame, createSavedBasicGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
 import { resetMockRouter, setMockSearchParams } from '@/test/mocks/expoRouter';
@@ -46,7 +47,8 @@ async function arrangeEditor(
   currentDurationMs: number,
 ) {
   arrangeBasicGame({ statTrackingEnabled: true });
-  if (saved) useGameStore.setState({ savedGames: [{ ...createSavedBasicGame(), events }] });
+  if (saved)
+    useSavedBasicGamesStore.setState({ savedGames: [{ ...createSavedBasicGame(), events }] });
   else useGameStore.setState({ events });
   setMockSearchParams({
     gameId: saved ? 'saved-basic-game-1' : 'current',
@@ -69,7 +71,7 @@ it.each([false, true])(
     await user.press(screen.getByText('Save'));
     await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
     const updatedEvents = saved
-      ? useGameStore.getState().savedGames[0].events
+      ? useSavedBasicGamesStore.getState().savedGames[0].events
       : useGameStore.getState().events;
     expect(updatedEvents[1].elapsedMs).toBe(25_000);
     expect(updatedEvents[0].elapsedMs).toBe(10_000);

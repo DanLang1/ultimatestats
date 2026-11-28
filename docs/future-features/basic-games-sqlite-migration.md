@@ -1,10 +1,10 @@
 # Basic Games SQLite Migration
 
-> **Status**: In progress. SQLite (`lib/basic/savedGameStorage.ts`) is the source of truth for saved games: the first start moves the AsyncStorage games into it once, and every save, edit, and delete writes there first. `useGameStore` still holds every game in memory, loaded from SQLite at startup; once that load succeeds the games are no longer written to AsyncStorage.
+> **Status**: In progress. SQLite (`lib/basic/savedGameStorage.ts`) is the source of truth for saved games: the first start moves the AsyncStorage games into it once, and every save, edit, and delete writes there first. `useSavedBasicGamesStore` holds every game in memory, loaded from SQLite at startup; once that load succeeds the games are no longer written to AsyncStorage.
 
 ## Overview
 
-Basic saved games currently live inside `useGameStore` as a persisted Zustand array:
+Basic saved games used to live inside `useGameStore` as a persisted Zustand array:
 `savedGames: SavedGame[]`. Advanced tracked games already use SQLite via
 `lib/advancedTracking/storage.ts`, with a summary table for list views and a JSON
 record table for full game data.

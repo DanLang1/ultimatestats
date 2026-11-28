@@ -3,7 +3,6 @@ import { current } from 'immer';
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { canTriggerHalftimeEarly, hasReachedHalftime } from '@/lib/basic/halftimeUtils';
-import { upsertBasicGames } from '@/lib/basic/savedGameStorage';
 import { deriveTimeoutState } from '@/lib/basic/timeoutUtils';
 import { DEFAULT_HALFTIME_BREAK_SECONDS, DEFAULT_TIMEOUT_SECONDS } from '@/lib/constants';
 import { getLatestLineForPoint, replacePointLineRecords } from '@/lib/lineUtils';
@@ -21,7 +20,8 @@ import {
   TurnoverEvent,
   TurnoverType,
 } from '../gameStore.types';
-import { canReplacePointLine, putSavedGame, resetGameState } from './gameStoreHelpers';
+import { useSavedBasicGamesStore } from '../savedGamesStore';
+import { canReplacePointLine, resetGameState } from './gameStoreHelpers';
 
 function applyHalftimeTransition(state: GameState) {
   state.gameHalf = 2;
@@ -759,7 +759,8 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
     }
 
     const timestamp = Date.now();
-    const savedGame = state.savedGames.find((game) => game.id === state.currentGameId);
+    const { savedGames, saveGame } = useSavedBasicGamesStore.getState();
+    const savedGame = savedGames.find((game) => game.id === state.currentGameId);
     const savedPointLines = savedGame?.pointLines;
     const canReplaceSavedGameLine =
       savedGame != null &&
@@ -773,7 +774,7 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
       : null;
 
     // The saved game goes to SQLite before this store changes; see savedGamesSlice.ts.
-    if (updatedSavedGame) await upsertBasicGames([updatedSavedGame]);
+    if (updatedSavedGame) await saveGame(updatedSavedGame);
     await set((draft: GameState) => {
       draft.pointLines = replacePointLineRecords(
         draft.pointLines,
@@ -781,7 +782,6 @@ export const createLiveGameSlice: GameSliceCreator<LiveGameSlice> = (set, get) =
         playerIds,
         timestamp,
       );
-      if (updatedSavedGame) putSavedGame(draft, updatedSavedGame);
     });
     return true;
   },

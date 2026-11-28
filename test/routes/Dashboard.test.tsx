@@ -8,6 +8,7 @@ import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/constants';
 import { LAST_DISMISSED_REMOTE_VERSION_KEY } from '@/lib/remoteVersionUtils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import {
@@ -172,7 +173,7 @@ it('opens saved games in the Stats tab', async () => {
 it('opens the last saved game from the dashboard', async () => {
   const queryClient = arrangeDashboard();
   arrangeOtherTeams([testTeam]);
-  useGameStore.setState({
+  useSavedBasicGamesStore.setState({
     savedGames: [
       { ...createSavedBasicGame(), id: 'older', team2Name: 'Falcons', createdAt: 1000 },
       { ...createSavedBasicGame(), id: 'newest', team2Name: 'Eagles', createdAt: 2000 },
@@ -190,7 +191,7 @@ it('opens the last saved game from the dashboard', async () => {
 it('hides the last game while a game is live', async () => {
   const queryClient = arrangeDashboard();
   arrangeOtherTeams([testTeam]);
-  useGameStore.setState({ savedGames: [createSavedBasicGame()] });
+  useSavedBasicGamesStore.setState({ savedGames: [createSavedBasicGame()] });
   arrangeAdvancedGame();
   await renderScreen(<DashboardScreen />, { queryClient });
   expect(screen.queryByText('Last game')).not.toBeOnTheScreen();

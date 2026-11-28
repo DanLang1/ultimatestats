@@ -119,7 +119,8 @@ describe('storage checkpoints', () => {
       const {
         currentTeam: _legacyCurrentTeam,
         savedTeams: _legacySavedTeams,
-        ...persistedBasicGame
+        savedGames: persistedSavedGames,
+        ...persistedLiveGame
       } = getBasicGameEntry(checkpoint).state;
       const expectedTeamEntry = getExpectedTeamEntry(checkpoint);
       await seedStorage(checkpoint);
@@ -130,11 +131,10 @@ describe('storage checkpoints', () => {
       // Seeded by the team store's own storage read, before any store has written.
       expect(getTeamEntry(await readStorage())).toEqual(expectedTeamEntry);
       expect(app.useTeamStore.getState()).toMatchObject(expectedTeamEntry.state);
-      const hydratedBasicGame = app.useGameStore.getState();
-      expect(getSavedGameIds(hydratedBasicGame.savedGames)).toEqual(
-        getSavedGameIds(persistedBasicGame.savedGames),
+      expect(getSavedGameIds(app.useSavedBasicGamesStore.getState().savedGames)).toEqual(
+        getSavedGameIds(persistedSavedGames),
       );
-      expect(hydratedBasicGame).toMatchObject(persistedBasicGame);
+      expect(app.useGameStore.getState()).toMatchObject(persistedLiveGame);
 
       await app.writeAllPersistedStores();
 
@@ -230,7 +230,7 @@ describe('storage checkpoints', () => {
       expect(app.reportedErrors).toEqual([]);
       const gamesInSqlite = await app.basicGameStorage.loadAllBasicGames();
       expect(getSavedGameIds(gamesInSqlite).sort()).toEqual([...storedGameIds].sort());
-      expect(app.useGameStore.getState().savedGames).toEqual(gamesInSqlite);
+      expect(app.useSavedBasicGamesStore.getState().savedGames).toEqual(gamesInSqlite);
       // Loading a game upgrades it, so only the summaries show the schema that was stored.
       const storedSchemaVersions = (await app.basicGameStorage.loadBasicGameSummaries()).map(
         (summary) => summary.schemaVersion,
@@ -244,7 +244,7 @@ describe('storage checkpoints', () => {
     const firstStart = await coldStartApp();
     const gamesAfterFirstStart = await firstStart.basicGameStorage.loadAllBasicGames();
     await firstStart.writeAllPersistedStores();
-    // A start whose SQLite load failed keeps writing the games it has in memory to the entry.
+    // A start whose SQLite load failed keeps the games in the entry.
     const storageWithOneGame = await readStorage();
     getBasicGameEntry(storageWithOneGame).state.savedGames = gamesAfterFirstStart.slice(0, 1);
     await seedStorage(storageWithOneGame);
@@ -254,7 +254,7 @@ describe('storage checkpoints', () => {
     expect(secondStart.reportedErrors).toEqual([]);
     expect(gamesAfterFirstStart).toHaveLength(11);
     expect(await secondStart.basicGameStorage.loadAllBasicGames()).toEqual(gamesAfterFirstStart);
-    expect(secondStart.useGameStore.getState().savedGames).toEqual(gamesAfterFirstStart);
+    expect(secondStart.useSavedBasicGamesStore.getState().savedGames).toEqual(gamesAfterFirstStart);
   });
 
   it('keeps the AsyncStorage games in use when the move to SQLite fails, and moves them on the next start', async () => {
@@ -268,15 +268,23 @@ describe('storage checkpoints', () => {
     const firstStart = await coldStartApp();
 
     expect(firstStart.reportedErrors.map(([error]) => error)).toEqual([moveError]);
-    expect(firstStart.useGameStore.getState().savedGames).toHaveLength(11);
+    expect(firstStart.useSavedBasicGamesStore.getState().savedGames).toHaveLength(11);
     expect(await firstStart.basicGameStorage.loadAllBasicGames()).toEqual([]);
     // A later write must not drop the only copy of the games.
     await firstStart.writeAllPersistedStores();
     expect(getBasicGameEntry(await readStorage()).state.savedGames).toHaveLength(11);
+    // A game saved before the next start has to be in the copy that start moves.
+    const gameSavedAfterFailedMove = { ...createSavedBasicGame(), id: 'saved-after-failed-move' };
+    await firstStart.useSavedBasicGamesStore.getState().importGame(gameSavedAfterFailedMove);
+    await firstStart.writeAllPersistedStores();
 
     const secondStart = await coldStartApp();
 
-    expect(await secondStart.basicGameStorage.loadAllBasicGames()).toHaveLength(11);
+    const gameIdsAfterSecondStart = getSavedGameIds(
+      await secondStart.basicGameStorage.loadAllBasicGames(),
+    );
+    expect(gameIdsAfterSecondStart).toHaveLength(12);
+    expect(gameIdsAfterSecondStart).toContain(gameSavedAfterFailedMove.id);
     // The database outlives this test, so the spy would too.
     failingMove.mockRestore();
   });

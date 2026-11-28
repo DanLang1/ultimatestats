@@ -14,6 +14,7 @@ import {
 } from '@/lib/sharing/serialize';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { createDeferred, holdAsyncStorageWrites } from '@/test/deferred';
@@ -39,6 +40,34 @@ beforeEach(async () => {
 afterEach(() => {
   jest.restoreAllMocks();
 });
+
+async function openBasicGameDatabase() {
+  const device = jest.requireMock<typeof import('@/test/mocks/expoSqlite')>('expo-sqlite');
+  return device.openDatabaseAsync('ultimatestats_basic_games.db');
+}
+
+/** Holds every saved-basic-game write to SQLite until `release()`; see holdAsyncStorageWrites. */
+async function holdBasicGameWrites() {
+  const db = await openBasicGameDatabase();
+  const originalTransaction = db.withTransactionAsync.bind(db);
+  const gate = createDeferred();
+  const held = createDeferred();
+  const writes: Promise<void>[] = [];
+  jest.spyOn(db, 'withTransactionAsync').mockImplementation((task) => {
+    held.resolve();
+    const write = gate.promise.then(() => originalTransaction(task));
+    writes.push(write);
+    return write;
+  });
+  return {
+    held: held.promise,
+    release: () =>
+      act(async () => {
+        gate.resolve();
+        await Promise.all(writes);
+      }),
+  };
+}
 
 describe('import routes', () => {
   it('shows a deterministic recovery state for an incomplete import link', async () => {
@@ -96,7 +125,9 @@ describe('shared-link import', () => {
       else if (kind === 'advanced-game') payload = serializeAdvancedGame(advancedGames[0]);
       else payload = serializeAdvancedGames(advancedGames);
       if (kind === 'game' || kind === 'games')
-        useGameStore.setState({ savedGames: [{ ...basicGames[0], team2Name: 'Old Rivals' }] });
+        useSavedBasicGamesStore.setState({
+          savedGames: [{ ...basicGames[0], team2Name: 'Old Rivals' }],
+        });
       else await useSavedAdvancedGamesStore.getState().saveGame(advancedGames[0]);
       const client = createTestQueryClient();
       client.setQueryData(['sharePayload', 'share-1'], payload);
@@ -117,8 +148,8 @@ describe('shared-link import', () => {
       });
       const ids = kind === 'game' || kind === 'advanced-game' ? ['first'] : ['first', 'second'];
       if (kind === 'game' || kind === 'games') {
-        expect(useGameStore.getState().savedGames.map(({ id }) => id)).toEqual(ids);
-        expect(useGameStore.getState().savedGames[0]).toMatchObject({
+        expect(useSavedBasicGamesStore.getState().savedGames.map(({ id }) => id)).toEqual(ids);
+        expect(useSavedBasicGamesStore.getState().savedGames[0]).toMatchObject({
           team2Name: 'New Rivals',
           importedAt: expect.any(Number),
         });
@@ -203,7 +234,7 @@ describe('shared-link import', () => {
       screen.queryByText('You already have this game. Importing will replace your saved copy.'),
     ).not.toBeOnTheScreen();
     await userEvent.setup().press(screen.getByText('Cancel'));
-    expect(useGameStore.getState().savedGames).toEqual([]);
+    expect(useSavedBasicGamesStore.getState().savedGames).toEqual([]);
     expect(router.dismissTo).toHaveBeenCalledWith('/');
   });
 
@@ -269,9 +300,10 @@ describe('shared-link import', () => {
       }
       const client = createTestQueryClient();
       client.setQueryData(['sharePayload', 'share-1'], payload);
-      const save = holdAsyncStorageWrites(
-        (key) => kind !== 'team' || key === 'ultimatestats-line-presets',
-      );
+      const save =
+        kind === 'team'
+          ? holdAsyncStorageWrites((key) => key === 'ultimatestats-line-presets')
+          : await holdBasicGameWrites();
       await renderScreen(<ImportScreen />, { queryClient: client });
       await userEvent.setup().press(screen.getByText('Import'));
       expect(await screen.findByText('Importing...')).toBeVisible();
@@ -287,7 +319,8 @@ describe('shared-link import', () => {
   it('shows a save failure instead of offering an unsaved imported game', async () => {
     const client = createTestQueryClient();
     client.setQueryData(['sharePayload', 'share-1'], serializeGame(createSavedBasicGame()));
-    jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('disk full'));
+    const db = await openBasicGameDatabase();
+    jest.spyOn(db, 'withTransactionAsync').mockRejectedValueOnce(new Error('disk full'));
     await renderScreen(<ImportScreen />, { queryClient: client });
     await userEvent.setup().press(screen.getByText('Import'));
     expect(

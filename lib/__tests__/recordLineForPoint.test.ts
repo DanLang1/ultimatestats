@@ -4,6 +4,7 @@ import { loadBasicGame } from '@/lib/basic/savedGameStorage';
 import { computePlayingTime } from '@/lib/lineUtils';
 import { Player, SavedGame, SavedTeam } from '@/lib/storage';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useTeamStore } from '@/store/teamStore';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -37,7 +38,7 @@ describe('recordLineForPoint replacement handling', () => {
     mockedAsyncStorage.removeItem.mockResolvedValue(undefined);
 
     useGameStore.getState().resetGame();
-    useGameStore.setState({ savedGames: [] });
+    useSavedBasicGamesStore.setState({ savedGames: [] });
   });
 
   it('replaces the full point lineup history after earlier injury subs', () => {
@@ -107,8 +108,8 @@ describe('recordLineForPoint replacement handling', () => {
       currentGameId: savedGame.id,
       currentPoint: 3,
       pointLines: originalPointLines,
-      savedGames: [savedGame],
     });
+    useSavedBasicGamesStore.setState({ savedGames: [savedGame] });
 
     expect(await useGameStore.getState().replacePointLine(1, ['b', 'c'])).toBe(true);
 
@@ -120,7 +121,7 @@ describe('recordLineForPoint replacement handling', () => {
       }),
       { pointNumber: 2, playerIds: ['d', 'e'], timestamp: 3 },
     ]);
-    expect(useGameStore.getState().savedGames[0].pointLines).toEqual(
+    expect(useSavedBasicGamesStore.getState().savedGames[0].pointLines).toEqual(
       useGameStore.getState().pointLines,
     );
     expect((await loadBasicGame(savedGame.id))?.pointLines).toEqual(
@@ -173,21 +174,21 @@ describe('recordLineForPoint replacement handling', () => {
       currentGameStatus: 'inProgress',
       currentPoint: 2,
       pointLines: game.pointLines,
-      savedGames: [game],
     });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
 
     await expect(
       useGameStore.getState().replaceSavedGamePointLine(game.id, 1, ['b', 'd']),
     ).resolves.toBe(true);
 
-    expect(useGameStore.getState().savedGames[0].pointLines).toEqual([
+    expect(useSavedBasicGamesStore.getState().savedGames[0].pointLines).toEqual([
       expect.objectContaining({
         pointNumber: 1,
         playerIds: ['b', 'd'],
         isSubstitution: false,
       }),
     ]);
-    expect(useGameStore.getState().savedGames[0].events).toEqual(game.events);
+    expect(useSavedBasicGamesStore.getState().savedGames[0].events).toEqual(game.events);
     expect(useGameStore.getState().pointLines).toEqual([
       expect.objectContaining({
         pointNumber: 1,
@@ -196,12 +197,12 @@ describe('recordLineForPoint replacement handling', () => {
       }),
     ]);
     expect((await loadBasicGame(game.id))?.pointLines).toEqual(
-      useGameStore.getState().savedGames[0].pointLines,
+      useSavedBasicGamesStore.getState().savedGames[0].pointLines,
     );
 
     await useGameStore.getState().saveCurrentGame();
 
-    expect(useGameStore.getState().savedGames[0].pointLines).toEqual([
+    expect(useSavedBasicGamesStore.getState().savedGames[0].pointLines).toEqual([
       expect.objectContaining({
         pointNumber: 1,
         playerIds: ['b', 'd'],
@@ -232,12 +233,15 @@ describe('recordLineForPoint replacement handling', () => {
       currentGameId: game.id,
       currentPoint: 2,
       pointLines,
-      savedGames: [game],
     });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
 
     expect(await useGameStore.getState().replacePointLine(1, ['a', 'c'])).toBe(true);
     expect(useGameStore.getState().pointLines[0]?.playerIds).toEqual(['a', 'c']);
-    expect(useGameStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual(['a', 'b']);
+    expect(useSavedBasicGamesStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual([
+      'a',
+      'b',
+    ]);
   });
 
   it('rejects a linked saved correction that is invalid for the live roster', async () => {
@@ -262,13 +266,16 @@ describe('recordLineForPoint replacement handling', () => {
       currentGameId: game.id,
       currentPoint: 2,
       pointLines,
-      savedGames: [game],
     });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
 
     await expect(
       useGameStore.getState().replaceSavedGamePointLine(game.id, 1, ['a', 'c']),
     ).resolves.toBe(false);
     expect(useGameStore.getState().pointLines[0]?.playerIds).toEqual(['a', 'b']);
-    expect(useGameStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual(['a', 'b']);
+    expect(useSavedBasicGamesStore.getState().savedGames[0].pointLines?.[0]?.playerIds).toEqual([
+      'a',
+      'b',
+    ]);
   });
 });

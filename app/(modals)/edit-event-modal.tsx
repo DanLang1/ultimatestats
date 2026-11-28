@@ -13,6 +13,7 @@ import { getAllPlayersByPoint } from '@/lib/lineUtils';
 import { getPlayerName } from '@/lib/playerUtils';
 import { useGameStore } from '@/store/basic/gameStore';
 import { TurnoverType } from '@/store/basic/gameStore.types';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useCurrentTeam } from '@/store/teamStore';
 import { Fonts } from '@/theme/theme';
 
@@ -70,14 +71,9 @@ export default function EditEventModal() {
   }>();
 
   const currentTeam = useCurrentTeam();
-  const {
-    events,
-    pointLines,
-    updateEvent,
-    deleteEvent,
-    updateSavedGameEvent,
-    deleteSavedGameEvent,
-  } = useGameStore();
+  const { events, pointLines, updateEvent, deleteEvent } = useGameStore();
+  const updateSavedGameEvent = useSavedBasicGamesStore((state) => state.updateSavedGameEvent);
+  const deleteSavedGameEvent = useSavedBasicGamesStore((state) => state.deleteSavedGameEvent);
 
   const isSavedGame = params.gameId && params.gameId !== 'current';
   const savedGame = useSavedBasicGame(isSavedGame ? params.gameId : null);

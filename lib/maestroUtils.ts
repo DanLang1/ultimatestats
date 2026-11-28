@@ -17,6 +17,7 @@ import type { GameEvent, PointLineRecord, SavedGame, SavedTeam } from '@/lib/sto
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -55,10 +56,12 @@ function waitForHydration(persist: PersistHydrationApi) {
 
 // The seeds read and replace the saved basic games, which load from SQLite after hydration.
 function waitForSavedBasicGamesToLoad() {
-  if (useGameStore.getState().savedGamesLoadStatus !== 'pending') return Promise.resolve();
+  if (useSavedBasicGamesStore.getState().savedGamesLoadStatus !== 'pending') {
+    return Promise.resolve();
+  }
 
   return new Promise<void>((resolve) => {
-    const unsubscribe = useGameStore.subscribe((state) => {
+    const unsubscribe = useSavedBasicGamesStore.subscribe((state) => {
       if (state.savedGamesLoadStatus === 'pending') return;
       unsubscribe();
       resolve();
@@ -190,7 +193,7 @@ export async function seedMaestroTeamPrerequisites(
 // Basic flows save finished games for the seed team; drop them so each flow starts with the same
 // saved-games list instead of accumulating games across runs.
 async function clearSeedTeamSavedBasicGames() {
-  const seedGameIds = useGameStore
+  const seedGameIds = useSavedBasicGamesStore
     .getState()
     .savedGames.filter((game) => game.team1.id === MAESTRO_SEED_TEAM_ID)
     .map((game) => game.id);
@@ -311,7 +314,7 @@ function buildSeedBasicSecondSavedGame(team: SavedTeam): SavedGame {
 export async function seedMaestroBasicSavedGame() {
   await seedMaestroTeamPrerequisites({ clearActiveGame: true });
   const team = buildSeedTeam();
-  await useGameStore.getState().importGame(buildSeedBasicSavedGame(team));
+  await useSavedBasicGamesStore.getState().importGame(buildSeedBasicSavedGame(team));
   return MAESTRO_SEED_BASIC_GAME_ID;
 }
 
@@ -362,7 +365,9 @@ function buildSeedBasicCallahanSavedGame(team: SavedTeam): SavedGame {
 
 export async function seedMaestroBasicSavedCallahanGame() {
   await seedMaestroTeamPrerequisites({ clearActiveGame: true });
-  await useGameStore.getState().importGame(buildSeedBasicCallahanSavedGame(buildSeedTeam()));
+  await useSavedBasicGamesStore
+    .getState()
+    .importGame(buildSeedBasicCallahanSavedGame(buildSeedTeam()));
   return MAESTRO_SEED_BASIC_GAME_ID;
 }
 
@@ -371,7 +376,9 @@ export async function seedMaestroBasicSavedGames() {
   // An earlier advanced flow can leave the seed team's advanced game saved; Saved Games lists the
   // whole team, so it would join a Select all and block combining.
   await clearAdvancedGames([MAESTRO_SEED_GAME_ID]);
-  await useGameStore.getState().importGame(buildSeedBasicSecondSavedGame(buildSeedTeam()));
+  await useSavedBasicGamesStore
+    .getState()
+    .importGame(buildSeedBasicSecondSavedGame(buildSeedTeam()));
 }
 
 export async function seedMaestroBasicCancelPendingGoalScenario() {

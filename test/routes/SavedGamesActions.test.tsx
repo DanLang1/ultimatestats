@@ -8,7 +8,7 @@ import { loadAllBasicGames, upsertBasicGames } from '@/lib/basic/savedGameStorag
 import { MAX_SHARE_GAMES } from '@/lib/constants';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { createDeferred } from '@/test/deferred';
 import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
@@ -38,7 +38,7 @@ async function arrangeGames(kind: 'basic' | 'advanced') {
       team2Name: id === 'first' ? 'First Rival' : 'Second Rival',
     }));
     await upsertBasicGames(savedGames);
-    useGameStore.setState({ savedGames });
+    useSavedBasicGamesStore.setState({ savedGames });
   } else {
     for (const id of ['first', 'second']) {
       await useSavedAdvancedGamesStore.getState().saveGame(
@@ -136,14 +136,17 @@ it.each([
 });
 
 it('shows a loading state instead of the empty state until the saved basic games have loaded', async () => {
-  useGameStore.setState({ savedGamesLoadStatus: 'pending' });
+  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'pending' });
   await renderScreen(<StatsScreen />);
 
   expect(screen.getByTestId('saved-games-loading')).toBeVisible();
   expect(screen.queryByText('No saved games yet')).not.toBeOnTheScreen();
 
   await act(() =>
-    useGameStore.setState({ savedGames: [createSavedBasicGame()], savedGamesLoadStatus: 'loaded' }),
+    useSavedBasicGamesStore.setState({
+      savedGames: [createSavedBasicGame()],
+      savedGamesLoadStatus: 'loaded',
+    }),
   );
 
   expect(screen.queryByTestId('saved-games-loading')).not.toBeOnTheScreen();
@@ -186,7 +189,7 @@ it('offers Select all again when a selected game is deleted elsewhere', async ()
   await user.press(screen.getByText('First Rival'));
 
   await act(() =>
-    useGameStore.setState((state) => ({
+    useSavedBasicGamesStore.setState((state) => ({
       savedGames: state.savedGames.filter((game) => game.id !== 'first'),
     })),
   );
@@ -349,7 +352,7 @@ it('keeps a failed upload open and clears the error after a successful retry', a
 });
 
 function arrangeSortableGames() {
-  useGameStore.setState({
+  useSavedBasicGamesStore.setState({
     savedGames: [
       { name: 'Light', opponent: 'Dark', day: 2, score: 7 },
       { name: 'Hybrid', opponent: 'Rivals', day: 3, score: 1 },
@@ -435,7 +438,7 @@ it.each([
   ['one tracked team', ['Light', 'Light'], '1–1'],
   ['a single game', ['Light'], null],
 ] as const)('shows a day record only for %s', async (_case, teamNames, expectedRecord) => {
-  useGameStore.setState({
+  useSavedBasicGamesStore.setState({
     savedGames: teamNames.map((name, i) => ({
       ...createSavedBasicGame(),
       id: `game-${i}`,
@@ -477,7 +480,7 @@ async function arrangeMixedKinds() {
     );
   }
   arrangeOtherTeams([testTeam]);
-  useGameStore.setState({ savedGames: [createSavedBasicGame()] });
+  useSavedBasicGamesStore.setState({ savedGames: [createSavedBasicGame()] });
   return tournamentId;
 }
 
@@ -586,7 +589,7 @@ it('drops the game type filter when the team no longer has games of that type', 
   await user.press(screen.getByTestId('saved-games-kind-option-basic'));
   expect(screen.getByText('Rivals')).toBeVisible();
 
-  await act(() => useGameStore.setState({ savedGames: [] }));
+  await act(() => useSavedBasicGamesStore.setState({ savedGames: [] }));
 
   expect(screen.queryByTestId('saved-games-kind-filter-chip')).not.toBeOnTheScreen();
   expect(screen.getByText('Advanced game')).toBeVisible();
@@ -721,7 +724,7 @@ it('hands the selected games to a tournament created from the picker', async () 
 
 it('deletes a selection of both kinds', async () => {
   await arrangeMixedKinds();
-  const basicGameId = useGameStore.getState().savedGames[0].id;
+  const basicGameId = useSavedBasicGamesStore.getState().savedGames[0].id;
   const user = userEvent.setup();
   await renderScreen(<StatsScreen />);
   await user.press(screen.getByTestId('header-action-select'));
@@ -734,7 +737,9 @@ it('deletes a selection of both kinds', async () => {
   });
   expect(screen.queryByText('Advanced game')).not.toBeOnTheScreen();
   expect(screen.getByText('Advanced scrimmage')).toBeVisible();
-  expect(useGameStore.getState().savedGames.map((game) => game.id)).not.toContain(basicGameId);
+  expect(useSavedBasicGamesStore.getState().savedGames.map((game) => game.id)).not.toContain(
+    basicGameId,
+  );
   expect(await useSavedAdvancedGamesStore.getState().loadGame('game')).toBeNull();
 });
 
@@ -743,7 +748,7 @@ describe('team scope', () => {
 
   async function arrangeTwoTeams() {
     arrangeOtherTeams([testTeam, owls]);
-    useGameStore.setState({
+    useSavedBasicGamesStore.setState({
       savedGames: [
         { ...createSavedBasicGame(), id: 'windchill-basic', team2Name: 'Basic Rival' },
         {
@@ -864,7 +869,7 @@ describe('team scope', () => {
       roster: [],
     }));
     arrangeOtherTeams(teams);
-    useGameStore.setState({
+    useSavedBasicGamesStore.setState({
       savedGames: teams.map((team, i) => ({
         ...createSavedBasicGame(),
         id: `${team.name}-game`,
@@ -889,7 +894,7 @@ describe('team scope', () => {
       roster: [],
     }));
     arrangeOtherTeams(teams);
-    useGameStore.setState({
+    useSavedBasicGamesStore.setState({
       savedGames: teams.map((team, i) => ({
         ...createSavedBasicGame(),
         id: `${team.name}-game`,
@@ -913,7 +918,7 @@ describe('team scope', () => {
 
   it('blames the tournament filter, not the team, when it hides the team’s matches', async () => {
     await arrangeTwoTeams();
-    useGameStore.setState((state) => ({
+    useSavedBasicGamesStore.setState((state) => ({
       savedGames: [
         ...state.savedGames,
         {

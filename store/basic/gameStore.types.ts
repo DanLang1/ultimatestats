@@ -52,32 +52,16 @@ export type EventToastSignal =
   | { id: number; kind: 'undo'; event: GameEvent }
   | { id: number; kind: 'opponentGoal' };
 
-/** Whether `savedGames` holds the games from SQLite yet. */
-type SavedGamesLoadStatus = 'pending' | 'loaded' | 'failed';
-
+/** The saved-game actions that also change the game in progress, and the pre-SQLite copy. */
 export interface SavedGamesSlice {
-  savedGames: SavedGame[];
-  savedGamesLoadStatus: SavedGamesLoadStatus;
   /**
-   * Fills `savedGames` from SQLite. On the first run on a device it first moves the games
-   * AsyncStorage held into SQLite.
+   * The saved games the AsyncStorage entry held before SQLite, kept only until they have moved;
+   * null when it holds none.
    */
-  loadSavedGames: () => Promise<void>;
+  asyncStorageSavedGames: SavedGame[] | null;
+  /** Takes the saved games out of the AsyncStorage entry. */
+  dropAsyncStorageSavedGames: () => Promise<void>;
 
-  updateSavedGameEvent: (
-    gameId: string,
-    eventIndex: number,
-    updates: {
-      playerId?: string | null;
-      player2Id?: string | null;
-      subtype?: TurnoverType;
-      goalPlayerId?: string | null;
-      assistPlayerId?: string | null;
-      elapsedMs?: number | null;
-    },
-  ) => Promise<void>;
-  deleteSavedGameEvent: (gameId: string, eventIndex: number) => Promise<boolean>;
-  updateSavedGamePlayedAt: (gameId: string, playedAt: number) => Promise<void>;
   replaceSavedGamePointLine: (
     gameId: string,
     pointNumber: number,
@@ -87,7 +71,6 @@ export interface SavedGamesSlice {
   saveCurrentGame: () => Promise<void>;
   deleteSavedGame: (id: string) => Promise<void>;
   deleteSavedGames: (ids: string[]) => Promise<void>;
-  importGame: (game: SavedGame) => Promise<void>;
 }
 
 export interface LiveGameSlice {

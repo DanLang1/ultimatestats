@@ -15,6 +15,7 @@ import type { GameEvent, PointLineRecord } from '@/lib/storage/types';
 import { buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { usePlayerStatsStore } from '@/store/playerStatsStore';
 import { useTournamentStore } from '@/store/tournamentStore';
@@ -280,11 +281,8 @@ describe('basic analytics routes', () => {
         },
       ],
     };
-    useGameStore.setState({
-      savedGames: [game],
-      currentGameId: game.id,
-      currentPoint: 1,
-    });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
+    useGameStore.setState({ currentGameId: game.id, currentPoint: 1 });
     setMockSearchParams({ gameId: game.id });
 
     await renderScreen(<SavedGameTimelineScreen />);
@@ -323,7 +321,7 @@ describe('basic analytics routes', () => {
   it('renders a dynamic saved-game route from a real saved record', async () => {
     const game = createSavedBasicGame();
     arrangeOtherTeams([testTeam]);
-    useGameStore.setState({ savedGames: [game] });
+    useSavedBasicGamesStore.setState({ savedGames: [game] });
     setMockSearchParams({ gameId: game.id });
 
     const user = userEvent.setup();
@@ -468,7 +466,7 @@ describe('basic timeline editing', () => {
       let gameId = 'current';
       if (source === 'saved') {
         const game = { ...createSavedBasicGame(), events };
-        useGameStore.setState({ savedGames: [game] });
+        useSavedBasicGamesStore.setState({ savedGames: [game] });
         gameId = game.id;
         setMockSearchParams({ gameId });
       }

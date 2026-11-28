@@ -7,7 +7,7 @@ import * as Sharing from 'expo-sharing';
 import CombinedStatsScreen from '@/app/(main)/(hub)/(analytics)/combined-stats';
 import type { SharedPayload } from '@/lib/sharing/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import {
   arrangeOtherTeams,
   createFinalAdvancedGame,
@@ -56,7 +56,7 @@ async function arrangeGames(kind: 'basic' | 'advanced') {
   if (kind === 'basic') {
     const game = createSavedBasicGame();
     arrangeOtherTeams([testTeam]);
-    useGameStore.setState({
+    useSavedBasicGamesStore.setState({
       savedGames: [
         { ...game, id: 'first', team2Name: 'Falcons', createdAt: 1000 },
         { ...game, id: 'second', team2Name: 'Eagles', createdAt: 2000 },
@@ -90,7 +90,7 @@ it('notes the scrimmages left out of an advanced combine', async () => {
 
 it('shows basic games as loading, not missing, until the saved basic games have loaded', async () => {
   setMockSearchParams({ kind: 'basic', gameIds: 'first,second', excludedScrimmageCount: '0' });
-  useGameStore.setState({ savedGamesLoadStatus: 'pending' });
+  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'pending' });
   await renderScreen(<CombinedStatsScreen />);
 
   expect(screen.getByText('Loading combined stats')).toBeVisible();

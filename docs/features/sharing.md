@@ -44,7 +44,7 @@ will be created or replaced, and performs the appropriate basic or advanced pers
 - Team imports detect an existing team ID and let the user choose whether to update the roster or
   keep the local copy.
 - Imported records receive `importedAt`.
-- Basic games are written through `useGameStore`; teams through `useTeamStore`.
+- Basic games are written through `useSavedBasicGamesStore`; teams through `useTeamStore`.
 - Advanced games are written through `useSavedAdvancedGamesStore`, which persists them to SQLite.
 - Team line presets are imported through `useLinePresetsStore`.
 - Persistence must finish before success is displayed, navigation, or another action invalidates the
@@ -99,7 +99,7 @@ Validation throws `InvalidSharePayloadError` with a `reason` of `malformed`, `ex
 | Import state         | `hooks/useShareImport.ts`                   |
 | Import UI            | `app/(main)/import.tsx`                     |
 | Deep-link redirect   | `app/s/[kind]/[shareId].tsx`                |
-| Basic persistence    | `store/basic/gameStore.ts`                  |
+| Basic persistence    | `store/basic/savedGamesStore.ts`            |
 | Advanced persistence | `store/advancedTracking/savedGamesStore.ts` |
 | Payload tests        | `lib/__tests__/validatePayload.test.ts`     |
 

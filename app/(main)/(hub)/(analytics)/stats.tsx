@@ -39,6 +39,7 @@ import { attachTournaments, buildTournamentIndex } from '@/lib/tournamentIndex';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useTeamStore } from '@/store/teamStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 
@@ -52,7 +53,7 @@ export default function StatsScreen() {
   const deleteSavedGames = useGameStore((state) => state.deleteSavedGames);
   const teams = useTeamStore((state) => state.teams);
   const savedGames = useSavedBasicGames();
-  const basicGamesLoadStatus = useGameStore((state) => state.savedGamesLoadStatus);
+  const basicGamesLoadStatus = useSavedBasicGamesStore((state) => state.savedGamesLoadStatus);
   const { data: completedAdvancedSavedGameSummaries, isLoading: advancedSummariesLoading } =
     useCompletedAdvancedGameSummaries();
   const isLoadingSavedGames = basicGamesLoadStatus === 'pending' || advancedSummariesLoading;

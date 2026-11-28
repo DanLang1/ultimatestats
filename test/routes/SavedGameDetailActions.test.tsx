@@ -11,7 +11,7 @@ import BasicGameScreen from '@/app/(main)/(hub)/(analytics)/saved-games/[gameId]
 import type { SharedPayload } from '@/lib/sharing/types';
 import type { StatsScreenOrigin } from '@/lib/statsRouteScope';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useTournamentStore } from '@/store/tournamentStore';
 import {
   createAdvancedGameScenario,
@@ -69,7 +69,7 @@ async function arrangeDetail(kind: 'basic' | 'advanced', from?: StatsScreenOrigi
   const id = `${kind}-detail`;
   if (kind === 'basic') {
     arrangeOtherTeams([testTeam]);
-    useGameStore.setState({
+    useSavedBasicGamesStore.setState({
       savedGames: [{ ...createSavedBasicGame(), id, team2Name: 'Detail Rival' }],
     });
   } else {
@@ -169,7 +169,7 @@ it.each(['basic', 'advanced'] as const)(
     await user.press(screen.getByText('Delete'));
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/stats'));
     expect(useTournamentStore.getState().gameLinks).toHaveLength(0);
-    if (kind === 'basic') expect(useGameStore.getState().savedGames).toHaveLength(0);
+    if (kind === 'basic') expect(useSavedBasicGamesStore.getState().savedGames).toHaveLength(0);
     else expect(await useSavedAdvancedGamesStore.getState().loadGame(id)).toBeNull();
   },
 );
@@ -276,7 +276,7 @@ it.each(['basic', 'advanced'] as const)(
     await act(async () => latestDialog('time').onValueChange!(event, past));
     const readPlayedAt = async () =>
       kind === 'basic'
-        ? useGameStore.getState().savedGames.find((game) => game.id === id)?.playedAt
+        ? useSavedBasicGamesStore.getState().savedGames.find((game) => game.id === id)?.playedAt
         : new Date(
             (await useSavedAdvancedGamesStore.getState().loadGame(id))!.metadata!.date!,
           ).getTime();

@@ -20,7 +20,7 @@ import {
 import { CURRENT_SCHEMA_VERSION } from '@/lib/storage/types';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { getCurrentTeam, useTeamStore } from '@/store/teamStore';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { createAdvancedGameScenario } from '@/test/fixtures/advancedGameBuilder';
@@ -138,7 +138,7 @@ describe('seedAdvancedTrackerTestGame tracker state presets', () => {
 describe('basic Maestro seeds', () => {
   beforeEach(async () => {
     await AsyncStorage.clear();
-    useGameStore.setState({ savedGames: [] });
+    useSavedBasicGamesStore.setState({ savedGames: [] });
     useTeamStore.setState(useTeamStore.getInitialState(), true);
   });
 
@@ -146,7 +146,7 @@ describe('basic Maestro seeds', () => {
     await seedMaestroBasicSavedGame();
     await seedMaestroBasicSavedGame();
 
-    const savedGames = useGameStore.getState().savedGames;
+    const savedGames = useSavedBasicGamesStore.getState().savedGames;
     expect(savedGames.map((game) => game.id)).toEqual([MAESTRO_SEED_BASIC_GAME_ID]);
 
     const [game] = savedGames;
@@ -162,11 +162,11 @@ describe('basic Maestro seeds', () => {
     await seedMaestroBasicSavedGame();
     const otherTeam = { id: 'real-team', name: 'Real Team', roster: [] };
     const otherGame = {
-      ...useGameStore.getState().savedGames[0],
+      ...useSavedBasicGamesStore.getState().savedGames[0],
       id: 'real-game',
       team1: otherTeam,
     };
-    useGameStore.setState((state) => {
+    useSavedBasicGamesStore.setState((state) => {
       state.savedGames.push(otherGame);
     });
     useTeamStore.setState((state) => {
@@ -175,7 +175,7 @@ describe('basic Maestro seeds', () => {
 
     await seedMaestroTeamPrerequisites({ clearActiveGame: true });
 
-    const { savedGames } = useGameStore.getState();
+    const { savedGames } = useSavedBasicGamesStore.getState();
     expect(savedGames.map((game) => game.id)).toEqual(['real-game']);
     const teamIds = useTeamStore.getState().teams.map((team) => team.id);
     expect(teamIds.sort()).toEqual([MAESTRO_SEED_TEAM_ID, 'real-team']);

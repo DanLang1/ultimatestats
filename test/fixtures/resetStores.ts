@@ -2,6 +2,7 @@ import { resetSessionThemeModeForTests } from '@/context/ThemeContext';
 import { useSavedAdvancedGamesStore } from '@/store/advancedTracking/savedGamesStore';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useNumberPickerStore } from '@/store/numberPickerStore';
@@ -14,6 +15,7 @@ import { useUIStore } from '@/store/uiStore';
 import { resetAdvancedTrackingStorage } from '@/test/mocks/advancedTrackingStorage';
 
 const initialGameState = useGameStore.getInitialState();
+const initialSavedBasicGamesState = useSavedBasicGamesStore.getInitialState();
 const initialGameSessionState = useGameSessionStore.getInitialState();
 const initialAdvancedTrackingState = useAdvancedTrackingStore.getInitialState();
 const initialSavedAdvancedGamesState = useSavedAdvancedGamesStore.getInitialState();
@@ -27,7 +29,11 @@ const initialTournamentState = useTournamentStore.getInitialState();
 const initialUIState = useUIStore.getInitialState();
 
 export function resetDashboardStores() {
-  useGameStore.setState({ ...initialGameState, savedGamesLoadStatus: 'loaded' }, true);
+  useGameStore.setState(initialGameState, true);
+  useSavedBasicGamesStore.setState(
+    { ...initialSavedBasicGamesState, savedGamesLoadStatus: 'loaded' },
+    true,
+  );
   useGameSessionStore.setState(initialGameSessionState, true);
   useAdvancedTrackingStore.setState(initialAdvancedTrackingState, true);
   useSavedAdvancedGamesStore.setState(

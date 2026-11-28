@@ -4,11 +4,17 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { reportHydrationError } from '@/lib/sentry';
-import { migrateSavedGames } from '@/lib/storage/migrations';
+import type { SavedGame } from '@/lib/storage/types';
+import { isRecord } from '@/lib/utils';
 
 import { GameState } from './gameStore.types';
 import { createLiveGameSlice } from './slices/liveGameSlice';
 import { createSavedGamesSlice } from './slices/savedGamesSlice';
+
+// The entry is this store's own write, so its saved games are only checked to be a list.
+function isSavedGameList(value: unknown): value is SavedGame[] {
+  return Array.isArray(value);
+}
 
 // Basic games only. Teams and rosters live in `store/teamStore.ts`; advanced game state and advanced
 // saved records never live here.
@@ -23,19 +29,27 @@ export const useGameStore = create<GameState>()(
         name: 'ultimatestats-game-storage',
         version: 0,
         storage: createJSONStorage(() => AsyncStorage),
-        onRehydrateStorage: () => (state, error) => {
+        onRehydrateStorage: () => (_state, error) => {
           reportHydrationError('basic-game', error);
-          if (!state?.savedGames?.length) return;
-          const { games, didChange } = migrateSavedGames(state.savedGames);
-          if (didChange) {
-            useGameStore.setState({ savedGames: games });
-          }
+        },
+        // The entry's `savedGames` are the pre-SQLite copy, not this store's saved games.
+        merge: (persistedEntry, currentState) => {
+          if (!isRecord(persistedEntry)) return currentState;
+          const { savedGames: asyncStorageSavedGames, ...persistedLiveGame } = persistedEntry;
+
+          return {
+            ...currentState,
+            ...persistedLiveGame,
+            asyncStorageSavedGames: isSavedGameList(asyncStorageSavedGames)
+              ? asyncStorageSavedGames
+              : null,
+          };
         },
         // Only persist game-related state, not UI state like pending entries
         partialize: (state: GameState) => {
-          // Saved games live in SQLite. Until this start has loaded them from there, the entry
+          // Saved games live in SQLite. Until a start has loaded them from there, the entry
           // keeps the games it held, so a failed move to SQLite cannot lose them.
-          const hasLoadedSavedGamesFromSqlite = state.savedGamesLoadStatus === 'loaded';
+          const hasAsyncStorageSavedGames = state.asyncStorageSavedGames != null;
 
           return {
             team2Name: state.team2Name,
@@ -78,7 +92,7 @@ export const useGameStore = create<GameState>()(
             currentLine: state.currentLine,
             pointLines: state.pointLines,
             lineConfirmedForNextPoint: state.lineConfirmedForNextPoint,
-            ...(hasLoadedSavedGamesFromSqlite ? {} : { savedGames: state.savedGames }),
+            ...(hasAsyncStorageSavedGames ? { savedGames: state.asyncStorageSavedGames } : {}),
           };
         },
       },

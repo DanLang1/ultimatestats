@@ -15,7 +15,7 @@ import {
 } from '@/lib/sharing';
 import { hasItems } from '@/lib/utils';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { Fonts } from '@/theme/theme';
 
 interface ShowcaseCardProps {
@@ -26,7 +26,7 @@ export default function ShowcaseCard({ game }: ShowcaseCardProps) {
   const { sizeClass } = useLayout();
   const { palette } = useTheme();
   const styles = createStyles(sizeClass);
-  const { importGame } = useGameStore();
+  const importGame = useSavedBasicGamesStore((state) => state.importGame);
   const { importAdvancedGame } = useAdvancedTrackingStore();
 
   const savedGames = useSavedBasicGames();

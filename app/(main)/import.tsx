@@ -13,7 +13,7 @@ import type { AdvancedTrackedGame } from '@/lib/advancedTracking/types';
 import type { SharedPayload } from '@/lib/sharing';
 import type { SavedGame } from '@/lib/storage';
 import { useAdvancedTrackingStore } from '@/store/advancedTracking/trackingStore';
-import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useLinePresetsStore } from '@/store/linePresetsStore';
 import { useTeamStore } from '@/store/teamStore';
 
@@ -26,7 +26,7 @@ export default function ImportScreen() {
   const { palette } = useTheme();
   const { sizeClass } = useLayout();
   const styles = createStyles(sizeClass);
-  const importGame = useGameStore((state) => state.importGame);
+  const importGame = useSavedBasicGamesStore((state) => state.importGame);
   const teams = useTeamStore((state) => state.teams);
   const importTeam = useTeamStore((state) => state.importTeam);
   const switchTeam = useTeamStore((state) => state.switchTeam);
