@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
+import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAlert } from '@/components/ui/AlertProvider';
 import { ShareConfirmModal } from '@/components/ui/ShareConfirmModal';
@@ -57,6 +58,7 @@ export default function StatsScreen() {
   const { data: completedAdvancedSavedGameSummaries, isLoading: advancedSummariesLoading } =
     useCompletedAdvancedGameSummaries();
   const isLoadingSavedGames = basicGamesLoadStatus === 'loading' || advancedSummariesLoading;
+  const didBasicGamesFailToLoad = basicGamesLoadStatus === 'failed';
   const { deleteSavedGame: deleteAdvancedSavedGame } = useAdvancedTrackingStore();
   const loadAdvancedGame = useSavedAdvancedGamesStore((state) => state.loadGame);
   const loadAdvancedGames = useSavedAdvancedGamesStore((state) => state.loadGames);
@@ -317,6 +319,15 @@ export default function StatsScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {didBasicGamesFailToLoad ? (
+            <View
+              testID="saved-games-load-error"
+              style={[styles.loadError, { backgroundColor: palette.dangerOverlay10 }]}>
+              <ThemedText style={[styles.loadErrorText, { color: palette.danger }]}>
+                Could not load your basic saved games. Restart the app to try again.
+              </ThemedText>
+            </View>
+          ) : null}
           {hasLiveStats ? <LiveGameRow /> : null}
           {currentTeam === null ? (
             <SavedGamesEmptyState />
@@ -395,6 +406,13 @@ function createStyles(sizeClass: SizeClass) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    loadError: {
+      borderRadius: 12,
+      padding: 12,
+    },
+    loadErrorText: {
+      fontSize: scaleBySizeClass(14, sizeClass),
     },
     scrollContent: {
       padding: 16,

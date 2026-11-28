@@ -18,8 +18,8 @@ import { TurnoverEntryOverlay } from '@/components/basic/turnover-entry/Turnover
 import { ThemedView } from '@/components/ThemedView';
 import EventToast from '@/components/toast/EventToast';
 import { useEventToast } from '@/components/toast/hooks/useEventToast';
+import { useFinishBasicGame } from '@/hooks/basic/useFinishBasicGame';
 import { useTimeoutTimer } from '@/hooks/basic/useTimeoutTimer';
-import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
 import { getSizeClassValue, scaleBySizeClass, SizeClass, useLayout } from '@/hooks/useLayout';
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
@@ -73,6 +73,7 @@ export default function LiveScoreboard() {
     eventToastSignal,
     clearEventToastSignal,
   } = useGameStore();
+  const finishGame = useFinishBasicGame();
   const { lineCallingEnabled } = useSettingsStore();
   const [pendingTurnoverType, setPendingTurnoverType] = useState<TurnoverType | null>(null);
 
@@ -148,13 +149,7 @@ export default function LiveScoreboard() {
     });
 
     if (isGameOver) {
-      if (statTrackingEnabled) {
-        await useGameStore.getState().saveCurrentGame();
-      }
-      useGameStore.getState().setCurrentGameStatus('finished');
-      useGameStore.getState().setPostGameFlowPending(true);
-      finishActiveGameSession();
-      router.push('/game-complete');
+      await finishGame(() => router.push('/game-complete'));
       return;
     }
 

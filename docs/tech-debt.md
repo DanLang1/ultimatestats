@@ -1,6 +1,6 @@
 # Tech Debt Backlog
 
-Last verified: Oct 14, 2026
+Last verified: Nov 27, 2026
 
 This document tracks intentionally deferred cleanup work discovered during the docs/rules/workflow audit.
 
@@ -19,25 +19,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `components/advancedTracking/TrackerRareMenu.tsx`
   `components/advancedTracking/TrackerLineChangeMenu.tsx`
   `components/new-game/NewGameSheet.tsx`
-
-## P2 - Basic Saved Games SQLite Error Paths
-
-- A failed SQLite write when a game ends is silent. `saveCurrentGame()` throws, so the game-over
-  flow stops before `setCurrentGameStatus('finished')` with no message, and the game is not in
-  `savedGames` until a later save succeeds. Cleanup: an alert with a retry at the three call sites.
-- A failed AsyncStorage hydration of `useGameStore` skips the SQLite load: zustand never fires
-  `onFinishHydration`, so `loadSavedBasicGamesAtStartup` waits forever and Saved Games shows its
-  loading spinner for that session even though SQLite holds every game. The load only needs
-  hydration for the one-time import; once that has run it could go ahead without it.
-- A failed SQLite load (`savedGamesLoadStatus` `'failed'`) shows no message. On any start after the
-  first, the basic games are then missing for the session: Saved Games lists none, combined stats
-  reports them not found, and the share-import preview does not say a game will be re-imported.
-- References:
-  `hooks/basic/useEndGame.ts`
-  `components/basic/scoreboard/LiveScoreboard.tsx`
-  `components/basic/stat-entry/StatEntryOverlay.tsx`
-  `hooks/basic/useLoadSavedBasicGames.ts`
-  `docs/future-features/basic-games-sqlite-migration.md`
 
 ## P2 - Maestro Menu and Sheet Steps Fail
 

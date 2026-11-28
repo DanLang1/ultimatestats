@@ -153,6 +153,13 @@ it('shows a loading state instead of the empty state until the saved basic games
   expect(screen.getByText('Rivals')).toBeVisible();
 });
 
+it('says the basic saved games could not be loaded after a failed load', async () => {
+  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'failed' });
+  await renderScreen(<StatsScreen />);
+
+  expect(screen.getByTestId('saved-games-load-error')).toBeVisible();
+});
+
 it('leaves the Stats tab for the Dashboard on Back', async () => {
   await renderScreen(<StatsScreen />);
 

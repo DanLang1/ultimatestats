@@ -113,7 +113,11 @@ export function useCombinedStats(kind: GameKind, gameIds: string[]) {
     if (kind === 'basic') {
       if (basicGamesLoadStatus === 'loading') return { status: 'loading' };
       const stats = combineBasicGames(savedGames, gameIdSet, teams);
-      return stats ? { status: 'ready', stats } : { status: 'notFound' };
+      if (stats) return { status: 'ready', stats };
+      if (basicGamesLoadStatus === 'failed') {
+        return { status: 'unavailable', message: 'Could not load your basic saved games.' };
+      }
+      return { status: 'notFound' };
     }
 
     if (!advancedGamesComplete && advancedGamesLoading) return { status: 'loading' };

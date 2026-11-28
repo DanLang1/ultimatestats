@@ -53,4 +53,3 @@ Keep these in `store/basic`:
 ## Related Docs
 
 - [Store Architecture Refactor](store-refactor.md)
-- [Basic Games SQLite Migration](basic-games-sqlite-migration.md)

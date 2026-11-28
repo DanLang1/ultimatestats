@@ -1,24 +1,15 @@
 import { router } from 'expo-router';
 
 import { useAlert } from '@/components/ui/AlertProvider';
-import { useGameSessionActions } from '@/hooks/useGameSessionActions';
+import { useFinishBasicGame } from '@/hooks/basic/useFinishBasicGame';
 import { useGameStore } from '@/store/basic/gameStore';
 import { useCurrentTeam } from '@/store/teamStore';
 
 export function useEndGame() {
   const { showAlert } = useAlert();
-  const { finishActiveGameSession } = useGameSessionActions();
+  const finishGame = useFinishBasicGame();
   const currentTeam = useCurrentTeam();
-  const {
-    team1Score,
-    team2Score,
-    team2Name,
-    pauseGameClock,
-    setCurrentGameStatus,
-    setPostGameFlowPending,
-    saveCurrentGame,
-    statTrackingEnabled,
-  } = useGameStore();
+  const { team1Score, team2Score, team2Name, pauseGameClock } = useGameStore();
 
   const team1Name = currentTeam.name;
 
@@ -42,15 +33,7 @@ export function useEndGame() {
           style: 'destructive',
           onPress: async () => {
             pauseGameClock();
-
-            if (statTrackingEnabled) {
-              await saveCurrentGame();
-            }
-
-            setCurrentGameStatus('finished');
-            setPostGameFlowPending(true);
-            finishActiveGameSession();
-            router.push('/game-complete');
+            await finishGame(() => router.push('/game-complete'));
           },
         },
       ],

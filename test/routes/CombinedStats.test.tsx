@@ -96,6 +96,14 @@ it('shows basic games as loading, not missing, until the saved basic games have 
   expect(screen.getByText('Loading combined stats')).toBeVisible();
 });
 
+it('says the basic games could not be loaded, not that they are missing, after a failed load', async () => {
+  setMockSearchParams({ kind: 'basic', gameIds: 'first,second', excludedScrimmageCount: '0' });
+  useSavedBasicGamesStore.setState({ savedGamesLoadStatus: 'failed' });
+  await renderScreen(<CombinedStatsScreen />);
+
+  expect(screen.getByText('Could not load your basic saved games.')).toBeVisible();
+});
+
 it('combines basic games into one box score', async () => {
   await arrangeGames('basic');
   await renderScreen(<CombinedStatsScreen />);

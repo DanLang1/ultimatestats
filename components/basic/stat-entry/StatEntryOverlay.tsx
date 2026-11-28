@@ -1,5 +1,5 @@
 import { BasicEntryOverlay } from '@/components/basic/BasicEntryOverlay';
-import { finishActiveGameSession } from '@/hooks/useGameSessionActions';
+import { useFinishBasicGame } from '@/hooks/basic/useFinishBasicGame';
 import { getGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver } from '@/lib/basic/gameUtils';
 import { shouldShowLinePrompt } from '@/lib/basic/linePromptUtils';
@@ -29,6 +29,7 @@ export function StatEntryOverlay({ onFinish }: StatEntryOverlayProps) {
     currentLine,
   } = useGameStore();
   const { lineCallingEnabled, statEntryOrder } = useSettingsStore();
+  const finishGame = useFinishBasicGame();
 
   if (!pendingStatEntry) {
     return null;
@@ -52,12 +53,7 @@ export function StatEntryOverlay({ onFinish }: StatEntryOverlayProps) {
     });
 
     if (isGameOver) {
-      if (state.statTrackingEnabled) {
-        await state.saveCurrentGame();
-      }
-      state.setCurrentGameStatus('finished');
-      state.setPostGameFlowPending(true);
-      finishActiveGameSession();
+      await finishGame();
       return;
     }
 

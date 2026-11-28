@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import GameInfoScreen from '@/app/(main)/(hub)/(game)/game-info';
 import BasicScoreboard from '@/app/(main)/(hub)/(game)/scoreboard';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { arrangeBasicGame } from '@/test/fixtures/domain';
 import { resetAllStores } from '@/test/fixtures/resetStores';
@@ -44,6 +45,33 @@ describe('live basic-game routes', () => {
     await user.press(screen.getByText('END GAME'));
 
     expect(screen.getByText('End Game Early?')).toBeVisible();
+  });
+
+  it('keeps the game in progress when it cannot be saved, and finishes it on a retry', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame({ statTrackingEnabled: true });
+    const device = jest.requireMock<typeof import('@/test/mocks/expoSqlite')>('expo-sqlite');
+    const db = await device.openDatabaseAsync('ultimatestats_basic_games.db');
+    const failingSave = jest
+      .spyOn(db, 'withTransactionAsync')
+      .mockRejectedValueOnce(new Error('disk full'));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    await renderScreen(<GameInfoScreen />);
+
+    await user.press(screen.getByText('END GAME'));
+    await user.press(screen.getByText('End Game'));
+
+    expect(await screen.findByText('Game not saved')).toBeVisible();
+    expect(useGameStore.getState().currentGameStatus).not.toBe('finished');
+    expect(router.push).not.toHaveBeenCalled();
+
+    await user.press(screen.getByText('Try Again'));
+
+    expect(router.push).toHaveBeenCalledWith('/game-complete');
+    expect(useGameStore.getState().currentGameStatus).toBe('finished');
+    expect(useSavedBasicGamesStore.getState().savedGames).toHaveLength(1);
+    // The database outlives this test, so the spy would too.
+    failingSave.mockRestore();
   });
 });
 
