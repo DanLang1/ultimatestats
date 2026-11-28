@@ -12,7 +12,7 @@ import { useAlert } from '@/components/ui/AlertProvider';
 import FlashingIcon from '@/components/ui/FlashingIcon';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useTheme } from '@/context/ThemeContext';
-import { useEndGame } from '@/hooks/basic/useEndGame';
+import { useFinishBasicGame } from '@/hooks/basic/useFinishBasicGame';
 import { useGameTimer } from '@/hooks/basic/useGameTimer';
 import { useHalftimeEarly } from '@/hooks/basic/useHalftimeEarly';
 import { usePointTimer } from '@/hooks/basic/usePointTimer';
@@ -43,6 +43,7 @@ export default function GameInfoScreen() {
     statTrackingEnabled,
     currentPoint,
     gameHalf,
+    pauseGameClock,
   } = useGameStore();
 
   const { genderRatioEnabled, firstPointRatio } = useSettingsStore();
@@ -65,7 +66,7 @@ export default function GameInfoScreen() {
 
   const { palette } = useTheme();
   const { showAlert } = useAlert();
-  const { confirmEndGame } = useEndGame();
+  const finishGame = useFinishBasicGame();
   const { canTriggerHalftimeEarly, confirmHalftimeEarly } = useHalftimeEarly();
   const {
     elapsedSeconds,
@@ -89,6 +90,12 @@ export default function GameInfoScreen() {
     const toText = `${toCount} TO`;
     if (!floaterEnabled) return toText;
     return hasFloater ? `${toText} • 1 Floater` : `${toText} • 0 Floater`;
+  };
+
+  // Game Complete can resume a game ended here, so this asks for no confirmation.
+  const endGame = async () => {
+    pauseGameClock();
+    await finishGame(() => router.push('/game-complete'));
   };
 
   const confirmRestartPointTimer = () => {
@@ -510,7 +517,7 @@ export default function GameInfoScreen() {
               </Pressable>
             )}
             <Pressable
-              onPress={confirmEndGame}
+              onPress={endGame}
               style={({ pressed }) => [
                 styles.actionButton,
                 { backgroundColor: palette.accentOverlay10, borderColor: palette.accentOverlay30 },

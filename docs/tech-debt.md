@@ -106,17 +106,6 @@ rewrite it to describe only the remaining problem as it exists now.
   `hooks/useLayout.ts`
   `docs/responsive-layout.md`
 
-## P3 - Store Architecture Refactor
-
-- `gameStore` is a god store spanning four concerns: live game state, timers, UI signals, and game config.
-- Reassess the remaining store before extracting config or timers.
-- Store boundaries can be redrawn without changing the `SavedGame` record shape, but moving
-  persisted ownership still requires a deliberate storage migration and hydration plan.
-- References:
-  `docs/future-features/store-refactor.md`
-  `store/basic/gameStore.ts`
-  `store/basic/gameStore.types.ts`
-
 ## P3 - Advanced Tracking Correction Utils Read the Clock
 
 - Live writes take their time from the store (`WriteContext`), but `correctAdvancedTouch`,
@@ -210,11 +199,8 @@ rewrite it to describe only the remaining problem as it exists now.
 - Not planned while basic mode is stable; revisit if basic work resumes.
 - `TurnoverType` has no spec table (labels, icons, toasts, stats re-derived across ~10 files); the
   basic impact chain uses display strings as data.
-- Live and saved games have separate edit paths (`updateEvent` vs `updateSavedGameEvent`) with
-  inconsistent mirroring; editing an event on a finished current game may not update its saved
-  record (unconfirmed).
-- `cancelPendingGoal` duplicates the goal branch of `undoLastAction` and has diverged (point timer
-  and post-game flags; unconfirmed impact).
+- `cancelPendingGoal` duplicates the goal branch of `undoLastAction`. They behave the same today,
+  but a change to one must be made in both.
 - Halftime, game-over, and soft-cap rules are implemented separately from advanced; share import
   does not validate basic events individually.
 - References:

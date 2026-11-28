@@ -9,7 +9,9 @@ import LinePresetEditor from '@/app/(main)/line-preset-editor';
 import PreGameConfirm from '@/app/(main)/pre-game-confirm';
 import SettingsScreen from '@/app/(main)/settings';
 import NumberPickerModal from '@/app/(modals)/number-picker-modal';
+import { loadAllBasicGames } from '@/lib/basic/savedGameStorage';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useGameSessionStore } from '@/store/gameSessionStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTutorialStore } from '@/store/tutorialStore';
@@ -84,6 +86,37 @@ describe('basic game routes', () => {
 
     expect(useGameSessionStore.getState().activeGameType).toBeNull();
     expect(router.replace).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('removes the saved record when the winning point is undone, so the live game is the only copy', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame({ statTrackingEnabled: true, status: 'finished' });
+    useGameStore.setState({ team1Score: 15, team2Score: 12, gameTo: 15 });
+    await useGameStore.getState().saveCurrentGame();
+    await renderScreen(<GameCompleteScreen />);
+
+    await user.press(screen.getByText('Undo Winning Point'));
+
+    expect(useSavedBasicGamesStore.getState().savedGames).toEqual([]);
+    expect(await loadAllBasicGames()).toEqual([]);
+    expect(router.replace).toHaveBeenCalledWith('/scoreboard');
+  });
+
+  it('resumes a game that was ended early without removing its last point', async () => {
+    const user = userEvent.setup();
+    arrangeBasicGame({ status: 'finished' });
+    useGameStore.setState({ team1Score: 3, team2Score: 1, gameTo: 15 });
+    await renderScreen(<GameCompleteScreen />);
+
+    await user.press(screen.getByText('Resume Game'));
+
+    expect(useGameStore.getState()).toMatchObject({
+      currentGameStatus: 'inProgress',
+      team1Score: 3,
+      team2Score: 1,
+    });
+    expect(useGameSessionStore.getState().activeGameType).toBe('basic');
+    expect(router.replace).toHaveBeenCalledWith('/scoreboard');
   });
 
   it('keeps app preferences in Settings and team management out', async () => {

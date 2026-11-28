@@ -49,7 +49,3 @@ Keep these in `store/basic`:
 - Mid-game roster changes now flow one way into a live advanced game:
   additions/reactivations append participants, while deactivation and deletion are blocked after
   recorded actions.
-
-## Related Docs
-
-- [Store Architecture Refactor](store-refactor.md)

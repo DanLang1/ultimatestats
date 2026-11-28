@@ -34,7 +34,7 @@ describe('live basic-game routes', () => {
     expect(useGameStore.getState().team1Score).toBe(1);
   });
 
-  it('shows match status and opens the real end-game confirmation', async () => {
+  it('shows match status and ends the game from the game actions', async () => {
     const user = userEvent.setup();
     arrangeBasicGame();
     await renderScreen(<GameInfoScreen />);
@@ -44,7 +44,8 @@ describe('live basic-game routes', () => {
 
     await user.press(screen.getByText('END GAME'));
 
-    expect(screen.getByText('End Game Early?')).toBeVisible();
+    expect(useGameStore.getState().currentGameStatus).toBe('finished');
+    expect(router.push).toHaveBeenCalledWith('/game-complete');
   });
 
   it('keeps the game in progress when it cannot be saved, and finishes it on a retry', async () => {
@@ -59,7 +60,6 @@ describe('live basic-game routes', () => {
     await renderScreen(<GameInfoScreen />);
 
     await user.press(screen.getByText('END GAME'));
-    await user.press(screen.getByText('End Game'));
 
     expect(await screen.findByText('Game not saved')).toBeVisible();
     expect(useGameStore.getState().currentGameStatus).not.toBe('finished');

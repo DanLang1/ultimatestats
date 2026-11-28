@@ -5,7 +5,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { useGameSessionActions } from '@/hooks/useGameSessionActions';
 import { getRecordedGameClockSecondsLeft } from '@/lib/basic/gameClockUtils';
 import { checkGameOver, getWinner } from '@/lib/basic/gameUtils';
+import { reportError } from '@/lib/sentry';
 import { useGameStore } from '@/store/basic/gameStore';
+import { useSavedBasicGamesStore } from '@/store/basic/savedGamesStore';
 import { useCurrentTeam } from '@/store/teamStore';
 
 export default function GameCompleteScreen() {
@@ -21,8 +23,10 @@ export default function GameCompleteScreen() {
     currentGameStatus,
     pauseGameClock,
     setPostGameFlowPending,
+    setCurrentGameStatus,
     currentGameId,
   } = useGameStore();
+  const deleteSavedBasicGames = useSavedBasicGamesStore((state) => state.deleteGames);
   const { palette } = useTheme();
   const { finishActiveGameSession, restoreBasicGameSession } = useGameSessionActions();
 
@@ -38,6 +42,8 @@ export default function GameCompleteScreen() {
     return <Redirect href="/scoreboard" />;
   }
 
+  // Ended from Game Status before the score or clock finished it, so no point ended the game.
+  const wasEndedEarly = !isGameOver;
   const isTie = team1Score === team2Score;
   const winnerTeam = isTie ? null : getWinner(team1Score, team2Score);
   const team1Won = winnerTeam === 'team1';
@@ -45,6 +51,9 @@ export default function GameCompleteScreen() {
   const loserName = team1Won ? team2Name : team1Name;
   const winnerScore = team1Won ? team1Score : team2Score;
   const loserScore = team1Won ? team2Score : team1Score;
+
+  const undoPointTitle = isTie ? 'Undo Last Point' : 'Undo Winning Point';
+  const resumeActionTitle = wasEndedEarly ? 'Resume Game' : undoPointTitle;
 
   const handleGoHome = () => {
     pauseGameClock();
@@ -57,9 +66,22 @@ export default function GameCompleteScreen() {
     router.replace('/dashboard');
   };
 
-  const handleUndo = () => {
+  const handleUndo = async () => {
+    // The game is in progress again, so the record saved when it finished would be a stale copy.
+    // Finishing the game again saves it under the same id.
+    if (statTrackingEnabled && currentGameId != null) {
+      try {
+        await deleteSavedBasicGames([currentGameId]);
+      } catch (error) {
+        reportError('basic-game-undo-finish', error);
+      }
+    }
     setPostGameFlowPending(false);
-    undoLastAction();
+    if (wasEndedEarly) {
+      setCurrentGameStatus('inProgress');
+    } else {
+      undoLastAction();
+    }
     restoreBasicGameSession();
     router.replace('/scoreboard');
   };
@@ -85,7 +107,7 @@ export default function GameCompleteScreen() {
           onPress: handleGoHome,
         }}
         secondaryAction={{
-          title: isTie ? 'Undo Last Point' : 'Undo Winning Point',
+          title: resumeActionTitle,
           text: 'Return to the scoreboard and continue the game',
           onPress: handleUndo,
         }}

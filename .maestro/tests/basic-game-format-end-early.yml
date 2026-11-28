@@ -68,10 +68,6 @@ tags:
     timeout: 5000
 - tapOn: '.*END GAME'
 - extendedWaitUntil:
-    visible: 'End Game Early\?'
-    timeout: 5000
-- tapOn: 'End Game'
-- extendedWaitUntil:
     visible: 'GAME COMPLETE'
     timeout: 5000
 - assertVisible: 'wins the game'
